@@ -12,3 +12,6 @@ application.register("auto-submit", AutoSubmitController)
 
 import BookBrowserController from "./book_browser_controller"
 application.register("book-browser", BookBrowserController)
+
+import AiSearchController from "./ai_search_controller"
+application.register("ai-search", AiSearchController)

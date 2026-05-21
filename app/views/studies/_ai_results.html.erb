@@ -1,0 +1,33 @@
+<%# locals: study, query, result %>
+<%= turbo_frame_tag "ai_results", class: "ps-ai-results" do %>
+  <% if result.ok? %>
+    <% if result.suggestions.empty? %>
+      <div class="ps-ai-hint">No matches found. Try rephrasing your thought.</div>
+    <% else %>
+      <div class="ps-ai-resultcount"><%= pluralize(result.suggestions.size, "passage") %> for &ldquo;<%= truncate(query, length: 60) %>&rdquo;</div>
+      <% result.suggestions.each do |s| %>
+        <div class="ps-xref">
+          <div class="ps-xref-head">
+            <div class="ps-xref-ref"><%= s.reference %></div>
+          </div>
+          <% if s.preview %>
+            <div class="ps-xref-text"><%= truncate(s.preview, length: 170) %></div>
+          <% end %>
+          <div class="ps-xref-actions">
+            <% study.panes.each do |pane| %>
+              <%= button_to "▸ #{pane_numeral(pane.position)}", study_pane_path(study, pane),
+                    method: :patch, params: { pane: { reference: s.reference } }, class: "ps-xref-load",
+                    form: { data: { turbo_frame: pane.frame_id }, style: "display:contents;" } %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  <% elsif result.error == :no_key %>
+    <div class="ps-ai-hint">&#9888; OpenAI key not configured. Add <code>OPENAI_API_KEY</code> to your <code>.env</code> file and restart the server.</div>
+  <% elsif result.error == :blank %>
+    <div class="ps-ai-hint">Type a description above, then search.</div>
+  <% else %>
+    <div class="ps-ai-hint">Couldn&rsquo;t reach the AI just now. Please try again.</div>
+  <% end %>
+<% end %>

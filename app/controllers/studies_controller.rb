@@ -1,5 +1,5 @@
 class StudiesController < ApplicationController
-  before_action :set_study, only: %i[ show update destroy ]
+  before_action :set_study, only: %i[ show update destroy suggest ]
 
   def index
     @studies = current_user.studies.recent
@@ -22,6 +22,12 @@ class StudiesController < ApplicationController
     @study.update(study_params)
     @study.sync_panes! if @study.saved_change_to_pane_count?
     redirect_to @study
+  end
+
+  def suggest
+    @query = params[:q].to_s
+    @result = ScriptureSuggester.call(@query)
+    render partial: "studies/ai_results", locals: { study: @study, query: @query, result: @result }
   end
 
   def destroy

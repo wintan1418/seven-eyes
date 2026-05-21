@@ -32,6 +32,9 @@
     <% else %>
       <button class="ps-tb-btn" disabled><span class="dot"></span> Sync Scroll</button>
     <% end %>
+    <% if study %>
+      <button type="button" class="ps-tb-btn" data-action="ai-search#open">&#10038; Find</button>
+    <% end %>
     <button class="ps-tb-btn" disabled>&#9159; X-Refs</button>
     <button class="ps-tb-btn" disabled><%= saved ? "✓ Saved" : "Save" %></button>
   </div>

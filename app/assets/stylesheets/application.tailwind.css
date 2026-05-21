@@ -133,3 +133,37 @@ turbo-frame.ps-pane { display: flex; }
 }
 .ps-chapter:hover { background: var(--rubric); color: var(--vellum-0); border-color: var(--rubric); }
 
+/* ---- AI "Find a Verse" slide-over ---- */
+.ps-ai-drawer { position: fixed; inset: 0; z-index: 41; visibility: hidden; pointer-events: none; }
+.ps-ai-drawer.is-open { visibility: visible; pointer-events: auto; }
+.ps-ai-drawer.is-open .ps-book-backdrop { opacity: 1; }
+.ps-ai-panel {
+  position: absolute; top: 0; right: 0; height: 100%; width: 408px;
+  background: linear-gradient(180deg, #ebdfc1 0%, #dec99a 100%);
+  border-left: 1px solid var(--vellum-edge);
+  box-shadow: -12px 0 30px -10px rgba(50, 30, 10, 0.45);
+  transform: translateX(100%); transition: transform 0.22s ease;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.ps-ai-drawer.is-open .ps-ai-panel { transform: translateX(0); }
+.ps-ai-panel form { padding: 14px 18px 6px; margin: 0; }
+.ps-ai-input {
+  width: 100%; padding: 10px 12px; background: #fff7e0;
+  border: 1px solid rgba(138, 116, 68, 0.4); border-radius: 2px;
+  font: 15px "EB Garamond", serif; color: var(--ink); resize: vertical; outline: none;
+}
+.ps-ai-input:focus { border-color: var(--rubric); box-shadow: 0 0 0 2px rgba(138, 36, 24, 0.12); }
+.ps-ai-results { padding: 4px 0 16px; overflow-y: auto; flex: 1; }
+.ps-ai-hint {
+  padding: 22px 18px; font-family: "EB Garamond", serif; font-style: italic;
+  font-size: 14px; color: var(--sepia-mute); text-align: center; line-height: 1.5;
+}
+.ps-ai-hint code {
+  font-family: ui-monospace, monospace; font-style: normal; font-size: 12px;
+  background: rgba(138, 36, 24, 0.08); padding: 1px 5px; border-radius: 2px; color: var(--rubric-deep);
+}
+.ps-ai-resultcount {
+  padding: 12px 20px 6px; font: 600 9.5px "Cinzel", serif; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--sepia-mute);
+}
+

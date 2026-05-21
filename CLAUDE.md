@@ -159,6 +159,18 @@ palette/fonts are also exposed as `@theme` tokens in `application.tailwind.css`.
   modal, 4-translation compare, cross-ref drawer, the Justification florilegium, sync-scroll +
   shortcut hint. **Match these when building each phase's UI.**
 
+## Beyond-MVP features added (by user request)
+
+- **Bible browser** — slide-over book/chapter navigator (`book_browser` Stimulus controller on
+  `.ps-root`, `studies/_book_browser`). Opened from each pane's 📖 button; browsing is client-side
+  (chapter counts from `Bible::Canon`), loading reuses the pane's own Turbo Frame form.
+- **AI "Find a Verse"** — describe a thought → GPT returns *references only*, which we validate via
+  `ReferenceParser` and load from our DB (`ScriptureSuggester`, `gpt-4o-mini`, JSON mode). The LLM
+  never supplies verse text — words always come from our vetted public-domain translations. UI:
+  `ai_search` Stimulus controller + `studies/_ai_search` / `_ai_results`; endpoint `GET
+  /studies/:id/suggest`. **Key**: `OPENAI_API_KEY` via `.env` (dotenv-rails, gitignored) or Rails
+  credentials `openai.api_key`. Missing key degrades gracefully to a "configure your key" notice.
+
 ## Out of scope (don't build)
 
 Real-time collaboration · mobile-first (desktop-first; tablet-landscape responsive is enough) ·

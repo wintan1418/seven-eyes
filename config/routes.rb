@@ -4,6 +4,7 @@ Rails.application.routes.draw do
 
   resources :studies, only: %i[ index show create update destroy ] do
     resources :panes, only: %i[ update ]
+    get :suggest, on: :member
   end
 
   root "studies#index"
