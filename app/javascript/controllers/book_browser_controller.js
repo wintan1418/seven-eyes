@@ -1,16 +1,18 @@
 import { Controller } from "@hotwired/stimulus"
 
-// A slide-over to browse books -> chapters and load a chapter into a pane.
-// Browsing is fully client-side; loading reuses the pane's own form + Turbo Frame.
+// A slide-over to browse books -> chapters -> verses and load a passage into a pane.
+// Book/chapter lists are client-side; the verse count is fetched per chapter so we
+// can offer a "zero in on a verse" grid (plus a "Whole chapter" option).
 export default class extends Controller {
-  static targets = ["drawer", "books", "chapters", "chapterGrid", "crumb"]
+  static targets = ["drawer", "books", "chapters", "chapterGrid", "verses", "verseGrid", "crumb"]
 
   connect() {
     this.targetPaneId = null
+    this.book = null
+    this.chapter = null
     this._onKey = (e) => { if (e.key === "Escape") this.close() }
   }
 
-  // Opened from a pane's "browse" button (data-pane-id on the button).
   open(event) {
     this.targetPaneId = event.currentTarget.dataset.paneId
     this.showBooks()
@@ -24,42 +26,104 @@ export default class extends Controller {
   }
 
   showBooks() {
+    this.crumbTarget.textContent = "Genesis — Revelation"
     this.booksTarget.hidden = false
     this.chaptersTarget.hidden = true
+    this.versesTarget.hidden = true
   }
 
-  // Clicking a book button reveals its chapter grid.
+  // Book button -> show its chapter grid.
   selectBook(event) {
     const btn = event.currentTarget
-    const name = btn.dataset.name
-    const count = parseInt(btn.dataset.chapters, 10)
-    this.crumbTarget.textContent = name
+    this.book = { name: btn.dataset.name, count: parseInt(btn.dataset.chapters, 10) }
+    this.crumbTarget.textContent = this.book.name
     this.chapterGridTarget.innerHTML = ""
-    for (let n = 1; n <= count; n++) {
-      const c = document.createElement("button")
-      c.type = "button"
-      c.className = "ps-chapter"
-      c.textContent = n
-      c.dataset.reference = count === 1 ? name : `${name} ${n}`
-      c.dataset.action = "book-browser#selectChapter"
-      this.chapterGridTarget.appendChild(c)
+    for (let n = 1; n <= this.book.count; n++) {
+      this.chapterGridTarget.appendChild(this.gridButton(n, "book-browser#selectChapter", { chapter: n }))
     }
     this.booksTarget.hidden = true
+    this.versesTarget.hidden = true
     this.chaptersTarget.hidden = false
   }
 
-  back() {
-    this.showBooks()
+  // Chapter button -> fetch verse count and show a verse grid (+ "Whole chapter").
+  async selectChapter(event) {
+    this.chapter = parseInt(event.currentTarget.dataset.chapter, 10)
+    const single = this.book.count === 1
+    const ref = single ? this.book.name : `${this.book.name} ${this.chapter}`
+    this.crumbTarget.textContent = ref
+
+    this.verseGridTarget.innerHTML = ""
+    // "Whole chapter" first.
+    const whole = document.createElement("button")
+    whole.type = "button"
+    whole.className = "ps-book-back"
+    whole.style.gridColumn = "1 / -1"
+    whole.textContent = single ? "Open the book" : "Whole chapter"
+    whole.dataset.reference = ref
+    whole.dataset.action = "book-browser#selectVerse"
+    this.verseGridTarget.appendChild(whole)
+
+    this.chaptersTarget.hidden = true
+    this.versesTarget.hidden = false
+
+    const count = await this.fetchVerseCount()
+    for (let v = 1; v <= count; v++) {
+      this.verseGridTarget.appendChild(this.gridButton(v, "book-browser#selectVerse", { reference: `${ref}:${v}` }))
+    }
   }
 
-  // Clicking a chapter fills the target pane's reference input and submits it.
-  selectChapter(event) {
-    const reference = event.currentTarget.dataset.reference
-    if (!this.targetPaneId) return
+  selectVerse(event) {
+    this.loadReference(event.currentTarget.dataset.reference)
+  }
+
+  back() { this.showBooks() }
+  backToChapters() {
+    this.versesTarget.hidden = true
+    this.chaptersTarget.hidden = false
+    this.crumbTarget.textContent = this.book?.name || ""
+  }
+
+  // --- helpers ---
+
+  gridButton(label, action, data) {
+    const b = document.createElement("button")
+    b.type = "button"
+    b.className = "ps-chapter"
+    b.textContent = label
+    b.dataset.action = action
+    Object.entries(data).forEach(([k, val]) => { b.dataset[k] = val })
+    return b
+  }
+
+  async fetchVerseCount() {
+    const osis = this.osisFor(this.book.name)
+    const translation = this.targetTranslation()
+    try {
+      const params = new URLSearchParams({ osis, chapter: this.chapter, translation })
+      const res = await fetch(`/verse_count?${params}`, { headers: { Accept: "application/json" } })
+      if (!res.ok) return 0
+      return (await res.json()).count || 0
+    } catch {
+      return 0
+    }
+  }
+
+  osisFor(name) {
+    const btn = this.booksTarget.querySelector(`.ps-book[data-name="${CSS.escape(name)}"]`)
+    return btn ? btn.dataset.osis : name
+  }
+
+  targetTranslation() {
     const frame = document.getElementById(`pane_${this.targetPaneId}`)
-    if (!frame) return
-    const input = frame.querySelector("input[name='pane[reference]']")
-    const form = input && input.closest("form")
+    const sel = frame?.querySelector("select[name='pane[translation_id]']")
+    return sel ? sel.options[sel.selectedIndex]?.text || "" : ""
+  }
+
+  loadReference(reference) {
+    const frame = document.getElementById(`pane_${this.targetPaneId}`)
+    const input = frame?.querySelector("input[name='pane[reference]']")
+    const form = input?.closest("form")
     if (!input || !form) return
     input.value = reference
     form.requestSubmit()

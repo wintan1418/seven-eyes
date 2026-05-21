@@ -15,7 +15,7 @@
         <div class="ps-sidebar-section" style="padding-left:20px;"><%= label %></div>
         <div class="ps-book-grid">
           <% Bible::Canon.all.select { |b| b.testament == testament }.each do |b| %>
-            <button type="button" class="ps-book" data-name="<%= b.name %>"
+            <button type="button" class="ps-book" data-name="<%= b.name %>" data-osis="<%= b.osis %>"
                     data-chapters="<%= b.chapter_count %>"
                     data-action="book-browser#selectBook"><%= b.name %></button>
           <% end %>
@@ -27,6 +27,12 @@
     <div data-book-browser-target="chapters" hidden>
       <button type="button" class="ps-book-back" data-action="book-browser#back">&larr; All books</button>
       <div class="ps-chapter-grid" data-book-browser-target="chapterGrid"></div>
+    </div>
+
+    <%# Verse grid for the chosen chapter (populated by Stimulus) %>
+    <div data-book-browser-target="verses" hidden>
+      <button type="button" class="ps-book-back" data-action="book-browser#backToChapters">&larr; Chapters</button>
+      <div class="ps-chapter-grid" data-book-browser-target="verseGrid"></div>
     </div>
   </aside>
 </div>
