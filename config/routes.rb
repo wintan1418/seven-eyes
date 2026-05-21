@@ -2,7 +2,7 @@ Rails.application.routes.draw do
   resource :session
   resources :passwords, param: :token
 
-  resources :studies, only: %i[ index show create destroy ] do
+  resources :studies, only: %i[ index show create update destroy ] do
     resources :panes, only: %i[ update ]
   end
 

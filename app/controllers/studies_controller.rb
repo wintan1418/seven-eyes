@@ -1,5 +1,5 @@
 class StudiesController < ApplicationController
-  before_action :set_study, only: %i[ show destroy ]
+  before_action :set_study, only: %i[ show update destroy ]
 
   def index
     @studies = current_user.studies.recent
@@ -18,6 +18,12 @@ class StudiesController < ApplicationController
     redirect_to study
   end
 
+  def update
+    @study.update(study_params)
+    @study.sync_panes! if @study.saved_change_to_pane_count?
+    redirect_to @study
+  end
+
   def destroy
     @study.destroy
     redirect_to root_path, status: :see_other
@@ -27,6 +33,12 @@ class StudiesController < ApplicationController
 
   def set_study
     @study = current_user.studies.find(params[:id])
+  end
+
+  def study_params
+    permitted = params.require(:study).permit(:name, :pane_count, :sync_scroll)
+    permitted[:pane_count] = permitted[:pane_count].to_i.clamp(1, 4) if permitted[:pane_count].present?
+    permitted
   end
 
   def pane_count_param

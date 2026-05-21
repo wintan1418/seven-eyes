@@ -1,6 +1,6 @@
 <div class="ps-root">
   <%= render "topbar", study_name: @study.name, panes: @study.pane_count,
-        sync: @study.sync_scroll, saved: true %>
+        sync: @study.sync_scroll, saved: true, study: @study %>
   <div class="ps-shell">
     <%= render "sidebar", studies: @studies, active_id: @study.id %>
     <main class="ps-workspace <%= workspace_cols_class(@study.pane_count) %>">
