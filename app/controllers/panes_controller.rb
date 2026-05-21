@@ -1,10 +1,16 @@
 class PanesController < ApplicationController
+  # Guests may navigate Scripture (reference/translation); only notes require an account.
+  allow_unauthenticated_access only: %i[ update ]
+
   def update
-    study = current_user.studies.find(params[:study_id])
+    study = current_study(params[:study_id])
     @pane = study.panes.find(params[:id])
+
+    # Saving notes is a "save" — require an account.
+    return head(:unauthorized) if params[:autosave] && !authenticated?
+
     @pane.update(pane_params)
 
-    # Notes auto-save is a background fetch; don't re-render the whole pane frame.
     if params[:autosave]
       head :no_content
     else

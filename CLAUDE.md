@@ -171,6 +171,22 @@ palette/fonts are also exposed as `@theme` tokens in `application.tailwind.css`.
   /studies/:id/suggest`. **Key**: `OPENAI_API_KEY` via `.env` (dotenv-rails, gitignored) or Rails
   credentials `openai.api_key`. Missing key degrades gracefully to a "configure your key" notice.
 
+## Access model — open app, gated saves (by user request)
+
+The workspace is **open to guests**; only *saving* requires an account.
+- **Guests** get a session-scoped study (`Study.user_id` is nullable; the id lives in
+  `session[:guest_study_id]`). They can create studies, look up verses, switch translations,
+  use cross-references, AI find, and the book browser — all without logging in.
+- **Gated (require an account)**: notes auto-save (`panes#update` with `autosave` → 401 for
+  guests), highlights (`highlights#*` → 401 for guests). The front-end listens for a 401 and
+  dispatches a `auth:required` window event; `auth_gate` Stimulus controller opens a
+  "create an account to save" modal.
+- **Registration**: `RegistrationsController` (`resource :registration`) + a styled sign-up page.
+  On sign-in *or* sign-up, `claim_guest_study` adopts the guest's session study into the new
+  account and redirects there, so guests never lose work.
+- `current_study(id)` in `ApplicationController` resolves owner-or-guest and 404s otherwise.
+  Controllers use `allow_unauthenticated_access` for read paths; writes check `authenticated?`.
+
 ## Out of scope (don't build)
 
 Real-time collaboration · mobile-first (desktop-first; tablet-landscape responsive is enough) ·

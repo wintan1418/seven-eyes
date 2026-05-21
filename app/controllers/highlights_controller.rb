@@ -1,4 +1,8 @@
 class HighlightsController < ApplicationController
+  # Open the route so guests get a clean 401 (handled in JS) instead of an HTML redirect.
+  allow_unauthenticated_access only: %i[ create destroy ]
+  before_action :require_account
+
   def create
     highlight = current_user.highlights.create!(
       verse_id: params.dig(:highlight, :verse_id),
@@ -16,5 +20,11 @@ class HighlightsController < ApplicationController
     head :no_content
   rescue ActiveRecord::RecordNotFound
     head :not_found
+  end
+
+  private
+
+  def require_account
+    head :unauthorized unless authenticated?
   end
 end

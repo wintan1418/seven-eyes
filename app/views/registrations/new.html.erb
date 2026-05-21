@@ -1,0 +1,41 @@
+<div class="ps-root">
+  <div class="ps-gate">
+    <div class="ps-modal">
+      <span class="corner tl">&#10086;</span>
+      <span class="corner tr">&#10086;</span>
+      <span class="corner bl">&#10086;</span>
+      <span class="corner br">&#10086;</span>
+
+      <h2>&middot; Join the Scriptorium &middot;</h2>
+      <div class="title">Create your account</div>
+      <div class="sub">Free, and your studies stay yours.</div>
+
+      <% if @user.errors.any? %>
+        <div class="ps-auth-flash alert"><%= @user.errors.full_messages.to_sentence %></div>
+      <% end %>
+
+      <%= form_with url: registration_path do |form| %>
+        <div class="field-label">Email</div>
+        <%= form.email_field :email_address, required: true, autofocus: true,
+              autocomplete: "username", placeholder: "you@example.com",
+              value: @user.email_address, class: "field" %>
+
+        <div class="field-label">Password</div>
+        <%= form.password_field :password, required: true, autocomplete: "new-password",
+              placeholder: "At least 8 characters", maxlength: 72, class: "field" %>
+
+        <div class="field-label">Confirm password</div>
+        <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password",
+              placeholder: "Repeat your password", maxlength: 72, class: "field" %>
+
+        <div class="actions">
+          <%= form.submit "Create Account", class: "btn primary" %>
+        </div>
+      <% end %>
+
+      <div class="foot">
+        Already have an account? <%= link_to "Sign in", new_session_path %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,4 +1,4 @@
-<div class="ps-root" data-controller="book-browser ai-search xref">
+<div class="ps-root" data-controller="book-browser ai-search xref shortcuts auth-gate">
   <%= render "topbar", study_name: @study.name, panes: @study.pane_count,
         sync: @study.sync_scroll, saved: true, study: @study %>
   <div class="ps-shell">
@@ -12,4 +12,5 @@
   <%= render "studies/book_browser" %>
   <%= render "studies/ai_search", study: @study %>
   <%= render "studies/xref_drawer" %>
+  <%= render "studies/auth_prompt" unless authenticated? %>
 </div>

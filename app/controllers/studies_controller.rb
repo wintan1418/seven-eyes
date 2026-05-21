@@ -1,20 +1,27 @@
 class StudiesController < ApplicationController
+  # The workspace is open to everyone; only saving (notes/highlights/account) needs auth.
+  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest ]
+
   before_action :set_study, only: %i[ show update destroy suggest cross_references ]
 
   def index
-    @studies = current_user.studies.recent
+    @studies = authenticated? ? current_user.studies.recent : []
   end
 
   def show
     @study.touch_opened!
-    @studies = current_user.studies.recent
+    @studies = authenticated? ? current_user.studies.recent : []
   end
 
   def create
-    study = current_user.studies.create!(
-      name: params[:name].presence || "Untitled Study",
-      pane_count: pane_count_param
-    )
+    study =
+      if authenticated?
+        current_user.studies.create!(name: study_name, pane_count: pane_count_param)
+      else
+        Study.create!(user: nil, name: study_name, pane_count: pane_count_param).tap do |s|
+          session[:guest_study_id] = s.id
+        end
+      end
     redirect_to study
   end
 
@@ -22,6 +29,11 @@ class StudiesController < ApplicationController
     @study.update(study_params)
     @study.sync_panes! if @study.saved_change_to_pane_count?
     redirect_to @study
+  end
+
+  def destroy
+    @study.destroy
+    redirect_to root_path, status: :see_other
   end
 
   def suggest
@@ -42,15 +54,14 @@ class StudiesController < ApplicationController
     render partial: "studies/xref_results", locals: { study: @study, origin: @origin, rows: @rows }
   end
 
-  def destroy
-    @study.destroy
-    redirect_to root_path, status: :see_other
-  end
-
   private
 
   def set_study
-    @study = current_user.studies.find(params[:id])
+    @study = current_study(params[:id])
+  end
+
+  def study_name
+    params[:name].presence || "Untitled Study"
   end
 
   def study_params

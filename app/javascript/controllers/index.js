@@ -27,3 +27,6 @@ application.register("highlighter", HighlighterController)
 
 import ShortcutsController from "./shortcuts_controller"
 application.register("shortcuts", ShortcutsController)
+
+import AuthGateController from "./auth_gate_controller"
+application.register("auth-gate", AuthGateController)

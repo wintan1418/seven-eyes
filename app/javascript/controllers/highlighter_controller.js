@@ -96,6 +96,7 @@ export default class extends Controller {
         headers: { "Content-Type": "application/json", "X-CSRF-Token": token, Accept: "application/json" },
         body: JSON.stringify({ highlight: { verse_id: p.verseId, color, char_start: p.start, char_end: p.end } })
       })
+      if (res.status === 401) { window.dispatchEvent(new CustomEvent("auth:required")); return }
       if (!res.ok) return
       const data = await res.json()
       this.wrap(p.range, color, data.id)

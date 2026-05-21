@@ -1,5 +1,5 @@
 class Study < ApplicationRecord
-  belongs_to :user
+  belongs_to :user, optional: true # nil = a guest's session-scoped study
   has_many :panes, -> { order(:position) }, dependent: :destroy, inverse_of: :study
 
   validates :name, presence: true

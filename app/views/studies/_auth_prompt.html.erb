@@ -1,0 +1,21 @@
+<div class="ps-modal-shroud ps-auth-modal" data-auth-gate-target="modal">
+  <div class="ps-modal">
+    <span class="corner tl">&#10086;</span>
+    <span class="corner tr">&#10086;</span>
+    <span class="corner bl">&#10086;</span>
+    <span class="corner br">&#10086;</span>
+    <h2>&middot; Keep Your Work &middot;</h2>
+    <div class="title">Save with a free account</div>
+    <div class="sub">
+      You can read and compare freely. To save notes, highlights, and this study,
+      sign in or create an account &mdash; your current workspace comes with you.
+    </div>
+    <div class="actions" style="justify-content:center;">
+      <%= link_to "Sign in", new_session_path, class: "btn secondary", style: "text-decoration:none;" %>
+      <%= link_to "Create account", new_registration_path, class: "btn primary", style: "text-decoration:none;" %>
+    </div>
+    <div class="foot" style="margin-top:14px;">
+      <button type="button" class="ps-link-btn" data-action="auth-gate#close">Keep browsing</button>
+    </div>
+  </div>
+</div>

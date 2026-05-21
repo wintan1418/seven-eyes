@@ -24,6 +24,11 @@ export default class extends Controller {
         body: new FormData(form),
         headers: { "X-CSRF-Token": token, "Accept": "text/plain" }
       })
+      if (res.status === 401) {
+        this.setStatus("Sign in to save")
+        window.dispatchEvent(new CustomEvent("auth:required"))
+        return
+      }
       this.setStatus(res.ok ? "Saved just now" : "Save failed")
     } catch {
       this.setStatus("Save failed")

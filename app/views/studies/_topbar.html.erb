@@ -42,6 +42,17 @@
     <% end %>
     <% if study %>
       <button type="button" class="ps-tb-btn" data-action="ai-search#open">&#10038; Find</button>
+      <% if authenticated? %>
+        <span class="ps-tb-btn is-active" style="cursor:default;">&#10003; Saved</span>
+      <% else %>
+        <button type="button" class="ps-tb-btn" data-action="auth-gate#open">&#9745; Save</button>
+      <% end %>
+    <% end %>
+    <% if authenticated? %>
+      <%= button_to "Sign out", session_path, method: :delete, class: "ps-tb-btn",
+            form: { style: "display:contents;" } %>
+    <% else %>
+      <%= link_to "Sign in", new_session_path, class: "ps-tb-btn", style: "text-decoration:none;" %>
     <% end %>
   </div>
 </div>

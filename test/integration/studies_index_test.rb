@@ -1,9 +1,10 @@
 require "test_helper"
 
 class StudiesIndexTest < ActionDispatch::IntegrationTest
-  test "redirects to login when unauthenticated" do
+  test "guests can view the open welcome (no forced login)" do
     get root_path
-    assert_redirected_to new_session_path
+    assert_response :success
+    assert_select ".ps-welcome"
   end
 
   test "renders the Scriptorium welcome when authenticated" do

@@ -9,7 +9,19 @@
     <% end %>
   </div>
 
-  <% if studies.blank? %>
+  <% unless authenticated? %>
+    <div class="ps-sidebar-section">Your Studies</div>
+    <div class="ps-study-list">
+      <div class="ps-guest-note">
+        <div>Studies you save will be kept here.</div>
+        <div style="margin-top:8px;">
+          <%= link_to "Sign in", new_session_path %> &middot; <%= link_to "Create account", new_registration_path %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <% if authenticated? && studies.blank? %>
     <div class="ps-sidebar-section">Studies</div>
     <div class="ps-study-list">
       <div class="ps-study-item" style="cursor: default;">
@@ -18,7 +30,7 @@
         </div>
       </div>
     </div>
-  <% else %>
+  <% elsif authenticated? %>
     <div class="ps-sidebar-section">Recent</div>
     <div class="ps-study-list">
       <% studies.each do |study| %>
