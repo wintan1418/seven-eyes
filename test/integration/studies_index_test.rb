@@ -12,6 +12,6 @@ class StudiesIndexTest < ActionDispatch::IntegrationTest
     get root_path
     assert_response :success
     assert_select ".ps-welcome"
-    assert_select "h1", text: "Welcome back, Pastor."
+    assert_select "h1", text: "Welcome back."
   end
 end

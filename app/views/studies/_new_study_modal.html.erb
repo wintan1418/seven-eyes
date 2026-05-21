@@ -1,0 +1,31 @@
+<div class="ps-modal-shroud ps-new-study-modal" data-new-study-target="modal">
+  <div class="ps-modal">
+    <span class="corner tl">&#10086;</span>
+    <span class="corner tr">&#10086;</span>
+    <span class="corner bl">&#10086;</span>
+    <span class="corner br">&#10086;</span>
+    <h2>&middot; The Naming of a Study &middot;</h2>
+    <div class="title">What shall we call this work?</div>
+
+    <%= form_with url: studies_path, method: :post do %>
+      <div class="field-label">Title</div>
+      <%= text_field_tag :name, "Untitled Study", class: "field", autocomplete: "off",
+            data: { new_study_target: "name" } %>
+
+      <div class="field-label">Pane arrangement</div>
+      <div class="seg">
+        <% [ [ 1, "I · Single" ], [ 2, "II · Pair" ], [ 3, "III · Triptych" ], [ 4, "IV · Codex" ] ].each do |count, label| %>
+          <button type="button" class="<%= "is-on" if count == 4 %>"
+                  data-count="<%= count %>" data-new-study-target="seg"
+                  data-action="new-study#choosePanes"><%= label %></button>
+        <% end %>
+      </div>
+      <%= hidden_field_tag :pane_count, 4, data: { new_study_target: "count" } %>
+
+      <div class="actions">
+        <button type="button" class="btn secondary" data-action="new-study#close">Cancel</button>
+        <%= submit_tag "Open Study", class: "btn primary" %>
+      </div>
+    <% end %>
+  </div>
+</div>

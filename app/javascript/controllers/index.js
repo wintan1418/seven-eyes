@@ -30,3 +30,6 @@ application.register("shortcuts", ShortcutsController)
 
 import AuthGateController from "./auth_gate_controller"
 application.register("auth-gate", AuthGateController)
+
+import NewStudyController from "./new_study_controller"
+application.register("new-study", NewStudyController)

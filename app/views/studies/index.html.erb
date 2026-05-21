@@ -1,11 +1,15 @@
-<div class="ps-root">
+<div class="ps-root" data-controller="new-study">
   <%= render "topbar", study_name: "The Scriptorium", panes: 4, sync: false, saved: true %>
   <div class="ps-shell">
     <%= render "sidebar", studies: @studies %>
     <main class="ps-workspace" style="grid-template-columns: 1fr; grid-template-rows: 1fr;">
       <div class="ps-welcome">
         <div class="eyebrow">&#9769; &nbsp; A Quiet Desk For The Word &nbsp; &#9769;</div>
-        <h1>Welcome back, Pastor.</h1>
+        <% if authenticated? %>
+          <h1>Welcome back.</h1>
+        <% else %>
+          <h1>Parallel Scripture</h1>
+        <% end %>
         <div class="rule-orn">
           <span class="line"></span>
           <span>&#10086;</span>
@@ -16,9 +20,7 @@
           <span class="ref">Psalm CXIX &middot; 18 &middot; KJV</span>
         </div>
         <div class="cta-row">
-          <%= button_to studies_path, class: "cta", form: { style: "margin:0;" } do %>
-            &#10010; &nbsp; Begin a New Study
-          <% end %>
+          <button type="button" class="cta" data-action="new-study#open">&#10010; &nbsp; Begin a New Study</button>
           <% if (resume = @studies.first) %>
             <%= link_to "↻  Resume #{truncate(resume.name, length: 28)}", study_path(resume),
                   class: "cta secondary", style: "text-decoration:none;" %>
@@ -32,4 +34,5 @@
       </div>
     </main>
   </div>
+  <%= render "studies/new_study_modal" %>
 </div>

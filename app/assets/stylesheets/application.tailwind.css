@@ -189,8 +189,10 @@ a.ps-vnum:hover { color: var(--rubric-deep); text-decoration: underline; }
 .ps-guest-note a { color: var(--rubric); text-decoration: none; border-bottom: 1px solid rgba(138, 36, 24, 0.3); }
 .ps-guest-note a:hover { color: var(--rubric-deep); }
 
-.ps-modal-shroud.ps-auth-modal { display: none; }
-.ps-modal-shroud.ps-auth-modal.is-open { display: flex; }
+.ps-modal-shroud.ps-auth-modal,
+.ps-modal-shroud.ps-new-study-modal { display: none; }
+.ps-modal-shroud.ps-auth-modal.is-open,
+.ps-modal-shroud.ps-new-study-modal.is-open { display: flex; }
 .ps-link-btn {
   background: transparent; border: 0; cursor: pointer; color: var(--sepia);
   font: 600 10px "Cinzel", serif; letter-spacing: 0.16em; text-transform: uppercase;

@@ -3,10 +3,10 @@
 <aside class="ps-sidebar">
   <div class="ps-sidebar-head">
     <div class="ps-sidebar-title">The Scriptorium</div>
-    <%= button_to studies_path, class: "ps-new-study", form: { style: "margin:0;" } do %>
+    <button type="button" class="ps-new-study" data-action="new-study#open">
       <span class="plus">&#10010;</span>
       <span>New Study</span>
-    <% end %>
+    </button>
   </div>
 
   <% unless authenticated? %>
