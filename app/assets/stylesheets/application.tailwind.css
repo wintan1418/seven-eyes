@@ -5,8 +5,8 @@
    The .ps-* component layer in scripture.css uses the raw CSS vars in :root
    (defined there); these tokens mirror them for incidental utility use. */
 @theme {
-  --font-serif: "EB Garamond", "Cormorant Garamond", Georgia, "Segoe UI Symbol", "Apple Symbols", "Segoe UI Emoji", "Noto Color Emoji", serif;
-  --font-display: "Cinzel", "Trajan Pro", "Segoe UI Symbol", "Apple Symbols", "Segoe UI Emoji", "Noto Color Emoji", serif;
+  --font-serif: "EB Garamond", "Cormorant Garamond", Georgia, "Noto Sans Symbols 2", "Segoe UI Symbol", "Apple Symbols", "Segoe UI Emoji", "Noto Color Emoji", serif;
+  --font-display: "Cinzel", "Trajan Pro", "Noto Sans Symbols 2", "Segoe UI Symbol", "Apple Symbols", "Segoe UI Emoji", "Noto Color Emoji", serif;
   --font-illuminated: "UnifrakturMaguntia", "Cinzel", "Segoe UI Symbol", serif;
 
   --color-vellum-0: #f4ead2;
@@ -30,7 +30,7 @@ html, body {
   margin: 0;
   height: 100%;
   background: #f0eee9;
-  font-family: "EB Garamond", "Segoe UI Symbol", "Apple Symbols", "Segoe UI Emoji", "Noto Color Emoji", serif;
+  font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", "Apple Symbols", "Segoe UI Emoji", "Noto Color Emoji", serif;
 }
 body > .ps-root { height: 100vh; }
 
