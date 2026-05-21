@@ -1,0 +1,29 @@
+<div class="ps-root">
+  <%= render "topbar", study_name: "The Scriptorium", panes: 4, sync: false, saved: true %>
+  <div class="ps-shell">
+    <%= render "sidebar", studies: @studies %>
+    <main class="ps-workspace" style="grid-template-columns: 1fr; grid-template-rows: 1fr;">
+      <div class="ps-welcome">
+        <div class="eyebrow">&#9769; &nbsp; A Quiet Desk For The Word &nbsp; &#9769;</div>
+        <h1>Welcome back, Pastor.</h1>
+        <div class="rule-orn">
+          <span class="line"></span>
+          <span>&#10086;</span>
+          <span class="line"></span>
+        </div>
+        <div class="verse-of-day">
+          &ldquo;Open thou mine eyes, that I may behold wondrous things out of thy law.&rdquo;
+          <span class="ref">Psalm CXIX &middot; 18 &middot; KJV</span>
+        </div>
+        <div class="cta-row">
+          <button class="cta">&#10010; &nbsp; Begin a New Study</button>
+        </div>
+        <div style="margin-top: 38px; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.22em; color: var(--sepia-mute); text-transform: uppercase;">
+          <span>kjv &middot; asv &middot; bsb &middot; web &middot; darby &middot; ylt</span>
+          <span style="margin: 0 10px; color: var(--gold);">&middot;</span>
+          <span>tsk cross-references &middot; seeded locally</span>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

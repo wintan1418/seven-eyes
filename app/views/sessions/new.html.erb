@@ -1,0 +1,37 @@
+<div class="ps-root">
+  <div class="ps-gate">
+    <div class="ps-modal">
+      <span class="corner tl">&#10086;</span>
+      <span class="corner tr">&#10086;</span>
+      <span class="corner bl">&#10086;</span>
+      <span class="corner br">&#10086;</span>
+
+      <h2>&middot; Enter the Scriptorium &middot;</h2>
+      <div class="title">Parallel Scripture</div>
+      <div class="sub">&ldquo;Open thou mine eyes, that I may behold wondrous things out of thy law.&rdquo;</div>
+
+      <% if flash[:alert] %><div class="ps-auth-flash alert"><%= flash[:alert] %></div><% end %>
+      <% if flash[:notice] %><div class="ps-auth-flash notice"><%= flash[:notice] %></div><% end %>
+
+      <%= form_with url: session_path do |form| %>
+        <div class="field-label">Email</div>
+        <%= form.email_field :email_address, required: true, autofocus: true,
+              autocomplete: "username", placeholder: "you@example.com",
+              value: params[:email_address], class: "field" %>
+
+        <div class="field-label">Password</div>
+        <%= form.password_field :password, required: true,
+              autocomplete: "current-password", placeholder: "Your password",
+              maxlength: 72, class: "field" %>
+
+        <div class="actions">
+          <%= form.submit "Sign In", class: "btn primary" %>
+        </div>
+      <% end %>
+
+      <div class="foot">
+        <%= link_to "Forgot password?", new_password_path %>
+      </div>
+    </div>
+  </div>
+</div>

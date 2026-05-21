@@ -1,0 +1,32 @@
+<%# locals: studies (Array/Relation of Study), active_id %>
+<% active_id = local_assigns[:active_id] %>
+<aside class="ps-sidebar">
+  <div class="ps-sidebar-head">
+    <div class="ps-sidebar-title">The Scriptorium</div>
+    <button class="ps-new-study">
+      <span class="plus">&#10010;</span>
+      <span>New Study</span>
+    </button>
+  </div>
+
+  <% if studies.blank? %>
+    <div class="ps-sidebar-section">Studies</div>
+    <div class="ps-study-list">
+      <div class="ps-study-item" style="cursor: default;">
+        <div class="meta" style="text-transform: none; letter-spacing: 0.02em; font-style: italic; font-family: 'EB Garamond', serif; font-size: 13px;">
+          No studies yet. Begin a new one above.
+        </div>
+      </div>
+    </div>
+  <% else %>
+    <div class="ps-sidebar-section">Recent</div>
+    <div class="ps-study-list">
+      <% studies.each do |study| %>
+        <div class="ps-study-item <%= "is-active" if active_id == study.id %>">
+          <div class="nm"><%= study.name %></div>
+          <div class="meta"><%= pluralize(study.pane_count, "pane") %> &middot; <%= time_ago_in_words(study.last_opened_at || study.updated_at) %> ago</div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</aside>

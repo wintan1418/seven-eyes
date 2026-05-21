@@ -1,0 +1,26 @@
+<%# locals: study_name, panes (1..4), sync (bool), saved (bool) %>
+<% panes ||= 4 %>
+<div class="ps-topbar">
+  <div class="ps-brand">
+    <span class="cross">&#9769;</span>
+    <span>PARALLEL &middot; SCRIPTURE</span>
+  </div>
+  <div class="ps-study-name">
+    <span class="orn">&#10086;</span>
+    <span><%= study_name %></span>
+    <span class="pencil">&#9998;</span>
+  </div>
+  <div class="ps-topbar-actions">
+    <div class="ps-pane-picker" title="Pane count">
+      <% (1..4).each do |n| %>
+        <button class="<%= "is-on" if panes == n %>"><%= n %></button>
+      <% end %>
+    </div>
+    <button class="ps-tb-btn <%= "is-active" if sync %>">
+      <span class="dot"></span>
+      Sync Scroll
+    </button>
+    <button class="ps-tb-btn">&#9159; X-Refs</button>
+    <button class="ps-tb-btn"><%= saved ? "✓ Saved" : "Save" %></button>
+  </div>
+</div>

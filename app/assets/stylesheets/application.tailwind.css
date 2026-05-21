@@ -1,0 +1,78 @@
+@import "tailwindcss";
+@import "./scripture.css";
+
+/* Ancient Epistle palette + fonts exposed as Tailwind v4 tokens.
+   The .ps-* component layer in scripture.css uses the raw CSS vars in :root
+   (defined there); these tokens mirror them for incidental utility use. */
+@theme {
+  --font-serif: "EB Garamond", "Cormorant Garamond", Georgia, serif;
+  --font-display: "Cinzel", "Trajan Pro", serif;
+  --font-illuminated: "UnifrakturMaguntia", "Cinzel", serif;
+
+  --color-vellum-0: #f4ead2;
+  --color-vellum-1: #efe3c5;
+  --color-vellum-2: #e7d6ad;
+  --color-vellum-edge: #c9b88e;
+  --color-vellum-shadow: #8a7444;
+
+  --color-ink: #231408;
+  --color-ink-soft: #3a2616;
+  --color-sepia: #5a3b1f;
+  --color-sepia-mute: #8a6d4a;
+
+  --color-rubric: #8a2418;
+  --color-rubric-deep: #5e1a12;
+  --color-gold: #a3812e;
+  --color-gold-deep: #6f5318;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #f0eee9;
+}
+body > .ps-root { height: 100vh; }
+
+/* ---- auth gate (login / password reset) ---- */
+.ps-gate {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+.ps-gate .ps-modal { position: relative; }
+.ps-gate form { margin: 0; }
+.ps-gate .field + .field { margin-top: 0; }
+.ps-gate .sub {
+  font-family: "EB Garamond", serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--sepia-mute);
+  text-align: center;
+  margin: 0 0 18px;
+}
+.ps-gate .actions { margin-top: 22px; }
+.ps-gate .actions .btn { flex: 1; }
+.ps-auth-flash {
+  font-family: "EB Garamond", serif;
+  font-style: italic;
+  font-size: 13px;
+  text-align: center;
+  padding: 9px 12px;
+  border-radius: 2px;
+  margin-bottom: 16px;
+}
+.ps-auth-flash.alert { background: rgba(138, 36, 24, 0.10); color: var(--rubric-deep); border: 1px solid rgba(138, 36, 24, 0.3); }
+.ps-auth-flash.notice { background: rgba(108, 132, 78, 0.14); color: var(--sepia); border: 1px solid rgba(108, 132, 78, 0.35); }
+.ps-gate .foot {
+  margin-top: 18px;
+  text-align: center;
+  font-family: "Cinzel", serif;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.ps-gate .foot a { color: var(--sepia); text-decoration: none; border-bottom: 1px solid rgba(138, 116, 68, 0.4); padding-bottom: 1px; }
+.ps-gate .foot a:hover { color: var(--rubric); }
+
