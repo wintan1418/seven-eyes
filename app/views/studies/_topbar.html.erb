@@ -8,11 +8,19 @@
       <span>PARALLEL &middot; SCRIPTURE</span>
     <% end %>
   </div>
-  <div class="ps-study-name">
-    <span class="orn">&#10086;</span>
-    <span><%= study_name %></span>
-    <span class="pencil">&#9998;</span>
-  </div>
+  <% if study %>
+    <%= form_with url: study_path(study), method: :patch, data: { controller: "auto-submit" }, class: "ps-study-name" do |f| %>
+      <span class="orn">&#10086;</span>
+      <%= f.text_field :name, value: study.name, class: "ps-study-name-input", autocomplete: "off",
+            "aria-label": "Study name", data: { action: "blur->auto-submit#submit" } %>
+      <span class="pencil">&#9998;</span>
+    <% end %>
+  <% else %>
+    <div class="ps-study-name">
+      <span class="orn">&#10086;</span>
+      <span><%= study_name %></span>
+    </div>
+  <% end %>
   <div class="ps-topbar-actions">
     <div class="ps-pane-picker" title="Pane count">
       <% (1..4).each do |n| %>

@@ -181,6 +181,25 @@ turbo-frame.ps-pane { display: flex; }
 .ps-vnum { text-decoration: none; cursor: pointer; }
 a.ps-vnum:hover { color: var(--rubric-deep); text-decoration: underline; }
 
+/* ---- inline-editable study name (topbar) ---- */
+.ps-study-name-input {
+  flex: 0 1 auto; min-width: 140px; max-width: 440px;
+  background: transparent; border: 0; outline: none; text-align: center;
+  font-family: "EB Garamond", serif; font-style: italic; font-size: 18px;
+  color: #e8d8b0; letter-spacing: 0.02em;
+}
+.ps-study-name-input:focus { border-bottom: 1px solid rgba(163, 129, 46, 0.6); }
+
+/* ---- sidebar study delete affordance ---- */
+.ps-study-item-wrap { position: relative; }
+.ps-study-del {
+  position: absolute; top: 8px; right: 8px; padding: 4px;
+  background: transparent; border: 0; cursor: pointer; line-height: 1;
+  color: var(--sepia-mute); font-size: 12px; opacity: 0; transition: opacity 0.15s;
+}
+.ps-study-item-wrap:hover .ps-study-del { opacity: 1; }
+.ps-study-del:hover { color: var(--rubric); }
+
 /* ---- notes auto-save textarea ---- */
 .ps-notes-area {
   width: 100%; border: 0; background: transparent; resize: vertical;
