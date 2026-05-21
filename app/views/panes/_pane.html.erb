@@ -24,10 +24,24 @@
       <div class="rule"></div>
       <div class="ps-verse-body">
         <% content.verses.each_with_index do |verse, i| %>
-          <%= scripture_verse(verse, dropcap: i.zero? && verse.verse_number == 1) %>
+          <%= scripture_verse(verse, study: pane.study, book: content.book, dropcap: i.zero? && verse.verse_number == 1) %>
         <% end %>
       </div>
     </div>
+
+    <%= form_with url: study_pane_path(pane.study, pane), method: :patch,
+          data: { controller: "notes", turbo: false } do %>
+      <div class="ps-notes">
+        <div class="ps-notes-head">
+          Notes
+          <span class="saving" data-notes-target="status">&mdash; <%= pane.notes.present? ? "Saved" : "auto-saves as you write" %></span>
+        </div>
+        <textarea name="pane[notes]" class="ps-notes-area" rows="3"
+                  placeholder="Write a thought, an outline, a cross-reference to remember…"
+                  data-action="input->notes#schedule"><%= pane.notes %></textarea>
+        <input type="hidden" name="autosave" value="1">
+      </div>
+    <% end %>
   <% elsif content.error == :empty %>
     <div class="ps-pane-empty">
       <div class="orn">&#10086;</div>

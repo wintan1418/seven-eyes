@@ -15,3 +15,9 @@ application.register("book-browser", BookBrowserController)
 
 import AiSearchController from "./ai_search_controller"
 application.register("ai-search", AiSearchController)
+
+import XrefController from "./xref_controller"
+application.register("xref", XrefController)
+
+import NotesController from "./notes_controller"
+application.register("notes", NotesController)

@@ -3,7 +3,13 @@ class PanesController < ApplicationController
     study = current_user.studies.find(params[:study_id])
     @pane = study.panes.find(params[:id])
     @pane.update(pane_params)
-    render partial: "panes/pane", locals: { pane: @pane }
+
+    # Notes auto-save is a background fetch; don't re-render the whole pane frame.
+    if params[:autosave]
+      head :no_content
+    else
+      render partial: "panes/pane", locals: { pane: @pane }
+    end
   end
 
   private

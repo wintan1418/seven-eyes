@@ -1,4 +1,4 @@
-<div class="ps-root" data-controller="book-browser ai-search">
+<div class="ps-root" data-controller="book-browser ai-search xref">
   <%= render "topbar", study_name: @study.name, panes: @study.pane_count,
         sync: @study.sync_scroll, saved: true, study: @study %>
   <div class="ps-shell">
@@ -11,4 +11,5 @@
   </div>
   <%= render "studies/book_browser" %>
   <%= render "studies/ai_search", study: @study %>
+  <%= render "studies/xref_drawer" %>
 </div>

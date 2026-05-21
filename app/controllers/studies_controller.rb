@@ -1,5 +1,5 @@
 class StudiesController < ApplicationController
-  before_action :set_study, only: %i[ show update destroy suggest ]
+  before_action :set_study, only: %i[ show update destroy suggest cross_references ]
 
   def index
     @studies = current_user.studies.recent
@@ -28,6 +28,18 @@ class StudiesController < ApplicationController
     @query = params[:q].to_s
     @result = ScriptureSuggester.call(@query)
     render partial: "studies/ai_results", locals: { study: @study, query: @query, result: @result }
+  end
+
+  def cross_references
+    book = Book.find_by_osis(params[:osis])
+    return head(:not_found) unless book
+
+    translation = Translation.find_by(code: params[:translation].presence) || Translation.find_by(code: "KJV")
+    @origin = "#{book.name} #{params[:chapter]}:#{params[:verse]}"
+    @rows = CrossReferenceLookup.for_verse(
+      book:, chapter: params[:chapter].to_i, verse: params[:verse].to_i, translation:
+    )
+    render partial: "studies/xref_results", locals: { study: @study, origin: @origin, rows: @rows }
   end
 
   def destroy

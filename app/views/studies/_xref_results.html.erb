@@ -1,0 +1,38 @@
+<%# locals: study, origin, rows %>
+<%= turbo_frame_tag "xref_drawer" do %>
+  <div class="ps-drawer-head">
+    <div class="ps-drawer-eyebrow">
+      <span>&#9159; &nbsp; Cross References</span>
+      <button class="close" type="button" data-action="xref#close">&#10005;</button>
+    </div>
+    <div class="ps-drawer-title"><%= origin %></div>
+    <div class="ps-drawer-sub">Treasury of Scripture Knowledge &middot; <%= pluralize(rows.size, "reference") %></div>
+  </div>
+  <div class="ps-drawer-list">
+    <% if rows.empty? %>
+      <div class="ps-ai-hint">No cross-references for this verse.</div>
+    <% else %>
+      <% rows.each do |row| %>
+        <div class="ps-xref">
+          <div class="ps-xref-head">
+            <div class="ps-xref-ref"><%= row.reference %></div>
+            <div class="ps-xref-votes">
+              <%= "●" * [ 5, [ 1, (row.votes / 18.0).round ].max ].min %>
+              <span style="margin-left:4px;">&middot; <%= row.votes %></span>
+            </div>
+          </div>
+          <% if row.preview %>
+            <div class="ps-xref-text"><%= truncate(row.preview, length: 180) %></div>
+          <% end %>
+          <div class="ps-xref-actions">
+            <% study.panes.each do |pane| %>
+              <%= button_to "▸ #{pane_numeral(pane.position)}", study_pane_path(study, pane),
+                    method: :patch, params: { pane: { reference: row.reference } }, class: "ps-xref-load",
+                    form: { data: { turbo_frame: pane.frame_id }, style: "display:contents;" } %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

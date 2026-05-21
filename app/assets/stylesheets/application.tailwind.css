@@ -167,3 +167,26 @@ turbo-frame.ps-pane { display: flex; }
   text-transform: uppercase; color: var(--sepia-mute);
 }
 
+/* ---- cross-reference slide-over (wraps the design's .ps-drawer) ---- */
+.ps-xref-host { position: fixed; inset: 0; z-index: 42; visibility: hidden; pointer-events: none; }
+.ps-xref-host.is-open { visibility: visible; pointer-events: auto; }
+.ps-xref-host.is-open .ps-book-backdrop { opacity: 1; }
+.ps-xref-host .ps-drawer {
+  position: absolute; top: 0; right: 0; height: 100%;
+  transform: translateX(100%); transition: transform 0.22s ease;
+}
+.ps-xref-host.is-open .ps-drawer { transform: translateX(0); }
+
+/* clickable verse number opens the xref drawer */
+.ps-vnum { text-decoration: none; cursor: pointer; }
+a.ps-vnum:hover { color: var(--rubric-deep); text-decoration: underline; }
+
+/* ---- notes auto-save textarea ---- */
+.ps-notes-area {
+  width: 100%; border: 0; background: transparent; resize: vertical;
+  font-family: "EB Garamond", serif; font-style: italic; font-size: 14px;
+  color: var(--ink-soft); line-height: 1.55; outline: none; padding: 0; min-height: 48px;
+}
+.ps-notes-area::placeholder { color: var(--sepia-mute); opacity: 0.7; }
+.ps-notes form, .ps-pane form { margin: 0; }
+

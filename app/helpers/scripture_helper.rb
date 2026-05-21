@@ -38,11 +38,15 @@ module ScriptureHelper
     options_from_collection_for_select(Translation.all, :id, :code, selected_id)
   end
 
-  # Render one verse as the design's superscript-number + text. When +dropcap+ is
-  # set and the verse opens with a letter, the first letter becomes an illuminated
-  # drop cap (manuscript style) and the verse text continues after it.
-  def scripture_verse(verse, dropcap: false)
-    vnum = tag.span(verse.verse_number, class: "ps-vnum")
+  # Render one verse as the design's superscript-number + text. The number is a link
+  # that opens the cross-reference drawer for that verse. When +dropcap+ is set and the
+  # verse opens with a letter, the first letter becomes an illuminated drop cap.
+  def scripture_verse(verse, study:, book:, dropcap: false)
+    vnum = link_to(verse.verse_number,
+                   cross_references_study_path(study, osis: book.osis_code,
+                     chapter: verse.chapter, verse: verse.verse_number, translation: verse.translation.code),
+                   class: "ps-vnum", title: "Cross-references",
+                   data: { turbo_frame: "xref_drawer", action: "xref#open" })
     text = verse.text.to_s
 
     if dropcap && text.match?(/\A\p{Alpha}/)
