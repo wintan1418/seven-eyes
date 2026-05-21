@@ -24,3 +24,6 @@ application.register("notes", NotesController)
 
 import HighlighterController from "./highlighter_controller"
 application.register("highlighter", HighlighterController)
+
+import ShortcutsController from "./shortcuts_controller"
+application.register("shortcuts", ShortcutsController)

@@ -181,6 +181,13 @@ turbo-frame.ps-pane { display: flex; }
 .ps-vnum { text-decoration: none; cursor: pointer; }
 a.ps-vnum:hover { color: var(--rubric-deep); text-decoration: underline; }
 
+/* ---- active pane (keyboard focus) ---- */
+.ps-pane.is-active-pane::before { border-color: rgba(138, 36, 24, 0.5); }
+.ps-pane.is-active-pane .ps-pane-index { background: rgba(138, 36, 24, 0.1); }
+
+/* dynamic toast fades via opacity */
+.ps-toast.js-flash { transition: opacity 0.3s ease; }
+
 /* ---- inline-editable study name (topbar) ---- */
 .ps-study-name-input {
   flex: 0 1 auto; min-width: 140px; max-width: 440px;
