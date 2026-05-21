@@ -235,6 +235,29 @@ a.ps-vnum:hover { color: var(--rubric-deep); text-decoration: underline; }
 .ps-study-item-wrap:hover .ps-study-del { opacity: 1; }
 .ps-study-del:hover { color: var(--rubric); }
 
+/* ---- notes as a hideable popover (doesn't occupy the pane) ---- */
+.ps-notes-form {
+  position: absolute; left: 12px; right: 12px; bottom: 12px;
+  display: none; z-index: 4; margin: 0;
+}
+.ps-notes-form.is-open { display: block; }
+.ps-notes-form .ps-notes {
+  background: var(--vellum-0); border: 1px solid var(--vellum-edge); border-radius: 2px;
+  padding: 10px 14px 12px;
+  box-shadow: 0 -8px 24px -10px rgba(50, 30, 10, 0.45), 0 2px 8px rgba(50, 30, 10, 0.18);
+}
+.ps-notes-form .ps-notes-head { justify-content: space-between; }
+.ps-notes-close {
+  background: transparent; border: 0; cursor: pointer; color: var(--sepia-mute);
+  font-size: 12px; line-height: 1; padding: 2px;
+}
+.ps-notes-close:hover { color: var(--rubric); }
+.ps-pane-tool.has-notes { color: var(--rubric); position: relative; }
+.ps-pane-tool.has-notes::after {
+  content: ""; position: absolute; top: 3px; right: 3px;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--rubric);
+}
+
 /* ---- notes auto-save textarea ---- */
 .ps-notes-area {
   width: 100%; border: 0; background: transparent; resize: vertical;

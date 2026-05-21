@@ -1,4 +1,4 @@
-<%= turbo_frame_tag pane.frame_id, class: "ps-pane" do %>
+<%= turbo_frame_tag pane.frame_id, class: "ps-pane", data: { controller: "pane" } do %>
   <% content = pane.content %>
 
   <%= form_with model: [ pane.study, pane ], method: :patch, data: { controller: "auto-submit" } do |f| %>
@@ -10,7 +10,10 @@
       <%= f.select :translation_id, translation_options(pane.effective_translation&.id),
             {}, class: "ps-trans-select", id: "pane_#{pane.id}_translation",
             "aria-label": "Translation", data: { action: "change->auto-submit#submit" } %>
-      <button type="button" class="ps-pane-tool" title="Cross references" disabled>&#167;</button>
+      <% if content.ok? %>
+        <button type="button" class="ps-pane-tool <%= "has-notes" if pane.notes.present? %>"
+                title="Notes" data-action="pane#toggleNotes">&#9998;</button>
+      <% end %>
       <button type="button" class="ps-pane-tool" title="Browse books"
               data-action="book-browser#open" data-pane-id="<%= pane.id %>">&#128214;</button>
     </div>
@@ -33,14 +36,14 @@
       </div>
     </div>
 
-    <%= form_with url: study_pane_path(pane.study, pane), method: :patch,
-          data: { controller: "notes", turbo: false } do %>
+    <%= form_with url: study_pane_path(pane.study, pane), method: :patch, class: "ps-notes-form",
+          data: { controller: "notes", turbo: false, pane_target: "notes" } do %>
       <div class="ps-notes">
         <div class="ps-notes-head">
-          Notes
-          <span class="saving" data-notes-target="status">&mdash; <%= pane.notes.present? ? "Saved" : "auto-saves as you write" %></span>
+          <span>Notes <span class="saving" data-notes-target="status">&mdash; <%= pane.notes.present? ? "Saved" : "auto-saves as you write" %></span></span>
+          <button type="button" class="ps-notes-close" title="Close notes" data-action="pane#toggleNotes">&#10005;</button>
         </div>
-        <textarea name="pane[notes]" class="ps-notes-area" rows="3"
+        <textarea name="pane[notes]" class="ps-notes-area" rows="4"
                   placeholder="Write a thought, an outline, a cross-reference to remember…"
                   data-action="input->notes#schedule"><%= pane.notes %></textarea>
         <input type="hidden" name="autosave" value="1">

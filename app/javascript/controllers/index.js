@@ -36,3 +36,6 @@ application.register("new-study", NewStudyController)
 
 import SyncScrollController from "./sync_scroll_controller"
 application.register("sync-scroll", SyncScrollController)
+
+import PaneController from "./pane_controller"
+application.register("pane", PaneController)
