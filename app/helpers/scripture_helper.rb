@@ -38,23 +38,46 @@ module ScriptureHelper
     options_from_collection_for_select(Translation.all, :id, :code, selected_id)
   end
 
-  # Render one verse as the design's superscript-number + text. The number is a link
-  # that opens the cross-reference drawer for that verse. When +dropcap+ is set and the
-  # verse opens with a letter, the first letter becomes an illuminated drop cap.
-  def scripture_verse(verse, study:, book:, dropcap: false)
+  # Render one verse: a clickable superscript number (opens cross-references) plus
+  # the verse text in a selectable container (used by the highlighter). The opening
+  # drop cap is a pure-CSS ::first-letter treatment so character offsets stay exact.
+  def scripture_verse(verse, study:, book:, highlights: [], dropcap: false)
     vnum = link_to(verse.verse_number,
                    cross_references_study_path(study, osis: book.osis_code,
                      chapter: verse.chapter, verse: verse.verse_number, translation: verse.translation.code),
                    class: "ps-vnum", title: "Cross-references",
                    data: { turbo_frame: "xref_drawer", action: "xref#open" })
-    text = verse.text.to_s
 
-    if dropcap && text.match?(/\A\p{Alpha}/)
-      cap = tag.span(text[0], class: "ps-dropcap")
-      verse_span = tag.span(safe_join([ vnum, text[1..], " " ]), class: "ps-verse")
-      safe_join([ cap, verse_span ])
-    else
-      tag.span(safe_join([ vnum, text, " " ]), class: "ps-verse")
+    text = verse.text.to_s
+    use_cap = dropcap && text.match?(/\A\p{Alpha}/)
+    base = use_cap ? 1 : 0
+
+    text_span = tag.span(highlight_text(text, highlights, base: base),
+                         class: "ps-verse-text", data: { verse_id: verse.id, offset_base: base })
+
+    parts = [ vnum ]
+    parts << tag.span(text[0], class: "ps-dropcap", aria: { hidden: true }) if use_cap
+    parts << text_span
+    parts << " "
+    tag.span(safe_join(parts), class: "ps-verse")
+  end
+
+  # Render verse text from index +base+, wrapping each highlighted [char_start, char_end)
+  # range (offsets index the full verse text) in an .hl-COLOR span. Overlaps are skipped.
+  def highlight_text(text, highlights, base: 0)
+    return html_escape(text[base..] || "") if highlights.blank?
+
+    pieces = []
+    cursor = base
+    highlights.sort_by(&:char_start).each do |h|
+      s = h.char_start.clamp(base, text.length)
+      e = h.char_end.clamp(s, text.length)
+      next if s < cursor
+      pieces << html_escape(text[cursor...s]) if s > cursor
+      pieces << tag.span(html_escape(text[s...e]), class: "hl-#{h.color}", data: { highlight_id: h.id })
+      cursor = e
     end
+    pieces << html_escape(text[cursor..]) if cursor < text.length
+    safe_join(pieces)
   end
 end

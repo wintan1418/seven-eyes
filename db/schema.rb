@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_21_175542) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_21_184818) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_175542) do
     t.integer "votes", default: 0, null: false
     t.index ["from_book_id", "from_chapter", "from_verse"], name: "index_xrefs_on_from_location"
     t.index ["to_book_id"], name: "index_cross_references_on_to_book_id"
+  end
+
+  create_table "highlights", force: :cascade do |t|
+    t.integer "char_end", null: false
+    t.integer "char_start", null: false
+    t.integer "color", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.bigint "verse_id", null: false
+    t.index ["user_id", "verse_id"], name: "index_highlights_on_user_id_and_verse_id"
+    t.index ["user_id"], name: "index_highlights_on_user_id"
+    t.index ["verse_id"], name: "index_highlights_on_verse_id"
   end
 
   create_table "panes", force: :cascade do |t|
@@ -109,6 +122,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_175542) do
 
   add_foreign_key "cross_references", "books", column: "from_book_id"
   add_foreign_key "cross_references", "books", column: "to_book_id"
+  add_foreign_key "highlights", "users"
+  add_foreign_key "highlights", "verses"
   add_foreign_key "panes", "studies"
   add_foreign_key "panes", "translations"
   add_foreign_key "sessions", "users"

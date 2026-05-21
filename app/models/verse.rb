@@ -1,6 +1,7 @@
 class Verse < ApplicationRecord
   belongs_to :translation
   belongs_to :book
+  has_many :highlights, dependent: :destroy
 
   validates :chapter, :verse_number, :text, presence: true
   validates :verse_number,

@@ -22,9 +22,12 @@
         <span class="tag">&middot; <%= content.translation.name %></span>
       </div>
       <div class="rule"></div>
-      <div class="ps-verse-body">
+      <% highlights_by_verse = current_user.highlights.where(verse_id: content.verses.map(&:id)).group_by(&:verse_id) %>
+      <div class="ps-verse-body" data-controller="highlighter">
         <% content.verses.each_with_index do |verse, i| %>
-          <%= scripture_verse(verse, study: pane.study, book: content.book, dropcap: i.zero? && verse.verse_number == 1) %>
+          <%= scripture_verse(verse, study: pane.study, book: content.book,
+                highlights: highlights_by_verse[verse.id] || [],
+                dropcap: i.zero? && verse.verse_number == 1) %>
         <% end %>
       </div>
     </div>

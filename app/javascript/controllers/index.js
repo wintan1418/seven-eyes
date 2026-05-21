@@ -21,3 +21,6 @@ application.register("xref", XrefController)
 
 import NotesController from "./notes_controller"
 application.register("notes", NotesController)
+
+import HighlighterController from "./highlighter_controller"
+application.register("highlighter", HighlighterController)

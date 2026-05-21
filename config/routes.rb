@@ -8,6 +8,8 @@ Rails.application.routes.draw do
     get :cross_references, on: :member
   end
 
+  resources :highlights, only: %i[ create destroy ]
+
   root "studies#index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
