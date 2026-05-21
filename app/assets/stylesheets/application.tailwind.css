@@ -76,3 +76,22 @@ body > .ps-root { height: 100vh; }
 .ps-gate .foot a { color: var(--sepia); text-decoration: none; border-bottom: 1px solid rgba(138, 116, 68, 0.4); padding-bottom: 1px; }
 .ps-gate .foot a:hover { color: var(--rubric); }
 
+/* ---- pane translation dropdown (real <select> styled like .ps-trans) ---- */
+.ps-trans-select {
+  padding: 5px 8px;
+  border: 1px solid rgba(138, 116, 68, 0.4);
+  border-radius: 2px;
+  font: 600 10.5px "Cinzel", serif;
+  letter-spacing: 0.14em;
+  color: var(--sepia);
+  background: rgba(255, 247, 224, 0.55);
+  text-transform: uppercase;
+  cursor: pointer;
+  max-width: 96px;
+}
+.ps-trans-select:focus { outline: none; border-color: var(--rubric); }
+.ps-pane-tool:disabled { opacity: 0.4; cursor: default; }
+
+/* turbo-frame is the replaceable pane unit; make it lay out like the section */
+turbo-frame.ps-pane { display: flex; }
+

@@ -3,10 +3,10 @@
 <aside class="ps-sidebar">
   <div class="ps-sidebar-head">
     <div class="ps-sidebar-title">The Scriptorium</div>
-    <button class="ps-new-study">
+    <%= button_to studies_path, class: "ps-new-study", form: { style: "margin:0;" } do %>
       <span class="plus">&#10010;</span>
       <span>New Study</span>
-    </button>
+    <% end %>
   </div>
 
   <% if studies.blank? %>
@@ -22,10 +22,10 @@
     <div class="ps-sidebar-section">Recent</div>
     <div class="ps-study-list">
       <% studies.each do |study| %>
-        <div class="ps-study-item <%= "is-active" if active_id == study.id %>">
+        <%= link_to study_path(study), class: "ps-study-item #{'is-active' if active_id == study.id}", style: "text-decoration:none;" do %>
           <div class="nm"><%= study.name %></div>
           <div class="meta"><%= pluralize(study.pane_count, "pane") %> &middot; <%= time_ago_in_words(study.last_opened_at || study.updated_at) %> ago</div>
-        </div>
+        <% end %>
       <% end %>
     </div>
   <% end %>

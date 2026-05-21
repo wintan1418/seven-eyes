@@ -1,0 +1,12 @@
+<div class="ps-root">
+  <%= render "topbar", study_name: @study.name, panes: @study.pane_count,
+        sync: @study.sync_scroll, saved: true %>
+  <div class="ps-shell">
+    <%= render "sidebar", studies: @studies, active_id: @study.id %>
+    <main class="ps-workspace <%= workspace_cols_class(@study.pane_count) %>">
+      <% @study.panes.each do |pane| %>
+        <%= render "panes/pane", pane: pane %>
+      <% end %>
+    </main>
+  </div>
+</div>

@@ -2,6 +2,10 @@ Rails.application.routes.draw do
   resource :session
   resources :passwords, param: :token
 
+  resources :studies, only: %i[ index show create destroy ] do
+    resources :panes, only: %i[ update ]
+  end
+
   root "studies#index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

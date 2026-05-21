@@ -1,0 +1,60 @@
+<%= turbo_frame_tag pane.frame_id, class: "ps-pane" do %>
+  <% content = pane.content %>
+
+  <%= form_with model: [ pane.study, pane ], method: :patch, data: { controller: "auto-submit" } do |f| %>
+    <div class="ps-pane-head">
+      <div class="ps-pane-index"><%= pane_numeral(pane.position) %></div>
+      <%= f.text_field :reference, value: pane.reference,
+            placeholder: "Type a reference…", autocomplete: "off", spellcheck: "false",
+            class: "ps-search#{' empty' if pane.empty?}" %>
+      <%= f.select :translation_id, translation_options(pane.effective_translation&.id),
+            {}, class: "ps-trans-select", data: { action: "change->auto-submit#submit" } %>
+      <button type="button" class="ps-pane-tool" title="Cross references" disabled>&#9159;</button>
+      <button type="button" class="ps-pane-tool" title="More" disabled>&#8943;</button>
+    </div>
+  <% end %>
+
+  <% if content.ok? %>
+    <div class="ps-verses">
+      <div class="ref-title">
+        <span><%= reference_title(content.book, content.parsed.chapter) %></span>
+        <span class="tag">&middot; <%= content.translation.name %></span>
+      </div>
+      <div class="rule"></div>
+      <div class="ps-verse-body">
+        <% content.verses.each_with_index do |verse, i| %>
+          <%= scripture_verse(verse, dropcap: i.zero? && verse.verse_number == 1) %>
+        <% end %>
+      </div>
+    </div>
+  <% elsif content.error == :empty %>
+    <div class="ps-pane-empty">
+      <div class="orn">&#10086;</div>
+      <div class="lead">Pane <%= pane_numeral(pane.position) %> stands ready</div>
+      <div class="hint">Type a reference &mdash; <em>Jn 3:16, Rom 5, 1 Cor 13</em> &mdash; to summon the text.</div>
+      <div style="display:flex; gap:6px; margin-top:6px;">
+        <span class="kbd">&#8984; K</span>
+        <span class="kbd"><%= pane.position + 1 %></span>
+      </div>
+    </div>
+  <% else %>
+    <div class="ps-pane-empty">
+      <div class="orn">&#9888;</div>
+      <div class="lead">
+        <% case content.error %>
+        <% when :not_found %>
+          Not found in <%= content.translation&.code %>
+        <% else %>
+          That reference could not be read
+        <% end %>
+      </div>
+      <div class="hint">
+        <% if content.error == :not_found %>
+          &ldquo;<%= pane.reference %>&rdquo; isn&rsquo;t in this translation. Try another reference or version.
+        <% else %>
+          Try a form like <em>John 3:16</em>, <em>Rom 5</em>, or <em>1 Cor 13:1-13</em>.
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+<% end %>

@@ -16,7 +16,13 @@
           <span class="ref">Psalm CXIX &middot; 18 &middot; KJV</span>
         </div>
         <div class="cta-row">
-          <button class="cta">&#10010; &nbsp; Begin a New Study</button>
+          <%= button_to studies_path, class: "cta", form: { style: "margin:0;" } do %>
+            &#10010; &nbsp; Begin a New Study
+          <% end %>
+          <% if (resume = @studies.first) %>
+            <%= link_to "↻  Resume #{truncate(resume.name, length: 28)}", study_path(resume),
+                  class: "cta secondary", style: "text-decoration:none;" %>
+          <% end %>
         </div>
         <div style="margin-top: 38px; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.22em; color: var(--sepia-mute); text-transform: uppercase;">
           <span>kjv &middot; asv &middot; bsb &middot; web &middot; darby &middot; ylt</span>

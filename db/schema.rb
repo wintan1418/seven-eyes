@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_21_172502) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_21_175542) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -42,6 +42,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_172502) do
     t.index ["to_book_id"], name: "index_cross_references_on_to_book_id"
   end
 
+  create_table "panes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "notes"
+    t.integer "position", default: 0, null: false
+    t.string "reference"
+    t.bigint "study_id", null: false
+    t.bigint "translation_id"
+    t.datetime "updated_at", null: false
+    t.index ["study_id", "position"], name: "index_panes_on_study_id_and_position", unique: true
+    t.index ["study_id"], name: "index_panes_on_study_id"
+    t.index ["translation_id"], name: "index_panes_on_translation_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -49,6 +62,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_172502) do
     t.string "user_agent"
     t.bigint "user_id", null: false
     t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
+  create_table "studies", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "last_opened_at"
+    t.string "name", default: "Untitled Study", null: false
+    t.integer "pane_count", default: 4, null: false
+    t.boolean "sync_scroll", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "last_opened_at"], name: "index_studies_on_user_id_and_last_opened_at"
+    t.index ["user_id"], name: "index_studies_on_user_id"
   end
 
   create_table "translations", force: :cascade do |t|
@@ -84,7 +109,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_172502) do
 
   add_foreign_key "cross_references", "books", column: "from_book_id"
   add_foreign_key "cross_references", "books", column: "to_book_id"
+  add_foreign_key "panes", "studies"
+  add_foreign_key "panes", "translations"
   add_foreign_key "sessions", "users"
+  add_foreign_key "studies", "users"
   add_foreign_key "verses", "books"
   add_foreign_key "verses", "translations"
 end
