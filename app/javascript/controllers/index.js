@@ -9,3 +9,6 @@ application.register("hello", HelloController)
 
 import AutoSubmitController from "./auto_submit_controller"
 application.register("auto-submit", AutoSubmitController)
+
+import BookBrowserController from "./book_browser_controller"
+application.register("book-browser", BookBrowserController)

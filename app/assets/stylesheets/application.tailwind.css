@@ -95,3 +95,41 @@ body > .ps-root { height: 100vh; }
 /* turbo-frame is the replaceable pane unit; make it lay out like the section */
 turbo-frame.ps-pane { display: flex; }
 
+/* ---- book browser (slide-over) ---- */
+.ps-book-drawer { position: fixed; inset: 0; z-index: 40; visibility: hidden; pointer-events: none; }
+.ps-book-drawer.is-open { visibility: visible; pointer-events: auto; }
+.ps-book-backdrop { position: absolute; inset: 0; background: rgba(35, 20, 8, 0.45); opacity: 0; transition: opacity 0.2s; }
+.ps-book-drawer.is-open .ps-book-backdrop { opacity: 1; }
+.ps-book-panel {
+  position: absolute; top: 0; right: 0; height: 100%; width: 384px;
+  background: linear-gradient(180deg, #ebdfc1 0%, #dec99a 100%);
+  border-left: 1px solid var(--vellum-edge);
+  box-shadow: -12px 0 30px -10px rgba(50, 30, 10, 0.45);
+  transform: translateX(100%); transition: transform 0.22s ease;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.ps-book-drawer.is-open .ps-book-panel { transform: translateX(0); }
+.ps-book-list { overflow-y: auto; padding-bottom: 20px; }
+.ps-book-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 4px 16px 12px; }
+.ps-book {
+  text-align: left; padding: 8px 10px; background: var(--vellum-0);
+  border: 1px solid var(--vellum-edge); border-radius: 2px;
+  font: 14px "EB Garamond", serif; color: var(--ink-soft); cursor: pointer;
+}
+.ps-book:hover { background: #fff7e0; color: var(--rubric); }
+.ps-book-back {
+  margin: 12px 16px 4px; background: transparent; border: 0; color: var(--sepia);
+  font: 600 10px "Cinzel", serif; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
+}
+.ps-book-back:hover { color: var(--rubric); }
+.ps-chapter-grid {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
+  padding: 0 16px 20px; overflow-y: auto;
+}
+.ps-chapter {
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  background: var(--vellum-0); border: 1px solid var(--vellum-edge); border-radius: 2px;
+  font: 600 13px "EB Garamond", serif; color: var(--ink-soft); cursor: pointer;
+}
+.ps-chapter:hover { background: var(--rubric); color: var(--vellum-0); border-color: var(--rubric); }
+

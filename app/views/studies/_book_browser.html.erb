@@ -1,0 +1,32 @@
+<div class="ps-book-drawer" data-book-browser-target="drawer">
+  <div class="ps-book-backdrop" data-action="book-browser#close"></div>
+  <aside class="ps-book-panel" data-book-browser-target="panel">
+    <div class="ps-drawer-head">
+      <div class="ps-drawer-eyebrow">
+        <span>&#128214; &nbsp; The Books</span>
+        <button class="close" type="button" data-action="book-browser#close">&#10005;</button>
+      </div>
+      <div class="ps-drawer-title" data-book-browser-target="crumb">Genesis &mdash; Revelation</div>
+    </div>
+
+    <%# Book list, grouped by testament %>
+    <div class="ps-book-list" data-book-browser-target="books">
+      <% { old: "Old Testament", new: "New Testament" }.each do |testament, label| %>
+        <div class="ps-sidebar-section" style="padding-left:20px;"><%= label %></div>
+        <div class="ps-book-grid">
+          <% Bible::Canon.all.select { |b| b.testament == testament }.each do |b| %>
+            <button type="button" class="ps-book" data-name="<%= b.name %>"
+                    data-chapters="<%= b.chapter_count %>"
+                    data-action="book-browser#selectBook"><%= b.name %></button>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Chapter grid for the chosen book (populated by Stimulus) %>
+    <div data-book-browser-target="chapters" hidden>
+      <button type="button" class="ps-book-back" data-action="book-browser#back">&larr; All books</button>
+      <div class="ps-chapter-grid" data-book-browser-target="chapterGrid"></div>
+    </div>
+  </aside>
+</div>

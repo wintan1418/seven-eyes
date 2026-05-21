@@ -10,7 +10,8 @@
       <%= f.select :translation_id, translation_options(pane.effective_translation&.id),
             {}, class: "ps-trans-select", data: { action: "change->auto-submit#submit" } %>
       <button type="button" class="ps-pane-tool" title="Cross references" disabled>&#9159;</button>
-      <button type="button" class="ps-pane-tool" title="More" disabled>&#8943;</button>
+      <button type="button" class="ps-pane-tool" title="Browse books"
+              data-action="book-browser#open" data-pane-id="<%= pane.id %>">&#128214;</button>
     </div>
   <% end %>
 
