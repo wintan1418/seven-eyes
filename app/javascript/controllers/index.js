@@ -33,3 +33,6 @@ application.register("auth-gate", AuthGateController)
 
 import NewStudyController from "./new_study_controller"
 application.register("new-study", NewStudyController)
+
+import SyncScrollController from "./sync_scroll_controller"
+application.register("sync-scroll", SyncScrollController)

@@ -3,7 +3,8 @@
         sync: @study.sync_scroll, saved: true, study: @study %>
   <div class="ps-shell">
     <%= render "sidebar", studies: @studies, active_id: @study.id %>
-    <main class="ps-workspace <%= workspace_cols_class(@study.pane_count) %>">
+    <main class="ps-workspace <%= workspace_cols_class(@study.pane_count) %>"
+          data-controller="sync-scroll" data-sync-scroll-enabled-value="<%= @study.sync_scroll %>">
       <% @study.panes.each do |pane| %>
         <%= render "panes/pane", pane: pane %>
       <% end %>
