@@ -8,7 +8,8 @@
             placeholder: "Type a reference…", autocomplete: "off", spellcheck: "false",
             class: "ps-search#{' empty' if pane.empty?}" %>
       <%= f.select :translation_id, translation_options(pane.effective_translation&.id),
-            {}, class: "ps-trans-select", data: { action: "change->auto-submit#submit" } %>
+            {}, class: "ps-trans-select", id: "pane_#{pane.id}_translation",
+            "aria-label": "Translation", data: { action: "change->auto-submit#submit" } %>
       <button type="button" class="ps-pane-tool" title="Cross references" disabled>&#167;</button>
       <button type="button" class="ps-pane-tool" title="Browse books"
               data-action="book-browser#open" data-pane-id="<%= pane.id %>">&#128214;</button>
