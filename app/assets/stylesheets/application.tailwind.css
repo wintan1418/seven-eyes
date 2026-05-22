@@ -267,3 +267,77 @@ a.ps-vnum:hover { color: var(--rubric-deep); text-decoration: underline; }
 .ps-notes-area::placeholder { color: var(--sepia-mute); opacity: 0.7; }
 .ps-notes form, .ps-pane form { margin: 0; }
 
+/* =====================================================================
+   Mobile / small-screen layout.
+   The workspace was built desktop-first (side-by-side panes). On a phone
+   we drop the multi-column grid and stack everything vertically so the
+   page scrolls top-to-bottom: topbar -> studies -> one pane at a time.
+   ===================================================================== */
+@media (max-width: 760px) {
+  /* let the whole app grow and scroll instead of locking to 100vh */
+  html, body { height: auto; }
+  body > .ps-root { height: auto; min-height: 100vh; }
+  .ps-root { overflow: visible; }
+
+  /* topbar wraps onto multiple rows instead of overflowing off-screen */
+  .ps-topbar {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    gap: 8px 10px;
+  }
+  .ps-brand { font-size: 12px; letter-spacing: 0.12em; }
+  .ps-study-name {
+    order: 3; flex: 1 0 100%;
+    justify-content: flex-start; font-size: 16px;
+  }
+  .ps-study-name-input { text-align: left; }
+  .ps-topbar-actions {
+    order: 4; flex: 1 0 100%;
+    flex-wrap: wrap; justify-content: flex-start;
+    gap: 6px; font-size: 9.5px;
+  }
+  .ps-tb-btn { padding: 6px 9px; }
+
+  /* shell stacks vertically */
+  .ps-shell { flex-direction: column; min-height: 0; }
+
+  /* sidebar becomes a capped, scrollable strip above the workspace */
+  .ps-sidebar {
+    width: 100%; flex: 0 0 auto;
+    max-height: 34vh; overflow-y: auto;
+    border-right: 0; border-bottom: 1px solid var(--vellum-edge);
+    box-shadow: none;
+  }
+  .ps-sidebar::after { display: none; }
+
+  /* one pane per row; the page scrolls between stacked panes */
+  .ps-workspace {
+    display: flex; flex-direction: column;
+    gap: 14px; padding: 14px;
+    overflow: visible;
+  }
+  .ps-workspace.cols-1,
+  .ps-workspace.cols-2,
+  .ps-workspace.cols-3,
+  .ps-workspace.cols-4 {
+    grid-template-columns: none;
+    grid-template-rows: none;
+  }
+  /* each pane is a tall viewport whose verses scroll internally */
+  .ps-pane { height: 78vh; min-height: 420px; flex: 0 0 auto; }
+  .ps-verses { padding: 16px 18px; font-size: 17px; }
+
+  /* slide-over drawers take the full width on a phone */
+  .ps-book-panel, .ps-ai-panel { width: 100%; max-width: 100%; }
+  .ps-xref-host .ps-drawer,
+  .ps-drawer { width: 100%; max-width: 100%; flex-basis: 100%; }
+
+  /* modals fit the screen and stay centered in the viewport */
+  .ps-modal-shroud { position: fixed; }
+  .ps-modal { width: auto; max-width: 92vw; padding: 22px 20px 20px; }
+
+  /* keyboard-shortcut hint isn't useful on touch */
+  .ps-shortcut-hint { display: none; }
+}
+
