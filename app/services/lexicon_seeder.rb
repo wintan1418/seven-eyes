@@ -66,7 +66,8 @@ class LexiconSeeder
     begin
       attempts += 1
       URI.parse(@url).open(read_timeout: 60, &:read).force_encoding("UTF-8")
-    rescue SocketError, Socket::ResolutionError, Errno::ECONNRESET, Net::OpenTimeout, Net::ReadTimeout, OpenURI::HTTPError
+    rescue SocketError, SystemCallError, Net::OpenTimeout, Net::ReadTimeout, OpenSSL::SSL::SSLError, OpenURI::HTTPError
+      # SystemCallError covers all Errno::* network failures (ENETUNREACH, EHOSTUNREACH, …).
       raise if attempts >= 8
       sleep([ 2 * attempts, 15 ].min)
       retry

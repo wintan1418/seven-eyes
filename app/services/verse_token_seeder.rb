@@ -91,7 +91,8 @@ class VerseTokenSeeder
       JSON.parse(body)
     rescue OpenURI::HTTPError
       []
-    rescue SocketError, Socket::ResolutionError, Errno::ECONNRESET, Net::OpenTimeout, Net::ReadTimeout, JSON::ParserError
+    rescue SocketError, SystemCallError, Net::OpenTimeout, Net::ReadTimeout, OpenSSL::SSL::SSLError, JSON::ParserError
+      # SystemCallError covers all Errno::* network failures (ENETUNREACH, EHOSTUNREACH, …).
       if attempts < 8
         sleep([ 2 * attempts, 15 ].min)
         retry
