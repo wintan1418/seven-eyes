@@ -8,6 +8,8 @@ Rails.application.routes.draw do
     get :suggest, on: :member
     get :search, on: :member
     get :cross_references, on: :member
+    get :commentary, on: :member
+    get "lexicon/:strongs", on: :member, action: :lexicon, as: :lexicon
   end
 
   resources :highlights, only: %i[ create destroy ]

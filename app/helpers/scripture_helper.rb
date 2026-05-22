@@ -48,6 +48,14 @@ module ScriptureHelper
                    class: "ps-vnum", title: "Cross-references",
                    data: { turbo_frame: "xref_drawer", action: "xref#open" })
 
+    # Word-by-word Strong's tagging (KJV) takes precedence when present and the
+    # verse isn't highlighted — highlight rendering and per-word spans don't mix.
+    if verse.tokens.present? && highlights.blank?
+      text_span = tag.span(strongs_tokens(verse.tokens, study),
+                           class: "ps-verse-text", data: { verse_id: verse.id, offset_base: 0 })
+      return tag.span(safe_join([ vnum, text_span, " " ]), class: "ps-verse")
+    end
+
     text = verse.text.to_s
     use_cap = dropcap && text.match?(/\A\p{Alpha}/)
     base = use_cap ? 1 : 0
@@ -60,6 +68,21 @@ module ScriptureHelper
     parts << text_span
     parts << " "
     tag.span(safe_join(parts), class: "ps-verse")
+  end
+
+  # Render Strong's-tagged tokens: words with an "s" become clickable lexicon
+  # links; everything else is plain text. Joined so the verse reads normally.
+  def strongs_tokens(tokens, study)
+    safe_join(tokens.map do |t|
+      surface = t["w"].to_s
+      if t["s"].present?
+        link_to(surface, lexicon_study_path(study, strongs: t["s"]),
+                class: "ps-word", title: t["s"],
+                data: { turbo_frame: "lexicon_drawer", action: "lexicon#open" })
+      else
+        surface
+      end
+    end)
   end
 
   # Render verse text from index +base+, wrapping each highlighted [char_start, char_end)

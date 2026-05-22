@@ -9,6 +9,9 @@ class Verse < ApplicationRecord
 
   scope :ordered, -> { order(:chapter, :verse_number) }
 
+  # Verses whose word tokens include a given Strong's number (KJV is tagged).
+  scope :with_strongs, ->(strongs) { where("tokens @> ?", [ { s: strongs.to_s.upcase } ].to_json) }
+
   # Full-text search within one translation, ranked by relevance. Uses the
   # generated `text_vector` column (GIN-indexed). `websearch_to_tsquery` accepts
   # natural input ("love your enemies", quoted phrases, OR) and never raises on

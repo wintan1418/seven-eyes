@@ -48,3 +48,9 @@ application.register("reader", ReaderController)
 
 import MemorizeController from "./memorize_controller"
 application.register("memorize", MemorizeController)
+
+import CommentaryController from "./commentary_controller"
+application.register("commentary", CommentaryController)
+
+import LexiconController from "./lexicon_controller"
+application.register("lexicon", LexiconController)

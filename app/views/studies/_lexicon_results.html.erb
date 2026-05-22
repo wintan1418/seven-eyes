@@ -1,0 +1,59 @@
+<%# locals: study, strongs, entry, count, samples %>
+<%= turbo_frame_tag "lexicon_drawer" do %>
+  <div class="ps-drawer-head">
+    <div class="ps-drawer-eyebrow">
+      <span>&#8501; &nbsp; Word Study</span>
+      <button class="close" type="button" data-action="lexicon#close">&#10005;</button>
+    </div>
+    <% if entry %>
+      <div class="ps-lex-lemma"><%= entry.lemma.presence || strongs %></div>
+      <div class="ps-drawer-sub">
+        <% if entry.translit.present? %><span class="ps-lex-translit"><%= entry.translit %></span> &middot; <% end %>
+        <span class="ps-lex-code"><%= strongs %></span> &middot; <%= entry.language.titleize %>
+      </div>
+    <% else %>
+      <div class="ps-drawer-title"><%= strongs %></div>
+      <div class="ps-drawer-sub">No lexicon entry found for this number.</div>
+    <% end %>
+  </div>
+
+  <div class="ps-drawer-list">
+    <% if entry %>
+      <div class="ps-lex-section">
+        <% if entry.definition.present? %>
+          <div class="ps-lex-label">Definition</div>
+          <div class="ps-lex-text"><%= entry.definition %></div>
+        <% end %>
+        <% if entry.kjv_def.present? %>
+          <div class="ps-lex-label">KJV usage</div>
+          <div class="ps-lex-text"><%= entry.kjv_def %></div>
+        <% end %>
+        <% if entry.derivation.present? %>
+          <div class="ps-lex-label">Derivation</div>
+          <div class="ps-lex-text ps-lex-muted"><%= entry.derivation %></div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div class="ps-lex-section">
+      <div class="ps-lex-label"><%= pluralize(count, "occurrence") %> in the KJV</div>
+      <% samples.each do |verse| %>
+        <% ref = "#{verse.book.name} #{verse.chapter}:#{verse.verse_number}" %>
+        <div class="ps-xref">
+          <div class="ps-xref-head"><div class="ps-xref-ref"><%= ref %></div></div>
+          <div class="ps-xref-text"><%= truncate(verse.text, length: 150) %></div>
+          <div class="ps-xref-actions">
+            <% study.panes.each do |pane| %>
+              <%= button_to "▸ #{pane_numeral(pane.position)}", study_pane_path(study, pane),
+                    method: :patch, params: { pane: { reference: ref } }, class: "ps-xref-load",
+                    form: { data: { turbo_frame: pane.frame_id }, style: "display:contents;" } %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+      <% if count > samples.size %>
+        <div class="ps-ai-hint">&hellip; and <%= count - samples.size %> more.</div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

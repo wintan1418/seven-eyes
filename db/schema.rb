@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_22_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_22_140100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -24,6 +24,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_22_120000) do
     t.datetime "updated_at", null: false
     t.index ["osis_code"], name: "index_books_on_osis_code", unique: true
     t.index ["position"], name: "index_books_on_position", unique: true
+  end
+
+  create_table "commentaries", force: :cascade do |t|
+    t.text "body", null: false
+    t.bigint "book_id", null: false
+    t.integer "chapter", null: false
+    t.datetime "created_at", null: false
+    t.string "source", null: false
+    t.string "source_name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id", "chapter"], name: "index_commentaries_on_book_and_chapter"
+    t.index ["book_id"], name: "index_commentaries_on_book_id"
+    t.index ["source", "book_id", "chapter"], name: "index_commentaries_unique", unique: true
   end
 
   create_table "cross_references", force: :cascade do |t|
@@ -53,6 +66,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_22_120000) do
     t.index ["user_id", "verse_id"], name: "index_highlights_on_user_id_and_verse_id"
     t.index ["user_id"], name: "index_highlights_on_user_id"
     t.index ["verse_id"], name: "index_highlights_on_verse_id"
+  end
+
+  create_table "lexicon_entries", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "definition"
+    t.text "derivation"
+    t.text "kjv_def"
+    t.string "language", null: false
+    t.string "lemma"
+    t.string "strongs", null: false
+    t.string "translit"
+    t.datetime "updated_at", null: false
+    t.index ["strongs"], name: "index_lexicon_entries_on_strongs", unique: true
   end
 
   create_table "panes", force: :cascade do |t|
@@ -113,15 +139,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_22_120000) do
     t.datetime "created_at", null: false
     t.text "text", null: false
     t.virtual "text_vector", type: :tsvector, as: "to_tsvector('english'::regconfig, COALESCE(text, ''::text))", stored: true
+    t.jsonb "tokens"
     t.bigint "translation_id", null: false
     t.datetime "updated_at", null: false
     t.integer "verse_number", null: false
     t.index ["book_id", "chapter"], name: "index_verses_on_book_id_and_chapter"
     t.index ["text_vector"], name: "index_verses_on_text_vector", using: :gin
+    t.index ["tokens"], name: "index_verses_on_tokens", using: :gin
     t.index ["translation_id", "book_id", "chapter", "verse_number"], name: "index_verses_unique_location", unique: true
     t.index ["translation_id"], name: "index_verses_on_translation_id"
   end
 
+  add_foreign_key "commentaries", "books"
   add_foreign_key "cross_references", "books", column: "from_book_id"
   add_foreign_key "cross_references", "books", column: "to_book_id"
   add_foreign_key "highlights", "users"

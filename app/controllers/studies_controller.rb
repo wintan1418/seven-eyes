@@ -1,8 +1,8 @@
 class StudiesController < ApplicationController
   # The workspace is open to everyone; only saving (notes/highlights/account) needs auth.
-  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest search ]
+  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest search commentary lexicon ]
 
-  before_action :set_study, only: %i[ show update destroy suggest search cross_references ]
+  before_action :set_study, only: %i[ show update destroy suggest search cross_references commentary lexicon ]
 
   def index
     @studies = authenticated? ? current_user.studies.recent : []
@@ -50,6 +50,28 @@ class StudiesController < ApplicationController
     @results = @translation ? Verse.search(@query, translation: @translation) : Verse.none
     render partial: "studies/search_results",
            locals: { study: @study, query: @query, results: @results, translation: @translation }
+  end
+
+  def commentary
+    book = Book.find_by_osis(params[:osis])
+    return head(:not_found) unless book
+
+    @book = book
+    @chapter = params[:chapter].to_i
+    @entries = Commentary.for_chapter(book, @chapter)
+    render partial: "studies/commentary_results",
+           locals: { book:, chapter: @chapter, entries: @entries }
+  end
+
+  def lexicon
+    @strongs = params[:strongs].to_s.upcase
+    @entry = LexiconEntry.lookup(@strongs)
+    occurrences = Verse.with_strongs(@strongs)
+    @count = occurrences.count
+    @samples = occurrences.includes(:book).joins(:book)
+                          .order("books.position", "verses.chapter", "verses.verse_number").limit(8)
+    render partial: "studies/lexicon_results",
+           locals: { study: @study, strongs: @strongs, entry: @entry, count: @count, samples: @samples }
   end
 
   def cross_references

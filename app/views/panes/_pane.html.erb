@@ -11,6 +11,9 @@
             {}, class: "ps-trans-select", id: "pane_#{pane.id}_translation",
             "aria-label": "Translation", data: { action: "change->auto-submit#submit" } %>
       <% if content.ok? %>
+        <%= link_to "\u{1F4DC}", commentary_study_path(pane.study, osis: content.book.osis_code, chapter: content.parsed.chapter),
+              class: "ps-pane-tool", title: "Commentary",
+              data: { turbo_frame: "commentary_drawer", action: "commentary#open" } %>
         <button type="button" class="ps-pane-tool" title="Read aloud"
                 data-action="reader#toggle" data-reader-target="button">&#9658;</button>
         <button type="button" class="ps-pane-tool" title="Memorize mode"

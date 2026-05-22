@@ -1,0 +1,14 @@
+<div class="ps-xref-host ps-lexicon-host" data-lexicon-target="host">
+  <div class="ps-book-backdrop" data-action="lexicon#close"></div>
+  <aside class="ps-drawer">
+    <%= turbo_frame_tag "lexicon_drawer" do %>
+      <div class="ps-drawer-head">
+        <div class="ps-drawer-eyebrow">
+          <span>&#8501; &nbsp; Word Study</span>
+          <button class="close" type="button" data-action="lexicon#close">&#10005;</button>
+        </div>
+        <div class="ps-drawer-sub">Tap any word in the King James text to study its original-language root.</div>
+      </div>
+    <% end %>
+  </aside>
+</div>

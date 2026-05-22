@@ -1,0 +1,25 @@
+<%# locals: book, chapter, entries %>
+<%= turbo_frame_tag "commentary_drawer" do %>
+  <div class="ps-drawer-head">
+    <div class="ps-drawer-eyebrow">
+      <span>&#128220; &nbsp; Commentary</span>
+      <button class="close" type="button" data-action="commentary#close">&#10005;</button>
+    </div>
+    <div class="ps-drawer-title"><%= reference_title(book, chapter) %></div>
+    <% if entries.any? %>
+      <div class="ps-drawer-sub"><%= entries.map(&:source_name).to_sentence %></div>
+    <% end %>
+  </div>
+  <div class="ps-drawer-list">
+    <% if entries.empty? %>
+      <div class="ps-ai-hint">No commentary seeded for this chapter yet.</div>
+    <% else %>
+      <% entries.each do |entry| %>
+        <div class="ps-commentary">
+          <div class="ps-commentary-source"><%= entry.source_name %></div>
+          <div class="ps-commentary-body"><%= sanitize entry.body, tags: %w[p span], attributes: %w[class] %></div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>
