@@ -192,6 +192,17 @@ turbo-frame.ps-pane[busy] .ps-verses { filter: blur(0.3px); }
 .ps-search-drawer.is-open .ps-search-panel { transform: translateX(0); }
 .ps-search-panel form { padding: 14px 18px 6px; margin: 0; }
 
+/* The xref / commentary / lexicon drawers wrap their content in a <turbo-frame>;
+   make it a flex column so the inner .ps-drawer-list can actually scroll instead
+   of overflowing the drawer when entries are long. */
+.ps-drawer > turbo-frame {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* ---- cross-reference slide-over (wraps the design's .ps-drawer) ---- */
 .ps-xref-host { position: fixed; inset: 0; z-index: 42; visibility: hidden; pointer-events: none; }
 .ps-xref-host.is-open { visibility: visible; pointer-events: auto; }
