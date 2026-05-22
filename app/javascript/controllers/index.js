@@ -42,3 +42,9 @@ application.register("pane", PaneController)
 
 import SearchController from "./search_controller"
 application.register("search", SearchController)
+
+import ReaderController from "./reader_controller"
+application.register("reader", ReaderController)
+
+import MemorizeController from "./memorize_controller"
+application.register("memorize", MemorizeController)

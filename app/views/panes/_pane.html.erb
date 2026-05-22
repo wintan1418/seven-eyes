@@ -1,4 +1,4 @@
-<%= turbo_frame_tag pane.frame_id, class: "ps-pane", data: { controller: "pane" } do %>
+<%= turbo_frame_tag pane.frame_id, class: "ps-pane", data: { controller: "pane reader memorize" } do %>
   <% content = pane.content %>
 
   <%= form_with model: [ pane.study, pane ], method: :patch, data: { controller: "auto-submit" } do |f| %>
@@ -11,6 +11,10 @@
             {}, class: "ps-trans-select", id: "pane_#{pane.id}_translation",
             "aria-label": "Translation", data: { action: "change->auto-submit#submit" } %>
       <% if content.ok? %>
+        <button type="button" class="ps-pane-tool" title="Read aloud"
+                data-action="reader#toggle" data-reader-target="button">&#9658;</button>
+        <button type="button" class="ps-pane-tool" title="Memorize mode"
+                data-action="memorize#toggle" data-memorize-target="button">&#9680;</button>
         <button type="button" class="ps-pane-tool <%= "has-notes" if pane.notes.present? %>"
                 title="Notes" data-action="pane#toggleNotes">&#9998;</button>
       <% end %>
@@ -27,7 +31,7 @@
       </div>
       <div class="rule"></div>
       <% highlights_by_verse = authenticated? ? current_user.highlights.where(verse_id: content.verses.map(&:id)).group_by(&:verse_id) : {} %>
-      <div class="ps-verse-body" data-controller="highlighter">
+      <div class="ps-verse-body" data-controller="highlighter" data-action="click->memorize#reveal">
         <% content.verses.each_with_index do |verse, i| %>
           <%= scripture_verse(verse, study: pane.study, book: content.book,
                 highlights: highlights_by_verse[verse.id] || [],

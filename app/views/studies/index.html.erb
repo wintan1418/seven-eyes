@@ -16,8 +16,13 @@
           <span class="line"></span>
         </div>
         <div class="verse-of-day">
-          &ldquo;Open thou mine eyes, that I may behold wondrous things out of thy law.&rdquo;
-          <span class="ref">Psalm CXIX &middot; 18 &middot; KJV</span>
+          <% if @verse_of_day %>
+            &ldquo;<%= @verse_of_day.text %>&rdquo;
+            <span class="ref"><%= @verse_of_day.reference_label %> &middot; <%= @verse_of_day.translation_code %></span>
+          <% else %>
+            &ldquo;Open thou mine eyes, that I may behold wondrous things out of thy law.&rdquo;
+            <span class="ref">Psalm 119:18 &middot; KJV</span>
+          <% end %>
         </div>
         <div class="cta-row">
           <button type="button" class="cta" data-action="new-study#open">&#10010; &nbsp; Begin a New Study</button>

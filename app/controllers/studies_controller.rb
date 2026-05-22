@@ -6,6 +6,7 @@ class StudiesController < ApplicationController
 
   def index
     @studies = authenticated? ? current_user.studies.recent : []
+    @verse_of_day = DailyVerse.for
   end
 
   def show
