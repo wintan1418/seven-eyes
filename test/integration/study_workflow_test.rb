@@ -34,6 +34,18 @@ class StudyWorkflowTest < ActionDispatch::IntegrationTest
     assert_equal "Jn 3:16", pane.reload.reference
   end
 
+  test "a Strong's-tagged KJV verse renders clickable word-study links" do
+    Verse.find_by(translation: @kjv, book: @john, chapter: 3, verse_number: 16)
+         .update!(tokens: [ { "w" => "For", "s" => "G1063" }, { "w" => " God", "s" => "G2316" } ])
+    study = users(:one).studies.create!(name: "S", pane_count: 1)
+    pane = study.panes.first
+
+    patch study_pane_path(study, pane), params: { pane: { reference: "Jn 3:16", translation_id: @kjv.id } }
+    assert_response :success
+    assert_select "a.ps-word", minimum: 2
+    assert_includes response.body, lexicon_study_path(study, strongs: "G2316")
+  end
+
   test "switching translation re-renders the same verse in the new version" do
     study = users(:one).studies.create!(name: "S", pane_count: 1)
     pane = study.panes.first
