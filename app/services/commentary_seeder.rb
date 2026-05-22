@@ -55,7 +55,7 @@ class CommentarySeeder
           source: @source, source_name: @source_name, book_id: book.id,
           chapter:, body:, created_at: now, updated_at: now
         }
-        if rows.size >= 200
+        if rows.size >= 40
           flush(rows)
           total += rows.size
           rows = []
