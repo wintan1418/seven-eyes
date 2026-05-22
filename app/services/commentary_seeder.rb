@@ -70,7 +70,7 @@ class CommentarySeeder
   # Assemble one chapter's commentary into simple, safe HTML paragraphs.
   def chapter_body(book_code, chapter)
     data = fetch_json("#{HELLOAO}/c/#{@source}/#{book_code}/#{chapter}.json")
-    content = data.dig("chapter", "content") or return nil
+    content = data&.dig("chapter", "content") or return nil # nil = missing/failed chapter, skip
 
     blocks = content.filter_map do |item|
       paragraphs = Array(item["content"]).flat_map { |s| s.to_s.split(/\n+/) }.map(&:strip).reject(&:blank?)

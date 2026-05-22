@@ -40,6 +40,20 @@ class CommentarySeederTest < ActiveSupport::TestCase
     assert_equal before, Commentary.where(source: "matthew-henry").maximum(:updated_at)
   end
 
+  test "a failed/missing chapter (nil response) is skipped, not a crash" do
+    seeder = CommentarySeeder.new("matthew-henry")
+    def seeder.fetch_json(url)
+      return { "books" => [ { "id" => "JHN", "order" => 43, "numberOfChapters" => 2 } ] } if url.end_with?("books.json")
+      return nil if url.end_with?("JHN/2.json") # simulate a 404 / network failure
+      { "chapter" => { "content" => [ { "type" => "verse", "number" => 1, "content" => [ "Only chapter one." ] } ] } }
+    end
+
+    assert_nothing_raised { seeder.run }
+    assert_equal 1, Commentary.where(source: "matthew-henry").count
+    assert Commentary.exists?(book: @john, chapter: 1)
+    refute Commentary.exists?(book: @john, chapter: 2)
+  end
+
   test "escapes HTML in the source text" do
     seeder = FakeSeeder.new("matthew-henry")
     def seeder.fetch_json(url)
