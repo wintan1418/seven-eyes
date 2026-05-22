@@ -39,3 +39,6 @@ application.register("sync-scroll", SyncScrollController)
 
 import PaneController from "./pane_controller"
 application.register("pane", PaneController)
+
+import SearchController from "./search_controller"
+application.register("search", SearchController)

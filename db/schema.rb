@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_21_190210) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_22_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -112,10 +112,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_190210) do
     t.integer "chapter", null: false
     t.datetime "created_at", null: false
     t.text "text", null: false
+    t.virtual "text_vector", type: :tsvector, as: "to_tsvector('english'::regconfig, COALESCE(text, ''::text))", stored: true
     t.bigint "translation_id", null: false
     t.datetime "updated_at", null: false
     t.integer "verse_number", null: false
     t.index ["book_id", "chapter"], name: "index_verses_on_book_id_and_chapter"
+    t.index ["text_vector"], name: "index_verses_on_text_vector", using: :gin
     t.index ["translation_id", "book_id", "chapter", "verse_number"], name: "index_verses_unique_location", unique: true
     t.index ["translation_id"], name: "index_verses_on_translation_id"
   end

@@ -1,0 +1,26 @@
+<%# locals: study, query, results, translation %>
+<%= turbo_frame_tag "verse_search_results", class: "ps-ai-results" do %>
+  <% if query.blank? %>
+    <div class="ps-ai-hint">Type a word or phrase &mdash; results appear here, ranked by relevance.</div>
+  <% elsif results.empty? %>
+    <div class="ps-ai-hint">No matches for &ldquo;<%= truncate(query, length: 60) %>&rdquo; in <%= translation&.code %>. Try fewer or different words.</div>
+  <% else %>
+    <div class="ps-ai-resultcount"><%= pluralize(results.size, "verse") %> in <%= translation&.code %> &middot; &ldquo;<%= truncate(query, length: 50) %>&rdquo;</div>
+    <% results.each do |verse| %>
+      <% ref = "#{verse.book.name} #{verse.chapter}:#{verse.verse_number}" %>
+      <div class="ps-xref">
+        <div class="ps-xref-head">
+          <div class="ps-xref-ref"><%= ref %></div>
+        </div>
+        <div class="ps-xref-text"><%= truncate(verse.text, length: 180) %></div>
+        <div class="ps-xref-actions">
+          <% study.panes.each do |pane| %>
+            <%= button_to "▸ #{pane_numeral(pane.position)}", study_pane_path(study, pane),
+                  method: :patch, params: { pane: { reference: ref, translation_id: translation&.id } }, class: "ps-xref-load",
+                  form: { data: { turbo_frame: pane.frame_id }, style: "display:contents;" } %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>

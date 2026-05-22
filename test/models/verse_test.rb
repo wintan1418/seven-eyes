@@ -28,4 +28,22 @@ class VerseTest < ActiveSupport::TestCase
     dup = Verse.new(translation: @t, book: @john, chapter: 3, verse_number: 16, text: "x")
     refute dup.valid?
   end
+
+  test "search finds verses by word, ranked, scoped to the translation" do
+    Verse.create!(translation: @t, book: @john, chapter: 3, verse_number: 18,
+                  text: "For God so loved the world that he gave his only Son")
+    other = Translation.create!(code: "OTH", name: "Other")
+    Verse.create!(translation: other, book: @john, chapter: 3, verse_number: 16,
+                  text: "loved the world")
+
+    hits = Verse.search("loved world", translation: @t)
+    assert_includes hits.map(&:verse_number), 18
+    assert hits.all? { |v| v.translation_id == @t.id }, "must not leak other translations"
+  end
+
+  test "search returns nothing for blank or unmatched queries" do
+    assert_equal 0, Verse.search("", translation: @t).size
+    assert_equal 0, Verse.search("   ", translation: @t).size
+    assert_equal 0, Verse.search("zzqxqwx", translation: @t).size
+  end
 end

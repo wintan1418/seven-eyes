@@ -1,0 +1,27 @@
+<%# locals: study %>
+<% kjv_id = Translation.find_by(code: "KJV")&.id %>
+<div class="ps-search-drawer" data-search-target="drawer">
+  <div class="ps-book-backdrop" data-action="search#close"></div>
+  <aside class="ps-search-panel">
+    <div class="ps-drawer-head">
+      <div class="ps-drawer-eyebrow">
+        <span>&#9906; &nbsp; Search the Scriptures</span>
+        <button class="close" type="button" data-action="search#close">&#10005;</button>
+      </div>
+      <div class="ps-drawer-sub">Find any word or phrase across an entire translation.</div>
+    </div>
+
+    <%= form_with url: search_study_path(study), method: :get, data: { turbo_frame: "verse_search_results" } do %>
+      <input type="text" name="q" class="ps-ai-input" data-search-target="input" autocomplete="off"
+             placeholder="e.g. love your enemies">
+      <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+        <%= select_tag :translation_id, translation_options(kjv_id), class: "ps-trans-select", "aria-label": "Translation to search" %>
+        <button type="submit" class="btn primary" style="flex:1;">Search</button>
+      </div>
+    <% end %>
+
+    <%= turbo_frame_tag "verse_search_results", class: "ps-ai-results" do %>
+      <div class="ps-ai-hint">Type a word or phrase &mdash; results appear here, ranked by relevance.</div>
+    <% end %>
+  </aside>
+</div>

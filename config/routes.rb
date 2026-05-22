@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   resources :studies, only: %i[ index show create update destroy ] do
     resources :panes, only: %i[ update ]
     get :suggest, on: :member
+    get :search, on: :member
     get :cross_references, on: :member
   end
 

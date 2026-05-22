@@ -177,6 +177,21 @@ turbo-frame.ps-pane[busy] .ps-verses { filter: blur(0.3px); }
   text-transform: uppercase; color: var(--sepia-mute);
 }
 
+/* ---- full-text "Search the Scriptures" slide-over ---- */
+.ps-search-drawer { position: fixed; inset: 0; z-index: 41; visibility: hidden; pointer-events: none; }
+.ps-search-drawer.is-open { visibility: visible; pointer-events: auto; }
+.ps-search-drawer.is-open .ps-book-backdrop { opacity: 1; }
+.ps-search-panel {
+  position: absolute; top: 0; right: 0; height: 100%; width: 408px;
+  background: linear-gradient(180deg, #ebdfc1 0%, #dec99a 100%);
+  border-left: 1px solid var(--vellum-edge);
+  box-shadow: -12px 0 30px -10px rgba(50, 30, 10, 0.45);
+  transform: translateX(100%); transition: transform 0.22s ease;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.ps-search-drawer.is-open .ps-search-panel { transform: translateX(0); }
+.ps-search-panel form { padding: 14px 18px 6px; margin: 0; }
+
 /* ---- cross-reference slide-over (wraps the design's .ps-drawer) ---- */
 .ps-xref-host { position: fixed; inset: 0; z-index: 42; visibility: hidden; pointer-events: none; }
 .ps-xref-host.is-open { visibility: visible; pointer-events: auto; }
@@ -329,7 +344,7 @@ a.ps-vnum:hover { color: var(--rubric-deep); text-decoration: underline; }
   .ps-verses { padding: 16px 18px; font-size: 17px; }
 
   /* slide-over drawers take the full width on a phone */
-  .ps-book-panel, .ps-ai-panel { width: 100%; max-width: 100%; }
+  .ps-book-panel, .ps-ai-panel, .ps-search-panel { width: 100%; max-width: 100%; }
   .ps-xref-host .ps-drawer,
   .ps-drawer { width: 100%; max-width: 100%; flex-basis: 100%; }
 

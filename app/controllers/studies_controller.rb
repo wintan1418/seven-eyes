@@ -1,8 +1,8 @@
 class StudiesController < ApplicationController
   # The workspace is open to everyone; only saving (notes/highlights/account) needs auth.
-  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest ]
+  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest search ]
 
-  before_action :set_study, only: %i[ show update destroy suggest cross_references ]
+  before_action :set_study, only: %i[ show update destroy suggest search cross_references ]
 
   def index
     @studies = authenticated? ? current_user.studies.recent : []
@@ -40,6 +40,15 @@ class StudiesController < ApplicationController
     @query = params[:q].to_s
     @result = ScriptureSuggester.call(@query)
     render partial: "studies/ai_results", locals: { study: @study, query: @query, result: @result }
+  end
+
+  def search
+    @query = params[:q].to_s
+    @translation = Translation.find_by(id: params[:translation_id]) ||
+                   Translation.find_by(code: "KJV") || Translation.first
+    @results = @translation ? Verse.search(@query, translation: @translation) : Verse.none
+    render partial: "studies/search_results",
+           locals: { study: @study, query: @query, results: @results, translation: @translation }
   end
 
   def cross_references

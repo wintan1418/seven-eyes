@@ -41,6 +41,7 @@
       <button class="ps-tb-btn" disabled><span class="dot"></span> Sync Scroll</button>
     <% end %>
     <% if study %>
+      <button type="button" class="ps-tb-btn" data-action="search#open">&#9906; Search</button>
       <button type="button" class="ps-tb-btn" data-action="ai-search#open">&#10038; Find</button>
       <% if authenticated? %>
         <span class="ps-tb-btn is-active" style="cursor:default;">&#10003; Saved</span>
