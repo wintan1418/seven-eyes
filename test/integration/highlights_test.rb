@@ -30,6 +30,29 @@ class HighlightsTest < ActionDispatch::IntegrationTest
     assert_response :no_content
   end
 
+  test "create accepts an optional note and returns it in the json" do
+    post highlights_path, params: { highlight: { verse_id: @verse.id, color: "sage", char_start: 4, char_end: 7, note: "key phrase" } }, as: :json
+    assert_response :created
+    body = JSON.parse(response.body)
+    assert_equal "key phrase", body["note"]
+    assert_equal "key phrase", Highlight.find(body["id"]).note
+  end
+
+  test "update edits the note and color for the owner's highlight" do
+    h = users(:one).highlights.create!(verse: @verse, color: :rose, char_start: 0, char_end: 3)
+    patch highlight_path(h), params: { highlight: { note: "John's testimony of love", color: "cobalt" } }, as: :json
+    assert_response :success
+    h.reload
+    assert_equal "John's testimony of love", h.note
+    assert_equal "cobalt", h.color
+  end
+
+  test "cannot update another user's highlight" do
+    other = users(:two).highlights.create!(verse: @verse, color: :ochre, char_start: 0, char_end: 3)
+    patch highlight_path(other), params: { highlight: { note: "evil" } }, as: :json
+    assert_response :not_found
+  end
+
   test "cannot destroy another user's highlight" do
     other = users(:two).highlights.create!(verse: @verse, color: :cobalt, char_start: 0, char_end: 3)
     delete highlight_path(other)

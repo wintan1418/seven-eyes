@@ -97,7 +97,11 @@ module ScriptureHelper
       e = h.char_end.clamp(s, text.length)
       next if s < cursor
       pieces << html_escape(text[cursor...s]) if s > cursor
-      pieces << tag.span(html_escape(text[s...e]), class: "hl-#{h.color}", data: { highlight_id: h.id })
+      classes = [ "hl-#{h.color}" ]
+      classes << "has-note" if h.note.present?
+      pieces << tag.span(html_escape(text[s...e]),
+                         class: classes.join(" "),
+                         data: { highlight_id: h.id, note: h.note.to_s })
       cursor = e
     end
     pieces << html_escape(text[cursor..]) if cursor < text.length

@@ -12,7 +12,7 @@ Rails.application.routes.draw do
     get "lexicon/:strongs", on: :member, action: :lexicon, as: :lexicon
   end
 
-  resources :highlights, only: %i[ create destroy ]
+  resources :highlights, only: %i[ create update destroy ]
 
   get "/verse_count", to: "verses#count" # JSON: verses in a book+chapter (for the browser)
 
