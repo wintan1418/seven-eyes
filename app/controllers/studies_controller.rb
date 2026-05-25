@@ -7,6 +7,7 @@ class StudiesController < ApplicationController
   def index
     @studies = authenticated? ? current_user.studies.recent : []
     @verse_of_day = DailyVerse.for
+    @show_guide = !authenticated? || current_user.guide_dismissed_at.blank?
     if authenticated?
       @active_plan = current_user.reading_plans.recent.first
       @plan_today = @active_plan&.todays_day

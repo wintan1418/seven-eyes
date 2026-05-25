@@ -51,6 +51,10 @@
     <% end %>
     <% if authenticated? %>
       <%= link_to "Plans", reading_plans_path, class: "ps-tb-btn", style: "text-decoration:none;" %>
+      <% if current_user.guide_dismissed_at.present? %>
+        <%= button_to "Guide", restore_guide_path, method: :delete, class: "ps-tb-btn",
+              form: { style: "display:contents;" } %>
+      <% end %>
       <%= button_to "Sign out", session_path, method: :delete, class: "ps-tb-btn",
             form: { style: "display:contents;" } %>
     <% else %>

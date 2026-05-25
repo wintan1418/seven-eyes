@@ -235,6 +235,82 @@ a.ps-vnum:hover { color: var(--rubric-deep); text-decoration: underline; }
 }
 .ps-link-btn:hover { color: var(--rubric); }
 
+/* ====================================================================
+   Welcome guide panel: "What's at your desk"
+   ==================================================================== */
+.ps-guide {
+  width: min(960px, 92%);
+  margin: 36px auto 60px;
+  padding: 22px 24px 24px;
+  background: var(--vellum-0);
+  border: 1px solid var(--vellum-edge);
+  box-shadow: inset 0 0 0 1px rgba(163, 129, 46, 0.3),
+              0 8px 24px -14px rgba(50, 30, 10, 0.35);
+  border-radius: 2px;
+  text-align: left;
+}
+.ps-guide-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 16px; margin-bottom: 14px;
+}
+.ps-guide-eyebrow {
+  font: 600 9.5px "Cinzel", serif; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--sepia-mute);
+}
+.ps-guide-title {
+  font-family: "EB Garamond", serif; font-size: 26px; color: var(--ink);
+  margin: 2px 0 4px;
+}
+.ps-guide-sub {
+  font: italic 14px "EB Garamond", serif; color: var(--sepia); margin: 0;
+}
+.ps-guide-grid {
+  display: grid; gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.ps-guide-card {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 12px 14px;
+  background: rgba(255, 247, 224, 0.5);
+  border: 1px solid rgba(163, 129, 46, 0.3);
+  border-radius: 2px;
+  color: var(--ink);
+  text-decoration: none;
+  min-height: 92px;
+}
+a.ps-guide-card:hover { background: #fff7e0; border-color: var(--gold); }
+.ps-guide-card .orn {
+  font-size: 18px; color: var(--gold); line-height: 1;
+}
+.ps-guide-card .t {
+  font: 600 13px "Cinzel", serif; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--rubric);
+}
+.ps-guide-card .d {
+  font: 14px/1.45 "EB Garamond", serif; color: var(--ink-soft); font-style: italic;
+}
+.ps-guide-card .cta {
+  margin-top: 6px;
+  font: 600 10.5px "Cinzel", serif; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--rubric);
+}
+.ps-guide-card .kbd {
+  font: 600 10px "Cinzel", serif; padding: 1px 4px;
+  border: 1px solid rgba(163, 129, 46, 0.4); border-radius: 2px;
+  color: var(--sepia); background: var(--vellum-0);
+}
+
+/* headline card spans the full row, larger */
+.ps-guide-card-lg {
+  grid-column: 1 / -1;
+  background: linear-gradient(180deg, #f5e7c4 0%, #ead7a6 100%);
+  border-color: var(--gold);
+  min-height: 0; padding: 18px 22px;
+}
+.ps-guide-card-lg .t { font-size: 15px; }
+.ps-guide-card-lg .d { font-size: 16px; color: var(--ink); }
+.ps-guide-card-lg .orn { font-size: 22px; }
+
 /* ---- "Today's reading" panel on the Scriptorium welcome ---- */
 .ps-today-panel {
   width: min(640px, 90%);

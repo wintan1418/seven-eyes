@@ -1,0 +1,83 @@
+<%# A discovery panel: "What's at your desk." Headline = Reading Plans, then 9
+     compact cards introducing the other tools. Authenticated users can hide it
+     (persisted on the user); guests get the JS-only fallback via the topbar's
+     "Show guide" link reset on their next account-restore. %>
+<section class="ps-guide" data-controller="guide">
+  <header class="ps-guide-head">
+    <div>
+      <div class="ps-guide-eyebrow">A Quill &amp; Compass</div>
+      <h2 class="ps-guide-title">What's at your desk</h2>
+      <p class="ps-guide-sub">A guide to the tools — keep it until they're in your hands.</p>
+    </div>
+    <% if authenticated? %>
+      <%= button_to "Hide guide", dismiss_guide_path, method: :post,
+            class: "ps-link-btn", form: { style: "display:contents;" } %>
+    <% else %>
+      <button type="button" class="ps-link-btn" data-action="guide#hide">Hide guide</button>
+    <% end %>
+  </header>
+
+  <div class="ps-guide-grid">
+    <%# headline card: reading plans %>
+    <a class="ps-guide-card ps-guide-card-lg" href="<%= authenticated? ? reading_plans_path : new_session_path %>">
+      <span class="orn">&#10070;</span>
+      <span class="t">Reading Plans</span>
+      <span class="d">Build a custom plan — pace a single book, the whole NT, the year-long Bible, or your own path — and tick each day done. The manuscript calendar fills as you go.</span>
+      <span class="cta">Open Plans &rsaquo;</span>
+    </a>
+
+    <div class="ps-guide-card">
+      <span class="orn">&#10086;</span>
+      <span class="t">Parallel translations</span>
+      <span class="d">Compare up to 4 versions of the same verse side by side. Click <span class="kbd">1–4</span> in the topbar to set the pane count.</span>
+    </div>
+
+    <div class="ps-guide-card">
+      <span class="orn">&#8501;</span>
+      <span class="t">Word study (Strong's)</span>
+      <span class="d">Tap any word in the King James text to see its Greek or Hebrew root, transliteration, definition, and every occurrence.</span>
+    </div>
+
+    <div class="ps-guide-card">
+      <span class="orn">&#167;</span>
+      <span class="t">Cross references</span>
+      <span class="d">Click any verse number to open the TSK cross-reference drawer, sorted by weight. Load any reference into a pane.</span>
+    </div>
+
+    <div class="ps-guide-card">
+      <span class="orn">&#128220;</span>
+      <span class="t">Matthew Henry commentary</span>
+      <span class="d">The little 📜 in each pane head opens the chapter's exposition next to the text.</span>
+    </div>
+
+    <div class="ps-guide-card">
+      <span class="orn">&#9906;</span>
+      <span class="t">Full-Bible search</span>
+      <span class="d">Type a phrase like "love your enemies" and jump to it. The ⊚ button in the topbar opens the search slide-over.</span>
+    </div>
+
+    <div class="ps-guide-card">
+      <span class="orn">&#10038;</span>
+      <span class="t">AI "Find a verse"</span>
+      <span class="d">Describe a thought — "where Paul says we're saved by grace, not by works" — and the assistant suggests passages, validated against our text.</span>
+    </div>
+
+    <div class="ps-guide-card">
+      <span class="orn">&#9658;</span>
+      <span class="t">Read aloud</span>
+      <span class="d">Click ▶ in a pane to have the passage read by your browser. ■ stops it. No network, no cost.</span>
+    </div>
+
+    <div class="ps-guide-card">
+      <span class="orn">&#9680;</span>
+      <span class="t">Memorize mode</span>
+      <span class="d">◐ in the pane head blanks out the words; click each blank to reveal. Great for scripture memory drills.</span>
+    </div>
+
+    <div class="ps-guide-card">
+      <span class="orn">&#9998;</span>
+      <span class="t">Highlights with notes</span>
+      <span class="d">Select a phrase, pick a color, then jot a study note right on the highlight. A small ✎ marker shows which highlights carry a note.</span>
+    </div>
+  </div>
+</section>

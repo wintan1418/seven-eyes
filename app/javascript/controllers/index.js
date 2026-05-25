@@ -54,3 +54,6 @@ application.register("commentary", CommentaryController)
 
 import LexiconController from "./lexicon_controller"
 application.register("lexicon", LexiconController)
+
+import GuideController from "./guide_controller"
+application.register("guide", GuideController)
