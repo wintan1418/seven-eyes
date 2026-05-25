@@ -25,6 +25,11 @@
       <% end %>
       <button type="button" class="ps-pane-tool" title="Browse books"
               data-action="book-browser#open" data-pane-id="<%= pane.id %>">&#128214;</button>
+      <%# Implicit-submit fallback: ensures the touch keyboard's Go button
+          submits the form (mobile browsers ignore Enter when a form has no
+          submit control). %>
+      <button type="submit" tabindex="-1" aria-hidden="true"
+              style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">Go</button>
     </div>
   <% end %>
 
