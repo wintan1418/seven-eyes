@@ -784,7 +784,8 @@
   height: 1px; width: 120px; background: var(--gold);
 }
 .ps-welcome .cta-row { margin-top: 30px; display: flex; gap: 12px; }
-.ps-welcome .cta {
+.cta, .ps-welcome .cta {
+  display: inline-block;
   padding: 11px 22px;
   background: var(--rubric);
   color: var(--vellum-0);
@@ -795,8 +796,14 @@
   text-transform: uppercase;
   cursor: pointer;
   box-shadow: 0 2px 0 rgba(0,0,0,0.18);
+  text-decoration: none;
 }
-.ps-welcome .cta.secondary { background: transparent; color: var(--sepia); border-color: rgba(138, 116, 68, 0.4); box-shadow: none; }
+.cta:hover, .ps-welcome .cta:hover { background: var(--rubric-deep); }
+.cta.secondary, .ps-welcome .cta.secondary {
+  background: transparent; color: var(--sepia);
+  border-color: rgba(138, 116, 68, 0.4); box-shadow: none;
+}
+.cta.secondary:hover { color: var(--ink); background: rgba(163, 129, 46, 0.12); }
 
 /* ----- search dropdown ----- */
 .ps-dropdown {
