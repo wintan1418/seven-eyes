@@ -68,10 +68,14 @@ class ReferenceParser
 
   def invalid = Result.new(valid: false)
 
-  # Lowercase, collapse whitespace, and turn leading ordinal words into digits
-  # ("First John" -> "1 john", "2nd Tim" -> "2 tim") so the canon alias map matches.
+  # Lowercase, collapse whitespace, turn leading ordinal words into digits, and
+  # tolerate common typos like "jeremiah:3" (colon used as book/chapter separator
+  # instead of a space). The chapter:verse colon in "3:16" is unaffected because
+  # the character before the colon there is a digit, not a non-digit.
   def normalize(str)
-    s = str.downcase.gsub(/\s+/, " ").strip
+    s = str.downcase.strip
+    s = s.sub(/(\D):(\d)/, '\1 \2') # "jeremiah:3" -> "jeremiah 3"
+    s = s.gsub(/\s+/, " ")
     s = s.sub(/\A(?:1st|first)\b\.?\s*/, "1 ")
     s = s.sub(/\A(?:2nd|second)\b\.?\s*/, "2 ")
     s = s.sub(/\A(?:3rd|third)\b\.?\s*/, "3 ")

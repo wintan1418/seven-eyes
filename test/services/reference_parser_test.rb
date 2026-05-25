@@ -125,6 +125,16 @@ class ReferenceParserTest < ActiveSupport::TestCase
     assert_equal "Phil", parse("Phil. 4:13").osis
   end
 
+  test "tolerates colon as book/chapter separator" do
+    assert_equal "Jer",  parse("jeremiah:3").osis
+    assert_equal 3,      parse("jeremiah:3").chapter
+    assert_equal "John", parse("john:3:16").osis
+    assert_equal 16,     parse("john:3:16").verse_start
+    # but a colon between digits (chapter:verse) is still respected
+    assert_equal "John", parse("John 3:16").osis
+    assert_equal 16,     parse("John 3:16").verse_start
+  end
+
   test "label round-trips" do
     assert_equal "John 3:16", parse("Jn 3:16").label
     assert_equal "John 3:16-18", parse("John 3:16-18").label
