@@ -6,6 +6,8 @@
       <div class="ps-pane-index"><%= pane_numeral(pane.position) %></div>
       <%= f.text_field :reference, value: pane.reference,
             placeholder: "Type a reference…", autocomplete: "off", spellcheck: "false",
+            autocapitalize: "none", autocorrect: "off", inputmode: "search", enterkeyhint: "go",
+            data: { action: "keydown.enter->auto-submit#submit" },
             class: "ps-search#{' empty' if pane.empty?}" %>
       <%= f.select :translation_id, translation_options(pane.effective_translation&.id),
             {}, class: "ps-trans-select", id: "pane_#{pane.id}_translation",
@@ -28,9 +30,23 @@
 
   <% if content.ok? %>
     <div class="ps-verses">
+      <% prev_ref = neighbor_reference(content.book, content.parsed.chapter, :prev) %>
+      <% next_ref = neighbor_reference(content.book, content.parsed.chapter, :next) %>
       <div class="ref-title">
+        <% if prev_ref %>
+          <%= button_to "‹", study_pane_path(pane.study, pane), method: :patch,
+                params: { pane: { reference: prev_ref } },
+                class: "ps-ch-nav prev", title: "Previous chapter (#{prev_ref})",
+                form: { data: { turbo_frame: pane.frame_id }, style: "display:contents;" } %>
+        <% end %>
         <span><%= reference_title(content.book, content.parsed.chapter) %></span>
         <span class="tag">&middot; <%= content.translation.name %></span>
+        <% if next_ref %>
+          <%= button_to "›", study_pane_path(pane.study, pane), method: :patch,
+                params: { pane: { reference: next_ref } },
+                class: "ps-ch-nav next", title: "Next chapter (#{next_ref})",
+                form: { data: { turbo_frame: pane.frame_id }, style: "display:contents;" } %>
+        <% end %>
       </div>
       <div class="rule"></div>
       <% highlights_by_verse = authenticated? ? current_user.highlights.where(verse_id: content.verses.map(&:id)).group_by(&:verse_id) : {} %>

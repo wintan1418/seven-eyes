@@ -34,6 +34,30 @@ module ScriptureHelper
     "#{book.name} #{to_roman(chapter)}"
   end
 
+  # Reference string for the chapter before or after the given one, wrapping at
+  # book boundaries (Genesis 50:end ↔ Exodus 1) so prev/next reads like a Bible.
+  # Returns nil if there is no neighbor (start of Genesis 1 / end of Revelation 22).
+  def neighbor_reference(book, chapter, direction)
+    pair =
+      case direction
+      when :next
+        if chapter < book.chapter_count
+          [ book, chapter + 1 ]
+        else
+          nxt = Book.where("position > ?", book.position).order(:position).first
+          nxt && [ nxt, 1 ]
+        end
+      when :prev
+        if chapter > 1
+          [ book, chapter - 1 ]
+        else
+          prv = Book.where("position < ?", book.position).order(position: :desc).first
+          prv && [ prv, prv.chapter_count ]
+        end
+      end
+    pair && "#{pair[0].name} #{pair[1]}"
+  end
+
   def translation_options(selected_id)
     options_from_collection_for_select(Translation.all, :id, :code, selected_id)
   end

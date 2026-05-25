@@ -235,6 +235,27 @@ a.ps-vnum:hover { color: var(--rubric-deep); text-decoration: underline; }
 }
 .ps-link-btn:hover { color: var(--rubric); }
 
+/* ---- pane head wraps cleanly when crowded (tablets, multi-pane) ---- */
+.ps-pane-head { flex-wrap: wrap; row-gap: 6px; }
+.ps-pane-head .ps-pane-tool,
+.ps-pane-head .ps-trans-select { flex-shrink: 0; }
+.ps-pane-head .ps-search { min-width: 0; flex: 1 1 140px; }
+
+/* ---- prev / next chapter arrows in the chapter title ---- */
+.ref-title { align-items: center; gap: 8px; flex-wrap: wrap; }
+.ps-ch-nav {
+  border: 1px solid rgba(138, 36, 24, 0.3);
+  background: transparent;
+  color: var(--rubric);
+  cursor: pointer;
+  padding: 0 8px;
+  border-radius: 2px;
+  font: 600 14px "EB Garamond", serif;
+  line-height: 1.6;
+  min-height: 26px;
+}
+.ps-ch-nav:hover { background: rgba(138, 36, 24, 0.1); border-color: var(--rubric); }
+
 /* ---- highlight edit popover (note + color swap + delete) ---- */
 .ps-hl-edit {
   width: 300px;
