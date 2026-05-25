@@ -2,7 +2,7 @@
   <%= render "topbar", study_name: "The Scriptorium", panes: 4, sync: false, saved: true %>
   <div class="ps-shell">
     <%= render "sidebar", studies: @studies %>
-    <main class="ps-workspace" style="grid-template-columns: 1fr; grid-template-rows: 1fr;">
+    <main class="ps-workspace is-doc" style="grid-template-columns: 1fr;">
       <div class="ps-welcome">
         <div class="eyebrow">&#9769; &nbsp; A Quiet Desk For The Word &nbsp; &#9769;</div>
         <% if authenticated? %>

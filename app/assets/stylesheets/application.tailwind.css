@@ -235,6 +235,19 @@ a.ps-vnum:hover { color: var(--rubric-deep); text-decoration: underline; }
 }
 .ps-link-btn:hover { color: var(--rubric); }
 
+/* ---- Document-style workspace (welcome, reading plans, etc.) ----
+   The default workspace is a fixed grid for the multi-pane studies view.
+   Long-form pages need vertical scroll and start-aligned content. */
+.ps-workspace.is-doc {
+  overflow-y: auto;
+  grid-template-rows: auto !important;
+}
+.ps-workspace.is-doc .ps-welcome {
+  justify-content: flex-start;
+  padding: 60px 24px 28px;
+  flex: 0 0 auto;
+}
+
 /* ====================================================================
    Welcome guide panel: "What's at your desk"
    ==================================================================== */
