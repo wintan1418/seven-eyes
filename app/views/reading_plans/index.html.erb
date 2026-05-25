@@ -1,0 +1,35 @@
+<div class="ps-root">
+  <%= render "studies/topbar", study_name: "Reading Plans", panes: 4, sync: false, saved: true %>
+  <div class="ps-shell">
+    <main class="ps-workspace" style="grid-template-columns: 1fr; grid-template-rows: 1fr;">
+      <div class="ps-plan-index">
+        <div class="ps-plan-index-head">
+          <h1 class="ps-plan-title">Reading Plans</h1>
+          <%= link_to "+ New Plan", new_reading_plan_path, class: "cta" %>
+        </div>
+
+        <% if @plans.any? %>
+          <div class="ps-plan-list">
+            <% @plans.each do |plan| %>
+              <%= link_to reading_plan_path(plan), class: "ps-plan-card" do %>
+                <div class="ps-plan-card-name"><%= plan.name %></div>
+                <div class="ps-plan-card-meta">
+                  <%= plan.total_days %> days &middot;
+                  <%= plan.completed_count %> done &middot;
+                  streak <%= plan.current_streak %>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="ps-plan-empty">
+            <div class="orn">&#10086;</div>
+            <p>No reading plans yet.</p>
+            <p class="hint">Build your own — pace a single book, the whole New Testament, the year-long Bible, or start empty and add days by hand.</p>
+            <%= link_to "Begin your first plan", new_reading_plan_path, class: "cta" %>
+          </div>
+        <% end %>
+      </div>
+    </main>
+  </div>
+</div>

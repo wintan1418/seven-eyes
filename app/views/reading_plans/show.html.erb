@@ -1,0 +1,41 @@
+<div class="ps-root">
+  <%= render "studies/topbar", study_name: @plan.name, panes: 4, sync: false, saved: true %>
+  <div class="ps-shell">
+    <main class="ps-workspace" style="grid-template-columns: 1fr; grid-template-rows: 1fr;">
+      <div class="ps-plan-show">
+        <div class="ps-plan-show-head">
+          <div>
+            <h1 class="ps-plan-title"><%= @plan.name %></h1>
+            <div class="ps-plan-sub">
+              Started <%= @plan.start_date.strftime("%b %-d, %Y") %> &middot;
+              <%= @plan.completed_count %> / <%= @plan.total_days %> done &middot;
+              streak <%= @plan.current_streak %> (best <%= @plan.longest_streak %>)
+            </div>
+          </div>
+          <div class="ps-plan-actions">
+            <% if @plan.todays_day %>
+              <%= link_to "Begin today's reading", open_today_reading_plan_path(@plan), class: "cta", data: { turbo_method: :get } %>
+            <% end %>
+            <%= button_to "Delete plan", reading_plan_path(@plan), method: :delete, class: "cta secondary",
+                  data: { turbo_confirm: "Delete this plan? Completion ticks will be removed too." } %>
+          </div>
+        </div>
+
+        <%= render "reading_plans/heatmap", plan: @plan, days: @days %>
+
+        <div class="ps-plan-days">
+          <% if @days.empty? %>
+            <div class="ps-plan-empty">
+              <p>This plan has no days yet.</p>
+              <p class="hint">Edit the plan with a template, or come back when day-adding is wired in.</p>
+            </div>
+          <% else %>
+            <% @days.each do |day| %>
+              <%= render "reading_plans/day_row", plan: @plan, day: day %>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

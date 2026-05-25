@@ -1,0 +1,26 @@
+<%# locals: plan, days
+     A vellum manuscript calendar — one cell per day in the plan, grouped by
+     month. Completed cells show a small gold flourish; today wears a rubric ring. %>
+<% return if days.empty? %>
+<% today_n = plan.today_day %>
+<% by_month = days.group_by { |d| d.date.strftime("%B %Y") } %>
+
+<div class="ps-plan-cal">
+  <% by_month.each do |label, group| %>
+    <div class="ps-plan-cal-month">
+      <div class="ps-plan-cal-label"><%= label %></div>
+      <div class="ps-plan-cal-grid">
+        <% group.each do |d| %>
+          <div class="ps-plan-cal-cell
+                      <%= 'is-done'    if d.completed? %>
+                      <%= 'is-today'   if d.day_number == today_n %>
+                      <%= 'is-future'  if d.day_number > today_n %>"
+               title="Day <%= d.day_number %> · <%= d.date.strftime('%b %-d') %> · <%= d.completed? ? 'done' : (d.day_number > today_n ? 'upcoming' : 'open') %>">
+            <span class="num"><%= d.date.day %></span>
+            <% if d.completed? %><span class="mark">&#10086;</span><% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

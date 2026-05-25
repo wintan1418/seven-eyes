@@ -1,0 +1,53 @@
+<div class="ps-root">
+  <%= render "studies/topbar", study_name: "New Reading Plan", panes: 4, sync: false, saved: true %>
+  <div class="ps-shell">
+    <main class="ps-workspace" style="grid-template-columns: 1fr; grid-template-rows: 1fr;">
+      <div class="ps-plan-form">
+        <h1 class="ps-plan-title">A New Reading Plan</h1>
+        <p class="ps-plan-sub">Pick a starting shape — every day is editable afterwards. Add or remove days as you like.</p>
+
+        <%= form_with model: @plan, local: true, class: "ps-plan-form-body" do |f| %>
+          <div class="field">
+            <%= f.label :name, "Name" %>
+            <%= f.text_field :name, placeholder: "e.g. Romans, 1 chapter a day", class: "ps-plan-input" %>
+          </div>
+          <div class="field">
+            <%= f.label :start_date, "Start date" %>
+            <%= f.date_field :start_date, value: (@plan.start_date || Date.current), class: "ps-plan-input" %>
+          </div>
+
+          <div class="field">
+            <%= f.label :template, "Starting template" %>
+            <%= f.select :template,
+                  [
+                    [ "Custom (start empty — add days yourself)", "empty" ],
+                    [ "Pace one book at N chapters/day",          "book" ],
+                    [ "Whole New Testament across N days",        "new_testament" ],
+                    [ "Bible in a year (365 days)",                "bible_year" ]
+                  ], {}, class: "ps-plan-input" %>
+          </div>
+
+          <div class="field">
+            <%= f.label :book, "Book (for the per-book template)" %>
+            <%= f.select :book,
+                  options_from_collection_for_select(@books, :osis_code, :name),
+                  { include_blank: "—" }, class: "ps-plan-input" %>
+          </div>
+          <div class="field">
+            <%= f.label :chapters_per_day, "Chapters per day (per-book template)" %>
+            <%= f.number_field :chapters_per_day, value: 1, min: 1, class: "ps-plan-input" %>
+          </div>
+          <div class="field">
+            <%= f.label :days, "Total days (NT / Bible-in-a-year templates)" %>
+            <%= f.number_field :days, placeholder: "60 for NT, 365 for the year", min: 1, class: "ps-plan-input" %>
+          </div>
+
+          <div class="ps-plan-form-actions">
+            <%= link_to "Cancel", reading_plans_path, class: "cta secondary" %>
+            <%= f.submit "Create plan", class: "cta" %>
+          </div>
+        <% end %>
+      </div>
+    </main>
+  </div>
+</div>

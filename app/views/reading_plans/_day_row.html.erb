@@ -1,0 +1,25 @@
+<%# locals: plan, day %>
+<%= turbo_frame_tag dom_id(day), class: "ps-plan-row #{'is-today' if day.day_number == plan.today_day} #{'is-done' if day.completed?}" do %>
+  <div class="ps-plan-row-head">
+    <span class="ps-plan-daynum">Day <%= day.day_number %></span>
+    <span class="ps-plan-date"><%= day.date.strftime("%a %b %-d") %></span>
+    <% if day.completed? %>
+      <%= button_to "✓ Done", uncomplete_reading_plan_plan_day_path(plan, day),
+            method: :delete,
+            class: "ps-plan-tick is-on",
+            form: { data: { turbo_frame: dom_id(day) }, style: "display:contents;" } %>
+    <% else %>
+      <%= button_to "Mark done", complete_reading_plan_plan_day_path(plan, day),
+            method: :post,
+            class: "ps-plan-tick",
+            form: { data: { turbo_frame: dom_id(day) }, style: "display:contents;" } %>
+    <% end %>
+  </div>
+  <%= form_with model: [ plan, day ], method: :patch, class: "ps-plan-row-body",
+        data: { controller: "auto-submit", turbo_frame: dom_id(day) } do |f| %>
+    <%= f.text_field :refs, value: day.refs,
+          class: "ps-plan-refs",
+          placeholder: "Type one or more references (comma-separated)",
+          data: { action: "blur->auto-submit#submit keydown.enter->auto-submit#submit" } %>
+  <% end %>
+<% end %>

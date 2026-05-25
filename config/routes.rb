@@ -14,6 +14,18 @@ Rails.application.routes.draw do
 
   resources :highlights, only: %i[ create update destroy ]
 
+  resources :reading_plans do
+    member do
+      get :open_today
+    end
+    resources :plan_days, only: %i[ update ], path: "days" do
+      member do
+        post   :complete
+        delete :complete, action: :uncomplete, as: :uncomplete
+      end
+    end
+  end
+
   get "/verse_count", to: "verses#count" # JSON: verses in a book+chapter (for the browser)
 
   root "studies#index"

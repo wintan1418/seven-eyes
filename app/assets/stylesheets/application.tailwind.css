@@ -235,6 +235,140 @@ a.ps-vnum:hover { color: var(--rubric-deep); text-decoration: underline; }
 }
 .ps-link-btn:hover { color: var(--rubric); }
 
+/* ====================================================================
+   Reading plans: index, new form, show (manuscript calendar + day list).
+   ==================================================================== */
+.ps-plan-index, .ps-plan-form, .ps-plan-show {
+  width: min(960px, 100%); margin: 0 auto; padding: 22px 24px 60px;
+  color: var(--ink);
+}
+.ps-plan-title {
+  font-family: "EB Garamond", serif; font-size: 30px; color: var(--ink);
+  margin: 4px 0 6px; letter-spacing: 0.01em;
+}
+.ps-plan-sub {
+  font-family: "EB Garamond", serif; font-style: italic; color: var(--sepia);
+  font-size: 14px; margin: 0 0 16px;
+}
+.ps-plan-index-head, .ps-plan-show-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
+}
+.ps-plan-actions { display: flex; gap: 10px; align-items: center; }
+
+.ps-plan-list { display: flex; flex-direction: column; gap: 10px; }
+.ps-plan-card {
+  display: block; padding: 14px 16px;
+  background: var(--vellum-0); border: 1px solid var(--vellum-edge);
+  border-radius: 2px; text-decoration: none; color: var(--ink);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset;
+}
+.ps-plan-card:hover { background: #fff7e0; border-color: var(--gold); }
+.ps-plan-card-name { font: italic 18px/1.2 "EB Garamond", serif; }
+.ps-plan-card-meta {
+  font: 600 10.5px "Cinzel", serif; color: var(--sepia-mute);
+  letter-spacing: 0.16em; text-transform: uppercase; margin-top: 4px;
+}
+
+.ps-plan-empty {
+  background: var(--vellum-0); border: 1px solid var(--vellum-edge);
+  padding: 28px 24px; text-align: center; color: var(--sepia);
+  border-radius: 2px;
+}
+.ps-plan-empty .orn { color: var(--gold); font-size: 22px; margin-bottom: 6px; }
+.ps-plan-empty .hint { font-style: italic; color: var(--sepia-mute); font-size: 14px; }
+
+/* new-plan form */
+.ps-plan-form-body { display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
+.ps-plan-form-body .field { display: flex; flex-direction: column; gap: 4px; }
+.ps-plan-form-body label {
+  font: 600 9.5px "Cinzel", serif; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--sepia);
+}
+.ps-plan-input {
+  padding: 8px 10px; background: var(--vellum-0);
+  border: 1px solid rgba(138, 116, 68, 0.4); border-radius: 2px;
+  font: 15px "EB Garamond", serif; color: var(--ink); outline: none;
+}
+.ps-plan-input:focus { border-color: var(--rubric); box-shadow: 0 0 0 2px rgba(138, 36, 24, 0.12); }
+.ps-plan-form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+
+/* day rows */
+.ps-plan-days { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; }
+.ps-plan-row {
+  display: block;
+  background: var(--vellum-0); border: 1px solid var(--vellum-edge);
+  border-radius: 2px; padding: 10px 14px;
+}
+.ps-plan-row.is-today { border-color: var(--rubric); box-shadow: 0 0 0 1px rgba(138, 36, 24, 0.2); }
+.ps-plan-row.is-done { background: linear-gradient(180deg, #f1e9cf 0%, #ead8aa 100%); }
+.ps-plan-row-head {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;
+}
+.ps-plan-daynum {
+  font: 600 10.5px "Cinzel", serif; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--rubric);
+}
+.ps-plan-date { font: italic 14px "EB Garamond", serif; color: var(--sepia); flex: 1; }
+.ps-plan-tick {
+  border: 1px solid rgba(138, 116, 68, 0.5); background: transparent;
+  border-radius: 2px; padding: 4px 10px;
+  font: 600 10.5px "Cinzel", serif; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--sepia); cursor: pointer;
+}
+.ps-plan-tick:hover { background: rgba(163, 129, 46, 0.15); color: var(--ink); }
+.ps-plan-tick.is-on {
+  background: var(--rubric); color: var(--vellum-0); border-color: var(--rubric-deep);
+}
+.ps-plan-refs {
+  width: 100%; padding: 8px 10px; background: rgba(255, 247, 224, 0.6);
+  border: 1px solid rgba(138, 116, 68, 0.3); border-radius: 2px;
+  font: italic 15px "EB Garamond", serif; color: var(--ink); outline: none;
+}
+.ps-plan-refs:focus { border-color: var(--rubric); background: #fff; }
+
+/* manuscript calendar */
+.ps-plan-cal {
+  display: flex; flex-direction: column; gap: 16px;
+  margin: 12px 0 26px;
+  padding: 14px 16px;
+  background: var(--vellum-0);
+  border: 1px solid var(--vellum-edge);
+  box-shadow: inset 0 0 0 1px rgba(163, 129, 46, 0.3);
+  border-radius: 2px;
+}
+.ps-plan-cal-label {
+  font: 600 10px "Cinzel", serif; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--sepia-mute); margin-bottom: 6px;
+}
+.ps-plan-cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+}
+.ps-plan-cal-cell {
+  position: relative;
+  aspect-ratio: 1; min-height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 247, 224, 0.5);
+  border: 1px solid rgba(163, 129, 46, 0.25);
+  border-radius: 2px;
+  font: 12px "EB Garamond", serif; color: var(--sepia);
+}
+.ps-plan-cal-cell .num { opacity: 0.55; font-size: 11px; }
+.ps-plan-cal-cell.is-future { opacity: 0.45; }
+.ps-plan-cal-cell.is-today {
+  border-color: var(--rubric);
+  box-shadow: 0 0 0 1px rgba(138, 36, 24, 0.25);
+}
+.ps-plan-cal-cell.is-done {
+  background: linear-gradient(180deg, #f5e3a8 0%, #e9c469 100%);
+  color: var(--rubric);
+  border-color: var(--gold);
+}
+.ps-plan-cal-cell .mark {
+  position: absolute; font-size: 14px; color: var(--rubric);
+  opacity: 0.85; pointer-events: none;
+}
+
 /* ---- pane head wraps cleanly when crowded (tablets, multi-pane) ---- */
 .ps-pane-head { flex-wrap: wrap; row-gap: 6px; }
 .ps-pane-head .ps-pane-tool,

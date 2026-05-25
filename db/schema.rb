@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_23_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_25_000200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -95,6 +95,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_23_000000) do
     t.index ["translation_id"], name: "index_panes_on_translation_id"
   end
 
+  create_table "plan_completions", force: :cascade do |t|
+    t.datetime "completed_at", null: false
+    t.datetime "created_at", null: false
+    t.bigint "plan_day_id", null: false
+    t.text "reflection"
+    t.datetime "updated_at", null: false
+    t.index ["plan_day_id"], name: "index_plan_completions_on_plan_day_id"
+    t.index ["plan_day_id"], name: "index_plan_completions_unique", unique: true
+  end
+
+  create_table "plan_days", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "day_number", null: false
+    t.bigint "reading_plan_id", null: false
+    t.text "refs", default: "", null: false
+    t.datetime "updated_at", null: false
+    t.index ["reading_plan_id", "day_number"], name: "index_plan_days_unique", unique: true
+    t.index ["reading_plan_id"], name: "index_plan_days_on_reading_plan_id"
+  end
+
+  create_table "reading_plans", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.date "start_date", null: false
+    t.bigint "study_id"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "start_date"], name: "index_reading_plans_on_user_id_and_start_date"
+    t.index ["user_id"], name: "index_reading_plans_on_user_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -158,6 +190,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_23_000000) do
   add_foreign_key "highlights", "verses"
   add_foreign_key "panes", "studies"
   add_foreign_key "panes", "translations"
+  add_foreign_key "plan_completions", "plan_days"
+  add_foreign_key "plan_days", "reading_plans"
+  add_foreign_key "reading_plans", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "studies", "users"
   add_foreign_key "verses", "books"

@@ -50,6 +50,7 @@
       <% end %>
     <% end %>
     <% if authenticated? %>
+      <%= link_to "Plans", reading_plans_path, class: "ps-tb-btn", style: "text-decoration:none;" %>
       <%= button_to "Sign out", session_path, method: :delete, class: "ps-tb-btn",
             form: { style: "display:contents;" } %>
     <% else %>
