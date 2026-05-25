@@ -52,12 +52,18 @@
     <% if authenticated? %>
       <%= link_to "Plans", reading_plans_path, class: "ps-tb-btn", style: "text-decoration:none;" %>
       <% if current_user.guide_dismissed_at.present? %>
-        <%= button_to "Guide", restore_guide_path, method: :delete, class: "ps-tb-btn",
+        <%= button_to "Show guide", restore_guide_path, method: :delete, class: "ps-tb-btn",
+              form: { style: "display:contents;" } %>
+      <% else %>
+        <%= button_to "Hide guide", dismiss_guide_path, method: :post, class: "ps-tb-btn",
               form: { style: "display:contents;" } %>
       <% end %>
       <%= button_to "Sign out", session_path, method: :delete, class: "ps-tb-btn",
             form: { style: "display:contents;" } %>
     <% else %>
+      <button type="button" class="ps-tb-btn" data-action="guide#toggle">
+        <span data-guide-target="label">Hide guide</span>
+      </button>
       <%= link_to "Sign in", new_session_path, class: "ps-tb-btn", style: "text-decoration:none;" %>
     <% end %>
   </div>

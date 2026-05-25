@@ -7,14 +7,8 @@
     <div>
       <div class="ps-guide-eyebrow">A Quill &amp; Compass</div>
       <h2 class="ps-guide-title">What's at your desk</h2>
-      <p class="ps-guide-sub">A guide to the tools — keep it until they're in your hands.</p>
+      <p class="ps-guide-sub">A guide to the tools — toggle it any time from the topbar.</p>
     </div>
-    <% if authenticated? %>
-      <%= button_to "Hide guide", dismiss_guide_path, method: :post,
-            class: "ps-link-btn", form: { style: "display:contents;" } %>
-    <% else %>
-      <button type="button" class="ps-link-btn" data-action="guide#hide">Hide guide</button>
-    <% end %>
   </header>
 
   <div class="ps-guide-grid">
