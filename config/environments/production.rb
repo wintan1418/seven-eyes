@@ -46,12 +46,14 @@ Rails.application.configure do
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
-  # Replace the default in-process memory cache store with a durable alternative.
-  config.cache_store = :solid_cache_store
+  # In-process memory cache (single Puma host, no need for a shared DB-backed
+  # cache). Avoids depending on the solid_cache_entries table — Hatchbox-style
+  # deploys only run `db:migrate` for the primary schema, not the cache schema.
+  config.cache_store = :memory_store, { size: 32.megabytes }
 
-  # Replace the default in-process and non-durable queuing backend for Active Job.
-  config.active_job.queue_adapter = :solid_queue
-  config.solid_queue.connects_to = { database: { writing: :queue } }
+  # In-process Active Job queue (this app doesn't run background jobs).
+  # Avoids depending on the solid_queue tables for the same reason as above.
+  config.active_job.queue_adapter = :async
 
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
