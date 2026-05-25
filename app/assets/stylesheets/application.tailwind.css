@@ -302,7 +302,11 @@ a.ps-guide-card:hover { background: #fff7e0; border-color: var(--gold); }
 .ps-guide-card .d {
   font: 14px/1.45 "EB Garamond", serif; color: var(--ink-soft); font-style: italic;
 }
+/* the small "Open Plans ›" label inside a guide card is a flat inline marker —
+   override the global .cta chunky-button styles back to a plain label. */
 .ps-guide-card .cta {
+  display: inline; padding: 0; background: transparent;
+  border: 0; box-shadow: none;
   margin-top: 6px;
   font: 600 10.5px "Cinzel", serif; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--rubric);
