@@ -65,7 +65,16 @@ module ScriptureHelper
   # Render one verse: a clickable superscript number (opens cross-references) plus
   # the verse text in a selectable container (used by the highlighter). The opening
   # drop cap is a pure-CSS ::first-letter treatment so character offsets stay exact.
-  def scripture_verse(verse, study:, book:, highlights: [], dropcap: false)
+  # Batch-load LexiconEntry rows for every Strong's number across the given
+  # verses' tokens, returned as a strongs → entry hash. Used to enrich the
+  # interlinear gloss without N+1 queries.
+  def lexicon_lookup_for(verses)
+    strongs = verses.flat_map { |v| Array(v.tokens).map { |t| t["s"] }.compact }.uniq
+    return {} if strongs.empty?
+    LexiconEntry.where(strongs: strongs).index_by(&:strongs)
+  end
+
+  def scripture_verse(verse, study:, book:, highlights: [], dropcap: false, lexicon: {})
     vnum = link_to(verse.verse_number,
                    cross_references_study_path(study, osis: book.osis_code,
                      chapter: verse.chapter, verse: verse.verse_number, translation: verse.translation.code),
@@ -77,7 +86,7 @@ module ScriptureHelper
     # Word-by-word Strong's tagging (KJV) takes precedence when present and the
     # verse isn't highlighted — highlight rendering and per-word spans don't mix.
     if verse.tokens.present? && highlights.blank?
-      text_span = tag.span(strongs_tokens(verse.tokens, study),
+      text_span = tag.span(strongs_tokens(verse.tokens, study, lexicon: lexicon),
                            class: "ps-verse-text", data: { verse_id: verse.id, offset_base: 0 })
       return tag.span(safe_join([ vnum, text_span, " " ]), class: "ps-verse", data: verse_data)
     end
@@ -98,13 +107,20 @@ module ScriptureHelper
 
   # Render Strong's-tagged tokens: words with an "s" become clickable lexicon
   # links; everything else is plain text. Joined so the verse reads normally.
-  def strongs_tokens(tokens, study)
+  # When +lexicon+ is supplied, attaches a data-gloss attribute carrying the
+  # transliteration (or lemma fallback) plus the Strong's code — interlinear
+  # mode renders it underneath each word via CSS.
+  def strongs_tokens(tokens, study, lexicon: {})
     safe_join(tokens.map do |t|
       surface = t["w"].to_s
       if t["s"].present?
+        entry = lexicon[t["s"]]
+        readable = entry&.translit.presence || entry&.lemma.presence
+        gloss = readable.present? ? "#{readable} · #{t["s"]}" : t["s"]
         link_to(surface, lexicon_study_path(study, strongs: t["s"]),
-                class: "ps-word", title: t["s"],
-                data: { turbo_frame: "lexicon_drawer", action: "lexicon#open" })
+                class: "ps-word", title: gloss,
+                data: { strongs: t["s"], gloss: gloss,
+                        turbo_frame: "lexicon_drawer", action: "lexicon#open" })
       else
         surface
       end

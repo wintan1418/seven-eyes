@@ -39,10 +39,12 @@
                 <span class="tag">&middot; <%= content.translation.name %></span>
               </div>
               <div class="rule"></div>
+              <% lexicon = lexicon_lookup_for(content.verses) %>
               <div class="ps-verse-body">
                 <% content.verses.each_with_index do |v, i| %>
                   <%= scripture_verse(v, study: @study, book: content.book,
-                        highlights: [], dropcap: i.zero? && v.verse_number == 1) %>
+                        highlights: [], dropcap: i.zero? && v.verse_number == 1,
+                        lexicon: lexicon) %>
                 <% end %>
               </div>
             </div>

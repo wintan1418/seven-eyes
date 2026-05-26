@@ -57,11 +57,13 @@
       </div>
       <div class="rule"></div>
       <% highlights_by_verse = authenticated? ? current_user.highlights.where(verse_id: content.verses.map(&:id)).group_by(&:verse_id) : {} %>
+      <% lexicon = lexicon_lookup_for(content.verses) %>
       <div class="ps-verse-body" data-controller="highlighter" data-action="click->memorize#reveal">
         <% content.verses.each_with_index do |verse, i| %>
           <%= scripture_verse(verse, study: pane.study, book: content.book,
                 highlights: highlights_by_verse[verse.id] || [],
-                dropcap: i.zero? && verse.verse_number == 1) %>
+                dropcap: i.zero? && verse.verse_number == 1,
+                lexicon: lexicon) %>
         <% end %>
       </div>
     </div>

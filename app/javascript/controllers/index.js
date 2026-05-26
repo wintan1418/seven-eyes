@@ -72,3 +72,6 @@ application.register("share", ShareController)
 
 import DiffController from "./diff_controller"
 application.register("diff", DiffController)
+
+import InterlinearController from "./interlinear_controller"
+application.register("interlinear", InterlinearController)

@@ -1211,6 +1211,32 @@
   z-index: 1;
 }
 
+/* ====== Interlinear mode: stack the gloss beneath each Strong's-tagged word ====== */
+.ps-root.is-interlinear .ps-verses { line-height: 1.45; }
+.ps-root.is-interlinear .ps-verse-text .ps-word {
+  display: inline-block;
+  text-align: center;
+  margin: 0 3px 16px;
+  vertical-align: top;
+  text-decoration: none;
+  line-height: 1.1;
+  position: relative;
+}
+.ps-root.is-interlinear .ps-word[data-gloss]::after {
+  content: attr(data-gloss);
+  display: block;
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-size: 0.52em;
+  letter-spacing: 0.04em;
+  color: var(--rubric);
+  margin-top: 3px;
+  line-height: 1;
+  opacity: 0.85;
+  white-space: nowrap;
+  text-transform: none;
+  font-weight: 600;
+}
+
 /* ====== Translation diff (word-level highlight when comparing same verse) ====== */
 .ps-word { /* identity wrapper — keeps selection and copy intact */ }
 .ps-diff-only {
