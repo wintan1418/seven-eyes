@@ -1211,6 +1211,19 @@
   z-index: 1;
 }
 
+/* ====== Translation diff (word-level highlight when comparing same verse) ====== */
+.ps-word { /* identity wrapper — keeps selection and copy intact */ }
+.ps-diff-only {
+  background: rgba(216, 100, 50, 0.15);
+  border-bottom: 1px dotted rgba(216, 100, 50, 0.55);
+  border-radius: 1px;
+  padding: 0 1px;
+}
+body[data-theme="candlelight"] .ps-diff-only {
+  background: rgba(232, 130, 80, 0.18);
+  border-bottom-color: rgba(232, 130, 80, 0.6);
+}
+
 /* ====== Shared (read-only) study view ====== */
 .ps-shared-ref {
   flex: 1;

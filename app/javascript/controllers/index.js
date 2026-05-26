@@ -69,3 +69,6 @@ application.register("theme", ThemeController)
 
 import ShareController from "./share_controller"
 application.register("share", ShareController)
+
+import DiffController from "./diff_controller"
+application.register("diff", DiffController)

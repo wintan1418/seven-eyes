@@ -57,6 +57,11 @@
       </button>
       <button type="button" class="ps-tb-btn" data-action="search#open">&#9906; Search</button>
       <button type="button" class="ps-tb-btn" data-action="ai-search#open">&#10038; Find</button>
+      <button type="button" class="ps-tb-btn"
+              data-action="diff#toggle" data-diff-target="button"
+              title="Highlight words that differ across translation panes">
+        &#8644; Diff
+      </button>
       <%= link_to sermon_study_path(study), class: "ps-tb-btn",
             style: "text-decoration:none;", title: "Compile this study as a printable sermon manuscript" do %>
         &#9998; Sermon
