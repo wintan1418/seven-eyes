@@ -78,6 +78,10 @@
     0 2px 0 rgba(0,0,0,0.18);
   gap: 18px;
   flex: 0 0 auto;
+  /* Must outrank .ps-shell (also z-index:1 via .ps-root > *) so descendants
+     like the View dropdown panel can paint over the workspace. Still below
+     modal-shroud (30) and drawer hosts (40+) so those overlay correctly. */
+  z-index: 10;
 }
 .ps-brand {
   font-family: "Cinzel", "Trajan Pro", "Noto Sans Symbols 2", "Segoe UI Symbol", "Apple Symbols", "Segoe UI Emoji", "Noto Color Emoji", serif;
