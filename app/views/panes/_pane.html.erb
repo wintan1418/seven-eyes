@@ -22,6 +22,8 @@
                 data-action="memorize#toggle" data-memorize-target="button">&#9680;</button>
         <button type="button" class="ps-pane-tool <%= "has-notes" if pane.notes.present? %>"
                 title="Notes" data-action="pane#toggleNotes">&#9998;</button>
+        <button type="button" class="ps-pane-tool" title="Focus this pane (presentation mode)"
+                data-action="presentation#enter">&#9974;</button>
       <% end %>
       <button type="button" class="ps-pane-tool" title="Browse books"
               data-action="book-browser#open" data-pane-id="<%= pane.id %>">&#128214;</button>

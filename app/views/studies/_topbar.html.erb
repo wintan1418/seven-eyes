@@ -41,6 +41,14 @@
       <button class="ps-tb-btn" disabled><span class="dot"></span> Sync Scroll</button>
     <% end %>
     <% if study %>
+      <div class="ps-font-size" title="Text size (for projection or large screens)">
+        <span class="lbl">Aa</span>
+        <input type="range" min="0" max="4" step="1" value="0"
+               data-font-size-target="slider"
+               data-action="input->font-size#change"
+               aria-label="Text size">
+        <span class="level" data-font-size-target="level">S</span>
+      </div>
       <button type="button" class="ps-tb-btn" data-action="search#open">&#9906; Search</button>
       <button type="button" class="ps-tb-btn" data-action="ai-search#open">&#10038; Find</button>
       <% if authenticated? %>

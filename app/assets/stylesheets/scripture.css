@@ -898,3 +898,135 @@
 
 /* ----- focused selection ----- */
 ::selection { background: rgba(163, 129, 46, 0.35); color: var(--ink); }
+
+/* ====== Reader font scaling (projector / large-screen) ====== */
+.ps-root {
+  --ps-verse-size: 18px;
+  --ps-verse-line: 1.72;
+}
+.ps-root[data-font-size="0"] { --ps-verse-size: 18px; --ps-verse-line: 1.72; }
+.ps-root[data-font-size="1"] { --ps-verse-size: 22px; --ps-verse-line: 1.68; }
+.ps-root[data-font-size="2"] { --ps-verse-size: 28px; --ps-verse-line: 1.62; }
+.ps-root[data-font-size="3"] { --ps-verse-size: 36px; --ps-verse-line: 1.55; }
+.ps-root[data-font-size="4"] { --ps-verse-size: 48px; --ps-verse-line: 1.48; }
+
+.ps-verses { font-size: var(--ps-verse-size); line-height: var(--ps-verse-line); }
+.ps-verses .ps-vnum { font-size: calc(var(--ps-verse-size) * 0.6); }
+.ps-verses .ps-dropcap { font-size: calc(var(--ps-verse-size) * 3.1); }
+
+/* slider in topbar */
+.ps-font-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  height: 28px;
+  border: 1px solid rgba(163, 129, 46, 0.3);
+  border-radius: 2px;
+  background: transparent;
+}
+.ps-font-size .lbl {
+  font: 600 11px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.16em;
+  color: #d8c389;
+}
+.ps-font-size .level {
+  font: 600 10px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  min-width: 22px;
+  text-align: center;
+}
+.ps-font-size input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 92px;
+  height: 3px;
+  background: rgba(163, 129, 46, 0.35);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.ps-font-size input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 1px solid var(--gold-deep);
+  cursor: pointer;
+  box-shadow: 0 0 0 2px rgba(35, 20, 8, 0.6);
+}
+.ps-font-size input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 1px solid var(--gold-deep);
+  cursor: pointer;
+  box-shadow: 0 0 0 2px rgba(35, 20, 8, 0.6);
+}
+
+/* ====== Presentation / focus-pane mode ====== */
+.ps-root.is-presenting {
+  --ps-verse-size: clamp(36px, 4.2vw, 72px);
+  --ps-verse-line: 1.5;
+  background: var(--vellum-0);
+}
+.ps-root.is-presenting .ps-topbar,
+.ps-root.is-presenting .ps-sidebar,
+.ps-root.is-presenting .ps-drawer,
+.ps-root.is-presenting .ps-notes,
+.ps-root.is-presenting .ps-pane:not(.is-presented) { display: none !important; }
+
+.ps-root.is-presenting .ps-shell { min-height: 100vh; }
+.ps-root.is-presenting .ps-workspace {
+  grid-template-columns: 1fr !important;
+  grid-template-rows: 1fr !important;
+  padding: 40px 64px;
+  gap: 0;
+}
+.ps-root.is-presenting .ps-pane.is-presented {
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.6) inset,
+    0 0 0 1px rgba(255, 244, 214, 0.5) inset,
+    0 30px 80px -20px rgba(50, 30, 10, 0.5),
+    0 6px 20px rgba(50, 30, 10, 0.2);
+}
+.ps-root.is-presenting .ps-pane-head { display: none; }
+.ps-root.is-presenting .ps-verses {
+  padding: 64px 80px;
+}
+.ps-root.is-presenting .ps-verses .ref-title { font-size: calc(var(--ps-verse-size) * 0.35); }
+.ps-root.is-presenting .ps-pane::before { inset: 18px; }
+
+/* Floating exit button */
+.ps-exit-presentation {
+  display: none;
+  position: fixed;
+  top: 18px;
+  right: 22px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(35, 20, 8, 0.94);
+  color: var(--vellum-0);
+  border: 1px solid var(--gold-deep);
+  border-radius: 2px;
+  font: 600 11px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+.ps-exit-presentation .kbd {
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  border: 1px solid rgba(163, 129, 46, 0.5);
+  border-radius: 2px;
+  color: var(--gold);
+}
+.ps-root.is-presenting .ps-exit-presentation { display: inline-flex; }

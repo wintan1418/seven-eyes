@@ -14,6 +14,8 @@ Rails.application.routes.draw do
 
   resources :highlights, only: %i[ create update destroy ]
 
+  resource :preferences, only: %i[ update ]
+
   post   "/guide/dismiss", to: "guide#dismiss", as: :dismiss_guide
   delete "/guide/dismiss", to: "guide#restore", as: :restore_guide
 

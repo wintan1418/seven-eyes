@@ -57,3 +57,9 @@ application.register("lexicon", LexiconController)
 
 import GuideController from "./guide_controller"
 application.register("guide", GuideController)
+
+import FontSizeController from "./font_size_controller"
+application.register("font-size", FontSizeController)
+
+import PresentationController from "./presentation_controller"
+application.register("presentation", PresentationController)

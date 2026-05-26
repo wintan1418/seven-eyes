@@ -1,6 +1,14 @@
-<div class="ps-root" data-controller="book-browser ai-search search xref commentary lexicon shortcuts auth-gate new-study">
+<div class="ps-root"
+     data-controller="book-browser ai-search search xref commentary lexicon shortcuts auth-gate new-study font-size presentation"
+     data-font-size="<%= authenticated? ? current_user.font_size : 0 %>"
+     data-font-size-url-value="<%= preferences_path %>"
+     data-font-size-authenticated-value="<%= authenticated? %>">
   <%= render "topbar", study_name: @study.name, panes: @study.pane_count,
         sync: @study.sync_scroll, saved: true, study: @study %>
+  <button type="button" class="ps-exit-presentation" data-action="presentation#exit"
+          title="Exit focus mode (Esc)">
+    <span>&#10005;</span> Exit Focus <span class="kbd">Esc</span>
+  </button>
   <div class="ps-shell">
     <%= render "sidebar", studies: @studies, active_id: @study.id %>
     <main class="ps-workspace <%= workspace_cols_class(@study.pane_count) %>"
