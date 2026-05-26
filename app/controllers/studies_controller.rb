@@ -110,7 +110,12 @@ class StudiesController < ApplicationController
     @rows = CrossReferenceLookup.for_verse(
       book:, chapter: params[:chapter].to_i, verse: params[:verse].to_i, translation:
     )
-    render partial: "studies/xref_results", locals: { study: @study, origin: @origin, rows: @rows }
+    @backlinks = authenticated? ? BacklinksLookup.for(
+      user: current_user, book: book,
+      chapter: params[:chapter].to_i, verse: params[:verse].to_i
+    ) : []
+    render partial: "studies/xref_results",
+           locals: { study: @study, origin: @origin, rows: @rows, backlinks: @backlinks }
   end
 
   private

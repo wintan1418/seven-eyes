@@ -51,7 +51,7 @@
             <% if pane.notes.present? %>
               <div class="ps-notes">
                 <div class="ps-notes-head"><span>Notes</span></div>
-                <div class="ps-notes-body"><%= simple_format(pane.notes) %></div>
+                <div class="ps-notes-body"><%= render_notes(pane.notes, study: @study) %></div>
               </div>
             <% end %>
           <% else %>

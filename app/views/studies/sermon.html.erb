@@ -43,7 +43,7 @@
         <% if s.notes.present? %>
           <div class="ms-notes">
             <div class="ms-notes-head">Reflections</div>
-            <div class="ms-notes-body"><%= simple_format(s.notes) %></div>
+            <div class="ms-notes-body"><%= render_notes(s.notes, study: @study) %></div>
           </div>
         <% end %>
       </section>

@@ -1,4 +1,5 @@
-<%# locals: study, origin, rows %>
+<%# locals: study, origin, rows, backlinks (optional) %>
+<% backlinks ||= [] %>
 <%= turbo_frame_tag "xref_drawer" do %>
   <div class="ps-drawer-head">
     <div class="ps-drawer-eyebrow">
@@ -8,6 +9,22 @@
     <div class="ps-drawer-title"><%= origin %></div>
     <div class="ps-drawer-sub">Treasury of Scripture Knowledge &middot; <%= pluralize(rows.size, "reference") %></div>
   </div>
+  <% if backlinks.any? %>
+    <div class="ps-backlinks">
+      <div class="ps-backlinks-head">
+        &#9698; In your notes &middot; <%= pluralize(backlinks.size, "mention") %>
+      </div>
+      <% backlinks.each do |b| %>
+        <%= link_to study_path(b.study), class: "ps-backlink" do %>
+          <div class="ps-backlink-meta">
+            <span class="study"><%= b.study.name %></span>
+            <span class="ref">&middot; <%= b.reference %></span>
+          </div>
+          <div class="ps-backlink-snippet"><%= b.snippet %></div>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
   <div class="ps-drawer-list">
     <% if rows.empty? %>
       <div class="ps-ai-hint">No cross-references for this verse.</div>

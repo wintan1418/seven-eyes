@@ -1,6 +1,44 @@
 module ScriptureHelper
   ROMAN_PANE = %w[I II III IV].freeze
 
+  NOTE_LINK_RE = /\[\[([^\]\n]+)\]\]/
+  NOTE_LINK_PLACEHOLDER = "\u{E010}NOTELINK_%d\u{E011}".freeze
+
+  # Render note text with `[[John 3:16]]` style wiki-links resolved against
+  # ReferenceParser + Book and turned into clickable links into the xref drawer.
+  # Falls through `simple_format` for paragraph/<br> handling so multi-line
+  # notes still read like prose.
+  def render_notes(text, study:)
+    return "".html_safe if text.blank?
+    links = []
+    with_placeholders = text.gsub(NOTE_LINK_RE) do
+      links << note_link_to(::Regexp.last_match(1), study)
+      NOTE_LINK_PLACEHOLDER % (links.size - 1)
+    end
+    out = simple_format(with_placeholders, {}, sanitize: false).to_s
+    links.each_with_index { |link, i| out = out.sub(NOTE_LINK_PLACEHOLDER % i, link.to_s) }
+    out.html_safe
+  end
+
+  def note_link_to(ref_text, study)
+    parsed = ReferenceParser.call(ref_text)
+    if parsed.valid? && (book = Book.find_by_osis(parsed.osis))
+      label = "#{book.name} #{parsed.chapter}"
+      label += ":#{parsed.verse_start}" if parsed.verse_start
+      label += "-#{parsed.verse_end}" if parsed.verse_end && parsed.verse_end != parsed.verse_start
+      translation_code = (study.panes.find_by(translation_id: nil).nil? &&
+                          study.panes.first&.effective_translation&.code) || "KJV"
+      link_to("[[#{label}]]",
+              cross_references_study_path(study,
+                osis: book.osis_code, chapter: parsed.chapter,
+                verse: parsed.verse_start || 1, translation: translation_code),
+              class: "ps-note-link",
+              data: { turbo_frame: "xref_drawer", action: "xref#open" })
+    else
+      ERB::Util.html_escape("[[#{ref_text}]]")
+    end
+  end
+
   # Pane index as a Roman numeral (I–IV) for the design's pane badges.
   def pane_numeral(position)
     ROMAN_PANE[position] || (position + 1).to_s

@@ -1323,6 +1323,65 @@ body[data-theme="candlelight"] .ps-font-size.in-menu { background: rgba(60, 40, 
   .ps-tb-btn-secondary { display: none; } /* trim "Saved" badge + Hide-guide on phone */
 }
 
+/* ====== Wiki-style note links and backlinks panel ====== */
+.ps-note-link {
+  color: var(--rubric);
+  text-decoration: none;
+  font-style: normal;
+  border-bottom: 1px dotted var(--rubric);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ps-note-link:hover {
+  color: var(--rubric-deep);
+  border-bottom-style: solid;
+}
+
+.ps-backlinks {
+  padding: 12px 20px 14px;
+  border-bottom: 1px dashed rgba(138, 116, 68, 0.4);
+  background: rgba(255, 247, 224, 0.35);
+}
+.ps-backlinks-head {
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  font-size: 9.5px;
+  color: var(--rubric);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.ps-backlink {
+  display: block;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-left: 2px solid var(--gold);
+  background: rgba(255, 247, 224, 0.55);
+  border-radius: 0 2px 2px 0;
+  text-decoration: none;
+}
+.ps-backlink:hover { background: rgba(255, 247, 224, 0.9); }
+.ps-backlink-meta {
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  font-size: 9.5px;
+  color: var(--sepia);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.ps-backlink-meta .ref { color: var(--sepia-mute); }
+.ps-backlink-snippet {
+  font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+body[data-theme="candlelight"] .ps-backlinks { background: rgba(60, 40, 20, 0.4); }
+body[data-theme="candlelight"] .ps-backlink { background: rgba(60, 40, 20, 0.5); }
+body[data-theme="candlelight"] .ps-backlink:hover { background: rgba(80, 55, 25, 0.6); }
+
 /* ====== Interlinear mode: stack the gloss beneath each Strong's-tagged word ====== */
 .ps-root.is-interlinear .ps-verses { line-height: 1.45; }
 .ps-root.is-interlinear .ps-verse-text .ps-word {
