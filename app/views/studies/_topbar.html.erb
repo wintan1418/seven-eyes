@@ -61,6 +61,15 @@
             style: "text-decoration:none;", title: "Compile this study as a printable sermon manuscript" do %>
         &#9998; Sermon
       <% end %>
+      <% if authenticated? && study.user_id == current_user.id %>
+        <button type="button" class="ps-tb-btn"
+                data-controller="share"
+                data-share-url-value="<%= share_study_path(study) %>"
+                data-action="share#copy"
+                title="Copy a read-only share link for this study">
+          <span data-share-target="label">&#x1F517; Share</span>
+        </button>
+      <% end %>
       <% if authenticated? %>
         <span class="ps-tb-btn is-active" style="cursor:default;">&#10003; Saved</span>
       <% else %>

@@ -1211,6 +1211,22 @@
   z-index: 1;
 }
 
+/* ====== Shared (read-only) study view ====== */
+.ps-shared-ref {
+  flex: 1;
+  padding: 6px 10px;
+  background: rgba(255, 247, 224, 0.5);
+  border: 1px solid rgba(138, 116, 68, 0.25);
+  border-radius: 2px;
+  font: 14px "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+body[data-theme="candlelight"] .ps-shared-ref {
+  background: rgba(60, 40, 20, 0.5);
+  color: var(--ink-soft);
+}
+
 /* ====== Candlelight (dark vellum) theme ====== */
 body[data-theme="candlelight"] {
   --vellum-0: #261a0e;

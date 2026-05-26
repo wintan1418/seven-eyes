@@ -10,8 +10,11 @@ Rails.application.routes.draw do
     get :cross_references, on: :member
     get :commentary, on: :member
     get :sermon, on: :member
+    post :share, on: :member
     get "lexicon/:strongs", on: :member, action: :lexicon, as: :lexicon
   end
+
+  get "/s/:token", to: "shared_studies#show", as: :shared_study
 
   resources :highlights, only: %i[ create update destroy ]
 

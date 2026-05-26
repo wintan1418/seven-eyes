@@ -66,3 +66,6 @@ application.register("presentation", PresentationController)
 
 import ThemeController from "./theme_controller"
 application.register("theme", ThemeController)
+
+import ShareController from "./share_controller"
+application.register("share", ShareController)

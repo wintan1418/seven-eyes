@@ -1,0 +1,27 @@
+<% content_for :title, "Shared study not found" %>
+
+<div class="ps-root">
+  <div class="ps-topbar">
+    <div class="ps-brand">
+      <%= link_to root_path, style: "text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px;" do %>
+        <span class="cross">&#9769;</span>
+        <span>PARALLEL &middot; SCRIPTURE</span>
+      <% end %>
+    </div>
+    <div class="ps-study-name"><span class="orn">&#10086;</span><span>This link is no longer available</span></div>
+    <div class="ps-topbar-actions"></div>
+  </div>
+  <div class="ps-shell">
+    <div class="ps-welcome">
+      <div class="eyebrow">A shared codex</div>
+      <h1>Not found</h1>
+      <div class="verse-of-day">
+        The share link you followed is invalid or has been revoked.
+        <span class="ref">Return to the Scriptorium</span>
+      </div>
+      <div class="cta-row">
+        <%= link_to "Open Parallel Scripture", root_path, class: "cta" %>
+      </div>
+    </div>
+  </div>
+</div>

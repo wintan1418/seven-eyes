@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_26_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_26_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -141,9 +141,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_120000) do
     t.datetime "last_opened_at"
     t.string "name", default: "Untitled Study", null: false
     t.integer "pane_count", default: 4, null: false
+    t.string "share_token"
     t.boolean "sync_scroll", default: false, null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id"
+    t.index ["share_token"], name: "index_studies_on_share_token", unique: true, where: "(share_token IS NOT NULL)"
     t.index ["user_id", "last_opened_at"], name: "index_studies_on_user_id_and_last_opened_at"
     t.index ["user_id"], name: "index_studies_on_user_id"
   end

@@ -2,7 +2,7 @@ class StudiesController < ApplicationController
   # The workspace is open to everyone; only saving (notes/highlights/account) needs auth.
   allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest search commentary lexicon sermon ]
 
-  before_action :set_study, only: %i[ show update destroy suggest search cross_references commentary lexicon sermon ]
+  before_action :set_study, only: %i[ show update destroy suggest search cross_references commentary lexicon sermon share ]
 
   def index
     @studies = authenticated? ? current_user.studies.recent : []
@@ -77,6 +77,14 @@ class StudiesController < ApplicationController
                           .order("books.position", "verses.chapter", "verses.verse_number").limit(8)
     render partial: "studies/lexicon_results",
            locals: { study: @study, strongs: @strongs, entry: @entry, count: @count, samples: @samples }
+  end
+
+  def share
+    return head(:forbidden) unless authenticated? && @study.user_id == current_user.id
+    token = @study.ensure_share_token!
+    respond_to do |format|
+      format.json { render json: { url: shared_study_url(token), token: token } }
+    end
   end
 
   def sermon

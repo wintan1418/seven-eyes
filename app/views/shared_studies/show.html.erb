@@ -1,0 +1,65 @@
+<% content_for :title, "#{@study.name} — Shared Study" %>
+
+<div class="ps-root is-shared">
+  <div class="ps-topbar">
+    <div class="ps-brand">
+      <%= link_to root_path, style: "text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px;" do %>
+        <span class="cross">&#9769;</span>
+        <span>PARALLEL &middot; SCRIPTURE</span>
+      <% end %>
+    </div>
+    <div class="ps-study-name">
+      <span class="orn">&#10086;</span>
+      <span><%= @study.name %></span>
+      <span class="pencil" style="letter-spacing: 0.2em; color: var(--gold);">&middot; SHARED</span>
+    </div>
+    <div class="ps-topbar-actions">
+      <%= link_to "Open your own workspace", root_path,
+            class: "ps-tb-btn", style: "text-decoration:none;" %>
+    </div>
+  </div>
+  <div class="ps-shell">
+    <main class="ps-workspace <%= workspace_cols_class(@study.pane_count) %>">
+      <% @panes.each do |pane| %>
+        <div class="ps-pane">
+          <div class="ps-pane-head">
+            <div class="ps-pane-index"><%= pane_numeral(pane.position) %></div>
+            <div class="ps-shared-ref"><%= pane.reference.presence || "—" %></div>
+            <% if pane.effective_translation %>
+              <div class="ps-trans" style="cursor: default;">
+                <%= pane.effective_translation.code %>
+              </div>
+            <% end %>
+          </div>
+          <% content = pane.content %>
+          <% if content.ok? %>
+            <div class="ps-verses">
+              <div class="ref-title">
+                <span><%= reference_title(content.book, content.parsed.chapter) %></span>
+                <span class="tag">&middot; <%= content.translation.name %></span>
+              </div>
+              <div class="rule"></div>
+              <div class="ps-verse-body">
+                <% content.verses.each_with_index do |v, i| %>
+                  <%= scripture_verse(v, study: @study, book: content.book,
+                        highlights: [], dropcap: i.zero? && v.verse_number == 1) %>
+                <% end %>
+              </div>
+            </div>
+            <% if pane.notes.present? %>
+              <div class="ps-notes">
+                <div class="ps-notes-head"><span>Notes</span></div>
+                <div class="ps-notes-body"><%= simple_format(pane.notes) %></div>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="ps-pane-empty">
+              <div class="orn">&#10086;</div>
+              <div class="lead">Pane <%= pane_numeral(pane.position) %> is empty</div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </main>
+  </div>
+</div>

@@ -13,6 +13,19 @@ class Study < ApplicationRecord
     update_column(:last_opened_at, Time.current)
   end
 
+  # Lazily generate a URL-safe share token. Idempotent — repeat calls return
+  # the same token so a shared link stays stable.
+  def ensure_share_token!
+    return share_token if share_token.present?
+    loop do
+      candidate = SecureRandom.urlsafe_base64(16)
+      update_column(:share_token, candidate)
+      return candidate
+    rescue ActiveRecord::RecordNotUnique
+      next
+    end
+  end
+
   # Ensure exactly pane_count panes exist (used when the count changes in Phase 3).
   def sync_panes!
     current = panes.to_a
