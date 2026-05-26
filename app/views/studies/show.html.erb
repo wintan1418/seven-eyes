@@ -18,6 +18,38 @@
   <button type="button" class="ps-preach-zone right"
           data-action="presentation#next" aria-label="Next verse"></button>
   <div class="ps-preach-counter" data-preach-counter></div>
+
+  <div class="ps-preach-controls">
+    <div class="ps-preach-group">
+      <span class="lbl">Group</span>
+      <% (1..3).each do |n| %>
+        <button type="button"
+                class="<%= 'is-on' if n == 1 %>"
+                data-action="presentation#setGroup"
+                data-preach-group="<%= n %>"
+                data-presentation-size-param="<%= n %>"><%= n %></button>
+      <% end %>
+    </div>
+    <button type="button" class="ps-preach-parallel"
+            data-preach-parallel
+            data-action="presentation#toggleParallel"
+            title="Show 2 translations side-by-side (P)">
+      &#9783; Parallel
+    </button>
+    <button type="button" class="ps-preach-jump-btn"
+            data-action="presentation#openJump"
+            title="Jump to verse (G, then number)">
+      G &#10142; verse
+    </button>
+  </div>
+
+  <div class="ps-preach-jump" hidden>
+    <span>Go to verse</span>
+    <input type="number" min="1" inputmode="numeric"
+           data-presentation-target="jumpInput"
+           data-action="keydown.enter->presentation#jumpSubmit keydown.esc->presentation#cancelJump">
+    <button type="button" data-action="presentation#jumpSubmit">Go</button>
+  </div>
   <div class="ps-shell">
     <%= render "sidebar", studies: @studies, active_id: @study.id %>
     <main class="ps-workspace <%= workspace_cols_class(@study.pane_count) %>"
