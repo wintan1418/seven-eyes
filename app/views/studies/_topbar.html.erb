@@ -22,51 +22,15 @@
     </div>
   <% end %>
   <div class="ps-topbar-actions">
-    <div class="ps-pane-picker" title="Pane count">
-      <% (1..4).each do |n| %>
-        <% if study %>
+    <% if study %>
+      <div class="ps-pane-picker" title="Pane count">
+        <% (1..4).each do |n| %>
           <%= button_to n, study_path(study), method: :patch, params: { study: { pane_count: n } },
                 class: (panes == n ? "is-on" : ""), form: { style: "display:contents;" } %>
-        <% else %>
-          <button class="<%= "is-on" if panes == n %>" disabled><%= n %></button>
         <% end %>
-      <% end %>
-    </div>
-    <% if study %>
-      <%= button_to study_path(study), method: :patch, params: { study: { sync_scroll: !sync } },
-            class: "ps-tb-btn #{'is-active' if sync}", form: { style: "display:contents;" } do %>
-        <span class="dot"></span> Sync Scroll
-      <% end %>
-    <% else %>
-      <button class="ps-tb-btn" disabled><span class="dot"></span> Sync Scroll</button>
-    <% end %>
-    <% if study %>
-      <div class="ps-font-size" title="Text size (for projection or large screens)">
-        <span class="lbl">Aa</span>
-        <input type="range" min="0" max="4" step="1" value="0"
-               data-font-size-target="slider"
-               data-action="input->font-size#change"
-               aria-label="Text size">
-        <span class="level" data-font-size-target="level">S</span>
       </div>
-      <button type="button" class="ps-tb-btn ps-theme-toggle"
-              data-action="theme#toggle"
-              title="Switch between vellum (light) and candlelight (dark)">
-        <span data-theme-target="icon">&#128367;</span>
-        <span data-theme-target="label">Candle</span>
-      </button>
       <button type="button" class="ps-tb-btn" data-action="search#open">&#9906; Search</button>
       <button type="button" class="ps-tb-btn" data-action="ai-search#open">&#10038; Find</button>
-      <button type="button" class="ps-tb-btn"
-              data-action="diff#toggle" data-diff-target="button"
-              title="Highlight words that differ across translation panes">
-        &#8644; Diff
-      </button>
-      <button type="button" class="ps-tb-btn"
-              data-action="interlinear#toggle" data-interlinear-target="button"
-              title="Show transliteration + Strong's beneath each tagged word (KJV)">
-        &alpha; Lemma
-      </button>
       <%= link_to sermon_study_path(study), class: "ps-tb-btn",
             style: "text-decoration:none;", title: "Compile this study as a printable sermon manuscript" do %>
         &#9998; Sermon
@@ -80,8 +44,59 @@
           <span data-share-target="label">&#x1F517; Share</span>
         </button>
       <% end %>
+
+      <div class="ps-view-menu" data-controller="view-menu">
+        <button type="button" class="ps-tb-btn ps-view-trigger"
+                data-action="view-menu#toggle"
+                title="Reading view options">
+          &#9776; View
+        </button>
+        <div class="ps-view-panel" data-view-menu-target="panel" hidden>
+          <div class="ps-view-section">
+            <div class="ps-view-label">Text size</div>
+            <div class="ps-font-size in-menu" title="Text size (for projection or large screens)">
+              <span class="lbl">Aa</span>
+              <input type="range" min="0" max="4" step="1" value="0"
+                     data-font-size-target="slider"
+                     data-action="input->font-size#change"
+                     aria-label="Text size">
+              <span class="level" data-font-size-target="level">S</span>
+            </div>
+          </div>
+          <div class="ps-view-section">
+            <div class="ps-view-label">Theme</div>
+            <button type="button" class="ps-view-btn ps-theme-toggle"
+                    data-action="theme#toggle">
+              <span data-theme-target="icon">&#128367;</span>
+              <span data-theme-target="label">Candle</span>
+            </button>
+          </div>
+          <div class="ps-view-section">
+            <div class="ps-view-label">Comparison</div>
+            <button type="button" class="ps-view-btn"
+                    data-action="diff#toggle" data-diff-target="button"
+                    title="Highlight words that differ across translation panes">
+              &#8644; Word diff
+            </button>
+            <button type="button" class="ps-view-btn"
+                    data-action="interlinear#toggle" data-interlinear-target="button"
+                    title="Show transliteration + Strong's beneath each tagged word (KJV)">
+              &alpha; Lemma (Strong's)
+            </button>
+          </div>
+          <div class="ps-view-section">
+            <div class="ps-view-label">Sync</div>
+            <%= button_to study_path(study), method: :patch, params: { study: { sync_scroll: !sync } },
+                  class: "ps-view-btn #{'is-active' if sync}",
+                  form: { style: "display:contents;" } do %>
+              <span class="dot"></span> Sync scroll
+            <% end %>
+          </div>
+        </div>
+      </div>
+
       <% if authenticated? %>
-        <span class="ps-tb-btn is-active" style="cursor:default;">&#10003; Saved</span>
+        <span class="ps-tb-btn is-active ps-saved-badge" style="cursor:default;">&#10003; Saved</span>
       <% else %>
         <button type="button" class="ps-tb-btn" data-action="auth-gate#open">&#9745; Save</button>
       <% end %>
@@ -89,16 +104,16 @@
     <% if authenticated? %>
       <%= link_to "Plans", reading_plans_path, class: "ps-tb-btn", style: "text-decoration:none;" %>
       <% if current_user.guide_dismissed_at.present? %>
-        <%= button_to "Show guide", restore_guide_path, method: :delete, class: "ps-tb-btn",
+        <%= button_to "Show guide", restore_guide_path, method: :delete, class: "ps-tb-btn ps-tb-btn-secondary",
               form: { style: "display:contents;" } %>
       <% else %>
-        <%= button_to "Hide guide", dismiss_guide_path, method: :post, class: "ps-tb-btn",
+        <%= button_to "Hide guide", dismiss_guide_path, method: :post, class: "ps-tb-btn ps-tb-btn-secondary",
               form: { style: "display:contents;" } %>
       <% end %>
       <%= button_to "Sign out", session_path, method: :delete, class: "ps-tb-btn",
             form: { style: "display:contents;" } %>
     <% else %>
-      <button type="button" class="ps-tb-btn" data-action="guide#toggle">
+      <button type="button" class="ps-tb-btn ps-tb-btn-secondary" data-action="guide#toggle">
         <span data-guide-target="label">Hide guide</span>
       </button>
       <%= link_to "Sign in", new_session_path, class: "ps-tb-btn", style: "text-decoration:none;" %>

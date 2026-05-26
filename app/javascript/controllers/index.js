@@ -75,3 +75,6 @@ application.register("diff", DiffController)
 
 import InterlinearController from "./interlinear_controller"
 application.register("interlinear", InterlinearController)
+
+import ViewMenuController from "./view_menu_controller"
+application.register("view-menu", ViewMenuController)
