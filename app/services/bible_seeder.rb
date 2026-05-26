@@ -10,17 +10,37 @@ require "json"
 class BibleSeeder
   HELLOAO = "https://bible.helloao.org/api".freeze
 
-  # Our internal code => HelloAO translation id + metadata. All public domain.
+  # Our internal code => HelloAO translation id + metadata.
+  # All entries here are public-domain or permissively licensed (CC-BY-SA or
+  # ministry-friendly). NIV / NKJV / NLT / AMP / ESV / MSG are NOT here because
+  # they're copyrighted and can't be self-hosted — use an on-demand API if you
+  # ever need them (Phase 2+).
   TRANSLATIONS = {
-    "KJV" => { id: "eng_kjv", name: "King James Version",        license: "public_domain" },
-    "ASV" => { id: "eng_asv", name: "American Standard Version", license: "public_domain" },
-    "BSB" => { id: "BSB",     name: "Berean Standard Bible",     license: "public_domain" },
-    "WEB" => { id: "ENGWEBP", name: "World English Bible",       license: "public_domain" },
-    "DBY" => { id: "eng_dby", name: "Darby Translation",         license: "public_domain" },
-    "YLT" => { id: "eng_ylt", name: "Young's Literal Translation", license: "public_domain" }
+    # Modern (the everyday workhorses)
+    "KJV" => { id: "eng_kjv", name: "King James Version",          license: "public_domain" },
+    "ASV" => { id: "eng_asv", name: "American Standard Version",   license: "public_domain" },
+    "BSB" => { id: "BSB",     name: "Berean Standard Bible",       license: "public_domain" },
+    "WEB" => { id: "ENGWEBP", name: "World English Bible",         license: "public_domain" },
+    "NET" => { id: "eng_net", name: "NET Bible",                   license: "permissive" },
+    "LSV" => { id: "eng_lsv", name: "Literal Standard Version",    license: "cc_by_sa" },
+    "FBV" => { id: "eng_fbv", name: "Free Bible Version",          license: "cc_by_sa" },
+    "MSB" => { id: "eng_msb", name: "Majority Standard Bible",     license: "public_domain" },
+    # Literal (for exegesis)
+    "DBY" => { id: "eng_dby", name: "Darby Translation",           license: "public_domain" },
+    "YLT" => { id: "eng_ylt", name: "Young's Literal Translation", license: "public_domain" },
+    # Historic (for tradition / Catholic / accessibility)
+    "GNV" => { id: "eng_gnv", name: "Geneva Bible (1599)",         license: "public_domain" },
+    "DRA" => { id: "eng_dra", name: "Douay-Rheims (1899)",         license: "public_domain" },
+    "WBS" => { id: "eng_wbs", name: "Webster Bible",               license: "public_domain" },
+    "BBE" => { id: "eng_bbe", name: "Bible in Basic English",      license: "public_domain" }
   }.freeze
 
+  # Auto-seeded by `bin/rails bibles:seed` with no args. Kept conservative on
+  # purpose so first-time seeders aren't waiting on 14 downloads. The rest can
+  # be opted in via `bibles:seed[NET,LSV,GNV,...]` or all at once with
+  # `bibles:seed_all`.
   MVP_CODES = %w[KJV ASV BSB WEB].freeze
+  ALL_CODES = TRANSLATIONS.keys.freeze
   BATCH = 5_000
 
   def self.cache_dir

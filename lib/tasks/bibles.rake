@@ -10,6 +10,11 @@ namespace :bibles do
     BibleSeeder.seed!(codes, force: ENV["FORCE"].present?)
   end
 
+  desc "Seed every public-domain / permissively-licensed translation we know. FORCE=1 re-seeds."
+  task seed_all: :environment do
+    BibleSeeder.seed!(BibleSeeder::ALL_CODES, force: ENV["FORCE"].present?)
+  end
+
   desc "Seed TSK cross-references (votes >= MIN_VOTES, default 0). FORCE=1 re-seeds."
   task seed_refs: :environment do
     CrossReferenceSeeder.seed!(force: ENV["FORCE"].present?, min_votes: ENV.fetch("MIN_VOTES", 0).to_i)
