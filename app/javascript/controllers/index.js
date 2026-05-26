@@ -63,3 +63,6 @@ application.register("font-size", FontSizeController)
 
 import PresentationController from "./presentation_controller"
 application.register("presentation", PresentationController)
+
+import ThemeController from "./theme_controller"
+application.register("theme", ThemeController)

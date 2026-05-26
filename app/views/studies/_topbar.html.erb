@@ -49,6 +49,12 @@
                aria-label="Text size">
         <span class="level" data-font-size-target="level">S</span>
       </div>
+      <button type="button" class="ps-tb-btn ps-theme-toggle"
+              data-action="theme#toggle"
+              title="Switch between vellum (light) and candlelight (dark)">
+        <span data-theme-target="icon">&#128367;</span>
+        <span data-theme-target="label">Candle</span>
+      </button>
       <button type="button" class="ps-tb-btn" data-action="search#open">&#9906; Search</button>
       <button type="button" class="ps-tb-btn" data-action="ai-search#open">&#10038; Find</button>
       <%= link_to sermon_study_path(study), class: "ps-tb-btn",

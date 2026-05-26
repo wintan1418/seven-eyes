@@ -1211,6 +1211,80 @@
   z-index: 1;
 }
 
+/* ====== Candlelight (dark vellum) theme ====== */
+body[data-theme="candlelight"] {
+  --vellum-0: #261a0e;
+  --vellum-1: #1c130a;
+  --vellum-2: #14100b;
+  --vellum-edge: #4a3a1f;
+  --vellum-shadow: #0a0703;
+
+  --ink: #f0dfa8;
+  --ink-soft: #d8c389;
+  --sepia: #c4a76c;
+  --sepia-mute: #927651;
+
+  --rubric: #d96b58;
+  --rubric-deep: #a64535;
+  --gold: #d8b550;
+  --gold-deep: #9b7c2e;
+
+  --hl-ochre: rgba(232, 178, 70, 0.32);
+  --hl-sage:  rgba(150, 180, 110, 0.30);
+  --hl-cobalt: rgba(130, 165, 215, 0.30);
+  --hl-rose:  rgba(220, 120, 140, 0.30);
+}
+
+/* Hardcoded vellum-light backgrounds need explicit candlelight overrides. */
+body[data-theme="candlelight"] .ps-pane {
+  background: linear-gradient(180deg, var(--vellum-0) 0%, #1a1108 100%);
+}
+body[data-theme="candlelight"] .ps-sidebar {
+  background: linear-gradient(180deg, #2a1d10 0%, #1a1108 100%);
+  box-shadow: inset -8px 0 16px -8px rgba(0, 0, 0, 0.55);
+}
+body[data-theme="candlelight"] .ps-drawer {
+  background: linear-gradient(180deg, #2a1d10 0%, #1a1108 100%);
+  box-shadow: inset 8px 0 16px -8px rgba(0, 0, 0, 0.55);
+}
+body[data-theme="candlelight"] .ps-search,
+body[data-theme="candlelight"] .ps-trans,
+body[data-theme="candlelight"] .ps-modal input.field {
+  background: rgba(60, 40, 20, 0.55);
+  color: var(--ink);
+}
+body[data-theme="candlelight"] .ps-search.is-focused { background: rgba(80, 55, 25, 0.7); }
+body[data-theme="candlelight"] .ps-pane-tool { color: var(--ink-soft); }
+body[data-theme="candlelight"] .ps-pane-tool:hover {
+  background: rgba(216, 181, 80, 0.14);
+  color: var(--gold);
+}
+body[data-theme="candlelight"] .ps-study-item:hover { background: rgba(216, 181, 80, 0.08); }
+body[data-theme="candlelight"] .ps-study-item.is-active { background: var(--vellum-0); }
+body[data-theme="candlelight"] .ps-notes { background: rgba(60, 40, 20, 0.5); }
+body[data-theme="candlelight"] .ps-modal { background: var(--vellum-0); color: var(--ink); }
+body[data-theme="candlelight"] .ps-dropdown { background: var(--vellum-0); }
+body[data-theme="candlelight"] .ps-dropdown .item:hover { background: rgba(216, 181, 80, 0.10); }
+body[data-theme="candlelight"] .ps-xref:hover { background: rgba(216, 181, 80, 0.08); }
+body[data-theme="candlelight"] .ms-page { background: var(--vellum-0); }
+body[data-theme="candlelight"] .ms-notes { background: rgba(60, 40, 20, 0.5); }
+body[data-theme="candlelight"] .ps-root::before {
+  background:
+    radial-gradient(ellipse at 18% 22%, rgba(216, 181, 80, 0.08), transparent 55%),
+    radial-gradient(ellipse at 82% 78%, rgba(216, 181, 80, 0.10), transparent 60%),
+    radial-gradient(ellipse at 55% 50%, rgba(255, 220, 140, 0.05), transparent 70%);
+}
+body[data-theme="candlelight"] .ps-root::after { opacity: 0.6; }
+body[data-theme="candlelight"] .ps-workspace {
+  background:
+    radial-gradient(ellipse at 50% -5%, rgba(216, 181, 80, 0.08), transparent 60%),
+    var(--vellum-1);
+}
+body[data-theme="candlelight"] .ps-welcome h1 { color: var(--ink); }
+body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
+
+/* The topbar already uses a dark gradient — keep it across themes for visual anchor. */
+
 /* Print: drop chrome, expand to page, avoid section splits */
 @media print {
   body { background: white !important; }
