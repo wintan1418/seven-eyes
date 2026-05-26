@@ -1031,6 +1031,93 @@
 }
 .ps-root.is-presenting .ps-exit-presentation { display: inline-flex; }
 
+/* ====== Preach sub-mode: verse-by-verse for the pulpit ====== */
+.ps-preach-enter,
+.ps-preach-zone,
+.ps-preach-counter { display: none; }
+
+.ps-preach-enter {
+  position: fixed;
+  top: 18px;
+  right: 220px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(35, 20, 8, 0.94);
+  color: var(--vellum-0);
+  border: 1px solid var(--gold-deep);
+  border-radius: 2px;
+  font: 600 11px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+.ps-root.is-presenting:not(.is-preaching) .ps-preach-enter { display: inline-flex; }
+
+.ps-preach-zone {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 28%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 90;
+  transition: background 0.18s ease;
+}
+.ps-preach-zone.left { left: 0; }
+.ps-preach-zone.right { right: 0; }
+.ps-preach-zone.left:hover { background: linear-gradient(90deg, rgba(163,129,46,0.10) 0%, transparent 70%); }
+.ps-preach-zone.right:hover { background: linear-gradient(-90deg, rgba(163,129,46,0.10) 0%, transparent 70%); }
+.ps-root.is-preaching .ps-preach-zone { display: block; }
+
+.ps-preach-counter {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  color: var(--vellum-0);
+  background: rgba(35, 20, 8, 0.92);
+  padding: 9px 18px;
+  border: 1px solid var(--gold-deep);
+  border-radius: 2px;
+  z-index: 95;
+  text-transform: uppercase;
+}
+.ps-root.is-preaching .ps-preach-counter { display: block; }
+
+/* When preaching, isolate one verse: hide the rest, blow up the current. */
+.ps-root.is-presenting.is-preaching .ps-pane.is-presented .ps-verses .ref-title { display: none; }
+.ps-root.is-presenting.is-preaching .ps-pane.is-presented .ps-verses .rule { display: none; }
+.ps-root.is-presenting.is-preaching .ps-pane.is-presented .ps-verse { display: none; }
+.ps-root.is-presenting.is-preaching .ps-pane.is-presented .ps-verse.is-preach-current {
+  display: block;
+  font-size: clamp(48px, 6.5vw, 108px);
+  line-height: 1.32;
+  text-align: center;
+  padding: 6vh 8vw 8vh;
+}
+.ps-root.is-presenting.is-preaching .ps-pane.is-presented .ps-verse.is-preach-current .ps-vnum {
+  font-size: 0.45em;
+  display: block;
+  margin-bottom: 12px;
+  color: var(--rubric);
+}
+.ps-root.is-presenting.is-preaching .ps-pane.is-presented .ps-verses {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.ps-root.is-presenting.is-preaching .ps-pane.is-presented .ps-verse-body {
+  width: 100%;
+}
+
 /* ====== Sermon manuscript (print-friendly export) ====== */
 .ps-manuscript {
   min-height: 100vh;
@@ -1220,10 +1307,13 @@
   border-color: rgba(163, 129, 46, 0.55);
 }
 .ps-view-panel {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
+  position: fixed; /* fixed escapes .ps-root's overflow:hidden — JS sets top/right from the trigger rect */
+  top: 64px;
+  right: 16px;
   min-width: 240px;
+  max-width: 320px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
   background: var(--vellum-0);
   border: 1px solid var(--vellum-edge);
   box-shadow:
@@ -1231,7 +1321,7 @@
     inset 0 0 0 6px rgba(255, 247, 224, 0.4),
     inset 0 0 0 7px rgba(163, 129, 46, 0.35);
   padding: 14px;
-  z-index: 40;
+  z-index: 80;
   display: flex;
   flex-direction: column;
   gap: 14px;

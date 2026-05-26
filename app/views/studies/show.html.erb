@@ -9,6 +9,15 @@
           title="Exit focus mode (Esc)">
     <span>&#10005;</span> Exit Focus <span class="kbd">Esc</span>
   </button>
+  <button type="button" class="ps-preach-enter" data-action="presentation#enterPreach"
+          title="Preach mode — verse by verse, tap/swipe to advance">
+    &#128272; Preach Mode
+  </button>
+  <button type="button" class="ps-preach-zone left"
+          data-action="presentation#prev" aria-label="Previous verse"></button>
+  <button type="button" class="ps-preach-zone right"
+          data-action="presentation#next" aria-label="Next verse"></button>
+  <div class="ps-preach-counter" data-preach-counter></div>
   <div class="ps-shell">
     <%= render "sidebar", studies: @studies, active_id: @study.id %>
     <main class="ps-workspace <%= workspace_cols_class(@study.pane_count) %>"
