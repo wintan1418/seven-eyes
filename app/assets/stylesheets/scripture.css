@@ -1413,6 +1413,28 @@ body[data-theme="candlelight"] .ps-font-size.in-menu { background: rgba(60, 40, 
   .ps-tb-btn-secondary { display: none; } /* trim "Saved" badge + Hide-guide on phone */
 }
 
+/* ====== Offline indicator (PWA) ====== */
+.ps-offline-badge {
+  position: fixed;
+  top: 14px;
+  left: 16px;
+  background: rgba(35, 20, 8, 0.92);
+  color: var(--vellum-0);
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  border: 1px solid var(--rubric);
+  border-radius: 2px;
+  z-index: 200;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ps-offline-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--rubric); box-shadow: 0 0 6px var(--rubric); }
+
 /* ====== Wiki-style note links and backlinks panel ====== */
 .ps-note-link {
   color: var(--rubric);

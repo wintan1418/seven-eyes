@@ -78,3 +78,6 @@ application.register("interlinear", InterlinearController)
 
 import ViewMenuController from "./view_menu_controller"
 application.register("view-menu", ViewMenuController)
+
+import OfflineController from "./offline_controller"
+application.register("offline", OfflineController)
