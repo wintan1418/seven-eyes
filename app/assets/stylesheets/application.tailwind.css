@@ -119,8 +119,26 @@ turbo-frame.ps-pane[busy] .ps-verses { filter: blur(0.3px); }
   display: flex; flex-direction: column; overflow: hidden;
 }
 .ps-book-drawer.is-open .ps-book-panel { transform: translateX(0); }
-.ps-book-list { overflow-y: auto; padding-bottom: 20px; }
+.ps-book-list {
+  flex: 1 1 0; min-height: 0;
+  overflow-y: auto; padding-bottom: 20px;
+}
 .ps-book-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 4px 16px 12px; }
+
+/* The chapter / verse views need to grow into the remaining panel height so
+   their inner .ps-chapter-grid actually scrolls (Psalms 150 chapters etc.).
+   When hidden, fall back to display:none via the [hidden] attribute. */
+.ps-book-panel > [data-book-browser-target="chapters"]:not([hidden]),
+.ps-book-panel > [data-book-browser-target="verses"]:not([hidden]) {
+  flex: 1 1 0; min-height: 0;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.ps-book-panel > [data-book-browser-target="chapters"] .ps-chapter-grid,
+.ps-book-panel > [data-book-browser-target="verses"] .ps-chapter-grid {
+  flex: 1 1 0; min-height: 0;
+  overflow-y: auto;
+}
 .ps-book {
   text-align: left; padding: 8px 10px; background: var(--vellum-0);
   border: 1px solid var(--vellum-edge); border-radius: 2px;
