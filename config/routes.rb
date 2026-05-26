@@ -9,6 +9,7 @@ Rails.application.routes.draw do
     get :search, on: :member
     get :cross_references, on: :member
     get :commentary, on: :member
+    get :sermon, on: :member
     get "lexicon/:strongs", on: :member, action: :lexicon, as: :lexicon
   end
 

@@ -1,0 +1,57 @@
+<% content_for :title, "#{@manuscript.title} — Manuscript" %>
+
+<div class="ps-manuscript">
+  <header class="ps-manuscript-bar">
+    <%= link_to "← Back to study", study_path(@study), class: "ps-tb-btn ms-back" %>
+    <h1 class="ms-title-bar"><%= @manuscript.title %></h1>
+    <div class="ms-actions">
+      <button type="button" class="ps-tb-btn" onclick="window.print()">&#9998; Print / Save PDF</button>
+      <%= link_to "⤓ Markdown", sermon_study_path(@study, format: :md), class: "ps-tb-btn" %>
+    </div>
+  </header>
+
+  <article class="ms-page">
+    <div class="ms-page-header">
+      <div class="ms-eyebrow">A Manuscript</div>
+      <h1 class="ms-title"><%= @manuscript.title %></h1>
+      <div class="ms-date"><%= @manuscript.compiled_on.strftime("%B %-d, %Y") %></div>
+      <div class="ms-rule"></div>
+    </div>
+
+    <% if @manuscript.sections.empty? %>
+      <div class="ms-empty">
+        <p>No verses to compile yet.</p>
+        <p class="hint">Add references to your panes — then return here.</p>
+      </div>
+    <% end %>
+
+    <% @manuscript.sections.each do |s| %>
+      <section class="ms-section">
+        <h2 class="ms-section-head">
+          <span class="ms-numeral"><%= s.numeral %>.</span>
+          <span class="ms-ref"><%= s.ref_title %></span>
+          <span class="ms-trans">&middot; <%= s.translation %></span>
+        </h2>
+        <div class="ms-verses">
+          <% s.verses.each do |v| %>
+            <p class="ms-verse">
+              <span class="ms-vnum"><%= v.verse_number %></span>
+              <%= highlight_text(v.text.to_s, s.highlights[v.id] || []) %>
+            </p>
+          <% end %>
+        </div>
+        <% if s.notes.present? %>
+          <div class="ms-notes">
+            <div class="ms-notes-head">Reflections</div>
+            <div class="ms-notes-body"><%= simple_format(s.notes) %></div>
+          </div>
+        <% end %>
+      </section>
+    <% end %>
+
+    <footer class="ms-footer">
+      <span><%= @manuscript.title %></span> &middot;
+      <span><%= @manuscript.compiled_on.strftime("%B %-d, %Y") %></span>
+    </footer>
+  </article>
+</div>

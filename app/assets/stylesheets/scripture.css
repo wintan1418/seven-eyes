@@ -1030,3 +1030,201 @@
   color: var(--gold);
 }
 .ps-root.is-presenting .ps-exit-presentation { display: inline-flex; }
+
+/* ====== Sermon manuscript (print-friendly export) ====== */
+.ps-manuscript {
+  min-height: 100vh;
+  background: var(--vellum-1);
+  padding: 0 0 80px;
+  font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  color: var(--ink);
+}
+.ps-manuscript-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(180deg, #2b1a0c 0%, #1d1107 100%);
+  color: var(--vellum-0);
+  padding: 12px 22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow:
+    inset 0 -1px 0 rgba(163, 129, 46, 0.4),
+    0 2px 0 rgba(0,0,0,0.18);
+}
+.ps-manuscript-bar .ms-back { text-decoration: none; }
+.ps-manuscript-bar .ms-title-bar {
+  flex: 1;
+  text-align: center;
+  font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 18px;
+  color: #e8d8b0;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+.ps-manuscript-bar .ms-actions { display: flex; gap: 8px; }
+.ps-manuscript-bar .ps-tb-btn { text-decoration: none; }
+
+.ms-page {
+  max-width: 760px;
+  margin: 32px auto;
+  background: var(--vellum-0);
+  border: 1px solid var(--vellum-edge);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.6) inset,
+    0 30px 80px -20px rgba(50, 30, 10, 0.4),
+    0 6px 20px rgba(50, 30, 10, 0.15);
+  padding: 64px 72px 56px;
+  position: relative;
+}
+.ms-page::before {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  border: 0.5px solid rgba(163, 129, 46, 0.35);
+  pointer-events: none;
+}
+.ms-page-header { text-align: center; margin-bottom: 28px; position: relative; z-index: 1; }
+.ms-page-header .ms-eyebrow {
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  font-size: 10.5px;
+  color: var(--rubric);
+  text-transform: uppercase;
+}
+.ms-page-header .ms-title {
+  font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-weight: 500;
+  font-style: italic;
+  font-size: 40px;
+  color: var(--ink);
+  margin: 6px 0 4px;
+  letter-spacing: -0.005em;
+}
+.ms-page-header .ms-date {
+  font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-style: italic;
+  color: var(--sepia-mute);
+  font-size: 14px;
+}
+.ms-page-header .ms-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold) 20%, var(--gold) 80%, transparent);
+  margin: 16px 0 0;
+  opacity: 0.5;
+}
+
+.ms-section { margin: 36px 0; position: relative; z-index: 1; }
+.ms-section-head {
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  font-size: 13px;
+  color: var(--sepia);
+  text-transform: uppercase;
+  margin: 0 0 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  border-bottom: 1px dashed rgba(138, 116, 68, 0.4);
+  padding-bottom: 10px;
+}
+.ms-section-head .ms-numeral { color: var(--rubric); letter-spacing: 0; }
+.ms-section-head .ms-ref { letter-spacing: 0.16em; }
+.ms-section-head .ms-trans {
+  font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  text-transform: none;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--sepia-mute);
+  letter-spacing: 0.02em;
+}
+
+.ms-verses {
+  font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-size: 19px;
+  line-height: 1.75;
+  color: var(--ink);
+}
+.ms-verse { margin: 0 0 4px; text-indent: 0; }
+.ms-vnum {
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--rubric);
+  vertical-align: super;
+  margin-right: 5px;
+}
+
+.ms-notes {
+  margin: 20px 0 4px;
+  padding: 14px 20px;
+  background: rgba(231, 214, 173, 0.45);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 2px 2px 0;
+}
+.ms-notes-head {
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  font-size: 10px;
+  color: var(--sepia);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.ms-notes-body {
+  font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.ms-notes-body p { margin: 0 0 8px; }
+
+.ms-empty {
+  text-align: center;
+  font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-style: italic;
+  color: var(--sepia-mute);
+  padding: 60px 0;
+  position: relative;
+  z-index: 1;
+}
+.ms-empty .hint { font-size: 13px; opacity: 0.8; margin-top: 8px; }
+
+.ms-footer {
+  margin-top: 44px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(138, 116, 68, 0.4);
+  text-align: center;
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  color: var(--sepia-mute);
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+
+/* Print: drop chrome, expand to page, avoid section splits */
+@media print {
+  body { background: white !important; }
+  .ps-manuscript-bar { display: none !important; }
+  .ps-manuscript { background: white !important; padding: 0; }
+  .ms-page {
+    margin: 0;
+    max-width: none;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    background: white;
+  }
+  .ms-page::before { display: none; }
+  .ms-section, .ms-notes { break-inside: avoid; page-break-inside: avoid; }
+  @page { size: letter; margin: 0.6in 0.65in; }
+}

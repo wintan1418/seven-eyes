@@ -1,8 +1,8 @@
 class StudiesController < ApplicationController
   # The workspace is open to everyone; only saving (notes/highlights/account) needs auth.
-  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest search commentary lexicon ]
+  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest search commentary lexicon sermon ]
 
-  before_action :set_study, only: %i[ show update destroy suggest search cross_references commentary lexicon ]
+  before_action :set_study, only: %i[ show update destroy suggest search cross_references commentary lexicon sermon ]
 
   def index
     @studies = authenticated? ? current_user.studies.recent : []
@@ -77,6 +77,20 @@ class StudiesController < ApplicationController
                           .order("books.position", "verses.chapter", "verses.verse_number").limit(8)
     render partial: "studies/lexicon_results",
            locals: { study: @study, strongs: @strongs, entry: @entry, count: @count, samples: @samples }
+  end
+
+  def sermon
+    @manuscript = SermonManuscript.new(@study, current_user: authenticated? ? current_user : nil)
+    respond_to do |format|
+      format.html
+      format.md do
+        filename = @study.name.to_s.parameterize.presence || "study"
+        send_data @manuscript.to_markdown,
+                  filename: "#{filename}.md",
+                  type: "text/markdown",
+                  disposition: "attachment"
+      end
+    end
   end
 
   def cross_references

@@ -51,6 +51,10 @@
       </div>
       <button type="button" class="ps-tb-btn" data-action="search#open">&#9906; Search</button>
       <button type="button" class="ps-tb-btn" data-action="ai-search#open">&#10038; Find</button>
+      <%= link_to sermon_study_path(study), class: "ps-tb-btn",
+            style: "text-decoration:none;", title: "Compile this study as a printable sermon manuscript" do %>
+        &#9998; Sermon
+      <% end %>
       <% if authenticated? %>
         <span class="ps-tb-btn is-active" style="cursor:default;">&#10003; Saved</span>
       <% else %>
