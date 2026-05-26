@@ -1307,26 +1307,31 @@
   border-color: rgba(163, 129, 46, 0.55);
 }
 .ps-view-panel {
-  position: fixed; /* fixed escapes .ps-root's overflow:hidden — JS sets top/right from the trigger rect */
+  /* `fixed` escapes .ps-root's overflow:hidden AND any positioned ancestor's
+     stacking context. `!important` shields against any cascade pollution from
+     Tailwind utilities; the z-index is well above modals (30) and the offline
+     badge (200). JS sets top/right from the trigger rect; the CSS fallbacks
+     keep the panel visible even if JS fails to run. */
+  position: fixed !important;
   top: 64px;
   right: 16px;
   min-width: 240px;
   max-width: 320px;
   max-height: calc(100vh - 80px);
   overflow-y: auto;
-  background: var(--vellum-0);
-  border: 1px solid var(--vellum-edge);
+  background: var(--vellum-0, #f4ead2);
+  border: 1px solid var(--vellum-edge, #c9b88e);
   box-shadow:
     0 10px 30px rgba(50, 30, 10, 0.35),
     inset 0 0 0 6px rgba(255, 247, 224, 0.4),
     inset 0 0 0 7px rgba(163, 129, 46, 0.35);
   padding: 14px;
-  z-index: 80;
+  z-index: 9999;
   display: flex;
   flex-direction: column;
   gap: 14px;
   font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
-  color: var(--ink);
+  color: var(--ink, #231408);
 }
 .ps-view-panel[hidden] { display: none; }
 .ps-view-section { display: flex; flex-direction: column; gap: 6px; }

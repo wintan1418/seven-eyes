@@ -10,7 +10,9 @@
 //     pass straight through, no caching.
 //
 // Versioned cache name — bumping CACHE_VERSION on deploy retires old caches.
-const CACHE_VERSION = "ps-2026-05-26"
+// Bump this on every deploy that ships CSS/JS changes so old caches are
+// retired by the activate handler below.
+const CACHE_VERSION = "ps-2026-05-26-2"
 const STATIC_CACHE  = `${CACHE_VERSION}-static`
 const PAGES_CACHE   = `${CACHE_VERSION}-pages`
 
@@ -37,7 +39,9 @@ self.addEventListener("fetch", (event) => {
 
   if (/\/assets\//.test(url.pathname) ||
       /\.(css|js|png|jpg|jpeg|svg|woff2?|ttf|ico)$/i.test(url.pathname)) {
-    event.respondWith(cacheFirst(request, STATIC_CACHE))
+    // Stale-while-revalidate so fresh CSS/JS lands on the very next visit,
+    // even for un-fingerprinted asset paths.
+    event.respondWith(staleWhileRevalidate(request, STATIC_CACHE))
     return
   }
 
@@ -47,17 +51,14 @@ self.addEventListener("fetch", (event) => {
   }
 })
 
-async function cacheFirst(request, cacheName) {
+async function staleWhileRevalidate(request, cacheName) {
   const cache = await caches.open(cacheName)
   const cached = await cache.match(request)
-  if (cached) return cached
-  try {
-    const fresh = await fetch(request)
+  const fetchPromise = fetch(request).then((fresh) => {
     if (fresh.ok && fresh.type !== "opaque") cache.put(request, fresh.clone())
     return fresh
-  } catch (e) {
-    return cached || Response.error()
-  }
+  }).catch(() => cached || Response.error())
+  return cached || fetchPromise
 }
 
 async function networkFirst(request, cacheName) {
