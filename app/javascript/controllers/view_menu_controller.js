@@ -35,7 +35,19 @@ export default class extends Controller {
     this._position()
     const rect = this.panelTarget.getBoundingClientRect()
     const style = getComputedStyle(this.panelTarget)
-    console.log("[view-menu] open — rect:", rect, "position:", style.position, "z-index:", style.zIndex, "display:", style.display)
+    console.log("[view-menu] open — rect:", rect, "position:", style.position, "z-index:", style.zIndex, "display:", style.display, "visibility:", style.visibility, "opacity:", style.opacity, "transform:", style.transform)
+    const cx = rect.left + rect.width / 2
+    const cy = rect.top + rect.height / 2
+    const elAtPoint = document.elementFromPoint(cx, cy)
+    console.log("[view-menu] element at panel center (", cx, cy, "):", elAtPoint, "— is it the panel or a descendant?", this.panelTarget.contains(elAtPoint))
+    let p = elAtPoint
+    while (p && p !== document.body) {
+      const s = getComputedStyle(p)
+      if (s.position === "fixed" || parseInt(s.zIndex, 10) > 0) {
+        console.log("  ancestor:", p.tagName, p.className, "position:", s.position, "z-index:", s.zIndex)
+      }
+      p = p.parentElement
+    }
     setTimeout(() => {
       document.addEventListener("click", this._outside)
       document.addEventListener("keydown", this._esc)
