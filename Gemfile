@@ -40,7 +40,7 @@ gem "kamal", require: false
 gem "thruster", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-gem "image_processing", "~> 1.2"
+gem "image_processing", "~> 2.0"
 
 # Load environment variables from .env in development/test (e.g. OPENAI_API_KEY)
 gem "dotenv-rails", groups: %i[ development test ]
