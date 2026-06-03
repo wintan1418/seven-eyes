@@ -1035,11 +1035,17 @@
 }
 .ps-root.is-presenting .ps-exit-presentation { display: inline-flex; }
 
-/* ====== Preach sub-mode: verse-by-verse for the pulpit ====== */
+/* ====== Preach sub-mode: verse-by-verse for the pulpit ======
+   Layout: chevron buttons left/right (primary nav), wide invisible tap zones
+   behind them (touch-friendly), unified bottom bar with counter + controls,
+   smooth fade between verses, auto-fit font when the verse overflows. */
+
 .ps-preach-enter,
 .ps-preach-zone,
-.ps-preach-counter { display: none; }
+.ps-preach-nav,
+.ps-preach-bar { display: none; }
 
+/* Enter-preach pill (only visible in focus mode, before preach starts) */
 .ps-preach-enter {
   position: fixed;
   top: 18px;
@@ -1050,7 +1056,7 @@
   background: rgba(35, 20, 8, 0.94);
   color: var(--vellum-0);
   border: 1px solid var(--gold-deep);
-  border-radius: 2px;
+  border-radius: 4px;
   font: 600 11px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -1060,40 +1066,155 @@
 }
 .ps-root.is-presenting:not(.is-preaching) .ps-preach-enter { display: inline-flex; }
 
+/* Wide invisible tap zones — full height between topbar and bottom bar.
+   Cover the whole left/right half so a thumb anywhere on the side advances. */
 .ps-preach-zone {
   position: fixed;
-  top: 0;
-  bottom: 0;
-  width: 28%;
+  top: 64px;
+  bottom: 88px;
+  width: 50%;
   background: transparent;
-  border: none;
+  border: 0;
+  padding: 0;
   cursor: pointer;
-  z-index: 90;
-  transition: background 0.18s ease;
+  z-index: 85;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 .ps-preach-zone.left { left: 0; }
 .ps-preach-zone.right { right: 0; }
-.ps-preach-zone.left:hover { background: linear-gradient(90deg, rgba(163,129,46,0.10) 0%, transparent 70%); }
-.ps-preach-zone.right:hover { background: linear-gradient(-90deg, rgba(163,129,46,0.10) 0%, transparent 70%); }
 .ps-root.is-preaching .ps-preach-zone { display: block; }
 
-.ps-preach-counter {
+/* Visible chevron buttons (primary nav cue) */
+.ps-preach-nav {
   position: fixed;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
-  font-size: 12px;
-  letter-spacing: 0.24em;
-  color: var(--vellum-0);
-  background: rgba(35, 20, 8, 0.92);
-  padding: 9px 18px;
+  top: 50%;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(35, 20, 8, 0.45);
+  color: var(--gold);
   border: 1px solid var(--gold-deep);
-  border-radius: 2px;
+  font: 700 38px "EB Garamond", "Cinzel", serif;
+  line-height: 1;
+  cursor: pointer;
   z-index: 95;
-  text-transform: uppercase;
+  opacity: 0.55;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.18s ease, background 0.18s ease, transform 0.08s ease;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  padding-bottom: 4px;
 }
-.ps-root.is-preaching .ps-preach-counter { display: block; }
+.ps-preach-nav.prev { left: 22px; transform: translateY(-50%); }
+.ps-preach-nav.next { right: 22px; transform: translateY(-50%); }
+.ps-preach-nav:hover { opacity: 1; background: rgba(35, 20, 8, 0.88); }
+.ps-preach-nav.prev:active { transform: translateY(-50%) scale(0.92); }
+.ps-preach-nav.next:active { transform: translateY(-50%) scale(0.92); }
+.ps-root.is-preaching .ps-preach-nav { display: inline-flex; }
+
+/* Unified bottom bar: counter / group / parallel / jump / prev-next */
+.ps-preach-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: linear-gradient(180deg, rgba(35, 20, 8, 0.92) 0%, rgba(20, 12, 5, 0.96) 100%);
+  border-top: 1px solid rgba(163, 129, 46, 0.45);
+  color: var(--vellum-0);
+  z-index: 96;
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+  gap: 16px;
+}
+.ps-root.is-preaching .ps-preach-bar { display: flex; }
+.ps-preach-bar-left,
+.ps-preach-bar-center,
+.ps-preach-bar-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.ps-preach-bar-left { min-width: 180px; }
+.ps-preach-bar-right { min-width: 180px; justify-content: flex-end; }
+.ps-preach-bar-center { justify-content: center; flex: 1; flex-wrap: wrap; }
+
+.ps-preach-bar .ps-preach-counter {
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+  text-transform: uppercase;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.2;
+}
+.ps-preach-counter .num { color: var(--vellum-0); font-size: 13px; letter-spacing: 0.18em; }
+.ps-preach-counter .of { color: rgba(216, 195, 137, 0.6); font-size: 9.5px; }
+
+.ps-preach-bar .ps-preach-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid rgba(163, 129, 46, 0.4);
+  border-radius: 4px;
+  background: rgba(255, 247, 224, 0.04);
+}
+.ps-preach-group .lbl {
+  color: #c7ad6e;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-right: 6px;
+}
+.ps-preach-group button {
+  width: 36px; height: 36px;
+  background: transparent;
+  color: #d8c389;
+  border: 1px solid rgba(163, 129, 46, 0.45);
+  border-radius: 4px;
+  font: 600 14px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.ps-preach-group button:hover { background: rgba(216, 181, 80, 0.15); color: var(--vellum-0); }
+.ps-preach-group button.is-on {
+  background: var(--gold);
+  color: #1d1107;
+  border-color: var(--gold);
+}
+
+.ps-preach-tool {
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--vellum-0);
+  border: 1px solid rgba(163, 129, 46, 0.55);
+  border-radius: 4px;
+  font: 600 11px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  min-height: 40px;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.ps-preach-tool:hover { background: rgba(216, 181, 80, 0.14); border-color: var(--gold); }
+.ps-preach-tool.is-on {
+  background: var(--gold);
+  color: #1d1107;
+  border-color: var(--gold);
+}
+.ps-preach-tool.primary {
+  background: var(--rubric);
+  color: var(--vellum-0);
+  border-color: var(--rubric-deep);
+}
+.ps-preach-tool.primary:hover { background: var(--rubric-deep); border-color: var(--rubric-deep); }
 
 /* When preaching, isolate the current verse(s): hide the rest, blow up the current. */
 .ps-root.is-presenting.is-preaching .ps-pane.is-presented .ps-verses .ref-title,
@@ -1106,10 +1227,13 @@
 .ps-root.is-presenting.is-preaching .ps-pane.is-presented .ps-verse.is-preach-current,
 .ps-root.is-presenting.is-preaching .ps-pane.is-paired .ps-verse.is-preach-current {
   display: block;
-  font-size: clamp(48px, 6.5vw, 108px);
-  line-height: 1.32;
+  font-size: clamp(32px, 4.8vw, 86px);
+  line-height: 1.34;
   text-align: center;
-  padding: 4vh 6vw;
+  padding: 2vh 5vw;
+  hyphens: auto;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 .ps-root.is-presenting.is-preaching .ps-pane.is-presented .ps-verse.is-preach-current .ps-vnum,
 .ps-root.is-presenting.is-preaching .ps-pane.is-paired .ps-verse.is-preach-current .ps-vnum {
@@ -1124,10 +1248,20 @@
   align-items: center;
   justify-content: center;
   padding: 0;
+  padding-bottom: 72px; /* leave room for the bottom bar */
+  overflow: hidden;
 }
 .ps-root.is-presenting.is-preaching .ps-pane.is-presented .ps-verse-body,
 .ps-root.is-presenting.is-preaching .ps-pane.is-paired .ps-verse-body {
   width: 100%;
+  transition: opacity 160ms ease;
+  opacity: 1;
+}
+/* Mid-transition: the controller adds .is-changing to fade out, swap verses,
+   run auto-fit, then removes it to fade the new verse in. */
+.ps-root.is-presenting.is-preaching .ps-pane.is-presented .ps-verse-body.is-changing,
+.ps-root.is-presenting.is-preaching .ps-pane.is-paired .ps-verse-body.is-changing {
+  opacity: 0;
 }
 
 /* Verse FUSION (group size > 1): show stacked verses, smaller per-verse padding
@@ -1153,77 +1287,8 @@
   padding: 3vh 3vw;
 }
 
-/* Preach controls overlay (group / parallel / jump button) — bottom-left, paired
-   with the bottom-center counter. Visible only in preach sub-mode. */
-.ps-preach-controls,
-.ps-preach-jump {
-  display: none;
-}
-.ps-root.is-preaching .ps-preach-controls {
-  display: inline-flex;
-  position: fixed;
-  bottom: 26px;
-  left: 22px;
-  align-items: center;
-  gap: 10px;
-  z-index: 95;
-}
-.ps-preach-controls .ps-preach-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(35, 20, 8, 0.92);
-  border: 1px solid var(--gold-deep);
-  border-radius: 2px;
-  padding: 4px 8px;
-  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--vellum-0);
-}
-.ps-preach-controls .ps-preach-group .lbl {
-  color: #d8c389;
-  margin-right: 4px;
-}
-.ps-preach-controls .ps-preach-group button {
-  width: 22px; height: 22px;
-  background: transparent;
-  color: #c7ad6e;
-  border: 1px solid rgba(163, 129, 46, 0.4);
-  border-radius: 2px;
-  font: 600 11px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
-  cursor: pointer;
-}
-.ps-preach-controls .ps-preach-group button.is-on {
-  background: var(--gold);
-  color: #1d1107;
-  border-color: var(--gold);
-}
-
-.ps-preach-controls .ps-preach-parallel,
-.ps-preach-controls .ps-preach-jump-btn {
-  padding: 8px 12px;
-  background: rgba(35, 20, 8, 0.92);
-  color: var(--vellum-0);
-  border: 1px solid var(--gold-deep);
-  border-radius: 2px;
-  font: 600 10px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-.ps-preach-controls .ps-preach-parallel:hover,
-.ps-preach-controls .ps-preach-jump-btn:hover {
-  background: rgba(60, 40, 20, 0.95);
-}
-.ps-preach-controls .ps-preach-parallel.is-on {
-  background: var(--gold);
-  color: #1d1107;
-  border-color: var(--gold);
-}
-
 /* Jump-to-verse input overlay — center top, big and obvious. */
+.ps-preach-jump { display: none; }
 .ps-root.is-preaching .ps-preach-jump:not([hidden]) {
   display: inline-flex;
   position: fixed;

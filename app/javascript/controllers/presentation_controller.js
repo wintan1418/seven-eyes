@@ -1,14 +1,21 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Drives focus-pane presentation mode plus the iPad-friendly preach sub-mode.
+// Drives focus-pane presentation mode plus the EasyWorship-style preach sub-mode.
 //
 // State classes layered on .ps-root:
 //   .is-presenting  — focus mode: one pane fills the screen, chrome hidden.
-//   .is-preaching   — preach sub-mode (inside focus): one verse at a time, big.
-//   .is-parallel    — parallel sub-mode (inside preach): two panes side-by-side
-//                     showing the same verse number in different translations.
+//   .is-preaching   — preach sub-mode: one verse at a time, big, smooth fade.
+//   .is-parallel    — two panes side-by-side showing the same verse number.
 //
 // Esc unwinds one layer at a time: jump-input → preach → focus → workspace.
+//
+// Transitions: _animate() fades the verse-body out (CSS opacity transition),
+// swaps which verses are .is-preach-current, runs _autoFit() to shrink the font
+// if the new verse(s) overflow the pane, then fades back in.
+const FADE_MS = 160
+const AUTOFIT_MAX_ITERS = 24
+const AUTOFIT_MIN_PX = 18
+
 export default class extends Controller {
   static targets = ["jumpInput"]
 
@@ -40,7 +47,7 @@ export default class extends Controller {
     this._unbindEsc()
   }
 
-  // ----- preach sub-mode (one verse at a time, tap/swipe/keys to advance) -----
+  // ----- preach sub-mode -----
 
   enterPreach(event) {
     event?.preventDefault?.()
@@ -48,6 +55,7 @@ export default class extends Controller {
     this.element.classList.add("is-preaching")
     this._preachIndex = 0
     this._paint()
+    requestAnimationFrame(() => this._autoFit())
     this._bindKeys()
     this._bindSwipe()
   }
@@ -57,6 +65,7 @@ export default class extends Controller {
     this.element.classList.remove("is-preaching", "is-parallel")
     this._closeJump()
     this._clear()
+    this._clearAutoFit()
     this._unbindKeys()
     this._unbindSwipe()
     this._groupSize = 1
@@ -67,28 +76,24 @@ export default class extends Controller {
   next(event) {
     event?.preventDefault?.()
     const verses = this._primaryVerses()
-    if (this._preachIndex + this._groupSize < verses.length) {
-      this._preachIndex += this._groupSize
-      this._paint()
-    }
+    if (this._preachIndex + this._groupSize >= verses.length) return
+    this._transition(() => { this._preachIndex += this._groupSize })
   }
 
   prev(event) {
     event?.preventDefault?.()
-    if (this._preachIndex > 0) {
-      this._preachIndex = Math.max(0, this._preachIndex - this._groupSize)
-      this._paint()
-    }
+    if (this._preachIndex <= 0) return
+    this._transition(() => { this._preachIndex = Math.max(0, this._preachIndex - this._groupSize) })
   }
 
-  // ----- group / fusion: 1, 2, or 3 verses per slide -----
+  // ----- group / fusion -----
 
   setGroup(event) {
     event?.preventDefault?.()
-    const n = parseInt(event.params?.size || event.currentTarget?.dataset?.groupParam || "1", 10)
+    const n = parseInt(event.params?.size || event.currentTarget?.dataset?.preachGroup || "1", 10)
     this._groupSize = Math.max(1, Math.min(5, n))
     this._syncGroupButtons()
-    this._paint()
+    this._transition(() => {})
   }
 
   _syncGroupButtons() {
@@ -97,7 +102,7 @@ export default class extends Controller {
     })
   }
 
-  // ----- parallel translations: pair the next pane with the same reference -----
+  // ----- parallel translations -----
 
   toggleParallel(event) {
     event?.preventDefault?.()
@@ -114,7 +119,7 @@ export default class extends Controller {
         if (match) match.classList.add("is-paired")
       }
     }
-    this._paint()
+    this._transition(() => {})
     this._syncParallelButton()
   }
 
@@ -129,7 +134,7 @@ export default class extends Controller {
     return `${verse.dataset.osis}:${verse.dataset.chapter}`
   }
 
-  // ----- jump-to-verse: press G, type a verse number, Enter -----
+  // ----- jump-to-verse -----
 
   openJump(event) {
     event?.preventDefault?.()
@@ -149,10 +154,8 @@ export default class extends Controller {
     if (!Number.isFinite(target)) return
     const verses = this._primaryVerses()
     const idx = verses.findIndex(v => parseInt(v.dataset.verseNum, 10) === target)
-    if (idx >= 0) {
-      this._preachIndex = idx
-      this._paint()
-    }
+    if (idx < 0) return
+    this._transition(() => { this._preachIndex = idx })
   }
 
   cancelJump(event) {
@@ -177,7 +180,30 @@ export default class extends Controller {
     this._unbindSwipe()
   }
 
-  // ----- internals -----
+  // ----- internals: rendering, transitions, auto-fit -----
+
+  _transition(mutate) {
+    if (this._fading) return // ignore rapid taps mid-fade
+    const bodies = this._activeBodies()
+    if (bodies.length === 0) { mutate(); this._paint(); return }
+    this._fading = true
+    bodies.forEach(b => b.classList.add("is-changing"))
+    setTimeout(() => {
+      mutate()
+      this._paint()
+      requestAnimationFrame(() => {
+        this._autoFit()
+        bodies.forEach(b => b.classList.remove("is-changing"))
+        this._fading = false
+      })
+    }, FADE_MS)
+  }
+
+  _activeBodies() {
+    return this._allActivePanes()
+        .map(p => p.querySelector(".ps-verse-body"))
+        .filter(Boolean)
+  }
 
   _primaryVerses() {
     const pane = this.element.querySelector(".ps-pane.is-presented")
@@ -195,7 +221,6 @@ export default class extends Controller {
     const start = this._preachIndex
     const end = Math.min(primary.length, start + this._groupSize)
 
-    // Track verse-numbers in the current group; mirror onto paired panes.
     const groupNumbers = new Set()
     for (let i = start; i < end; i++) {
       groupNumbers.add(parseInt(primary[i].dataset.verseNum, 10))
@@ -208,13 +233,41 @@ export default class extends Controller {
       })
     })
 
+    const sorted = Array.from(groupNumbers).sort((a, b) => a - b)
+    const first = sorted[0]
+    const last = sorted[sorted.length - 1]
+    const total = primary.length > 0 ? parseInt(primary[primary.length - 1].dataset.verseNum, 10) : 0
     const counter = this.element.querySelector("[data-preach-counter]")
     if (counter) {
-      const last = Array.from(groupNumbers).sort((a, b) => a - b).pop()
-      const first = Array.from(groupNumbers).sort((a, b) => a - b)[0]
       const range = first === last ? `${first}` : `${first}–${last}`
-      counter.textContent = `verse ${range}`
+      counter.innerHTML = `<span class="num">verse ${range}</span><span class="of">of ${total}</span>`
     }
+  }
+
+  // Iteratively shrink font-size of the active verse(s) until the content fits
+  // the .ps-verses container without scrolling. Resets between calls so a short
+  // verse after a long one grows back to the natural CSS clamp size.
+  _autoFit() {
+    this._allActivePanes().forEach(pane => {
+      const container = pane.querySelector(".ps-verses")
+      const currents = pane.querySelectorAll(".ps-verse.is-preach-current")
+      if (!container || currents.length === 0) return
+
+      currents.forEach(v => v.style.fontSize = "")
+      if (container.scrollHeight <= container.clientHeight + 1) return
+
+      let fs = parseFloat(getComputedStyle(currents[0]).fontSize) || 64
+      let iters = AUTOFIT_MAX_ITERS
+      while (container.scrollHeight > container.clientHeight + 1 && iters > 0 && fs > AUTOFIT_MIN_PX) {
+        fs *= 0.92
+        currents.forEach(v => v.style.fontSize = `${fs}px`)
+        iters--
+      }
+    })
+  }
+
+  _clearAutoFit() {
+    this.element.querySelectorAll(".ps-verse[style*='font-size']").forEach(v => v.style.fontSize = "")
   }
 
   _clear() {
@@ -223,6 +276,8 @@ export default class extends Controller {
     })
     this._preachIndex = 0
   }
+
+  // ----- input bindings -----
 
   _bindEsc() {
     if (this._escHandler) return
@@ -242,13 +297,18 @@ export default class extends Controller {
     if (this._keyHandler) return
     this._keyHandler = (e) => {
       if (!this.element.classList.contains("is-preaching")) return
-      // While the jump input is open, let it own keystrokes.
       if (this._jumpOpen) return
-      if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); this.next() }
-      else if (e.key === "ArrowLeft") { e.preventDefault(); this.prev() }
+      if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") { e.preventDefault(); this.next() }
+      else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); this.prev() }
+      else if (e.key === "Home") { e.preventDefault(); this._transition(() => { this._preachIndex = 0 }) }
       else if (e.key === "g" || e.key === "G") { e.preventDefault(); this.openJump() }
       else if (e.key === "p" || e.key === "P") { e.preventDefault(); this.toggleParallel() }
-      else if (e.key >= "1" && e.key <= "5") { e.preventDefault(); this._groupSize = parseInt(e.key, 10); this._syncGroupButtons(); this._paint() }
+      else if (e.key >= "1" && e.key <= "5") {
+        e.preventDefault()
+        this._groupSize = parseInt(e.key, 10)
+        this._syncGroupButtons()
+        this._transition(() => {})
+      }
     }
     document.addEventListener("keydown", this._keyHandler)
   }

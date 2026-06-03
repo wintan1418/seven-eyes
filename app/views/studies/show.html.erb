@@ -14,33 +14,47 @@
     &#128272; Preach Mode
   </button>
   <button type="button" class="ps-preach-zone left"
-          data-action="presentation#prev" aria-label="Previous verse"></button>
+          data-action="presentation#prev" aria-label="Previous verse" tabindex="-1"></button>
   <button type="button" class="ps-preach-zone right"
-          data-action="presentation#next" aria-label="Next verse"></button>
-  <div class="ps-preach-counter" data-preach-counter></div>
+          data-action="presentation#next" aria-label="Next verse" tabindex="-1"></button>
 
-  <div class="ps-preach-controls">
-    <div class="ps-preach-group">
-      <span class="lbl">Group</span>
-      <% (1..3).each do |n| %>
-        <button type="button"
-                class="<%= 'is-on' if n == 1 %>"
-                data-action="presentation#setGroup"
-                data-preach-group="<%= n %>"
-                data-presentation-size-param="<%= n %>"><%= n %></button>
-      <% end %>
+  <button type="button" class="ps-preach-nav prev"
+          data-action="presentation#prev" aria-label="Previous verse">&#8249;</button>
+  <button type="button" class="ps-preach-nav next"
+          data-action="presentation#next" aria-label="Next verse">&#8250;</button>
+
+  <div class="ps-preach-bar">
+    <div class="ps-preach-bar-left">
+      <div class="ps-preach-counter" data-preach-counter>
+        <span class="num">verse 1</span>
+      </div>
     </div>
-    <button type="button" class="ps-preach-parallel"
-            data-preach-parallel
-            data-action="presentation#toggleParallel"
-            title="Show 2 translations side-by-side (P)">
-      &#9783; Parallel
-    </button>
-    <button type="button" class="ps-preach-jump-btn"
-            data-action="presentation#openJump"
-            title="Jump to verse (G, then number)">
-      G &#10142; verse
-    </button>
+    <div class="ps-preach-bar-center">
+      <div class="ps-preach-group">
+        <span class="lbl">Group</span>
+        <% (1..3).each do |n| %>
+          <button type="button"
+                  class="<%= 'is-on' if n == 1 %>"
+                  data-action="presentation#setGroup"
+                  data-preach-group="<%= n %>"
+                  data-presentation-size-param="<%= n %>"
+                  title="<%= n %> verse#{'s' if n > 1} per slide"><%= n %></button>
+        <% end %>
+      </div>
+      <button type="button" class="ps-preach-tool"
+              data-action="presentation#openJump"
+              title="Jump to verse (G)">&#10148; Go</button>
+      <button type="button" class="ps-preach-tool"
+              data-preach-parallel
+              data-action="presentation#toggleParallel"
+              title="Show two translations side-by-side (P)">&#9783; Parallel</button>
+    </div>
+    <div class="ps-preach-bar-right">
+      <button type="button" class="ps-preach-tool"
+              data-action="presentation#prev" title="Previous verse (←)">&#8249; Prev</button>
+      <button type="button" class="ps-preach-tool primary"
+              data-action="presentation#next" title="Next verse (→ or Space)">Next &#8250;</button>
+    </div>
   </div>
 
   <div class="ps-preach-jump" hidden>
