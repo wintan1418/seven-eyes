@@ -1,8 +1,8 @@
 class StudiesController < ApplicationController
   # The workspace is open to everyone; only saving (notes/highlights/account) needs auth.
-  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest search commentary lexicon sermon ]
+  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest search commentary lexicon rabbi sermon ]
 
-  before_action :set_study, only: %i[ show update destroy suggest search cross_references commentary lexicon sermon share ]
+  before_action :set_study, only: %i[ show update destroy suggest search cross_references commentary lexicon rabbi sermon share ]
 
   def index
     @studies = authenticated? ? current_user.studies.recent : []
@@ -99,6 +99,15 @@ class StudiesController < ApplicationController
                   disposition: "attachment"
       end
     end
+  end
+
+  # The "AI Rabbi": explain a highlighted span of Scripture with full-chapter
+  # context + cross-references, under strict interpretive guardrails.
+  def rabbi
+    verse = Verse.includes(:book, :translation).find_by(id: params[:verse_id])
+    @selection = params[:q].to_s
+    @result = RabbiExposition.call(verse:, selection: @selection, study: @study)
+    render partial: "studies/rabbi_results", locals: { study: @study, result: @result }
   end
 
   def cross_references

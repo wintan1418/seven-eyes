@@ -1,5 +1,5 @@
 <div class="ps-root"
-     data-controller="book-browser ai-search search xref commentary lexicon shortcuts auth-gate new-study font-size presentation diff interlinear"
+     data-controller="book-browser ai-search search xref commentary lexicon rabbi shortcuts auth-gate new-study font-size presentation diff interlinear"
      data-font-size="<%= authenticated? ? current_user.font_size : 0 %>"
      data-font-size-url-value="<%= preferences_path %>"
      data-font-size-authenticated-value="<%= authenticated? %>">
@@ -79,6 +79,7 @@
   <%= render "studies/xref_drawer" %>
   <%= render "studies/commentary_drawer" %>
   <%= render "studies/lexicon_drawer" %>
+  <%= render "studies/rabbi_drawer", study: @study %>
   <%= render "studies/auth_prompt" unless authenticated? %>
   <%= render "studies/new_study_modal" %>
 </div>

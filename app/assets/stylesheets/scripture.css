@@ -627,6 +627,49 @@
 }
 .ps-hl-popover .x-ref:hover { color: var(--vellum-0); }
 
+/* ----- AI Rabbi slide-over ----- */
+.ps-rabbi-host { position: fixed; inset: 0; z-index: 43; visibility: hidden; pointer-events: none; }
+.ps-rabbi-host.is-open { visibility: visible; pointer-events: auto; }
+.ps-rabbi-host.is-open .ps-book-backdrop { opacity: 1; }
+.ps-rabbi-host .ps-drawer {
+  position: absolute; top: 0; right: 0; height: 100%; width: 420px; flex-basis: 420px;
+  transform: translateX(100%); transition: transform 0.22s ease;
+}
+.ps-rabbi-host.is-open .ps-drawer { transform: translateX(0); }
+
+.ps-rabbi-host .ps-rabbi-body {
+  display: block; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 4px 0 22px;
+}
+.ps-rabbi-origin { padding: 14px 20px 6px; border-bottom: 1px dashed rgba(138, 116, 68, 0.35); }
+.ps-rabbi-selection {
+  margin-top: 4px; font: italic 14px "EB Garamond", serif; color: var(--rubric);
+}
+.ps-rabbi-section { padding: 12px 20px 6px; }
+.ps-rabbi-label {
+  font: 600 9.5px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--sepia-mute); margin-bottom: 4px;
+}
+.ps-rabbi-text {
+  font: 16px/1.6 "EB Garamond", serif; color: var(--ink);
+}
+.ps-rabbi-text p { margin: 0 0 8px; }
+.ps-rabbi-xrefs { margin-top: 2px; }
+.ps-rabbi-caution {
+  margin: 10px 16px; padding: 12px 16px;
+  background: rgba(138, 36, 24, 0.06); border-left: 3px solid var(--rubric); border-radius: 2px;
+}
+.ps-rabbi-caution .ps-rabbi-label { color: var(--rubric-deep); }
+.ps-rabbi-foot {
+  margin: 14px 20px 0; padding-top: 10px; border-top: 1px dashed rgba(138, 116, 68, 0.35);
+  font: italic 11.5px "EB Garamond", serif; color: var(--sepia-mute); line-height: 1.5;
+}
+.ps-rabbi-provider { font-style: normal; text-transform: capitalize; }
+.ps-rabbi-loading { padding: 40px 24px; text-align: center; }
+.ps-rabbi-loading .orn { font-size: 26px; color: var(--gold-deep); animation: ps-rabbi-pulse 1.6s ease-in-out infinite; }
+.ps-rabbi-loading .lead { margin-top: 10px; font: italic 16px "EB Garamond", serif; color: var(--ink); }
+.ps-rabbi-loading .hint { margin-top: 4px; font: italic 12.5px "EB Garamond", serif; color: var(--sepia-mute); }
+@keyframes ps-rabbi-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
 /* ----- new study modal ----- */
 .ps-modal-shroud {
   position: absolute;

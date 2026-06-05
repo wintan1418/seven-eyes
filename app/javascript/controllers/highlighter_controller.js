@@ -67,8 +67,29 @@ export default class extends Controller {
       sw.addEventListener("mousedown", (e) => { e.preventDefault(); this.create(c) })
       pop.appendChild(sw)
     })
+
+    // "Ask the Rabbi" — explain the selected words in full context. Reading the
+    // selection requires no account, so this is offered to everyone.
+    const divider = document.createElement("span")
+    divider.className = "divider"
+    pop.appendChild(divider)
+
+    const rabbi = document.createElement("span")
+    rabbi.className = "x-ref"
+    rabbi.textContent = "✢ Rabbi"
+    rabbi.addEventListener("mousedown", (e) => { e.preventDefault(); this.askRabbi() })
+    pop.appendChild(rabbi)
+
     document.body.appendChild(pop)
     this.popover = pop
+  }
+
+  askRabbi() {
+    const p = this.pending
+    const text = window.getSelection()?.toString() || ""
+    this.removePopover()
+    if (!p || !p.verseId || !text.trim()) return
+    window.dispatchEvent(new CustomEvent("rabbi:ask", { detail: { verseId: p.verseId, text } }))
   }
 
   removePopover() {

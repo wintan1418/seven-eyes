@@ -19,6 +19,9 @@ application.register("ai-search", AiSearchController)
 import XrefController from "./xref_controller"
 application.register("xref", XrefController)
 
+import RabbiController from "./rabbi_controller"
+application.register("rabbi", RabbiController)
+
 import NotesController from "./notes_controller"
 application.register("notes", NotesController)
 

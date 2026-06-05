@@ -1,0 +1,77 @@
+<%# locals: study, result %>
+<%= turbo_frame_tag "rabbi_drawer", class: "ps-rabbi-body", data: { rabbi_target: "frame" } do %>
+  <% if result.ok? %>
+    <% ex = result.exposition %>
+    <div class="ps-rabbi-origin">
+      <div class="ps-drawer-title"><%= result.origin %></div>
+      <div class="ps-rabbi-selection">&ldquo;<%= truncate(result.selection, length: 160) %>&rdquo;</div>
+    </div>
+
+    <% {
+         "Summary"     => ex.summary,
+         "In context"  => ex.context,
+         "What it means" => ex.meaning,
+       }.each do |label, text| %>
+      <% if text.present? %>
+        <div class="ps-rabbi-section">
+          <div class="ps-rabbi-label"><%= label %></div>
+          <div class="ps-rabbi-text"><%= simple_format(text) %></div>
+        </div>
+      <% end %>
+    <% end %>
+
+    <% if result.cross_references.any? %>
+      <div class="ps-rabbi-section">
+        <div class="ps-rabbi-label">Scripture interprets Scripture</div>
+        <div class="ps-rabbi-xrefs">
+          <% result.cross_references.each do |x| %>
+            <div class="ps-xref">
+              <div class="ps-xref-head">
+                <div class="ps-xref-ref"><%= x.reference %></div>
+              </div>
+              <div class="ps-xref-actions">
+                <% study.panes.each do |pane| %>
+                  <%= button_to "▸ #{pane_numeral(pane.position)}", study_pane_path(study, pane),
+                        method: :patch, params: { pane: { reference: x.reference } }, class: "ps-xref-load",
+                        form: { data: { turbo_frame: pane.frame_id }, style: "display:contents;" } %>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <% if ex.caution.present? %>
+      <div class="ps-rabbi-caution">
+        <div class="ps-rabbi-label">&#9888; A caution</div>
+        <div class="ps-rabbi-text"><%= simple_format(ex.caution) %></div>
+      </div>
+    <% end %>
+
+    <% if ex.application.present? %>
+      <div class="ps-rabbi-section">
+        <div class="ps-rabbi-label">For the pulpit</div>
+        <div class="ps-rabbi-text"><%= simple_format(ex.application) %></div>
+      </div>
+    <% end %>
+
+    <div class="ps-rabbi-foot">
+      Generated guidance &mdash; weigh it against the text and the Spirit. Verse wording is always
+      from your own translations, never the model.
+      <% if result.provider %><span class="ps-rabbi-provider">&middot; via <%= result.provider %></span><% end %>
+    </div>
+
+  <% elsif result.error == :no_key %>
+    <div class="ps-ai-hint">
+      &#9888; No AI provider configured. Add <code>Google_GEMINI_API_KEY</code> (and optionally
+      <code>ROUTELLM_API_KEY</code> for fail-over) to your <code>.env</code>, then restart the server.
+    </div>
+  <% elsif result.error == :blank %>
+    <div class="ps-ai-hint">Highlight a phrase in a verse first, then ask the Rabbi.</div>
+  <% elsif result.error == :no_verse %>
+    <div class="ps-ai-hint">Couldn&rsquo;t tell which verse that was. Try selecting within a single verse.</div>
+  <% else %>
+    <div class="ps-ai-hint">The Rabbi is silent just now &mdash; couldn&rsquo;t reach the AI. Please try again.</div>
+  <% end %>
+<% end %>
