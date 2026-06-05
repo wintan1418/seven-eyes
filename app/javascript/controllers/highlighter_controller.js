@@ -31,16 +31,43 @@ export default class extends Controller {
     if (!sel || sel.isCollapsed || sel.rangeCount === 0) return this.removePopover()
 
     const range = sel.getRangeAt(0)
-    const container = this.verseTextOf(range.startContainer)
-    if (!container || container !== this.verseTextOf(range.endContainer)) return this.removePopover()
+    const startC = this.verseTextOf(range.startContainer)
+    const endC = this.verseTextOf(range.endContainer)
 
-    const base = parseInt(container.dataset.offsetBase || "0", 10)
-    const start = base + this.offsetWithin(container, range.startContainer, range.startOffset)
-    const end = start + range.toString().length
-    if (end <= start) return this.removePopover()
+    // A selection may span several verses; collect a segment (verse + char
+    // offsets) for each verse it touches, so colours/Rabbi/Share all work.
+    const segments = this.selectedSegments(range, startC, endC)
+    if (segments.length === 0) return this.removePopover()
 
-    this.pending = { verseId: container.dataset.verseId, start, end, range: range.cloneRange() }
+    this.pending = { segments, text: sel.toString(), range: range.cloneRange(), startC, endC }
     this.showColorPopover(range.getBoundingClientRect())
+  }
+
+  // Every .ps-verse-text the range intersects, with per-verse char offsets.
+  selectedSegments(range, startC, endC) {
+    const all = [ ...this.element.querySelectorAll(".ps-verse-text") ]
+    return all
+      .filter((c) => range.intersectsNode(c))
+      .map((c) => {
+        const base = parseInt(c.dataset.offsetBase || "0", 10)
+        const full = c.textContent.length
+        let start, end
+        if (c === startC && c === endC) {
+          start = base + this.offsetWithin(c, range.startContainer, range.startOffset)
+          end = base + this.offsetWithin(c, range.endContainer, range.endOffset)
+        } else if (c === startC) {
+          start = base + this.offsetWithin(c, range.startContainer, range.startOffset)
+          end = base + full
+        } else if (c === endC) {
+          start = base
+          end = base + this.offsetWithin(c, range.endContainer, range.endOffset)
+        } else {
+          start = base
+          end = base + full
+        }
+        return { verseId: c.dataset.verseId, container: c, start, end }
+      })
+      .filter((s) => s.end > s.start)
   }
 
   // Click an existing highlight: open the edit popover for it.
@@ -93,18 +120,28 @@ export default class extends Controller {
 
   askRabbi() {
     const p = this.pending
-    const text = window.getSelection()?.toString() || ""
     this.removePopover()
-    if (!p || !p.verseId || !text.trim()) return
-    window.dispatchEvent(new CustomEvent("rabbi:ask", { detail: { verseId: p.verseId, text } }))
+    if (!p || !p.segments?.length || !p.text.trim()) return
+    // The Rabbi reads the whole chapter for context; the first verse anchors it.
+    window.dispatchEvent(new CustomEvent("rabbi:ask", {
+      detail: { verseId: p.segments[0].verseId, text: p.text }
+    }))
   }
 
   shareSelection() {
     const p = this.pending
-    const text = window.getSelection()?.toString() || ""
     this.removePopover()
-    if (!p || !p.verseId) return
-    window.dispatchEvent(new CustomEvent("share:open", { detail: { verseId: p.verseId, q: text.trim() } }))
+    if (!p || !p.segments?.length) return
+    const verses = p.segments.map((s) => s.container.closest(".ps-verse")).filter(Boolean)
+    if (!verses.length) return
+    const first = verses[0], last = verses[verses.length - 1]
+    window.dispatchEvent(new CustomEvent("share:open", {
+      detail: {
+        osis: first.dataset.osis, chapter: first.dataset.chapter,
+        verseStart: first.dataset.verseNum, verseEnd: last.dataset.verseNum,
+        q: p.text.trim()
+      }
+    }))
   }
 
   removePopover() {
@@ -121,26 +158,46 @@ export default class extends Controller {
   async create(color) {
     const p = this.pending
     this.removePopover()
-    if (!p) return
-    try {
-      const res = await this.api("POST", "/highlights", {
-        highlight: { verse_id: p.verseId, color, char_start: p.start, char_end: p.end }
-      })
+    if (!p || !p.segments?.length) return
+
+    let made = 0, lastSpan = null
+    for (const seg of p.segments) {
+      let res
+      try {
+        res = await this.api("POST", "/highlights", {
+          highlight: { verse_id: seg.verseId, color, char_start: seg.start, char_end: seg.end }
+        })
+      } catch { continue }
       if (res.status === 401) { window.dispatchEvent(new CustomEvent("auth:required")); return }
-      if (!res.ok) return
-      const data = await res.json()
-      const span = this.wrap(p.range, color, data.id)
-      window.getSelection()?.removeAllRanges()
-      if (span) this.openEditor(span) // jump straight into note entry for the new highlight
-    } catch { /* will appear on reload */ }
+      if (!res.ok) continue
+      const { id } = await res.json()
+      made++
+      const span = this.wrapSegment(seg, p, color, id)
+      if (span) lastSpan = span
+    }
+    window.getSelection()?.removeAllRanges()
+    // For a single highlight, jump straight into its note; multi-verse spans
+    // are left as-is (they re-render fully on the next load).
+    if (made === 1 && lastSpan) this.openEditor(lastSpan)
   }
 
-  wrap(range, color, id) {
+  // Wrap one verse-segment of the selection in a highlight span. Builds a range
+  // bounded by the original selection at the start/end verse, and the whole
+  // verse text in between. surroundContents throws across element boundaries
+  // (e.g. Strong's word spans) — caught, so it renders on the next load.
+  wrapSegment(seg, p, color, id) {
+    const c = seg.container
+    const r = document.createRange()
+    if (c === p.startC) r.setStart(p.range.startContainer, p.range.startOffset)
+    else r.setStart(c, 0)
+    if (c === p.endC) r.setEnd(p.range.endContainer, p.range.endOffset)
+    else r.setEnd(c, c.childNodes.length)
+
     const span = document.createElement("span")
     span.className = `hl-${color}`
     span.dataset.highlightId = id
     span.dataset.note = ""
-    try { range.surroundContents(span); return span } catch { return null } // crosses nodes; reload shows it
+    try { r.surroundContents(span); return span } catch { return null }
   }
 
   // ---------------- edit popover (existing highlight) ----------------
