@@ -1,0 +1,18 @@
+<% content_for :title, "Passage not found · Parallel Scripture" %>
+<div class="ps-root ps-pub-root">
+  <main class="ps-pub">
+    <a href="<%= root_path %>" class="ps-pub-brand">
+      <span class="cross">&#9769;</span>
+      <span>PARALLEL &middot; SCRIPTURE</span>
+    </a>
+    <article class="ps-pub-card">
+      <div class="ps-pub-ref"><span class="r">Passage not found</span></div>
+      <div class="ps-pub-rule"><span></span>&#9888;<span></span></div>
+      <p class="ps-pub-verse first">That reference could not be read. It may be mistyped, or the
+        translation may not carry it.</p>
+    </article>
+    <div class="ps-pub-cta">
+      <%= link_to "Open Parallel Scripture &rsaquo;".html_safe, root_path, class: "cta" %>
+    </div>
+  </main>
+</div>

@@ -1,8 +1,8 @@
 class StudiesController < ApplicationController
   # The workspace is open to everyone; only saving (notes/highlights/account) needs auth.
-  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest search commentary lexicon rabbi sermon ]
+  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest search commentary lexicon rabbi sermon share_card prayer ]
 
-  before_action :set_study, only: %i[ show update destroy suggest search cross_references commentary lexicon rabbi sermon share ]
+  before_action :set_study, only: %i[ show update destroy suggest search cross_references commentary lexicon rabbi sermon share share_card prayer ]
 
   def index
     @studies = authenticated? ? current_user.studies.recent : []
@@ -110,6 +110,30 @@ class StudiesController < ApplicationController
     render partial: "studies/rabbi_results", locals: { study: @study, result: @result }
   end
 
+  # Metadata for the share modal: the canonical reference, the text to render on
+  # the card, and the public share URL. Resolves from either a single verse
+  # (verse_id, from the highlight popover) or a passage (osis + chapter [+ range]).
+  def share_card
+    data = build_share_card
+    return head(:not_found) unless data
+    render json: data
+  end
+
+  # The shareable chapter prayer (AI-composed, cached). Open to everyone; degrades
+  # gracefully to ok:false when no provider key is configured.
+  def prayer
+    book = Book.find_by_osis(params[:osis])
+    return head(:not_found) unless book
+
+    chapter = params[:chapter].to_i
+    translation = Translation.find_by(code: params[:translation].presence)
+    result = ChapterPrayer.call(book:, chapter:, translation:)
+    render json: {
+      ok: result.ok?, reference: result.reference, prayer: result.prayer, error: result.error,
+      url: passage_url(PassageSlug.slug_for(osis: book.osis_code, chapter:), prayer: 1)
+    }
+  end
+
   def cross_references
     book = Book.find_by_osis(params[:osis])
     return head(:not_found) unless book
@@ -128,6 +152,46 @@ class StudiesController < ApplicationController
   end
 
   private
+
+  def build_share_card
+    verse = params[:verse_id].present? &&
+            Verse.includes(:book, :translation).find_by(id: params[:verse_id])
+
+    if verse
+      book, chapter = verse.book, verse.chapter
+      v_start = v_end = verse.verse_number
+      translation = verse.translation
+      reference = "#{book.name} #{chapter}:#{v_start}"
+      text = params[:q].presence || verse.text
+    else
+      book = Book.find_by_osis(params[:osis])
+      return nil unless book
+
+      chapter = params[:chapter].to_i
+      v_start = params[:verse_start].presence&.to_i
+      v_end   = params[:verse_end].presence&.to_i
+      translation = Translation.find_by(code: params[:translation].presence) ||
+                    Translation.find_by(code: "KJV")
+      verses = Verse.passage(translation:, book:, chapter:, verse_start: v_start, verse_end: v_end)
+      return nil if verses.empty?
+      reference = passage_reference_label(book, chapter, v_start, v_end)
+      text = params[:q].presence || verses.map(&:text).join(" ")
+    end
+
+    slug = PassageSlug.slug_for(osis: book.osis_code, chapter:, verse_start: v_start, verse_end: v_end)
+    {
+      reference:, translation: translation&.name, translation_code: translation&.code,
+      osis: book.osis_code, chapter:, text: text.to_s, slug:,
+      url: passage_url(slug, t: translation&.code)
+    }
+  end
+
+  def passage_reference_label(book, chapter, v_start, v_end)
+    return "#{book.name} #{chapter}" if v_start.blank?
+    label = "#{book.name} #{chapter}:#{v_start}"
+    label += "-#{v_end}" if v_end && v_end != v_start
+    label
+  end
 
   def set_study
     @study = current_study(params[:id])

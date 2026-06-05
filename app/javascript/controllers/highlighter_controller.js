@@ -80,6 +80,13 @@ export default class extends Controller {
     rabbi.addEventListener("mousedown", (e) => { e.preventDefault(); this.askRabbi() })
     pop.appendChild(rabbi)
 
+    // "Share" — turn the selected words into a shareable picture + link.
+    const share = document.createElement("span")
+    share.className = "x-ref"
+    share.textContent = "⤳ Share"
+    share.addEventListener("mousedown", (e) => { e.preventDefault(); this.shareSelection() })
+    pop.appendChild(share)
+
     document.body.appendChild(pop)
     this.popover = pop
   }
@@ -90,6 +97,14 @@ export default class extends Controller {
     this.removePopover()
     if (!p || !p.verseId || !text.trim()) return
     window.dispatchEvent(new CustomEvent("rabbi:ask", { detail: { verseId: p.verseId, text } }))
+  }
+
+  shareSelection() {
+    const p = this.pending
+    const text = window.getSelection()?.toString() || ""
+    this.removePopover()
+    if (!p || !p.verseId) return
+    window.dispatchEvent(new CustomEvent("share:open", { detail: { verseId: p.verseId, q: text.trim() } }))
   }
 
   removePopover() {

@@ -1,0 +1,55 @@
+<%# locals: study — the share-as-image modal (passage card + chapter prayer). %>
+<div class="ps-share-host" data-share-card-target="host"
+     data-controller="share-card"
+     data-share-card-card-url-value="<%= share_card_study_path(study) %>"
+     data-share-card-prayer-url-value="<%= prayer_study_path(study) %>">
+  <div class="ps-book-backdrop" data-action="share-card#close"></div>
+  <aside class="ps-share-panel">
+    <div class="ps-share-head">
+      <div class="ps-share-eyebrow">
+        <span>&#10086; &nbsp; Share</span>
+        <button class="close" type="button" data-action="share-card#close">&#10005;</button>
+      </div>
+      <div class="ps-share-modes" role="tablist">
+        <button type="button" class="is-on" data-share-card-target="modePassage"
+                data-action="share-card#showPassage">Passage</button>
+        <button type="button" data-share-card-target="modePrayer"
+                data-action="share-card#showPrayer">&#10018; Prayer</button>
+      </div>
+    </div>
+
+    <div class="ps-share-stage">
+      <canvas data-share-card-target="canvas" class="ps-share-canvas" width="1080" height="1080"></canvas>
+      <div class="ps-share-status" data-share-card-target="status" hidden></div>
+    </div>
+
+    <div class="ps-share-bgs" data-share-card-target="bgs" aria-label="Background">
+      <% %w[vellum sepia candle ink cream].each_with_index do |bg, i| %>
+        <button type="button" class="ps-share-bg bg-<%= bg %><%= ' is-on' if i.zero? %>"
+                data-bg="<%= bg %>" data-action="share-card#pickBg"
+                title="<%= bg.capitalize %>"></button>
+      <% end %>
+    </div>
+
+    <div class="ps-share-actions">
+      <button type="button" class="ps-share-btn primary" data-action="share-card#share"
+              data-share-card-target="shareBtn">&#10150; Share</button>
+      <button type="button" class="ps-share-btn" data-action="share-card#download">&#11015; Download</button>
+      <button type="button" class="ps-share-btn" data-action="share-card#copyImage"
+              data-share-card-target="copyImage">&#9783; Copy image</button>
+    </div>
+
+    <div class="ps-share-link">
+      <input type="text" readonly data-share-card-target="link" class="ps-share-link-input"
+             aria-label="Share link">
+      <button type="button" class="ps-share-btn" data-action="share-card#copyLink"
+              data-share-card-target="copyLink">Copy link</button>
+      <button type="button" class="ps-share-btn" data-action="share-card#copyText"
+              data-share-card-target="copyText">Copy text</button>
+    </div>
+
+    <p class="ps-share-note" data-share-card-target="note">
+      A picture you can post anywhere &mdash; the link brings people back to read it here.
+    </p>
+  </aside>
+</div>

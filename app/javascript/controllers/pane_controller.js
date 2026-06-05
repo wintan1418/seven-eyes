@@ -14,4 +14,20 @@ export default class extends Controller {
   closeNotes() {
     this.notesTarget?.classList.remove("is-open")
   }
+
+  // Open the share modal for this pane's displayed passage.
+  share(event) {
+    event?.preventDefault()
+    const d = event.currentTarget.dataset
+    window.dispatchEvent(new CustomEvent("share:open", { detail: {
+      osis: d.osis, chapter: d.chapter, verseStart: d.verseStart, verseEnd: d.verseEnd
+    } }))
+  }
+
+  // Open the share modal straight to a prayer composed from this chapter.
+  prayer(event) {
+    event?.preventDefault()
+    const d = event.currentTarget.dataset
+    window.dispatchEvent(new CustomEvent("prayer:open", { detail: { osis: d.osis, chapter: d.chapter } }))
+  }
 }

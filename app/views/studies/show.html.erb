@@ -83,6 +83,7 @@
   <%= render "studies/commentary_drawer" %>
   <%= render "studies/lexicon_drawer" %>
   <%= render "studies/rabbi_drawer", study: @study %>
+  <%= render "studies/share_modal", study: @study %>
   <%= render "studies/auth_prompt" unless authenticated? %>
   <%= render "studies/new_study_modal" %>
 </div>

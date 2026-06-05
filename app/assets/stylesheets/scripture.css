@@ -670,6 +670,135 @@
 .ps-rabbi-loading .hint { margin-top: 4px; font: italic 12.5px "EB Garamond", serif; color: var(--sepia-mute); }
 @keyframes ps-rabbi-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 
+/* ===== share-as-image modal (passage card + chapter prayer) ===== */
+.ps-share-host { position: fixed; inset: 0; z-index: 44; visibility: hidden; pointer-events: none; }
+.ps-share-host.is-open { visibility: visible; pointer-events: auto; }
+.ps-share-host.is-open .ps-book-backdrop { opacity: 1; }
+.ps-share-panel {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.97);
+  width: min(540px, 94vw); max-height: 92vh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 20px 22px 22px; background: var(--vellum-0);
+  border: 1px solid var(--vellum-edge); border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(163, 129, 46, 0.32), 0 24px 60px -20px rgba(28, 18, 8, 0.65);
+  opacity: 0; transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.ps-share-host.is-open .ps-share-panel { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.ps-share-head { display: flex; flex-direction: column; gap: 12px; }
+.ps-share-eyebrow {
+  display: flex; align-items: center; justify-content: space-between;
+  font: 600 11px "Cinzel", serif; letter-spacing: 0.2em; text-transform: uppercase; color: var(--sepia);
+}
+.ps-share-eyebrow .close {
+  background: transparent; border: 0; cursor: pointer; color: var(--sepia-mute); font-size: 14px; line-height: 1;
+}
+.ps-share-eyebrow .close:hover { color: var(--rubric); }
+.ps-share-modes { display: flex; gap: 6px; }
+.ps-share-modes button {
+  flex: 1; cursor: pointer; padding: 8px 10px; border-radius: 2px;
+  font: 600 10.5px "Cinzel", serif; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--sepia); background: transparent; border: 1px solid rgba(163, 129, 46, 0.4);
+}
+.ps-share-modes button.is-on { color: var(--vellum-0); background: var(--rubric); border-color: var(--rubric-deep); }
+
+.ps-share-stage { position: relative; }
+.ps-share-canvas {
+  display: block; width: 100%; height: auto; border-radius: 3px;
+  box-shadow: 0 8px 24px -14px rgba(50, 30, 10, 0.5);
+}
+.ps-share-status {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 24px; border-radius: 3px;
+  background: rgba(244, 234, 210, 0.92); color: var(--ink-soft);
+  font: italic 15px/1.5 "EB Garamond", serif;
+}
+
+.ps-share-bgs { display: flex; gap: 8px; justify-content: center; }
+.ps-share-bg {
+  width: 30px; height: 30px; border-radius: 50%; cursor: pointer; padding: 0;
+  border: 1px solid rgba(163, 129, 46, 0.5); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
+}
+.ps-share-bg.is-on { outline: 2px solid var(--rubric); outline-offset: 2px; }
+.ps-share-bg.bg-vellum { background: linear-gradient(135deg, #f4e7c8, #e6d2a2); }
+.ps-share-bg.bg-sepia  { background: linear-gradient(135deg, #e8d4a6, #c8a86a); }
+.ps-share-bg.bg-candle { background: linear-gradient(135deg, #2a1c0d, #120c06); }
+.ps-share-bg.bg-ink    { background: linear-gradient(135deg, #1b2330, #0d131c); }
+.ps-share-bg.bg-cream  { background: linear-gradient(135deg, #fbf5e6, #f2e8cf); }
+
+.ps-share-actions { display: flex; gap: 8px; }
+.ps-share-link { display: flex; gap: 6px; }
+.ps-share-link-input {
+  flex: 1; min-width: 0; padding: 7px 10px; border-radius: 2px;
+  border: 1px solid rgba(163, 129, 46, 0.4); background: rgba(255, 247, 224, 0.5);
+  font: 12px "EB Garamond", serif; color: var(--ink-soft);
+}
+.ps-share-btn {
+  cursor: pointer; padding: 9px 12px; border-radius: 2px; white-space: nowrap;
+  font: 600 10px "Cinzel", serif; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--sepia); background: transparent; border: 1px solid rgba(163, 129, 46, 0.45);
+}
+.ps-share-btn:hover { color: var(--ink); background: rgba(163, 129, 46, 0.12); }
+.ps-share-btn.primary {
+  flex: 1; color: var(--vellum-0); background: var(--rubric);
+  border-color: var(--rubric-deep); box-shadow: 0 2px 0 rgba(0,0,0,0.18);
+}
+.ps-share-btn.primary:hover { background: var(--rubric-deep); }
+.ps-share-actions .ps-share-btn:not(.primary) { flex: 1; }
+.ps-share-note {
+  margin: 0; text-align: center; font: italic 12.5px "EB Garamond", serif; color: var(--sepia-mute);
+}
+
+/* ===== public passage page (/p/:slug) ===== */
+.ps-pub-root { overflow-y: auto; min-height: 100vh; }
+.ps-pub { width: min(680px, 92%); margin: 0 auto; padding: 40px 0 64px; text-align: center; }
+.ps-pub-brand {
+  display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink);
+  font: 600 12px "Cinzel", serif; letter-spacing: 0.22em; margin-bottom: 28px;
+}
+.ps-pub-brand .cross { color: var(--gold); font-size: 16px; }
+.ps-pub-card {
+  background: var(--vellum-0); border: 1px solid var(--vellum-edge); border-radius: 4px;
+  padding: 40px 40px 44px; text-align: left;
+  box-shadow: inset 0 0 0 1px rgba(163, 129, 46, 0.3), 0 16px 44px -22px rgba(50, 30, 10, 0.45);
+}
+.ps-pub-ref { text-align: center; }
+.ps-pub-ref .r {
+  display: block; font-family: "EB Garamond", serif; font-style: italic; font-size: 30px; color: var(--ink);
+}
+.ps-pub-ref .tr {
+  display: block; margin-top: 6px; font: 600 9.5px "Cinzel", serif; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--sepia-mute);
+}
+.ps-pub-rule {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  margin: 20px 0 24px; color: var(--gold); opacity: 0.7;
+}
+.ps-pub-rule span { height: 1px; width: 80px; background: var(--gold); }
+.ps-pub-verses { font: 19px/1.72 "EB Garamond", serif; color: var(--ink); }
+.ps-pub-verse { margin: 0 0 10px; }
+.ps-pub-verse .vn {
+  font-size: 11px; color: var(--rubric); vertical-align: super; margin-right: 5px; font-weight: 600;
+}
+.ps-pub-verse.first::first-letter {
+  font-family: "UnifrakturMaguntia", "EB Garamond", serif; font-size: 56px; line-height: 0.8;
+  float: left; margin: 6px 10px 0 0; color: var(--rubric);
+}
+.ps-pub-prayer {
+  margin-top: 28px; padding-top: 22px; border-top: 1px dashed rgba(163, 129, 46, 0.4);
+}
+.ps-pub-prayer .lbl {
+  font: 600 9.5px "Cinzel", serif; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--gold-deep); margin-bottom: 8px;
+}
+.ps-pub-prayer p {
+  margin: 0; font: italic 18px/1.7 "EB Garamond", serif; color: var(--ink-soft);
+}
+.ps-pub-cta { margin-top: 30px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.ps-pub-foot {
+  margin: 28px auto 0; max-width: 460px;
+  font: italic 14px/1.6 "EB Garamond", serif; color: var(--sepia-mute);
+}
+
 /* ----- new study modal ----- */
 .ps-modal-shroud {
   position: absolute;

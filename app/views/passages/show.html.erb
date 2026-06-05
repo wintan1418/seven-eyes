@@ -1,0 +1,62 @@
+<% content_for :title, "#{@reference} · Parallel Scripture" %>
+<%
+  meta_desc = (@prayer.presence || @verses.map(&:text).join(" ")).to_s.squish.truncate(180)
+  og_image  = "#{request.base_url}/icon.png"
+%>
+<% content_for :head do %>
+  <meta name="description" content="<%= meta_desc %>">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Parallel Scripture">
+  <meta property="og:title" content="<%= @reference %> · <%= @translation&.name %>">
+  <meta property="og:description" content="<%= meta_desc %>">
+  <meta property="og:url" content="<%= passage_url(@slug) %>">
+  <meta property="og:image" content="<%= og_image %>">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="<%= @reference %> · <%= @translation&.name %>">
+  <meta name="twitter:description" content="<%= meta_desc %>">
+  <meta name="twitter:image" content="<%= og_image %>">
+<% end %>
+
+<div class="ps-root ps-pub-root">
+  <main class="ps-pub">
+    <a href="<%= root_path %>" class="ps-pub-brand">
+      <span class="cross">&#9769;</span>
+      <span>PARALLEL &middot; SCRIPTURE</span>
+    </a>
+
+    <article class="ps-pub-card">
+      <div class="ps-pub-ref">
+        <span class="r"><%= @reference %></span>
+        <span class="tr"><%= @translation&.name %></span>
+      </div>
+      <div class="ps-pub-rule"><span></span>&#10086;<span></span></div>
+
+      <div class="ps-pub-verses">
+        <% @verses.each_with_index do |v, i| %>
+          <p class="ps-pub-verse<%= " first" if i.zero? %>">
+            <% if @verses.size > 1 %><span class="vn"><%= v.verse_number %></span><% end %><%= v.text %>
+          </p>
+        <% end %>
+      </div>
+
+      <% if @prayer.present? %>
+        <section class="ps-pub-prayer">
+          <div class="lbl">&#10018; &nbsp; A Prayer from <%= @reference %></div>
+          <p><%= @prayer %></p>
+        </section>
+      <% end %>
+    </article>
+
+    <div class="ps-pub-cta">
+      <%= link_to "Open in Parallel Scripture &rsaquo;".html_safe,
+            open_passage_path(@slug, t: @translation&.code), class: "cta" %>
+      <%= link_to "Explore the whole Bible", root_path, class: "cta secondary",
+            style: "text-decoration:none;" %>
+    </div>
+
+    <p class="ps-pub-foot">
+      A quiet desk for the Word &mdash; lay passages side by side, trace cross-references,
+      study the original words, and let a careful AI help you see the text in context.
+    </p>
+  </main>
+</div>

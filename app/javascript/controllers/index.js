@@ -87,3 +87,6 @@ application.register("view-menu", ViewMenuController)
 
 import OfflineController from "./offline_controller"
 application.register("offline", OfflineController)
+
+import ShareCardController from "./share_card_controller"
+application.register("share-card", ShareCardController)

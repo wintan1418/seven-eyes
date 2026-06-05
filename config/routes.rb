@@ -12,10 +12,16 @@ Rails.application.routes.draw do
     get :rabbi, on: :member
     get :sermon, on: :member
     post :share, on: :member
+    get :share_card, on: :member
+    get :prayer, on: :member
     get "lexicon/:strongs", on: :member, action: :lexicon, as: :lexicon
   end
 
   get "/s/:token", to: "shared_studies#show", as: :shared_study
+
+  # Public, no-login share pages for a passage + an optional chapter prayer.
+  get "/p/:slug/open", to: "passages#open", as: :open_passage
+  get "/p/:slug",      to: "passages#show", as: :passage
 
   resources :highlights, only: %i[ create update destroy ]
 

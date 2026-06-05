@@ -24,6 +24,13 @@
                 title="Notes" data-action="pane#toggleNotes">&#9998;</button>
         <button type="button" class="ps-pane-tool" title="Focus this pane (presentation mode)"
                 data-action="presentation#enter">&#9974;</button>
+        <button type="button" class="ps-pane-tool" title="Share this passage as a picture"
+                data-action="pane#share"
+                data-osis="<%= content.book.osis_code %>" data-chapter="<%= content.parsed.chapter %>"
+                data-verse-start="<%= content.parsed.verse_start %>" data-verse-end="<%= content.parsed.verse_end %>">&#10150;</button>
+        <button type="button" class="ps-pane-tool" title="A prayer from this chapter, to share"
+                data-action="pane#prayer"
+                data-osis="<%= content.book.osis_code %>" data-chapter="<%= content.parsed.chapter %>">&#10018;</button>
         <span class="ps-hint" tabindex="0"
               data-tip="Click a verse number for cross-references · select words to highlight them or ask ✢ Rabbi">?</span>
       <% end %>
