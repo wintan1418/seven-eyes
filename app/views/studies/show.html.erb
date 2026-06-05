@@ -1,8 +1,11 @@
 <div class="ps-root"
-     data-controller="book-browser ai-search search xref commentary lexicon rabbi shortcuts auth-gate new-study font-size presentation diff interlinear"
+     data-controller="book-browser ai-search search xref commentary lexicon rabbi tour shortcuts auth-gate new-study font-size presentation diff interlinear"
      data-font-size="<%= authenticated? ? current_user.font_size : 0 %>"
      data-font-size-url-value="<%= preferences_path %>"
-     data-font-size-authenticated-value="<%= authenticated? %>">
+     data-font-size-authenticated-value="<%= authenticated? %>"
+     data-tour-authenticated-value="<%= authenticated? %>"
+     data-tour-done-value="<%= authenticated? && current_user.tour_completed_at.present? %>"
+     data-tour-url-value="<%= preferences_path %>">
   <%= render "topbar", study_name: @study.name, panes: @study.pane_count,
         sync: @study.sync_scroll, saved: true, study: @study %>
   <button type="button" class="ps-exit-presentation" data-action="presentation#exit"

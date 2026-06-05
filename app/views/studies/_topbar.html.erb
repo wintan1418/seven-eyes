@@ -23,15 +23,15 @@
   <% end %>
   <div class="ps-topbar-actions">
     <% if study %>
-      <div class="ps-pane-picker" title="Pane count">
+      <div class="ps-pane-picker" title="Pane count" data-tour="panes">
         <% (1..4).each do |n| %>
           <%= button_to n, study_path(study), method: :patch, params: { study: { pane_count: n } },
                 class: (panes == n ? "is-on" : ""), form: { style: "display:contents;" } %>
         <% end %>
       </div>
-      <button type="button" class="ps-tb-btn" data-action="search#open">&#9906; Search</button>
-      <button type="button" class="ps-tb-btn" data-action="ai-search#open">&#10038; Find</button>
-      <%= link_to sermon_study_path(study), class: "ps-tb-btn",
+      <button type="button" class="ps-tb-btn" data-action="search#open" data-tour="search">&#9906; Search</button>
+      <button type="button" class="ps-tb-btn" data-action="ai-search#open" data-tour="find">&#10038; Find</button>
+      <%= link_to sermon_study_path(study), class: "ps-tb-btn", data: { tour: "sermon" },
             style: "text-decoration:none;", title: "Compile this study as a printable sermon manuscript" do %>
         &#9998; Sermon
       <% end %>
@@ -47,7 +47,7 @@
 
       <div class="ps-view-menu" data-controller="view-menu">
         <button type="button" class="ps-tb-btn ps-view-trigger"
-                data-action="view-menu#toggle"
+                data-action="view-menu#toggle" data-tour="view"
                 title="Reading view options">
           &#9776; View
         </button>
@@ -94,6 +94,13 @@
           </div>
         </div>
       </div>
+
+      <%= link_to guide_path, class: "ps-tb-btn", data: { tour: "guide" },
+            style: "text-decoration:none;", title: "Field guide — everything you can do here" do %>
+        &#10070; Guide
+      <% end %>
+      <button type="button" class="ps-tb-btn ps-tb-btn-secondary" data-action="tour#start"
+              title="Replay the quick tour">&#9737; Tour</button>
 
       <% if authenticated? %>
         <span class="ps-tb-btn is-active ps-saved-badge" style="cursor:default;">&#10003; Saved</span>

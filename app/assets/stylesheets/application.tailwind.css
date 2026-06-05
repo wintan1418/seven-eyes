@@ -719,6 +719,306 @@ a.ps-guide-card:hover { background: #fff7e0; border-color: var(--gold); }
 .ps-notes-area::placeholder { color: var(--sepia-mute); opacity: 0.7; }
 .ps-notes form, .ps-pane form { margin: 0; }
 
+/* ====================================================================
+   Guide-panel footer link + first-run "?" hint dot
+   ==================================================================== */
+.ps-guide-foot {
+  margin-top: 16px; padding-top: 14px;
+  border-top: 1px dashed rgba(163, 129, 46, 0.4);
+  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+}
+.ps-guide-foot-link {
+  font: 600 10.5px "Cinzel", serif; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--rubric); text-decoration: none;
+}
+.ps-guide-foot-link:hover { color: var(--rubric-deep); }
+.ps-guide-foot-note {
+  font: italic 13px "EB Garamond", serif; color: var(--sepia);
+}
+
+/* the "?" hint dot in each pane head — calm, with a tooltip on hover/focus */
+.ps-hint {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; margin-left: 2px;
+  border: 1px solid rgba(163, 129, 46, 0.5); border-radius: 50%;
+  font: 600 10px "Cinzel", serif; color: var(--sepia); cursor: help;
+  background: var(--vellum-0); position: relative; outline: none;
+  flex: 0 0 auto;
+}
+.ps-hint:hover, .ps-hint:focus { color: var(--rubric); border-color: var(--gold); }
+.ps-hint::after {
+  content: attr(data-tip);
+  position: absolute; top: calc(100% + 8px); right: 0;
+  width: 240px; padding: 8px 10px; z-index: 60;
+  background: var(--ink); color: var(--vellum-0);
+  font: 12px/1.5 "EB Garamond", serif; font-style: italic;
+  border-radius: 3px; box-shadow: 0 6px 20px -8px rgba(0,0,0,0.5);
+  opacity: 0; visibility: hidden; transform: translateY(-2px);
+  transition: opacity 0.14s ease, transform 0.14s ease;
+  pointer-events: none;
+}
+.ps-hint:hover::after, .ps-hint:focus::after {
+  opacity: 1; visibility: visible; transform: translateY(0);
+}
+
+/* ====================================================================
+   First-run guided tour — spotlight coachmarks (tour_controller.js)
+   ==================================================================== */
+.ps-tour { position: fixed; inset: 0; z-index: 1000; pointer-events: none; }
+/* the spotlight: a small transparent box whose huge box-shadow dims
+   everything else, leaving the target control lit through the hole. */
+.ps-tour-spot {
+  position: fixed; border-radius: 4px;
+  box-shadow: 0 0 0 9999px rgba(28, 18, 8, 0.66),
+              0 0 0 2px var(--gold) inset;
+  transition: left 0.22s ease, top 0.22s ease, width 0.22s ease, height 0.22s ease;
+  pointer-events: none;
+}
+.ps-tour-card {
+  position: fixed; width: 320px; pointer-events: auto;
+  background: var(--vellum-0); color: var(--ink);
+  border: 1px solid var(--vellum-edge);
+  box-shadow: inset 0 0 0 1px rgba(163, 129, 46, 0.35),
+              0 14px 40px -16px rgba(28, 18, 8, 0.6);
+  border-radius: 3px; padding: 16px 18px 14px;
+  transition: left 0.22s ease, top 0.22s ease;
+}
+.ps-tour-card.is-centered {
+  left: 50% !important; top: 50% !important;
+  transform: translate(-50%, -50%);
+}
+/* when centered with no spotlight, dim the page from the overlay root */
+.ps-tour:has(.ps-tour-spot[style*="display: none"])::before {
+  content: ""; position: fixed; inset: 0;
+  background: rgba(28, 18, 8, 0.66); pointer-events: auto;
+}
+.ps-tour-step {
+  font: 600 9px "Cinzel", serif; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--sepia-mute); margin-bottom: 6px;
+}
+.ps-tour-title {
+  font-family: "EB Garamond", serif; font-size: 21px; font-style: italic;
+  color: var(--ink); margin-bottom: 6px; line-height: 1.2;
+}
+.ps-tour-body {
+  font: 14px/1.55 "EB Garamond", serif; color: var(--ink-soft); margin-bottom: 14px;
+}
+.ps-tour-actions {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.ps-tour-nav { display: flex; gap: 8px; }
+.ps-tour-skip {
+  background: transparent; border: 0; cursor: pointer;
+  font: 600 10px "Cinzel", serif; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--sepia-mute);
+}
+.ps-tour-skip:hover { color: var(--rubric); }
+.ps-tour-back, .ps-tour-next {
+  cursor: pointer; border-radius: 2px;
+  font: 600 10px "Cinzel", serif; letter-spacing: 0.16em; text-transform: uppercase;
+  padding: 7px 14px;
+}
+.ps-tour-back {
+  background: transparent; color: var(--sepia);
+  border: 1px solid rgba(163, 129, 46, 0.4);
+}
+.ps-tour-back:hover { color: var(--ink); background: rgba(163, 129, 46, 0.12); }
+.ps-tour-next {
+  background: var(--rubric); color: var(--vellum-0);
+  border: 1px solid var(--rubric-deep); box-shadow: 0 2px 0 rgba(0,0,0,0.18);
+}
+.ps-tour-next:hover { background: var(--rubric-deep); }
+
+/* ====================================================================
+   Illustrated Field Guide page (guide/show.html.erb)
+   Self-contained — .eyebrow / .lede / .rule-orn are re-scoped under
+   .ps-tut here because the globals are scoped to .ps-welcome.
+   ==================================================================== */
+.ps-tut-root { overflow-y: auto; }
+.ps-tut {
+  width: min(1040px, 92%); margin: 0 auto; padding: 8px 0 80px;
+}
+.ps-tut .eyebrow {
+  font: 600 11px "Cinzel", serif; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--rubric);
+}
+.ps-tut-hero {
+  text-align: center; padding: 56px 0 40px;
+}
+.ps-tut-hero h1 {
+  font-family: "EB Garamond", serif; font-style: italic; font-weight: 500;
+  font-size: 46px; color: var(--ink); margin: 12px 0 14px; letter-spacing: -0.005em;
+}
+.ps-tut .lede {
+  max-width: 640px; margin: 0 auto;
+  font: 18px/1.7 "EB Garamond", serif; color: var(--ink-soft);
+}
+.ps-tut-hero-cta {
+  margin-top: 26px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+}
+
+/* alternating feature rows */
+.ps-tut-section {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
+  align-items: center; padding: 40px 0;
+  border-top: 1px dashed rgba(163, 129, 46, 0.35);
+}
+.ps-tut-section.reverse .ps-tut-copy { order: 2; }
+.ps-tut-section.reverse .ps-tut-art  { order: 1; }
+.ps-tut-feature {
+  background: linear-gradient(180deg, rgba(245,231,196,0.4) 0%, rgba(234,215,166,0.25) 100%);
+  border-radius: 4px; padding: 40px 32px;
+  box-shadow: inset 0 0 0 1px rgba(163, 129, 46, 0.28);
+}
+.ps-tut-kicker {
+  font: 600 18px "Cinzel", serif; color: var(--gold-deep);
+  letter-spacing: 0.1em; margin-bottom: 8px;
+}
+.ps-tut-copy h2 {
+  font-family: "EB Garamond", serif; font-size: 28px; color: var(--ink);
+  margin: 0 0 12px; line-height: 1.2;
+}
+.ps-tut-copy p {
+  font: 16px/1.65 "EB Garamond", serif; color: var(--ink-soft); margin: 0;
+}
+.ps-tut-copy strong { color: var(--rubric); font-weight: 600; }
+.ps-tut-copy .kbd, .ps-tut .kbd {
+  font: 600 11px "Cinzel", serif; padding: 1px 6px;
+  border: 1px solid rgba(163, 129, 46, 0.45); border-radius: 2px;
+  color: var(--sepia); background: var(--vellum-0);
+}
+.ps-tut-chips { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+.ps-tut-chip {
+  font: 600 12px "Cinzel", serif; letter-spacing: 0.08em;
+  padding: 4px 10px; border-radius: 2px; color: var(--sepia);
+  background: var(--vellum-0); border: 1px solid rgba(163, 129, 46, 0.4);
+}
+
+/* the little illustrative artboards */
+.ps-tut-art { display: flex; justify-content: center; }
+.ps-tut-art > * {
+  width: 100%; max-width: 420px;
+  background: var(--vellum-0); border: 1px solid var(--vellum-edge);
+  border-radius: 3px; padding: 16px 18px;
+  box-shadow: inset 0 0 0 1px rgba(163, 129, 46, 0.3),
+              0 10px 28px -16px rgba(50, 30, 10, 0.4);
+}
+.ps-tut-panes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px !important; }
+.ps-tut-pane {
+  border: 1px solid rgba(163, 129, 46, 0.3); border-radius: 2px;
+  padding: 8px 10px; background: rgba(255, 247, 224, 0.5);
+}
+.ps-tut-pane-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; }
+.ps-tut-pane-head .num { color: var(--gold-deep); font: 600 12px "Cinzel", serif; }
+.ps-tut-pane-head .ref { font: italic 13px "EB Garamond", serif; color: var(--ink); }
+.ps-tut-pane-head .tr {
+  margin-left: auto; font: 600 8.5px "Cinzel", serif; letter-spacing: 0.12em;
+  color: var(--sepia-mute);
+}
+.ps-tut-pane-body { font: 14px/1.5 "EB Garamond", serif; color: var(--ink-soft); }
+.ps-tut-pane-body .v {
+  font-size: 9px; color: var(--rubric); vertical-align: super; margin-right: 3px;
+}
+
+.ps-tut-field {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ps-tut-field .cur { font: 18px "EB Garamond", serif; color: var(--ink); }
+.ps-tut-field .caret {
+  display: inline-block; width: 1px; height: 18px; margin-left: 1px;
+  background: var(--rubric); vertical-align: middle;
+  animation: ps-tut-blink 1.1s step-end infinite;
+}
+@keyframes ps-tut-blink { 50% { opacity: 0; } }
+.ps-tut-field .go {
+  font: 600 9px "Cinzel", serif; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--vellum-0); background: var(--rubric); padding: 5px 10px; border-radius: 2px;
+}
+
+.ps-tut-drawer-head {
+  font: 600 10px "Cinzel", serif; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--sepia); margin-bottom: 10px;
+}
+.ps-tut-xref {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 0; border-bottom: 1px dashed rgba(163, 129, 46, 0.3);
+}
+.ps-tut-xref:last-child { border-bottom: 0; }
+.ps-tut-xref .r { font: italic 15px "EB Garamond", serif; color: var(--ink); }
+.ps-tut-xref .dots { color: var(--gold-deep); font-size: 10px; letter-spacing: 1px; }
+
+.ps-tut-rabbi .sel {
+  font: italic 16px "EB Garamond", serif; color: var(--rubric);
+  background: rgba(138, 36, 24, 0.08); border-radius: 2px;
+  padding: 4px 8px; display: inline-block; margin-bottom: 12px;
+}
+.ps-tut-rabbi .card .lbl {
+  font: 600 8.5px "Cinzel", serif; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--sepia-mute); margin: 8px 0 3px;
+}
+.ps-tut-rabbi .card p {
+  font: 14px/1.5 "EB Garamond", serif; color: var(--ink-soft); margin: 0;
+}
+.ps-tut-rabbi .card p.caution { color: var(--rubric-deep); font-style: italic; }
+.ps-tut-rabbi .refs { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+.ps-tut-rabbi .refs span {
+  font: 600 10px "Cinzel", serif; color: var(--rubric);
+  border: 1px solid rgba(138, 36, 24, 0.3); border-radius: 2px; padding: 2px 7px;
+}
+
+.ps-tut-find .q { font: italic 15px "EB Garamond", serif; color: var(--ink); margin-bottom: 12px; }
+.ps-tut-find .results { display: flex; gap: 6px; flex-wrap: wrap; }
+.ps-tut-find .results span {
+  font: 600 10px "Cinzel", serif; color: var(--sepia);
+  border: 1px solid rgba(163, 129, 46, 0.4); border-radius: 2px; padding: 3px 8px;
+  background: rgba(255, 247, 224, 0.6);
+}
+
+.ps-tut-lex .word { font: 18px "EB Garamond", serif; color: var(--ink); }
+.ps-tut-lex .word .g {
+  font: 600 11px "Cinzel", serif; letter-spacing: 0.06em; color: var(--gold-deep); margin-left: 8px;
+}
+.ps-tut-lex .def {
+  margin-top: 10px; font: italic 14px/1.55 "EB Garamond", serif; color: var(--ink-soft);
+}
+
+/* "more tools" grid */
+.ps-tut-more { padding: 48px 0 0; border-top: 1px dashed rgba(163, 129, 46, 0.35); margin-top: 8px; }
+.ps-tut-more-title {
+  text-align: center; font-family: "EB Garamond", serif; font-style: italic;
+  font-size: 26px; color: var(--ink); margin: 0 0 28px;
+}
+.ps-tut-more-grid {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+}
+.ps-tut-more-card {
+  display: flex; flex-direction: column; gap: 6px; padding: 16px 18px;
+  background: var(--vellum-0); border: 1px solid rgba(163, 129, 46, 0.3);
+  border-radius: 3px;
+}
+.ps-tut-more-card .orn { font-size: 20px; color: var(--gold); line-height: 1; }
+.ps-tut-more-card .t {
+  font: 600 12px "Cinzel", serif; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--rubric);
+}
+.ps-tut-more-card .d { font: 14px/1.5 "EB Garamond", serif; color: var(--ink-soft); font-style: italic; }
+
+.ps-tut-foot { text-align: center; padding: 56px 0 0; }
+.ps-tut .rule-orn {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  margin: 0 0 28px; color: var(--gold); opacity: 0.6;
+}
+.ps-tut .rule-orn .line { height: 1px; width: 120px; background: var(--gold); }
+.ps-tut-foot .cta { margin: 0 6px; }
+
+@media (max-width: 860px) {
+  .ps-tut-section { grid-template-columns: 1fr; gap: 24px; }
+  .ps-tut-section.reverse .ps-tut-copy,
+  .ps-tut-section.reverse .ps-tut-art { order: 0; }
+  .ps-tut-hero h1 { font-size: 34px; }
+}
+
 /* =====================================================================
    Mobile / small-screen layout.
    The workspace was built desktop-first (side-by-side panes). On a phone

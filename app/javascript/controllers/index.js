@@ -22,6 +22,9 @@ application.register("xref", XrefController)
 import RabbiController from "./rabbi_controller"
 application.register("rabbi", RabbiController)
 
+import TourController from "./tour_controller"
+application.register("tour", TourController)
+
 import NotesController from "./notes_controller"
 application.register("notes", NotesController)
 

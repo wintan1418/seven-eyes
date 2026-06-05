@@ -1,0 +1,169 @@
+<% content_for :title, "Field Guide" %>
+<div class="ps-root ps-tut-root">
+  <%= render "studies/topbar", study_name: "The Field Guide", panes: 4, sync: false, saved: true %>
+
+  <div class="ps-tut">
+    <header class="ps-tut-hero">
+      <div class="eyebrow">&#9769; &nbsp; A Field Guide To Your Desk &nbsp; &#9769;</div>
+      <h1>Everything you can do here</h1>
+      <p class="lede">
+        Parallel Scripture is a quiet desk for the Word — lay passages side by side, trace
+        cross-references, study the original words, and let a careful AI help you see the text in
+        context. Here is the whole desk, tool by tool.
+      </p>
+      <div class="ps-tut-hero-cta">
+        <% tour_target = @resume ? study_path(@resume, tour: 1) : root_path %>
+        <%= link_to "&#9737; &nbsp; Take the interactive tour".html_safe, tour_target, class: "cta" %>
+        <%= link_to "Back to your desk", root_path, class: "cta secondary", style: "text-decoration:none;" %>
+      </div>
+    </header>
+
+    <%# 1 — Parallel panes %>
+    <section class="ps-tut-section">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">I</div>
+        <h2>Up to four passages, side by side</h2>
+        <p>Compare the same verse across translations — KJV, ASV, BSB, WEB and more — or set different
+           verses next to each other. Use the <span class="kbd">1</span>–<span class="kbd">4</span>
+           selector in the topbar to choose how many panes are open.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-panes">
+          <% [["John III", "KJV"], ["John III", "BSB"]].each do |ref, tr| %>
+            <div class="ps-tut-pane">
+              <div class="ps-tut-pane-head"><span class="num">&#8544;</span> <span class="ref"><%= ref %></span> <span class="tr"><%= tr %></span></div>
+              <div class="ps-tut-pane-body"><span class="v">16</span> For God so loved the world, that he gave his only begotten Son…</div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </section>
+
+    <%# 2 — Reference lookup %>
+    <section class="ps-tut-section reverse">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">II</div>
+        <h2>Type a reference the way you say it</h2>
+        <p>The parser understands the natural forms — no rigid syntax to learn.</p>
+        <div class="ps-tut-chips">
+          <% %w[Jn\ 3:16 Rom\ 5 1\ Cor\ 13 Ps\ 23 romans\ 5:1-11].each do |r| %>
+            <span class="ps-tut-chip"><%= r %></span>
+          <% end %>
+        </div>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-field">
+          <span class="cur">John 3:16&#8203;<span class="caret"></span></span>
+          <span class="go">go &#8629;</span>
+        </div>
+      </div>
+    </section>
+
+    <%# 3 — Cross references %>
+    <section class="ps-tut-section">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">III</div>
+        <h2>Cross-references, one click away</h2>
+        <p>Click any <strong>verse number</strong> to open the Treasury of Scripture Knowledge drawer,
+           sorted by weight. Load any reference straight into a pane.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-drawer">
+          <div class="ps-tut-drawer-head">&#167; &nbsp; Cross References &middot; John 3:16</div>
+          <% [["Romans 5:8", 58], ["1 John 4:9", 47], ["John 3:36", 33]].each do |ref, votes| %>
+            <div class="ps-tut-xref"><span class="r"><%= ref %></span><span class="dots"><%= "●" * [votes/18, 1].max %></span></div>
+          <% end %>
+        </div>
+      </div>
+    </section>
+
+    <%# 4 — AI Rabbi (featured) %>
+    <section class="ps-tut-section reverse ps-tut-feature">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">&#10018;</div>
+        <h2>Ask the AI Rabbi</h2>
+        <p>Highlight a phrase and choose <strong>✢ Rabbi</strong>. It reads the
+           <em>whole chapter</em> and the verse's cross-references before answering, and stays under
+           strict rules of sound interpretation: context first, Scripture interprets Scripture,
+           never beyond what is written. It cites references — the verse wording always comes from
+           our own translations, never the model.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-rabbi">
+          <div class="sel">&ldquo;God so loved the world&rdquo;</div>
+          <div class="card">
+            <div class="lbl">Summary</div>
+            <p>God's love is the ground and motive of the gospel — the gift of the Son flows from it.</p>
+            <div class="lbl">A caution</div>
+            <p class="caution">&ldquo;World&rdquo; here speaks of its scope and wickedness, not of universal salvation.</p>
+            <div class="refs"><span>Romans 5:8</span><span>1 John 4:9</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <%# 5 — AI Find a verse %>
+    <section class="ps-tut-section">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">IV</div>
+        <h2>Find a verse from a thought</h2>
+        <p>Describe a half-remembered idea and the assistant returns matching passages, every one
+           validated against our text. The <span class="kbd">&#10038; Find</span> button opens it.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-find">
+          <div class="q">&ldquo;where Paul says we're saved by grace, not works&rdquo;</div>
+          <div class="results"><span>Ephesians 2:8-9</span><span>Romans 3:28</span><span>Titus 3:5</span></div>
+        </div>
+      </div>
+    </section>
+
+    <%# 6 — Original-language study %>
+    <section class="ps-tut-section reverse">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">V</div>
+        <h2>Study the original words</h2>
+        <p>In the King James text, tap any word for its Strong's number, transliteration, definition
+           and every occurrence. Turn on <em>Lemma (Strong's)</em> in the View menu to see the
+           transliteration beneath each tagged word, and <em>Word diff</em> to highlight where two
+           translations differ.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-lex">
+          <div class="word">loved <span class="g">&#945;&#947;&#945;&#960;&#940;&#969; &middot; G25</span></div>
+          <div class="def">agapaō — to love, to welcome, to be fond of; of God's redeeming love.</div>
+        </div>
+      </div>
+    </section>
+
+    <%# 7 — More tools grid %>
+    <section class="ps-tut-more">
+      <h2 class="ps-tut-more-title">And at hand whenever you need them</h2>
+      <div class="ps-tut-more-grid">
+        <% [
+             ["&#128220;", "Commentary", "Matthew Henry's exposition, opened beside the text from the 📜 in each pane."],
+             ["&#9998;", "Highlights & notes", "Four colours, with a study note attached to each highlight; ✎ marks the ones with notes."],
+             ["&#9906;", "Full-Bible search", "Find any phrase across the whole text and jump straight to it."],
+             ["&#9658;", "Read aloud", "Have a passage read by the browser — no network, no cost."],
+             ["&#9680;", "Memorize mode", "Blank the words, then tap to reveal — for scripture-memory drills."],
+             ["&#128272;", "Preach mode", "Project verse-by-verse, fused 1–3 per slide, with large auto-fit text."],
+             ["&#10070;", "Reading plans", "Pace a book, the NT, the year, or your own path — and tick each day done."],
+             ["&#9776;", "Reading view", "Text size, candle/day theme, sync-scroll — all in the View menu."]
+           ].each do |icon, title, desc| %>
+          <div class="ps-tut-more-card">
+            <span class="orn"><%= icon.html_safe %></span>
+            <span class="t"><%= title %></span>
+            <span class="d"><%= desc %></span>
+          </div>
+        <% end %>
+      </div>
+    </section>
+
+    <footer class="ps-tut-foot">
+      <div class="rule-orn"><span class="line"></span><span>&#10086;</span><span class="line"></span></div>
+      <% tour_target = @resume ? study_path(@resume, tour: 1) : root_path %>
+      <%= link_to "&#9737; &nbsp; Take the interactive tour".html_safe, tour_target, class: "cta" %>
+      <%= link_to "Begin at your desk", root_path, class: "cta secondary", style: "text-decoration:none;" %>
+    </footer>
+  </div>
+</div>

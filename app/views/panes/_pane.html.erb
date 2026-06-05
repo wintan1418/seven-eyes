@@ -7,15 +7,15 @@
       <%= f.text_field :reference, value: pane.reference,
             placeholder: "Type a reference…", autocomplete: "off", spellcheck: "false",
             autocapitalize: "none", autocorrect: "off", inputmode: "search", enterkeyhint: "go",
-            data: { action: "keydown.enter->auto-submit#submit" },
+            data: { action: "keydown.enter->auto-submit#submit", tour: "reference" },
             class: "ps-search#{' empty' if pane.empty?}" %>
       <%= f.select :translation_id, translation_options(pane.effective_translation&.id),
             {}, class: "ps-trans-select", id: "pane_#{pane.id}_translation",
-            "aria-label": "Translation", data: { action: "change->auto-submit#submit" } %>
+            "aria-label": "Translation", data: { action: "change->auto-submit#submit", tour: "translation" } %>
       <% if content.ok? %>
         <%= link_to "\u{1F4DC}", commentary_study_path(pane.study, osis: content.book.osis_code, chapter: content.parsed.chapter),
               class: "ps-pane-tool", title: "Commentary",
-              data: { turbo_frame: "commentary_drawer", action: "commentary#open" } %>
+              data: { turbo_frame: "commentary_drawer", action: "commentary#open", tour: "commentary" } %>
         <button type="button" class="ps-pane-tool" title="Read aloud"
                 data-action="reader#toggle" data-reader-target="button">&#9658;</button>
         <button type="button" class="ps-pane-tool" title="Memorize mode"
@@ -24,6 +24,8 @@
                 title="Notes" data-action="pane#toggleNotes">&#9998;</button>
         <button type="button" class="ps-pane-tool" title="Focus this pane (presentation mode)"
                 data-action="presentation#enter">&#9974;</button>
+        <span class="ps-hint" tabindex="0"
+              data-tip="Click a verse number for cross-references · select words to highlight them or ask ✢ Rabbi">?</span>
       <% end %>
       <button type="button" class="ps-pane-tool" title="Browse books"
               data-action="book-browser#open" data-pane-id="<%= pane.id %>">&#128214;</button>
@@ -58,7 +60,7 @@
       <div class="rule"></div>
       <% highlights_by_verse = authenticated? ? current_user.highlights.where(verse_id: content.verses.map(&:id)).group_by(&:verse_id) : {} %>
       <% lexicon = lexicon_lookup_for(content.verses) %>
-      <div class="ps-verse-body" data-controller="highlighter" data-action="click->memorize#reveal">
+      <div class="ps-verse-body" data-controller="highlighter" data-action="click->memorize#reveal" data-tour="verses">
         <% content.verses.each_with_index do |verse, i| %>
           <%= scripture_verse(verse, study: pane.study, book: content.book,
                 highlights: highlights_by_verse[verse.id] || [],

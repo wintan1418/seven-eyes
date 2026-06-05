@@ -33,4 +33,25 @@ class GuideTest < ActionDispatch::IntegrationTest
     get root_path
     assert_match(/What.s at your desk/, response.body)
   end
+
+  test "the illustrated field guide renders for a signed-in user" do
+    get guide_path
+    assert_response :success
+    assert_match(/Everything you can do here/, response.body)
+    assert_match(/Ask the AI Rabbi/, response.body)
+  end
+
+  test "the illustrated field guide is open to guests" do
+    delete session_path
+    get guide_path
+    assert_response :success
+    assert_match(/Everything you can do here/, response.body)
+  end
+
+  test "the topbar links to the field guide and offers the tour" do
+    study = users(:one).studies.create!(name: "Test", pane_count: 1)
+    get study_path(study)
+    assert_match(guide_path, response.body)
+    assert_match(/data-action="tour#start"/, response.body)
+  end
 end
