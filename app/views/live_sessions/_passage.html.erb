@@ -1,0 +1,26 @@
+<% verses = live.verses.to_a %>
+<% if verses.any? %>
+  <article class="ps-live-passage"
+           data-osis="<%= live.osis %>" data-chapter="<%= live.chapter %>"
+           data-translation="<%= live.translation_code %>">
+    <div class="ref-title">
+      <span><%= live.reference_label %></span>
+      <span class="tag">&middot; <%= live.translation&.name %></span>
+    </div>
+    <div class="rule"></div>
+    <% from = live.verse_start %>
+    <% to = live.verse_end || live.verse_start %>
+    <% verses.each do |verse| %>
+      <p class="ps-live-verse <%= "is-now" if from && verse.verse_number.between?(from, to) %>"
+         data-num="<%= verse.verse_number %>">
+        <span class="vnum"><%= verse.verse_number %></span>
+        <span class="vtext"><%= verse.text %></span>
+      </p>
+    <% end %>
+  </article>
+<% else %>
+  <div class="ps-live-waiting">
+    <div class="orn">&#10086;</div>
+    <p>You&rsquo;re in. The text will appear here the moment the preacher opens it.</p>
+  </div>
+<% end %>

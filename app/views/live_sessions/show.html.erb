@@ -1,0 +1,39 @@
+<% content_for :title, "Live · #{@live.reference_label || 'Parallel Scripture'}" %>
+
+<div class="ps-live"
+     data-controller="live-follow"
+     data-live-follow-code-value="<%= @live.code %>"
+     data-live-follow-passage-url-value="<%= live_session_passage_path(@live.code) %>"
+     data-live-follow-ended-value="<%= @live.ended? %>">
+
+  <header class="ps-live-head">
+    <span class="dot" aria-hidden="true"></span>
+    <div class="meta">
+      <span class="lbl">Following live</span>
+      <span class="ref" data-live-follow-target="reference"><%= @live.reference_label || "Waiting for the preacher…" %></span>
+    </div>
+    <span class="code" title="Join code"><%= @live.code %></span>
+  </header>
+
+  <main class="ps-live-body" data-live-follow-target="body">
+    <%= render "live_sessions/passage", live: @live %>
+  </main>
+
+  <button type="button" class="ps-live-jump" data-live-follow-target="jump"
+          data-action="live-follow#jumpToLive" hidden>&#8595; Jump to live</button>
+
+  <div class="ps-live-ended" data-live-follow-target="ended" <%= "hidden" unless @live.ended? %>>
+    <div class="card">
+      <div class="orn">&#10086;</div>
+      <h2>The service has ended</h2>
+      <p>Grace and peace go with you.</p>
+      <% if @live.book && @live.chapter %>
+        <%= link_to "Keep reading #{@live.reference_label}",
+              open_passage_path(PassageSlug.slug_for(osis: @live.book.osis_code, chapter: @live.chapter)),
+              class: "cta" %>
+      <% else %>
+        <%= link_to "Open Parallel Scripture", root_path, class: "cta" %>
+      <% end %>
+    </div>
+  </div>
+</div>

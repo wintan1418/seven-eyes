@@ -170,6 +170,15 @@ palette/fonts are also exposed as `@theme` tokens in `application.tailwind.css`.
   `ai_search` Stimulus controller + `studies/_ai_search` / `_ai_results`; endpoint `GET
   /studies/:id/suggest`. **Key**: `OPENAI_API_KEY` via `.env` (dotenv-rails, gitignored) or Rails
   credentials `openai.api_key`. Missing key degrades gracefully to a "configure your key" notice.
+- **Live follow-along ("Go Live")** — congregants follow the pulpit on their phones in real time.
+  Operator: "Go Live" in the preach bar (`live` Stimulus controller) creates a `LiveSession`
+  (short join code + QR via `rqrcode`) and PATCHes preach state to `/studies/:id/live`; the server
+  rebroadcasts over Action Cable (`LiveSessionChannel`, one stream per code). Followers:
+  `/live/:code` (public, anonymous — `ApplicationCable::Connection` allows guests) with
+  `live_follow` Stimulus controller: emphasised current verse, auto-scroll, "Jump to live" pill,
+  ended overlay linking to `/p/:slug/open`. Preach mode emits `preach:state` / `preach:exit`
+  window events that the live controller relays; the dual-screen output window
+  (`?output=1`, BroadcastChannel) is same-device only and unrelated to cable.
 
 ## Access model — open app, gated saves (by user request)
 

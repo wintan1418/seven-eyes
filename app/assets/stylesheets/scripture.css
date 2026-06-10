@@ -1481,8 +1481,8 @@
   z-index: 110;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
 }
-.ps-preach-jump input[type="number"] {
-  width: 110px;
+.ps-preach-jump input {
+  width: 230px;
   padding: 8px 12px;
   background: rgba(255, 247, 224, 0.1);
   border: 1px solid var(--gold-deep);
@@ -1493,9 +1493,25 @@
   outline: none;
   text-align: center;
 }
-.ps-preach-jump input[type="number"]:focus {
+.ps-preach-jump input::placeholder {
+  color: rgba(216, 195, 137, 0.45);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+}
+.ps-preach-jump input:focus {
   border-color: var(--gold);
   background: rgba(255, 247, 224, 0.18);
+}
+/* A reference the parser couldn't read: keep the text, shake, mark rubric. */
+.ps-root.is-preaching .ps-preach-jump.is-error {
+  border-color: var(--rubric);
+  animation: ps-jump-shake 0.4s ease;
+}
+.ps-preach-jump.is-error input { border-color: var(--rubric); }
+@keyframes ps-jump-shake {
+  0%, 100% { transform: translateX(-50%); }
+  25% { transform: translateX(calc(-50% - 9px)); }
+  75% { transform: translateX(calc(-50% + 9px)); }
 }
 .ps-preach-jump button {
   padding: 8px 16px;
@@ -1616,6 +1632,259 @@
   transition: opacity 0.18s ease;
 }
 .ps-root.is-output .ps-out-full:hover { opacity: 1; }
+
+/* ====== Live follow-along (congregation on their phones) ====== */
+
+/* Operator: "N following" chip in the preach bar (visible while live) */
+.ps-live-chip {
+  display: none;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border: 1px solid rgba(163, 129, 46, 0.5);
+  border-radius: 999px;
+  background: rgba(216, 181, 80, 0.12);
+  color: var(--gold);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.ps-live-chip .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #7fae6b;
+  box-shadow: 0 0 6px rgba(127, 174, 107, 0.9);
+  animation: ps-live-pulse 2.2s ease-in-out infinite;
+}
+.ps-root.is-live-session .ps-live-chip { display: inline-flex; }
+.ps-golive.is-on {
+  background: var(--rubric);
+  color: var(--vellum-0);
+  border-color: var(--rubric-deep);
+}
+
+/* Operator: join panel (QR + code) */
+.ps-live-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 12, 5, 0.7);
+}
+.ps-live-panel[hidden] { display: none; }
+.ps-live-card {
+  width: min(440px, calc(100vw - 48px));
+  padding: 30px 34px;
+  background: var(--vellum-0);
+  border: 1px solid var(--gold-deep);
+  border-radius: 4px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+.ps-live-card .eyebrow {
+  font: 600 11px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--rubric);
+  margin-bottom: 16px;
+}
+.ps-live-card .qr { display: flex; justify-content: center; }
+.ps-live-card .qr svg {
+  width: 190px; height: 190px;
+  border: 1px solid var(--gold-deep);
+  padding: 10px;
+  background: #fff;
+  border-radius: 2px;
+}
+.ps-live-card .bigcode {
+  margin-top: 14px;
+  font: 700 34px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.35em;
+  color: var(--ink);
+}
+.ps-live-card .join-url {
+  font: 500 14px "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  color: var(--rubric);
+  word-break: break-all;
+}
+.ps-live-card .hint {
+  margin: 14px 0 18px;
+  font: 400 14px/1.55 "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  color: var(--sepia);
+}
+.ps-live-card .row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.ps-live-card .tool {
+  padding: 10px 14px;
+  border: 1px solid var(--gold-deep);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font: 600 10.5px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.ps-live-card .tool:hover { background: rgba(216, 181, 80, 0.14); }
+.ps-live-card .tool.primary { background: var(--rubric); border-color: var(--rubric-deep); color: var(--vellum-0); }
+.ps-live-card .tool.primary:hover { background: var(--rubric-deep); }
+.ps-live-card .tool.danger { color: var(--rubric); border-color: rgba(138, 36, 24, 0.5); }
+.ps-live-card .tool.danger:hover { background: rgba(138, 36, 24, 0.08); }
+
+/* Follower page — phone-first, calm vellum */
+.ps-live {
+  min-height: 100vh;
+  background: var(--vellum-1);
+  font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  color: var(--ink);
+}
+.ps-live-head {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, rgba(35, 20, 8, 0.97) 0%, rgba(20, 12, 5, 0.97) 100%);
+  color: var(--vellum-0);
+  border-bottom: 1px solid rgba(163, 129, 46, 0.5);
+}
+.ps-live-head .dot {
+  flex: none;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--rubric);
+  box-shadow: 0 0 8px rgba(196, 74, 52, 0.9);
+  animation: ps-live-pulse 2.2s ease-in-out infinite;
+}
+.ps-live-head .meta { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.ps-live-head .lbl {
+  font: 600 9px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.ps-live-head .ref {
+  font: 600 16px "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ps-live-head .code {
+  font: 700 13px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  border: 1px solid rgba(163, 129, 46, 0.5);
+  border-radius: 3px;
+  padding: 4px 8px 4px 11px;
+}
+.ps-live-body { max-width: 640px; margin: 0 auto; padding: 22px 18px 90px; }
+.ps-live-passage .ref-title {
+  font: 600 13px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--rubric);
+  text-align: center;
+}
+.ps-live-passage .ref-title .tag { color: var(--sepia); letter-spacing: 0.12em; }
+.ps-live-passage .rule {
+  height: 0;
+  border-bottom: 1px dashed rgba(110, 84, 50, 0.45);
+  margin: 12px auto 18px;
+  max-width: 220px;
+}
+.ps-live-verse {
+  margin: 0 0 4px;
+  padding: 8px 12px;
+  border-left: 3px solid transparent;
+  border-radius: 3px;
+  font-size: 19px;
+  line-height: 1.66;
+  transition: background 0.4s ease, border-color 0.4s ease, opacity 0.4s ease;
+  opacity: 0.62;
+}
+.ps-live-verse .vnum {
+  font-size: 0.62em;
+  vertical-align: super;
+  color: var(--rubric);
+  margin-right: 6px;
+  font-weight: 600;
+}
+.ps-live-verse.is-now {
+  opacity: 1;
+  background: rgba(216, 181, 80, 0.16);
+  border-left-color: var(--gold);
+  font-size: 21px;
+}
+.ps-live-waiting {
+  text-align: center;
+  padding: 80px 24px;
+  color: var(--sepia);
+  font-size: 17px;
+}
+.ps-live-waiting .orn { font-size: 30px; color: var(--gold-deep); margin-bottom: 14px; }
+
+/* "Jump to live" pill — appears when the reader scrolls away */
+.ps-live-jump {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  z-index: 20;
+  padding: 12px 22px;
+  border-radius: 999px;
+  background: var(--rubric);
+  color: var(--vellum-0);
+  border: 1px solid var(--rubric-deep);
+  font: 600 11px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* Ended / not-found overlay */
+.ps-live-ended {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(43, 26, 12, 0.72);
+}
+.ps-live-ended[hidden] { display: none; }
+.ps-live-ended .card {
+  width: min(420px, 100%);
+  background: var(--vellum-0);
+  border: 1px solid var(--gold-deep);
+  border-radius: 4px;
+  padding: 34px 30px;
+  text-align: center;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+}
+.ps-live-ended .orn { font-size: 28px; color: var(--gold-deep); margin-bottom: 10px; }
+.ps-live-ended h2 {
+  font: 600 20px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.08em;
+  margin: 0 0 8px;
+}
+.ps-live-ended p { color: var(--sepia); font-size: 16px; margin: 0 0 18px; }
+.ps-live-ended .cta {
+  display: inline-block;
+  padding: 12px 22px;
+  background: var(--rubric);
+  color: var(--vellum-0);
+  border-radius: 4px;
+  text-decoration: none;
+  font: 600 11px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.ps-live-ended .cta:hover { background: var(--rubric-deep); }
 
 /* ====== Sermon manuscript (print-friendly export) ====== */
 .ps-manuscript {

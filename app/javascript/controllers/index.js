@@ -90,3 +90,9 @@ application.register("offline", OfflineController)
 
 import ShareCardController from "./share_card_controller"
 application.register("share-card", ShareCardController)
+
+import LiveController from "./live_controller"
+application.register("live", LiveController)
+
+import LiveFollowController from "./live_follow_controller"
+application.register("live-follow", LiveFollowController)

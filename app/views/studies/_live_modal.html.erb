@@ -1,0 +1,19 @@
+<%# "Go Live" panel: join QR + code for the congregation. Filled in by
+    live_controller when the session starts; reopened by clicking Go Live. %>
+<div class="ps-live-panel" data-live-target="panel" hidden>
+  <div class="ps-live-card">
+    <div class="eyebrow">Follow along &mdash; live</div>
+    <div class="qr" data-live-target="qr" aria-label="QR code to join"></div>
+    <div class="bigcode" data-live-target="code"></div>
+    <div class="join-url" data-live-target="url"></div>
+    <p class="hint">
+      Put this on the screen for a moment &mdash; anyone can scan it (or type the address)
+      and the Scripture will follow you on their phone. No account needed.
+    </p>
+    <div class="row">
+      <button type="button" class="tool" data-action="live#copyLink">&#128279; Copy link</button>
+      <button type="button" class="tool primary" data-action="live#closePanel">Continue preaching</button>
+      <button type="button" class="tool danger" data-action="live#endLive">End live</button>
+    </div>
+  </div>
+</div>

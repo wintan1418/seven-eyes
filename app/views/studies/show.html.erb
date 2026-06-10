@@ -1,5 +1,6 @@
 <div class="ps-root"
-     data-controller="book-browser ai-search search xref commentary lexicon rabbi tour shortcuts auth-gate new-study font-size presentation diff interlinear"
+     data-controller="book-browser ai-search search xref commentary lexicon rabbi tour shortcuts auth-gate new-study font-size presentation diff interlinear live"
+     data-live-url-value="<%= study_live_path(@study) %>"
      data-font-size="<%= authenticated? ? current_user.font_size : 0 %>"
      data-font-size-url-value="<%= preferences_path %>"
      data-font-size-authenticated-value="<%= authenticated? %>"
@@ -32,6 +33,10 @@
         <span class="num">verse 1</span>
       </div>
       <span class="ps-preach-live" title="The output window is live on the second screen">&#9679; Live</span>
+      <span class="ps-live-chip" title="Phones following along right now">
+        <span class="dot" aria-hidden="true"></span>
+        <span data-live-target="count">0</span>&nbsp;following
+      </span>
     </div>
     <div class="ps-preach-bar-center">
       <div class="ps-preach-group">
@@ -47,7 +52,7 @@
       </div>
       <button type="button" class="ps-preach-tool"
               data-action="presentation#openJump"
-              title="Jump to verse (G)">&#10148; Go</button>
+              title="Go to a verse — or chase any reference the preacher calls, e.g. rom 8:28 (G)">&#10148; Go</button>
       <button type="button" class="ps-preach-tool"
               data-preach-parallel
               data-action="presentation#toggleParallel"
@@ -56,6 +61,10 @@
               data-preach-project
               data-action="presentation#openOutput"
               title="Open the output window — drag it onto the projector screen, then click Fullscreen">&#10697; Project</button>
+      <button type="button" class="ps-preach-tool ps-golive"
+              data-live-target="button"
+              data-action="live#toggle"
+              title="Let the congregation follow along on their phones — live, no account needed">&#9737; Go Live</button>
     </div>
     <div class="ps-preach-bar-right">
       <button type="button" class="ps-preach-tool"
@@ -70,8 +79,9 @@
           title="Fullscreen on this screen">&#9974; Fullscreen</button>
 
   <div class="ps-preach-jump" hidden>
-    <span>Go to verse</span>
-    <input type="number" min="1" inputmode="numeric"
+    <span>Go to</span>
+    <input type="text" inputmode="search" placeholder="28 &middot; or rom 8:28"
+           autocomplete="off" spellcheck="false" autocapitalize="none"
            data-presentation-target="jumpInput"
            data-action="keydown.enter->presentation#jumpSubmit keydown.esc->presentation#cancelJump">
     <button type="button" data-action="presentation#jumpSubmit">Go</button>
@@ -93,6 +103,7 @@
   <%= render "studies/lexicon_drawer" %>
   <%= render "studies/rabbi_drawer", study: @study %>
   <%= render "studies/share_modal", study: @study %>
+  <%= render "studies/live_modal" %>
   <%= render "studies/auth_prompt" unless authenticated? %>
   <%= render "studies/new_study_modal" %>
 </div>

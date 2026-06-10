@@ -1,6 +1,11 @@
 class Study < ApplicationRecord
   belongs_to :user, optional: true # nil = a guest's session-scoped study
   has_many :panes, -> { order(:position) }, dependent: :destroy, inverse_of: :study
+  has_many :live_sessions, dependent: :destroy
+
+  def live_session
+    live_sessions.active.order(created_at: :desc).first
+  end
 
   validates :name, presence: true
   validates :pane_count, inclusion: { in: 1..4 }

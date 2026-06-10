@@ -42,6 +42,9 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 1.2"
 
+# QR codes (pure Ruby, rendered as inline SVG) for joining a live session
+gem "rqrcode", "~> 3.1"
+
 # Load environment variables from .env in development/test (e.g. OPENAI_API_KEY)
 gem "dotenv-rails", groups: %i[ development test ]
 

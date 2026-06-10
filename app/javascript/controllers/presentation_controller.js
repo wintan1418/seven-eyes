@@ -86,6 +86,8 @@ export default class extends Controller {
     if (!this._isOutput) {
       this._send({ type: "exit" }) // the output window closes itself
       this._setProjecting(false)
+      // The live controller ends any congregation session.
+      window.dispatchEvent(new CustomEvent("preach:exit"))
     }
     this.element.classList.remove("is-preaching", "is-parallel")
     this._closeJump()
@@ -176,15 +178,64 @@ export default class extends Controller {
     this.jumpInputTarget.focus()
   }
 
+  // The Go box takes either a bare verse number ("28" → jump within this
+  // chapter) or any reference the preacher calls out ("rom 8:28" → chase).
   jumpSubmit(event) {
     event?.preventDefault?.()
-    const target = parseInt(this.jumpInputTarget.value, 10)
+    const raw = this.jumpInputTarget.value.trim()
     this._closeJump()
-    if (!Number.isFinite(target)) return
-    const verses = this._primaryVerses()
-    const idx = verses.findIndex(v => parseInt(v.dataset.verseNum, 10) === target)
-    if (idx < 0) return
-    this._transition(() => { this._preachIndex = idx })
+    if (!raw) return
+    if (/^\d+$/.test(raw)) {
+      const verses = this._primaryVerses()
+      const idx = verses.findIndex(v => parseInt(v.dataset.verseNum, 10) === parseInt(raw, 10))
+      if (idx >= 0) this._transition(() => { this._preachIndex = idx })
+      return
+    }
+    this._chase(raw)
+  }
+
+  // Quick chase: validate the reference server-side first (a misheard call
+  // must never put an error page on the big screen), load the whole chapter
+  // through the pane's own Turbo Frame form, then land on the called verse.
+  // Preach mode never exits; the output window and live followers pick the
+  // move up through the normal broadcast.
+  async _chase(raw) {
+    let parsed
+    try {
+      const res = await fetch(`/reference_check?q=${encodeURIComponent(raw)}`,
+                              { headers: { Accept: "application/json" } })
+      parsed = await res.json()
+    } catch { return }
+    if (!parsed.ok) { this._flashJumpError(raw); return }
+
+    const pane = this.element.querySelector(".ps-pane.is-presented")
+    const input = pane?.querySelector("input[name='pane[reference]']")
+    if (!input) return
+    input.value = parsed.chapter_reference
+    pane.addEventListener("turbo:frame-load", () => {
+      this._pairForParallel()
+      const verses = this._primaryVerses()
+      let idx = 0
+      if (parsed.verse_start) {
+        const found = verses.findIndex(v => parseInt(v.dataset.verseNum, 10) === parsed.verse_start)
+        if (found >= 0) idx = found
+      }
+      this._preachIndex = idx
+      this._paint()
+      requestAnimationFrame(() => this._autoFit())
+    }, { once: true })
+    input.form?.requestSubmit()
+  }
+
+  // Reopen the jump box with the unreadable text kept for correction.
+  _flashJumpError(raw) {
+    this.openJump()
+    this.jumpInputTarget.value = raw
+    this.jumpInputTarget.select?.()
+    const wrapper = this.jumpInputTarget.closest(".ps-preach-jump")
+    if (!wrapper) return
+    wrapper.classList.add("is-error")
+    setTimeout(() => wrapper.classList.remove("is-error"), 650)
   }
 
   cancelJump(event) {
@@ -288,19 +339,24 @@ export default class extends Controller {
   }
 
   _broadcast() {
-    if (!this._channel || this._isOutput) return
+    if (this._isOutput) return
     if (!this.element.classList.contains("is-preaching")) return
     const pane = this.element.querySelector(".ps-pane.is-presented")
     if (!pane) return
-    this._send({
+    const state = {
       type: "state",
       pane: Math.max(0, this._workspacePanes().indexOf(pane)),
       index: this._preachIndex,
       group: this._groupSize,
       parallel: this.element.classList.contains("is-parallel"),
       reference: pane.querySelector("input[name='pane[reference]']")?.value || null,
-      translation: pane.querySelector("select[name='pane[translation_id]']")?.value || null
-    })
+      translation: pane.querySelector("select[name='pane[translation_id]']")?.value || null,
+      verseStart: this._range?.first ?? null,
+      verseEnd: this._range?.last ?? null
+    }
+    this._send(state)
+    // The live controller relays this to the congregation's phones.
+    window.dispatchEvent(new CustomEvent("preach:state", { detail: state }))
   }
 
   _send(msg) {
@@ -391,6 +447,7 @@ export default class extends Controller {
     const sorted = Array.from(groupNumbers).sort((a, b) => a - b)
     const first = sorted[0]
     const last = sorted[sorted.length - 1]
+    this._range = { first, last } // actual verse numbers, for broadcast + live
     const total = primary.length > 0 ? parseInt(primary[primary.length - 1].dataset.verseNum, 10) : 0
     const counter = this.element.querySelector("[data-preach-counter]")
     if (counter) {

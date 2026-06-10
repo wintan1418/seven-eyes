@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_05_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_10_182714) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -80,6 +80,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_110000) do
     t.string "translit"
     t.datetime "updated_at", null: false
     t.index ["strongs"], name: "index_lexicon_entries_on_strongs", unique: true
+  end
+
+  create_table "live_sessions", force: :cascade do |t|
+    t.integer "chapter"
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.datetime "ended_at"
+    t.integer "followers_count", default: 0, null: false
+    t.string "osis"
+    t.bigint "study_id", null: false
+    t.string "translation_code"
+    t.datetime "updated_at", null: false
+    t.integer "verse_end"
+    t.integer "verse_start"
+    t.index ["code"], name: "index_live_sessions_on_code", unique: true
+    t.index ["study_id"], name: "index_live_sessions_on_study_id"
   end
 
   create_table "panes", force: :cascade do |t|
@@ -193,6 +209,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_110000) do
   add_foreign_key "cross_references", "books", column: "to_book_id"
   add_foreign_key "highlights", "users"
   add_foreign_key "highlights", "verses"
+  add_foreign_key "live_sessions", "studies"
   add_foreign_key "panes", "studies"
   add_foreign_key "panes", "translations"
   add_foreign_key "plan_completions", "plan_days"

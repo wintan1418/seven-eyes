@@ -15,7 +15,12 @@ Rails.application.routes.draw do
     get :share_card, on: :member
     get :prayer, on: :member
     get "lexicon/:strongs", on: :member, action: :lexicon, as: :lexicon
+    resource :live, only: %i[ create update destroy ], controller: "live_sessions"
   end
+
+  # Public "follow along" pages — congregants follow the pulpit live, no login.
+  get "/live/:code",         to: "live_sessions#show",    as: :live_session
+  get "/live/:code/passage", to: "live_sessions#passage", as: :live_session_passage
 
   get "/s/:token", to: "shared_studies#show", as: :shared_study
 
@@ -43,7 +48,8 @@ Rails.application.routes.draw do
     end
   end
 
-  get "/verse_count", to: "verses#count" # JSON: verses in a book+chapter (for the browser)
+  get "/verse_count",      to: "verses#count" # JSON: verses in a book+chapter (for the browser)
+  get "/reference_check",  to: "verses#check" # JSON: parse a typed reference (preach quick chase)
 
   root "studies#index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
