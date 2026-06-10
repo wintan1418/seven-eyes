@@ -1510,6 +1510,113 @@
 }
 .ps-preach-jump button:hover { background: var(--rubric-deep); }
 
+/* ====== Dual-screen projection ======
+   "Project" opens a second window (?output=1) meant for the projector; the
+   windows sync over a BroadcastChannel. While the output is connected the
+   operator window becomes a console (.is-projecting): live verse shrinks and
+   a next-verse strip appears. The output window (.is-output) is chrome-free. */
+
+/* Live badge beside the counter while an output window is connected */
+.ps-preach-live {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid rgba(138, 36, 24, 0.85);
+  border-radius: 999px;
+  background: rgba(138, 36, 24, 0.3);
+  color: #f0c8b4;
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  animation: ps-live-pulse 2.2s ease-in-out infinite;
+}
+.ps-root.is-projecting .ps-preach-live { display: inline-flex; }
+@keyframes ps-live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* Next-verse preview strip — operator console only */
+.ps-preach-next {
+  display: none;
+  position: fixed;
+  left: 24px;
+  right: 24px;
+  bottom: 84px;
+  z-index: 94;
+  align-items: baseline;
+  gap: 14px;
+  padding: 13px 18px;
+  background: rgba(35, 20, 8, 0.9);
+  border: 1px solid rgba(163, 129, 46, 0.45);
+  border-radius: 4px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+.ps-root.is-preaching.is-projecting .ps-preach-next { display: flex; }
+.ps-preach-next .lbl {
+  flex: none;
+  font: 600 10px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.ps-preach-next .txt {
+  font: 400 15px/1.5 "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  color: var(--vellum-1);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ps-preach-next .txt.end { color: rgba(216, 195, 137, 0.6); font-style: italic; }
+
+/* Console: make room for the strip and keep the live verse modest — the big
+   rendering happens in the output window, this is just the operator's mirror. */
+.ps-root.is-preaching.is-projecting .ps-pane.is-presented .ps-verses,
+.ps-root.is-preaching.is-projecting .ps-pane.is-paired .ps-verses {
+  padding-bottom: 170px; /* bottom bar + next-verse strip */
+}
+.ps-root.is-preaching.is-projecting .ps-pane.is-presented .ps-verse.is-preach-current,
+.ps-root.is-preaching.is-projecting .ps-pane.is-paired .ps-verse.is-preach-current {
+  font-size: clamp(26px, 3.6vw, 60px);
+}
+
+/* Output window: nothing but the verse — no bars, zones, or buttons */
+.ps-root.is-output .ps-exit-presentation,
+.ps-root.is-output .ps-preach-enter,
+.ps-root.is-output .ps-preach-zone,
+.ps-root.is-output .ps-preach-nav,
+.ps-root.is-output .ps-preach-bar,
+.ps-root.is-output .ps-preach-jump,
+.ps-root.is-output .ps-preach-next { display: none !important; }
+.ps-root.is-output.is-preaching .ps-pane.is-presented .ps-verses,
+.ps-root.is-output.is-preaching .ps-pane.is-paired .ps-verses { padding-bottom: 0; }
+
+/* Discreet fullscreen control — only exists in the output window */
+.ps-out-full { display: none; }
+.ps-root.is-output .ps-out-full {
+  display: inline-flex;
+  position: fixed;
+  top: 14px;
+  right: 16px;
+  z-index: 120;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(35, 20, 8, 0.55);
+  color: var(--vellum-0);
+  border: 1px solid rgba(163, 129, 46, 0.5);
+  border-radius: 4px;
+  font: 600 10px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: opacity 0.18s ease;
+}
+.ps-root.is-output .ps-out-full:hover { opacity: 1; }
+
 /* ====== Sermon manuscript (print-friendly export) ====== */
 .ps-manuscript {
   min-height: 100vh;

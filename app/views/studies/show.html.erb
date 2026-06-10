@@ -31,6 +31,7 @@
       <div class="ps-preach-counter" data-preach-counter>
         <span class="num">verse 1</span>
       </div>
+      <span class="ps-preach-live" title="The output window is live on the second screen">&#9679; Live</span>
     </div>
     <div class="ps-preach-bar-center">
       <div class="ps-preach-group">
@@ -51,6 +52,10 @@
               data-preach-parallel
               data-action="presentation#toggleParallel"
               title="Show two translations side-by-side (P)">&#9783; Parallel</button>
+      <button type="button" class="ps-preach-tool"
+              data-preach-project
+              data-action="presentation#openOutput"
+              title="Open the output window — drag it onto the projector screen, then click Fullscreen">&#10697; Project</button>
     </div>
     <div class="ps-preach-bar-right">
       <button type="button" class="ps-preach-tool"
@@ -59,6 +64,10 @@
               data-action="presentation#next" title="Next verse (→ or Space)">Next &#8250;</button>
     </div>
   </div>
+
+  <div class="ps-preach-next" data-preach-next aria-hidden="true"></div>
+  <button type="button" class="ps-out-full" data-action="presentation#toggleFullscreen"
+          title="Fullscreen on this screen">&#9974; Fullscreen</button>
 
   <div class="ps-preach-jump" hidden>
     <span>Go to verse</span>
