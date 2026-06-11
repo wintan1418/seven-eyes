@@ -55,12 +55,20 @@ Rails.application.configure do
   # Avoids depending on the solid_queue tables for the same reason as above.
   config.active_job.queue_adapter = :async
 
+  # Action Cable powers Go Live and the phone remote. Accept websocket
+  # connections from the public site regardless of how the SSL proxy presents
+  # the request scheme to the app.
+  config.action_cable.allowed_request_origins = [
+    "https://bibliorata.com", "https://www.bibliorata.com",
+    "http://bibliorata.com",  "http://www.bibliorata.com"
+  ]
+
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "example.com" }
+  config.action_mailer.default_url_options = { host: "bibliorata.com" }
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
   # config.action_mailer.smtp_settings = {

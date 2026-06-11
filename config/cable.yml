@@ -8,10 +8,11 @@ development:
 test:
   adapter: test
 
+# Solid Cable runs against the PRIMARY database (no connects_to): the
+# production host only migrates the primary schema, so the separate cable
+# database never existed there. The solid_cable_messages table is created by a
+# normal migration instead.
 production:
   adapter: solid_cable
-  connects_to:
-    database:
-      writing: cable
   polling_interval: 0.1.seconds
   message_retention: 1.day
