@@ -1,18 +1,21 @@
 require "test_helper"
 
 class ScriptureSuggesterTest < ActiveSupport::TestCase
-  # Test double: bypasses the network by overriding the two seams (key + raw refs).
+  # Test double: overrides the network seam (mirrors FakeRabbi / FakePrayer).
   class FakeSuggester < ScriptureSuggester
-    def initialize(query, refs: [], key: "sk-test")
+    def initialize(query, refs: [], error: nil)
       super(query)
-      @fake_refs = refs
-      @fake_key = key
+      @fake_result =
+        if error
+          AiChat::Result.new(ok: false, error: error)
+        else
+          AiChat::Result.new(ok: true, content: { references: refs }.to_json, provider: :gemini)
+        end
     end
 
     private
 
-    def api_key = @fake_key
-    def request_references = @fake_refs
+    def chat_completion = @fake_result
   end
 
   setup do
@@ -27,8 +30,8 @@ class ScriptureSuggesterTest < ActiveSupport::TestCase
     assert_equal :blank, ScriptureSuggester.call("  ").error
   end
 
-  test "missing API key reports :no_key" do
-    assert_equal :no_key, FakeSuggester.new("grace and works", key: nil).call.error
+  test "no configured provider reports :no_key" do
+    assert_equal :no_key, FakeSuggester.new("grace and works", error: :no_key).call.error
   end
 
   test "valid references become suggestions; invalid/unknown/duplicate are dropped" do
@@ -39,7 +42,7 @@ class ScriptureSuggesterTest < ActiveSupport::TestCase
     assert_equal "Therefore being justified by faith...", result.suggestions.first.preview
   end
 
-  test "nil response from the API reports :api" do
-    assert_equal :api, FakeSuggester.new("anything", refs: nil).call.error
+  test "a provider failure reports :api" do
+    assert_equal :api, FakeSuggester.new("anything", error: :api).call.error
   end
 end

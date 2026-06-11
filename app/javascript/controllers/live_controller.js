@@ -88,6 +88,14 @@ export default class extends Controller {
 
   _params(state) {
     if (!state) return {}
+    if (state.slide) {
+      return {
+        kind: "slide",
+        slide_title: state.slide.title,
+        slide_body: state.slide.body,
+        slide_index: state.slide.index
+      }
+    }
     return {
       reference: state.reference,
       translation_id: state.translation,

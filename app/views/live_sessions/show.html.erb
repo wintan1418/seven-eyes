@@ -4,6 +4,7 @@
      data-controller="live-follow"
      data-live-follow-code-value="<%= @live.code %>"
      data-live-follow-passage-url-value="<%= live_session_passage_path(@live.code) %>"
+     data-live-follow-recap-url-value="<%= live_session_recap_path(@live.code) %>"
      data-live-follow-ended-value="<%= @live.ended? %>">
 
   <header class="ps-live-head">
@@ -27,6 +28,9 @@
       <div class="orn">&#10086;</div>
       <h2>The service has ended</h2>
       <p>Grace and peace go with you.</p>
+      <div data-live-follow-target="recap">
+        <%= render "live_sessions/recap", live: @live if @live.ended? %>
+      </div>
       <% if @live.book && @live.chapter %>
         <%= link_to "Keep reading #{@live.reference_label}",
               open_passage_path(PassageSlug.slug_for(osis: @live.book.osis_code, chapter: @live.chapter)),

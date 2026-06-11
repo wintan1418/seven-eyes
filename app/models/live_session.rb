@@ -21,7 +21,25 @@ class LiveSession < ApplicationRecord
     active.find_by(code: code.to_s.upcase)
   end
 
+  PASSAGE_LOG_LIMIT = 100
+
   def ended? = ended_at.present?
+
+  # A non-scripture moment: a song stanza or a projected thought/announcement.
+  def slide? = kind == "slide"
+
+  def slide_stanzas
+    slide_body.to_s.split(/\n{2,}/).map(&:strip).reject(&:empty?)
+  end
+
+  # Recap trail: every passage the congregation was shown, in order. Consecutive
+  # pushes within the same chapter collapse into one entry.
+  def log_passage!
+    return if osis.blank? || chapter.blank?
+    entry = { "osis" => osis, "chapter" => chapter, "label" => reference_label }
+    return if passages.last == entry
+    update_column(:passages, (passages + [ entry ]).last(PASSAGE_LOG_LIMIT))
+  end
 
   def end!
     update!(ended_at: Time.current) unless ended?

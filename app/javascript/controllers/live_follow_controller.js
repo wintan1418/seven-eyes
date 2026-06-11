@@ -8,8 +8,8 @@ import { createConsumer } from "@rails/actioncable"
 //   - the reader scrolled away → stop auto-following and offer "Jump to live"
 //   - session ended → farewell overlay with a "keep reading" link
 export default class extends Controller {
-  static targets = ["body", "reference", "jump", "ended"]
-  static values = { code: String, passageUrl: String, ended: Boolean }
+  static targets = ["body", "reference", "jump", "ended", "recap"]
+  static values = { code: String, passageUrl: String, recapUrl: String, ended: Boolean }
 
   connect() {
     if (this.endedValue) return
@@ -43,6 +43,7 @@ export default class extends Controller {
     if (data.type === "ended") { this._showEnded(); return }
     if (data.type !== "state") return
     this._setReference(data.reference)
+    if (data.kind === "slide") { this._renderSlide(data); return }
     const current = this.bodyTarget.querySelector(".ps-live-passage")
     const samePassage = current &&
         current.dataset.osis === String(data.osis) &&
@@ -50,6 +51,52 @@ export default class extends Controller {
         current.dataset.translation === String(data.translation)
     if (samePassage) this._applyRange(data.verse_start, data.verse_end)
     else this._reload(data)
+  }
+
+  // A song stanza or projected thought: build the slide client-side from the
+  // broadcast itself (no fetch). Same slide → just move the highlighted stanza.
+  _renderSlide(data) {
+    const title = data.slide_title || ""
+    const body = data.slide_body || ""
+    const index = data.slide_index || 0
+    let slide = this.bodyTarget.querySelector(".ps-live-slide")
+    if (!slide || slide.dataset.title !== title || slide.dataset.body !== body) {
+      slide = document.createElement("article")
+      slide.className = "ps-live-slide"
+      slide.dataset.title = title
+      slide.dataset.body = body
+      if (title) {
+        const head = document.createElement("div")
+        head.className = "ref-title"
+        head.textContent = title
+        slide.appendChild(head)
+        const rule = document.createElement("div")
+        rule.className = "rule"
+        slide.appendChild(rule)
+      }
+      const stanzas = body.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean)
+      ;(stanzas.length ? stanzas : [title]).forEach((stanza, i) => {
+        const p = document.createElement("p")
+        p.className = "ps-live-stanza"
+        p.dataset.idx = String(i)
+        p.textContent = stanza
+        slide.appendChild(p)
+      })
+      this.bodyTarget.innerHTML = ""
+      this.bodyTarget.appendChild(slide)
+    }
+    slide.querySelectorAll(".ps-live-stanza").forEach(p => {
+      p.classList.toggle("is-now", parseInt(p.dataset.idx, 10) === index)
+    })
+    if (this._autoFollow) {
+      const now = slide.querySelector(".ps-live-stanza.is-now")
+      if (now) {
+        this._programmatic = true
+        now.scrollIntoView({ behavior: "smooth", block: "center" })
+        clearTimeout(this._progTimer)
+        this._progTimer = setTimeout(() => { this._programmatic = false }, 900)
+      }
+    }
   }
 
   async _reload(data) {
@@ -97,8 +144,15 @@ export default class extends Controller {
     if (label && this.hasReferenceTarget) this.referenceTarget.textContent = label
   }
 
-  _showEnded() {
+  async _showEnded() {
     if (this.hasEndedTarget) this.endedTarget.hidden = false
     this._sub?.unsubscribe()
+    // "Tonight's scriptures": pull the recap so the farewell lists everything
+    // that was preached, not just what this phone happened to see.
+    if (!this.hasRecapTarget || !this.recapUrlValue) return
+    try {
+      const res = await fetch(this.recapUrlValue, { headers: { Accept: "text/html" } })
+      if (res.ok) this.recapTarget.innerHTML = await res.text()
+    } catch { /* the farewell still shows without the list */ }
   }
 }

@@ -26,23 +26,36 @@ import { Controller } from "@hotwired/stimulus"
 const FADE_MS = 160
 const AUTOFIT_MAX_ITERS = 24
 const AUTOFIT_MIN_PX = 18
+const SCREEN_PREFS_KEY = "ps-screen-prefs"
 
 export default class extends Controller {
   static targets = ["jumpInput"]
+  static values = { quickFindUrl: String }
 
   initialize() {
     this._preachIndex = 0
     this._groupSize = 1
+    this._slide = null // {title, body, stanzas, index} while a song/thought is projected
   }
 
   connect() {
     const params = new URLSearchParams(window.location.search)
-    this._isOutput = params.get("output") === "1"
+    this._isStage = params.get("stage") === "1"
+    this._isOutput = params.get("output") === "1" || this._isStage
     if ("BroadcastChannel" in window) {
       this._channel = new BroadcastChannel(`ps-preach:${window.location.pathname}`)
       this._channel.onmessage = (e) => this._onMessage(e.data)
     }
-    if (this._isOutput) this._enterOutput(parseInt(params.get("pane") || "0", 10))
+    if (this._isOutput) {
+      this._enterOutput(parseInt(params.get("pane") || "0", 10))
+    } else {
+      // Operator: queue items and phone-remote commands arrive as window events.
+      this._onSetlist = (e) => this.presentItem(e.detail)
+      this._onCommand = (e) => this._runCommand(e.detail)
+      window.addEventListener("setlist:present", this._onSetlist)
+      window.addEventListener("preach:command", this._onCommand)
+      this._screen = this._loadScreenPrefs()
+    }
   }
 
   // ----- focus mode (whole pane) -----
@@ -60,7 +73,9 @@ export default class extends Controller {
 
   exit(event) {
     event?.preventDefault?.()
+    if (this._findsOpen) { this._closeFinds(); return }
     if (this._jumpOpen) { this._closeJump(); return }
+    if (this._slide) { this._clearSlide(); return }
     if (this.element.classList.contains("is-preaching")) { this.exitPreach(); return }
     this.element.classList.remove("is-presenting", "is-parallel")
     this.element.querySelectorAll(".ps-pane.is-presented, .ps-pane.is-paired")
@@ -91,6 +106,8 @@ export default class extends Controller {
     }
     this.element.classList.remove("is-preaching", "is-parallel")
     this._closeJump()
+    this._closeFinds()
+    this._clearSlide({ repaint: false })
     this._clear()
     this._clearAutoFit()
     this._unbindKeys()
@@ -102,6 +119,7 @@ export default class extends Controller {
 
   next(event) {
     event?.preventDefault?.()
+    if (this._slide) { this._stepSlide(+1); return }
     const verses = this._primaryVerses()
     if (this._preachIndex + this._groupSize >= verses.length) return
     this._transition(() => { this._preachIndex += this._groupSize })
@@ -109,6 +127,7 @@ export default class extends Controller {
 
   prev(event) {
     event?.preventDefault?.()
+    if (this._slide) { this._stepSlide(-1); return }
     if (this._preachIndex <= 0) return
     this._transition(() => { this._preachIndex = Math.max(0, this._preachIndex - this._groupSize) })
   }
@@ -178,14 +197,16 @@ export default class extends Controller {
     this.jumpInputTarget.focus()
   }
 
-  // The Go box takes either a bare verse number ("28" → jump within this
-  // chapter) or any reference the preacher calls out ("rom 8:28" → chase).
+  // The Go box takes a bare verse number ("28" → jump within this chapter),
+  // any reference the preacher calls out ("rom 8:28" → chase), or a described
+  // thought ("the walls of jericho falling" → AI quick search).
   jumpSubmit(event) {
     event?.preventDefault?.()
     const raw = this.jumpInputTarget.value.trim()
     this._closeJump()
     if (!raw) return
     if (/^\d+$/.test(raw)) {
+      this._clearSlide({ repaint: false })
       const verses = this._primaryVerses()
       const idx = verses.findIndex(v => parseInt(v.dataset.verseNum, 10) === parseInt(raw, 10))
       if (idx >= 0) this._transition(() => { this._preachIndex = idx })
@@ -198,26 +219,38 @@ export default class extends Controller {
   // must never put an error page on the big screen), load the whole chapter
   // through the pane's own Turbo Frame form, then land on the called verse.
   // Preach mode never exits; the output window and live followers pick the
-  // move up through the normal broadcast.
-  async _chase(raw) {
+  // move up through the normal broadcast. Text the parser can't read falls
+  // through to the AI quick search ("the prodigal son" → references).
+  async _chase(raw, { silent = false } = {}) {
     let parsed
     try {
       const res = await fetch(`/reference_check?q=${encodeURIComponent(raw)}`,
                               { headers: { Accept: "application/json" } })
       parsed = await res.json()
     } catch { return }
-    if (!parsed.ok) { this._flashJumpError(raw); return }
+    if (!parsed.ok) {
+      if (silent) return
+      if (this.hasQuickFindUrlValue && /\s/.test(raw)) { this._quickFind(raw); return }
+      this._flashJumpError(raw)
+      return
+    }
+    this._loadPassage(parsed.chapter_reference, parsed.verse_start)
+  }
 
+  // Load a whole chapter through the presented pane's own Turbo Frame form,
+  // then land on the given verse. Shared by chase, the queue, and AI finds.
+  _loadPassage(chapterReference, verseStart) {
     const pane = this.element.querySelector(".ps-pane.is-presented")
     const input = pane?.querySelector("input[name='pane[reference]']")
     if (!input) return
-    input.value = parsed.chapter_reference
+    this._clearSlide({ repaint: false })
+    input.value = chapterReference
     pane.addEventListener("turbo:frame-load", () => {
       this._pairForParallel()
       const verses = this._primaryVerses()
       let idx = 0
-      if (parsed.verse_start) {
-        const found = verses.findIndex(v => parseInt(v.dataset.verseNum, 10) === parsed.verse_start)
+      if (verseStart) {
+        const found = verses.findIndex(v => parseInt(v.dataset.verseNum, 10) === verseStart)
         if (found >= 0) idx = found
       }
       this._preachIndex = idx
@@ -252,6 +285,331 @@ export default class extends Controller {
     }
   }
 
+  // ----- AI quick search (Go-box fallback: describe a thought, get references) -----
+
+  // The volunteer typed something the parser can't read ("the walls of jericho
+  // falling"). Ask the AI for matching references — validated server-side and
+  // loaded from our own DB — and offer them as one-tap chips. The big screen
+  // never changes until a chip is picked.
+  async _quickFind(q) {
+    const box = this._findsBox()
+    if (!box) return
+    this._findsOpen = true
+    box.hidden = false
+    box.innerHTML = `<div class="head"><span class="lbl">&#10038; Searching the Scriptures&hellip;</span></div>`
+    let data
+    try {
+      const res = await fetch(`${this.quickFindUrlValue}?q=${encodeURIComponent(q)}`,
+                              { headers: { Accept: "application/json" } })
+      data = await res.json()
+    } catch { data = null }
+    if (!this._findsOpen) return // the operator moved on while we searched
+    if (!data?.ok || !data.suggestions?.length) {
+      this._closeFinds()
+      this._flashJumpError(q)
+      return
+    }
+    box.innerHTML = ""
+    const head = document.createElement("div")
+    head.className = "head"
+    head.innerHTML = `<span class="lbl">&#10038; Found in the Scriptures</span>` +
+                     `<button type="button" class="close" data-action="presentation#cancelFinds">&#10005;</button>`
+    box.appendChild(head)
+    data.suggestions.forEach(s => {
+      const btn = document.createElement("button")
+      btn.type = "button"
+      btn.className = "find"
+      btn.dataset.action = "presentation#pickFind"
+      btn.dataset.chapterReference = s.chapter_reference
+      if (s.verse_start) btn.dataset.verseStart = String(s.verse_start)
+      const ref = document.createElement("span")
+      ref.className = "ref"
+      ref.textContent = s.reference
+      const preview = document.createElement("span")
+      preview.className = "prev"
+      preview.textContent = s.preview || ""
+      btn.append(ref, preview)
+      box.appendChild(btn)
+    })
+  }
+
+  pickFind(event) {
+    event?.preventDefault?.()
+    const d = event.currentTarget.dataset
+    this._closeFinds()
+    this._loadPassage(d.chapterReference, d.verseStart ? parseInt(d.verseStart, 10) : null)
+  }
+
+  cancelFinds(event) {
+    event?.preventDefault?.()
+    this._closeFinds()
+  }
+
+  _closeFinds() {
+    this._findsOpen = false
+    const box = this._findsBox()
+    if (box) { box.hidden = true; box.innerHTML = "" }
+  }
+
+  _findsBox() {
+    return this.element.querySelector("[data-preach-finds]")
+  }
+
+  // ----- the preach queue & content slides (songs / thoughts) -----
+
+  // A queue item was clicked in the setlist drawer.
+  presentItem(detail) {
+    if (!detail) return
+    if (detail.kind === "scripture" && detail.reference) {
+      if (this.element.classList.contains("is-preaching")) {
+        this._chase(detail.reference)
+      } else {
+        // Not preaching yet: stage the passage in the presented (or first) pane.
+        const pane = this.element.querySelector(".ps-pane.is-presented") || this._workspacePanes()[0]
+        const input = pane?.querySelector("input[name='pane[reference]']")
+        if (!input) return
+        input.value = detail.reference
+        input.form?.requestSubmit()
+      }
+      return
+    }
+    if (detail.kind === "slide" && this.element.classList.contains("is-preaching")) {
+      this._presentSlide({ title: detail.title, body: detail.body, index: 0 })
+    }
+  }
+
+  // Project a song/thought instead of the verse. Blank lines in the body split
+  // it into stanzas; next/prev walk the stanzas until scripture returns.
+  _presentSlide({ title, body, index }) {
+    const stanzas = (body || "").split(/\n\s*\n/).map(s => s.trim()).filter(Boolean)
+    if (stanzas.length === 0 && !title) return
+    this._slide = {
+      title: title || "",
+      body: body || "",
+      stanzas: stanzas.length ? stanzas : [title || ""],
+      index: Math.max(0, Math.min(index || 0, Math.max(stanzas.length - 1, 0)))
+    }
+    this.element.classList.add("is-slide")
+    this._paintSlide()
+  }
+
+  _stepSlide(delta) {
+    const next = this._slide.index + delta
+    if (next < 0 || next >= this._slide.stanzas.length) return
+    this._slide.index = next
+    this._paintSlide(true)
+  }
+
+  _paintSlide(fade = false) {
+    const layer = this.element.querySelector("[data-preach-slide]")
+    if (!layer || !this._slide) return
+    const render = () => {
+      const { title, stanzas, index } = this._slide
+      layer.innerHTML = ""
+      if (title) {
+        const t = document.createElement("div")
+        t.className = "slide-title"
+        t.textContent = title
+        layer.appendChild(t)
+      }
+      const stanza = document.createElement("div")
+      stanza.className = "slide-stanza"
+      stanza.textContent = stanzas[index] || ""
+      layer.appendChild(stanza)
+      this._fitSlide(layer, stanza)
+      const counter = this.element.querySelector("[data-preach-counter]")
+      if (counter) {
+        counter.innerHTML = `<span class="num">stanza ${index + 1}</span><span class="of">of ${stanzas.length}</span>`
+      }
+      this._paintSlideNextPreview()
+      if (this._isStage) this._paintStage()
+      this._broadcast()
+    }
+    if (fade) {
+      layer.classList.add("is-changing")
+      setTimeout(() => {
+        render()
+        requestAnimationFrame(() => layer.classList.remove("is-changing"))
+      }, FADE_MS)
+    } else {
+      render()
+    }
+  }
+
+  _paintSlideNextPreview() {
+    const box = this.element.querySelector("[data-preach-next]")
+    if (!box || this._isOutput) return
+    const { stanzas, index } = this._slide
+    if (index + 1 >= stanzas.length) {
+      box.innerHTML = `<span class="lbl">Next</span><span class="txt end">— end —</span>`
+      return
+    }
+    box.innerHTML = `<span class="lbl">Next · stanza ${index + 2}</span><span class="txt"></span>`
+    box.querySelector(".txt").textContent = stanzas[index + 1]
+  }
+
+  _fitSlide(layer, stanza) {
+    stanza.style.fontSize = ""
+    let fs = parseFloat(getComputedStyle(stanza).fontSize) || 56
+    let iters = AUTOFIT_MAX_ITERS
+    while (layer.scrollHeight > layer.clientHeight + 1 && iters > 0 && fs > AUTOFIT_MIN_PX) {
+      fs *= 0.92
+      stanza.style.fontSize = `${fs}px`
+      iters--
+    }
+  }
+
+  _clearSlide({ repaint = true } = {}) {
+    if (!this._slide) return
+    this._slide = null
+    this.element.classList.remove("is-slide")
+    const layer = this.element.querySelector("[data-preach-slide]")
+    if (layer) layer.innerHTML = ""
+    if (repaint && this.element.classList.contains("is-preaching")) {
+      this._paint()
+      requestAnimationFrame(() => this._autoFit())
+    }
+  }
+
+  // ----- phone remote commands (relayed by the remote controller) -----
+
+  _runCommand(detail) {
+    if (!detail || !this.element.classList.contains("is-preaching")) return
+    if (detail.action === "next") this.next()
+    else if (detail.action === "prev") this.prev()
+    else if (detail.action === "chase" && detail.value) this._chase(detail.value, { silent: true })
+  }
+
+  // ----- output screen preferences (theme + text scale) -----
+
+  toggleScreenPanel(event) {
+    event?.preventDefault?.()
+    const panel = this.element.querySelector(".ps-screen-panel")
+    if (!panel) return
+    panel.hidden = !panel.hidden
+    this._syncScreenPanel()
+  }
+
+  setTheme(event) {
+    event?.preventDefault?.()
+    this._screen.theme = event.currentTarget.dataset.screenTheme || "vellum"
+    this._saveScreenPrefs()
+    this._sendScreen()
+    this._syncScreenPanel()
+  }
+
+  bumpScale(event) {
+    event?.preventDefault?.()
+    const delta = parseFloat(event.currentTarget.dataset.screenScaleDelta || "0")
+    const next = (this._screen.scale || 1) + delta
+    this._screen.scale = Math.round(Math.min(1.6, Math.max(0.7, next)) * 10) / 10
+    this._saveScreenPrefs()
+    this._sendScreen()
+    this._syncScreenPanel()
+  }
+
+  _syncScreenPanel() {
+    const panel = this.element.querySelector(".ps-screen-panel")
+    if (!panel) return
+    panel.querySelectorAll("[data-screen-theme]").forEach(b => {
+      b.classList.toggle("is-on", b.dataset.screenTheme === this._screen.theme)
+    })
+    const lbl = panel.querySelector("[data-screen-scale]")
+    if (lbl) lbl.textContent = `${Math.round((this._screen.scale || 1) * 100)}%`
+  }
+
+  _loadScreenPrefs() {
+    try {
+      return { theme: "vellum", scale: 1, ...JSON.parse(localStorage.getItem(SCREEN_PREFS_KEY) || "{}") }
+    } catch {
+      return { theme: "vellum", scale: 1 }
+    }
+  }
+
+  _saveScreenPrefs() {
+    try { localStorage.setItem(SCREEN_PREFS_KEY, JSON.stringify(this._screen)) } catch { /* private mode */ }
+  }
+
+  _sendScreen() {
+    if (!this._screen) return
+    this._send({ type: "screen", theme: this._screen.theme, scale: this._screen.scale })
+  }
+
+  // Output window: restyle the projection (the stage display keeps its own look).
+  _applyScreen(msg) {
+    if (this._isStage) return
+    this.element.classList.toggle("out-theme-ink", msg.theme === "ink")
+    this.element.classList.toggle("out-theme-paper", msg.theme === "paper")
+    this.element.style.setProperty("--ps-out-scale", String(msg.scale || 1))
+    requestAnimationFrame(() => {
+      this._autoFit()
+      if (this._slide) this._paintSlide()
+    })
+  }
+
+  // ----- stage display (confidence monitor: NOW small, NEXT big, clock) -----
+
+  openStage(event) {
+    event?.preventDefault?.()
+    if (!this.element.classList.contains("is-preaching")) return
+    const pane = this.element.querySelector(".ps-pane.is-presented")
+    const url = new URL(window.location.href)
+    url.searchParams.set("stage", "1")
+    url.searchParams.set("pane", String(Math.max(0, this._workspacePanes().indexOf(pane))))
+    this._stageWindow = window.open(url.toString(), "ps-preach-stage", "popup=yes,width=1100,height=650")
+  }
+
+  _paintStage() {
+    const now = this.element.querySelector("[data-stage-now]")
+    const next = this.element.querySelector("[data-stage-next]")
+    const ref = this.element.querySelector("[data-stage-ref]")
+    if (!now || !next) return
+
+    if (this._slide) {
+      const { title, stanzas, index } = this._slide
+      if (ref) ref.textContent = title || "Song"
+      this._fillStagePanel(now, `stanza ${index + 1} of ${stanzas.length}`, stanzas[index] || "")
+      this._fillStagePanel(next, "next", stanzas[index + 1] || "— end —")
+      return
+    }
+
+    const verses = this._primaryVerses()
+    const start = this._preachIndex
+    const end = Math.min(verses.length, start + this._groupSize)
+    const pane = this.element.querySelector(".ps-pane.is-presented")
+    if (ref) ref.textContent = pane?.querySelector("input[name='pane[reference]']")?.value || ""
+    const textOf = (list) => list.map(v =>
+      Array.from(v.querySelectorAll(".ps-verse-text")).map(t => t.textContent).join("")
+    ).join("  ").trim()
+    const numsOf = (list) => list.map(v => v.dataset.verseNum).join("–")
+
+    const current = verses.slice(start, end)
+    this._fillStagePanel(now, current.length ? `now · v${numsOf(current)}` : "now", textOf(current))
+    const upcoming = verses.slice(end, Math.min(verses.length, end + this._groupSize))
+    this._fillStagePanel(next, upcoming.length ? `next · v${numsOf(upcoming)}` : "next",
+                         upcoming.length ? textOf(upcoming) : "— end of chapter —")
+  }
+
+  _fillStagePanel(panel, label, text) {
+    panel.innerHTML = ""
+    const lbl = document.createElement("div")
+    lbl.className = "lbl"
+    lbl.textContent = label
+    const txt = document.createElement("div")
+    txt.className = "txt"
+    txt.textContent = text
+    panel.append(lbl, txt)
+  }
+
+  _startClock() {
+    const tick = () => {
+      const el = this.element.querySelector("[data-stage-clock]")
+      if (el) el.textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    }
+    tick()
+    this._clockTimer = setInterval(tick, 10_000)
+  }
+
   // ----- dual-screen projection -----
 
   // Operator: open the output window. Reusing the window name means clicking
@@ -278,6 +636,10 @@ export default class extends Controller {
   // arrives exclusively as state messages from the operator.
   _enterOutput(paneIndex) {
     this.element.classList.add("is-output")
+    if (this._isStage) {
+      this.element.classList.add("is-stage")
+      this._startClock()
+    }
     const panes = this._workspacePanes()
     const pane = panes[paneIndex] || panes[0]
     if (!pane) return
@@ -286,18 +648,27 @@ export default class extends Controller {
     this.element.classList.add("is-presenting", "is-preaching")
     this._paint()
     requestAnimationFrame(() => this._autoFit())
-    window.addEventListener("pagehide", () => this._send({ type: "bye" }))
-    this._send({ type: "hello" })
+    const role = this._isStage ? "stage" : "output"
+    window.addEventListener("pagehide", () => this._send({ type: "bye", role }))
+    this._send({ type: "hello", role })
   }
 
   _onMessage(msg) {
     if (!msg || !msg.type) return
     if (this._isOutput) {
       if (msg.type === "state") this._applyState(msg)
+      else if (msg.type === "screen") this._applyScreen(msg)
       else if (msg.type === "exit") window.close()
     } else {
-      if (msg.type === "hello") { this._setProjecting(true); this._broadcast() }
-      else if (msg.type === "bye") this._setProjecting(false)
+      // Only the projector output flips the operator into console mode; the
+      // stage display is a passive extra.
+      if (msg.type === "hello") {
+        if (msg.role !== "stage") this._setProjecting(true)
+        this._sendScreen()
+        this._broadcast()
+      } else if (msg.type === "bye") {
+        if (msg.role !== "stage") this._setProjecting(false)
+      }
     }
   }
 
@@ -305,6 +676,8 @@ export default class extends Controller {
   // park it in _afterFade (applied when the fade ends) so rapid Next-Next from
   // the operator can't desync the two windows.
   _applyState(msg) {
+    if (msg.slide) { this._applySlide(msg.slide); return }
+    if (this._slide) this._clearSlide({ repaint: false })
     if (this._fading) { this._afterFade = msg; return }
     const panes = this._workspacePanes()
     const pane = panes[msg.pane] || panes[0]
@@ -338,6 +711,19 @@ export default class extends Controller {
     this._transition(() => { this._preachIndex = msg.index || 0 })
   }
 
+  // Output/stage window: mirror a song/thought slide. Same slide → fade to the
+  // new stanza; different slide → render it fresh.
+  _applySlide(slide) {
+    if (this._slide && this._slide.body === slide.body && this._slide.title === slide.title) {
+      if (this._slide.index !== slide.index) {
+        this._slide.index = slide.index
+        this._paintSlide(true)
+      }
+      return
+    }
+    this._presentSlide(slide)
+  }
+
   _broadcast() {
     if (this._isOutput) return
     if (!this.element.classList.contains("is-preaching")) return
@@ -352,7 +738,10 @@ export default class extends Controller {
       reference: pane.querySelector("input[name='pane[reference]']")?.value || null,
       translation: pane.querySelector("select[name='pane[translation_id]']")?.value || null,
       verseStart: this._range?.first ?? null,
-      verseEnd: this._range?.last ?? null
+      verseEnd: this._range?.last ?? null,
+      slide: this._slide
+        ? { title: this._slide.title, body: this._slide.body, index: this._slide.index }
+        : null
     }
     this._send(state)
     // The live controller relays this to the congregation's phones.
@@ -378,9 +767,12 @@ export default class extends Controller {
   // ----- lifecycle -----
 
   disconnect() {
-    if (this._isOutput) this._send({ type: "bye" })
+    if (this._isOutput) this._send({ type: "bye", role: this._isStage ? "stage" : "output" })
     this._channel?.close()
     this._channel = null
+    if (this._onSetlist) window.removeEventListener("setlist:present", this._onSetlist)
+    if (this._onCommand) window.removeEventListener("preach:command", this._onCommand)
+    clearInterval(this._clockTimer)
     this._unbindEsc()
     this._unbindKeys()
     this._unbindSwipe()
@@ -456,6 +848,7 @@ export default class extends Controller {
     }
 
     this._paintNextPreview(primary, end)
+    if (this._isStage) this._paintStage()
     this._broadcast()
   }
 

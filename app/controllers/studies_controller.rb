@@ -1,8 +1,8 @@
 class StudiesController < ApplicationController
   # The workspace is open to everyone; only saving (notes/highlights/account) needs auth.
-  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest search commentary lexicon rabbi sermon share_card prayer ]
+  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest quick_find search commentary lexicon rabbi sermon share_card prayer ]
 
-  before_action :set_study, only: %i[ show update destroy suggest search cross_references commentary lexicon rabbi sermon share share_card prayer ]
+  before_action :set_study, only: %i[ show update destroy suggest quick_find search cross_references commentary lexicon rabbi sermon share share_card prayer ]
 
   def index
     @studies = authenticated? ? current_user.studies.recent : []
@@ -46,6 +46,28 @@ class StudiesController < ApplicationController
     @query = params[:q].to_s
     @result = ScriptureSuggester.call(@query)
     render partial: "studies/ai_results", locals: { study: @study, query: @query, result: @result }
+  end
+
+  # Preach-mode quick search (JSON): the projection volunteer types a described
+  # thought or event ("the walls of Jericho falling") and gets back validated
+  # references to chase. The AI returns references only — the projected words
+  # still come from our own DB.
+  def quick_find
+    result = ScriptureSuggester.call(params[:q].to_s)
+    return render json: { ok: false, error: result.error } unless result.ok?
+
+    render json: {
+      ok: true,
+      suggestions: result.suggestions.map do |s|
+        book = Bible::Canon.find(s.osis)
+        {
+          reference: s.reference,
+          chapter_reference: "#{book&.name || s.osis} #{s.chapter}",
+          verse_start: s.verse_start,
+          preview: s.preview.to_s.truncate(140)
+        }
+      end
+    }
   end
 
   def search

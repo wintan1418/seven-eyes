@@ -96,3 +96,12 @@ application.register("live", LiveController)
 
 import LiveFollowController from "./live_follow_controller"
 application.register("live-follow", LiveFollowController)
+
+import SetlistController from "./setlist_controller"
+application.register("setlist", SetlistController)
+
+import RemoteController from "./remote_controller"
+application.register("remote", RemoteController)
+
+import RemotePadController from "./remote_pad_controller"
+application.register("remote-pad", RemotePadController)

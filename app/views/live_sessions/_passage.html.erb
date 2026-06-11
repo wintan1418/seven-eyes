@@ -1,3 +1,16 @@
+<% if live.slide? %>
+  <%# A song stanza / projected thought is on the screen right now. %>
+  <article class="ps-live-slide" data-title="<%= live.slide_title %>" data-body="<%= live.slide_body %>">
+    <% if live.slide_title.present? %>
+      <div class="ref-title"><%= live.slide_title %></div>
+      <div class="rule"></div>
+    <% end %>
+    <% stanzas = live.slide_stanzas.presence || [ live.slide_title.to_s ] %>
+    <% stanzas.each_with_index do |stanza, i| %>
+      <p class="ps-live-stanza <%= "is-now" if i == live.slide_index.to_i %>" data-idx="<%= i %>"><%= stanza %></p>
+    <% end %>
+  </article>
+<% else %>
 <% verses = live.verses.to_a %>
 <% if verses.any? %>
   <article class="ps-live-passage"
@@ -23,4 +36,5 @@
     <div class="orn">&#10086;</div>
     <p>You&rsquo;re in. The text will appear here the moment the preacher opens it.</p>
   </div>
+<% end %>
 <% end %>

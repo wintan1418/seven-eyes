@@ -22,13 +22,7 @@ class LiveSessionsController < ApplicationController
     return head :not_found unless live
     return head :unprocessable_entity unless apply_state(live)
 
-    LiveSessionChannel.broadcast_to(live, {
-      type: "state",
-      osis: live.osis, chapter: live.chapter,
-      verse_start: live.verse_start, verse_end: live.verse_end,
-      translation: live.translation_code,
-      reference: live.reference_label
-    })
+    LiveSessionChannel.broadcast_to(live, state_payload(live))
     head :ok
   end
 
@@ -55,11 +49,29 @@ class LiveSessionsController < ApplicationController
     render partial: "live_sessions/passage", locals: { live: live }, layout: false
   end
 
+  # GET /live/:code/recap — "tonight's scriptures": every passage shown, in order.
+  # Works for ended sessions too (the farewell overlay fetches it).
+  def recap
+    live = LiveSession.find_by(code: params[:code].to_s.upcase)
+    return head :not_found unless live
+    render partial: "live_sessions/recap", locals: { live: live }, layout: false
+  end
+
   private
 
   # Update the session from operator params. Reference parsing failures return
   # false (422) so a garbled push never blanks what the pews are reading.
+  # A kind=slide push (song stanza / projected thought) swaps the pews over to
+  # the slide; the next scripture push swaps them back.
   def apply_state(live)
+    if params[:kind].to_s == "slide"
+      return false if params[:slide_title].blank? && params[:slide_body].blank?
+      return live.update(kind: "slide",
+                         slide_title: params[:slide_title].to_s.presence,
+                         slide_body: params[:slide_body].to_s.presence,
+                         slide_index: params[:slide_index].to_i)
+    end
+
     attrs = {}
     if params[:reference].present?
       parsed = ReferenceParser.call(params[:reference].to_s)
@@ -74,7 +86,25 @@ class LiveSessionsController < ApplicationController
     attrs[:translation_code] = Pane::DEFAULT_TRANSLATION if live.translation_code.blank? && attrs[:translation_code].blank?
     attrs[:verse_start] = params[:verse_start].to_i if params[:verse_start].present?
     attrs[:verse_end] = params[:verse_end].to_i if params[:verse_end].present?
-    attrs.empty? ? true : live.update(attrs)
+    return true if attrs.empty?
+
+    attrs[:kind] = "scripture"
+    live.update(attrs).tap { |ok| live.log_passage! if ok }
+  end
+
+  def state_payload(live)
+    if live.slide?
+      { type: "state", kind: "slide",
+        slide_title: live.slide_title, slide_body: live.slide_body,
+        slide_index: live.slide_index.to_i,
+        reference: live.slide_title.presence || "—" }
+    else
+      { type: "state", kind: "scripture",
+        osis: live.osis, chapter: live.chapter,
+        verse_start: live.verse_start, verse_end: live.verse_end,
+        translation: live.translation_code,
+        reference: live.reference_label }
+    end
   end
 
   def live_payload(live)

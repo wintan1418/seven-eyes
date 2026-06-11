@@ -1,0 +1,14 @@
+<%# locals: live — "tonight's scriptures": every passage shown, in order %>
+<% if live.passages.any? %>
+  <div class="ps-live-recap">
+    <div class="lbl">Tonight&rsquo;s scriptures</div>
+    <ol>
+      <% live.passages.each do |entry| %>
+        <li>
+          <%= link_to entry["label"],
+                open_passage_path(PassageSlug.slug_for(osis: entry["osis"], chapter: entry["chapter"])) %>
+        </li>
+      <% end %>
+    </ol>
+  </div>
+<% end %>

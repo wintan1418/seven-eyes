@@ -1,4 +1,3 @@
-require "net/http"
 require "json"
 require "set"
 
@@ -6,14 +5,15 @@ require "set"
 # references using an LLM, then validates each through ReferenceParser and loads a
 # preview from our own DB. The LLM only ever returns *references* — never verse text —
 # so the displayed words always come from our vetted public-domain translations.
+#
+# LLM calls go through AiChat (Gemini first, Abacus RouteLLM fail-over).
 class ScriptureSuggester
-  ENDPOINT = "https://api.openai.com/v1/chat/completions".freeze
-  MODEL = "gpt-4o-mini".freeze
   MAX = 8
 
   SYSTEM_PROMPT = <<~PROMPT.freeze
-    You are a Bible reference finder. Given a description, theme, or half-remembered
-    idea, return the most relevant Bible passages. Respond ONLY as JSON of the form:
+    You are a Bible reference finder. Given a description, theme, half-remembered
+    idea, or historical event, return the most relevant Bible passages. Respond ONLY
+    as JSON of the form:
     {"references": ["Romans 5:1", "Ephesians 2:8-9", "John 3:16"]}
     Rules: use standard English book names with chapter:verse (ranges allowed); at most
     8 references; order by relevance; return ONLY references, no commentary or verse text.
@@ -34,12 +34,11 @@ class ScriptureSuggester
 
   def call
     return Result.new(ok: false, error: :blank) if @query.empty?
-    return Result.new(ok: false, error: :no_key) if api_key.blank?
 
-    refs = request_references
-    return Result.new(ok: false, error: :api) if refs.nil?
+    res = chat_completion
+    return Result.new(ok: false, error: res.error || :api) unless res.ok?
 
-    Result.new(ok: true, suggestions: build_suggestions(refs))
+    Result.new(ok: true, suggestions: build_suggestions(extract_references(res.content)))
   rescue => e
     Rails.logger.error("[ScriptureSuggester] #{e.class}: #{e.message}")
     Result.new(ok: false, error: :api)
@@ -47,41 +46,15 @@ class ScriptureSuggester
 
   private
 
-  def api_key
-    @api_key ||= ENV["OPENAI_API_KEY"].presence ||
-                 Rails.application.credentials.dig(:openai, :api_key)
-  end
-
-  def request_references
-    uri = URI(ENDPOINT)
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
-    http.read_timeout = 30
-    http.open_timeout = 10
-
-    req = Net::HTTP::Post.new(uri)
-    req["Authorization"] = "Bearer #{api_key}"
-    req["Content-Type"] = "application/json"
-    req.body = {
-      model: MODEL,
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: @query }
-      ]
-    }.to_json
-
-    res = http.request(req)
-    return nil unless res.is_a?(Net::HTTPSuccess)
-
-    content = JSON.parse(res.body).dig("choices", 0, "message", "content")
-    extract_references(content)
+  # Network seam — overridden in tests to avoid a live API call.
+  def chat_completion
+    AiChat.call(system: SYSTEM_PROMPT, user: @query, json: true)
   end
 
   def extract_references(content)
     return [] if content.blank?
-    Array(JSON.parse(content)["references"]).first(MAX)
+    cleaned = content.to_s.strip.sub(/\A```(?:json)?\s*/, "").sub(/```\z/, "")
+    Array(JSON.parse(cleaned)["references"]).first(MAX)
   rescue JSON::ParserError
     []
   end

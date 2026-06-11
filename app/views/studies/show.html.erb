@@ -1,6 +1,8 @@
 <div class="ps-root"
-     data-controller="book-browser ai-search search xref commentary lexicon rabbi tour shortcuts auth-gate new-study font-size presentation diff interlinear live"
+     data-controller="book-browser ai-search search xref commentary lexicon rabbi tour shortcuts auth-gate new-study font-size presentation diff interlinear live setlist remote"
      data-live-url-value="<%= study_live_path(@study) %>"
+     data-remote-url-value="<%= study_remote_path(@study) %>"
+     data-presentation-quick-find-url-value="<%= quick_find_study_path(@study) %>"
      data-font-size="<%= authenticated? ? current_user.font_size : 0 %>"
      data-font-size-url-value="<%= preferences_path %>"
      data-font-size-authenticated-value="<%= authenticated? %>"
@@ -51,8 +53,11 @@
         <% end %>
       </div>
       <button type="button" class="ps-preach-tool"
+              data-action="setlist#toggle"
+              title="The preach queue — scriptures, songs and thoughts lined up for the service">&#9835; Queue</button>
+      <button type="button" class="ps-preach-tool"
               data-action="presentation#openJump"
-              title="Go to a verse — or chase any reference the preacher calls, e.g. rom 8:28 (G)">&#10148; Go</button>
+              title="Go to a verse, chase any reference the preacher calls (rom 8:28), or describe a thought for AI search (G)">&#10148; Go</button>
       <button type="button" class="ps-preach-tool"
               data-preach-parallel
               data-action="presentation#toggleParallel"
@@ -61,10 +66,20 @@
               data-preach-project
               data-action="presentation#openOutput"
               title="Open the output window — drag it onto the projector screen, then click Fullscreen">&#10697; Project</button>
+      <button type="button" class="ps-preach-tool"
+              data-action="presentation#openStage"
+              title="Stage display for the pulpit — current verse, NEXT verse big, and a clock">&#8983; Stage</button>
+      <button type="button" class="ps-preach-tool"
+              data-action="presentation#toggleScreenPanel"
+              title="Projection screen look — theme and text size">&#10022; Screen</button>
       <button type="button" class="ps-preach-tool ps-golive"
               data-live-target="button"
               data-action="live#toggle"
               title="Let the congregation follow along on their phones — live, no account needed">&#9737; Go Live</button>
+      <button type="button" class="ps-preach-tool"
+              data-remote-target="button"
+              data-action="remote#toggle"
+              title="Pair a phone as a remote clicker — next, previous, chase">&#9742; Remote</button>
     </div>
     <div class="ps-preach-bar-right">
       <button type="button" class="ps-preach-tool"
@@ -77,6 +92,38 @@
   <div class="ps-preach-next" data-preach-next aria-hidden="true"></div>
   <button type="button" class="ps-out-full" data-action="presentation#toggleFullscreen"
           title="Fullscreen on this screen">&#9974; Fullscreen</button>
+
+  <%# Content slide layer — a song stanza or thought projected instead of the verse %>
+  <div class="ps-preach-slide" data-preach-slide></div>
+
+  <%# AI quick-search results for the Go box ("the walls of jericho" → chips) %>
+  <div class="ps-preach-finds" data-preach-finds hidden></div>
+
+  <%# Projection screen prefs (theme + text scale), broadcast to the output window %>
+  <div class="ps-screen-panel" hidden>
+    <div class="lbl">Projection screen</div>
+    <div class="row themes">
+      <button type="button" data-screen-theme="vellum" data-action="presentation#setTheme">Vellum</button>
+      <button type="button" data-screen-theme="ink" data-action="presentation#setTheme">Ink</button>
+      <button type="button" data-screen-theme="paper" data-action="presentation#setTheme">Paper</button>
+    </div>
+    <div class="row scale">
+      <button type="button" data-screen-scale-delta="-0.1" data-action="presentation#bumpScale">A&minus;</button>
+      <span class="val" data-screen-scale>100%</span>
+      <button type="button" data-screen-scale-delta="0.1" data-action="presentation#bumpScale">A&#43;</button>
+    </div>
+    <button type="button" class="done" data-action="presentation#toggleScreenPanel">Done</button>
+  </div>
+
+  <%# Stage display (?stage=1): NOW small, NEXT big, clock — for the pulpit %>
+  <div class="ps-stage" aria-hidden="true">
+    <div class="ps-stage-head">
+      <span class="ref" data-stage-ref></span>
+      <span class="clock" data-stage-clock></span>
+    </div>
+    <div class="ps-stage-now" data-stage-now></div>
+    <div class="ps-stage-next" data-stage-next></div>
+  </div>
 
   <div class="ps-preach-jump" hidden>
     <span>Go to</span>
@@ -104,6 +151,8 @@
   <%= render "studies/rabbi_drawer", study: @study %>
   <%= render "studies/share_modal", study: @study %>
   <%= render "studies/live_modal" %>
+  <%= render "studies/remote_modal" %>
+  <%= render "studies/setlist_drawer", study: @study %>
   <%= render "studies/auth_prompt" unless authenticated? %>
   <%= render "studies/new_study_modal" %>
 </div>

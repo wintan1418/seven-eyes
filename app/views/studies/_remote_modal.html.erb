@@ -1,0 +1,18 @@
+<%# Phone-remote pairing panel: secret QR + code. Filled in by remote_controller. %>
+<div class="ps-live-panel" data-remote-target="panel" hidden>
+  <div class="ps-live-card">
+    <div class="eyebrow">Phone remote</div>
+    <div class="qr" data-remote-target="qr" aria-label="QR code to pair the remote"></div>
+    <div class="bigcode" data-remote-target="code"></div>
+    <div class="join-url" data-remote-target="url"></div>
+    <p class="hint">
+      Scan with the phone that will drive the screen &mdash; next, previous, and chasing
+      called references. Keep this code <em>off</em> the projector: anyone holding it
+      can change the slides.
+    </p>
+    <div class="row">
+      <button type="button" class="tool primary" data-action="remote#closePanel">Done</button>
+      <button type="button" class="tool danger" data-action="remote#unpair">Unpair</button>
+    </div>
+  </div>
+</div>

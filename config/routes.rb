@@ -15,12 +15,23 @@ Rails.application.routes.draw do
     get :share_card, on: :member
     get :prayer, on: :member
     get "lexicon/:strongs", on: :member, action: :lexicon, as: :lexicon
+    get :quick_find, on: :member
     resource :live, only: %i[ create update destroy ], controller: "live_sessions"
+    resource :remote, only: %i[ create ], controller: "remotes"
+    resources :setlist_items, only: %i[ create update destroy ], path: "setlist" do
+      post :move, on: :member
+    end
   end
 
   # Public "follow along" pages — congregants follow the pulpit live, no login.
   get "/live/:code",         to: "live_sessions#show",    as: :live_session
   get "/live/:code/passage", to: "live_sessions#passage", as: :live_session_passage
+  get "/live/:code/recap",   to: "live_sessions#recap",   as: :live_session_recap
+
+  # Phone remote pad — pairs with the operator console over a secret code.
+  get "/remote/:code", to: "remotes#show", as: :remote_pad
+
+  get "/admin", to: "admin#show", as: :admin
 
   get "/s/:token", to: "shared_studies#show", as: :shared_study
 

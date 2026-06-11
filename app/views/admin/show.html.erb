@@ -1,0 +1,107 @@
+<% content_for :title, "Overseer · Parallel Scripture" %>
+
+<div class="ps-admin">
+  <header class="head">
+    <div>
+      <div class="eyebrow">Overseer</div>
+      <h1>The state of the flock</h1>
+      <p class="sub">
+        <%= @signups_this_week %> new account<%= "s" unless @signups_this_week == 1 %> and
+        <%= @studies_this_week %> new stud<%= @studies_this_week == 1 ? "y" : "ies" %> this week.
+      </p>
+    </div>
+    <%= link_to "&larr; Back to the scriptorium".html_safe, root_path, class: "back" %>
+  </header>
+
+  <section class="tiles">
+    <% @totals.each do |label, count| %>
+      <div class="tile">
+        <div class="num"><%= number_with_delimiter(count) %></div>
+        <div class="lbl"><%= label %></div>
+      </div>
+    <% end %>
+  </section>
+
+  <% if @live_now.any? %>
+    <section class="panel">
+      <h2><span class="dot"></span> Live right now</h2>
+      <table>
+        <thead><tr><th>Code</th><th>Passage</th><th>Following</th><th>Study</th><th>Started</th></tr></thead>
+        <tbody>
+          <% @live_now.each do |live| %>
+            <tr>
+              <td class="mono"><%= live.code %></td>
+              <td><%= live.slide? ? (live.slide_title.presence || "Song / thought") : live.reference_label %></td>
+              <td><%= live.followers_count %></td>
+              <td><%= live.study.name %></td>
+              <td><%= time_ago_in_words(live.created_at) %> ago</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </section>
+  <% end %>
+
+  <div class="cols">
+    <section class="panel">
+      <h2>Recent accounts</h2>
+      <table>
+        <thead><tr><th>Email</th><th>Studies</th><th>Joined</th></tr></thead>
+        <tbody>
+          <% @recent_users.each do |user| %>
+            <tr>
+              <td><%= user.email_address %><%= " &middot; admin".html_safe if user.admin? %></td>
+              <td><%= user.studies.size %></td>
+              <td><%= user.created_at.strftime("%-d %b %Y") %></td>
+            </tr>
+          <% end %>
+          <% if @recent_users.empty? %>
+            <tr><td colspan="3" class="empty">No accounts yet.</td></tr>
+          <% end %>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>Recently worked studies</h2>
+      <table>
+        <thead><tr><th>Study</th><th>Owner</th><th>Panes</th><th>Last opened</th></tr></thead>
+        <tbody>
+          <% @recent_studies.each do |study| %>
+            <tr>
+              <td><%= study.name %></td>
+              <td><%= study.user&.email_address || "guest" %></td>
+              <td><%= study.pane_count %></td>
+              <td><%= study.last_opened_at ? "#{time_ago_in_words(study.last_opened_at)} ago" : "—" %></td>
+            </tr>
+          <% end %>
+          <% if @recent_studies.empty? %>
+            <tr><td colspan="4" class="empty">No studies yet.</td></tr>
+          <% end %>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>Recent live services</h2>
+    <table>
+      <thead><tr><th>Code</th><th>Passages preached</th><th>Peak text</th><th>Followers</th><th>When</th><th>Status</th></tr></thead>
+      <tbody>
+        <% @recent_lives.each do |live| %>
+          <tr>
+            <td class="mono"><%= live.code %></td>
+            <td><%= live.passages.size %></td>
+            <td><%= live.passages.last&.fetch("label", nil) || live.reference_label || "—" %></td>
+            <td><%= live.followers_count %></td>
+            <td><%= live.created_at.strftime("%-d %b, %H:%M") %></td>
+            <td><%= live.ended? ? "ended" : "live" %></td>
+          </tr>
+        <% end %>
+        <% if @recent_lives.empty? %>
+          <tr><td colspan="6" class="empty">No live services yet.</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+</div>

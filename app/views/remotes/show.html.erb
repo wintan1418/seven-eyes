@@ -1,0 +1,33 @@
+<% content_for :title, "Remote · Parallel Scripture" %>
+
+<div class="ps-remote-pad"
+     data-controller="remote-pad"
+     data-remote-pad-code-value="<%= @code %>">
+
+  <header class="head">
+    <span class="dot" data-remote-pad-target="dot" aria-hidden="true"></span>
+    <span class="status" data-remote-pad-target="status">Reaching the console&hellip;</span>
+    <span class="code"><%= @code %></span>
+  </header>
+
+  <main class="pad">
+    <button type="button" class="step prev" data-action="remote-pad#prev">
+      <span class="glyph">&#8249;</span>
+      <span class="lbl">Previous</span>
+    </button>
+    <button type="button" class="step next" data-action="remote-pad#next">
+      <span class="glyph">&#8250;</span>
+      <span class="lbl">Next</span>
+    </button>
+  </main>
+
+  <footer class="chase">
+    <input type="text" inputmode="search" autocomplete="off" autocapitalize="none" spellcheck="false"
+           placeholder="Call a reference &mdash; rom 8:28"
+           data-remote-pad-target="input"
+           data-action="keydown.enter->remote-pad#chase">
+    <button type="button" data-action="remote-pad#chase">Go</button>
+  </footer>
+
+  <p class="hint">Keep this page open &mdash; taps land on the projection instantly.</p>
+</div>

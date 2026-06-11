@@ -121,4 +121,53 @@ class LiveSessionsTest < ActionDispatch::IntegrationTest
     assert_response :not_found
     assert_includes response.body, "No such live session"
   end
+
+  test "a slide push swaps the pews to the song and back to scripture" do
+    study = owner_study
+    post study_live_path(study), params: { reference: "John 3", translation_id: @kjv.id }, as: :json
+    live = study.live_session
+
+    patch study_live_path(study), params: { kind: "slide", slide_title: "Amazing Grace",
+                                            slide_body: "v one\n\nv two", slide_index: 1 }, as: :json
+    assert_response :success
+    live.reload
+    assert live.slide?
+    assert_equal [ "v one", "v two" ], live.slide_stanzas
+
+    get live_session_passage_path(live.code)
+    assert_select ".ps-live-slide .ps-live-stanza.is-now[data-idx='1']", text: "v two"
+
+    patch study_live_path(study), params: { reference: "John 3", verse_start: 16, verse_end: 16 }, as: :json
+    assert_equal "scripture", live.reload.kind
+  end
+
+  test "an empty slide push is rejected" do
+    study = owner_study
+    post study_live_path(study), as: :json
+    patch study_live_path(study), params: { kind: "slide", slide_title: "", slide_body: "" }, as: :json
+    assert_response :unprocessable_entity
+  end
+
+  test "each chapter preached is logged once for the recap" do
+    study = owner_study
+    post study_live_path(study), params: { reference: "John 3", translation_id: @kjv.id }, as: :json
+    patch study_live_path(study), params: { reference: "John 3", verse_start: 17 }, as: :json
+    patch study_live_path(study), params: { reference: "John 4" }, as: :json
+    live = study.live_session.reload
+    assert_equal [ "John 3", "John 4" ], live.passages.map { |p| p["label"] }
+
+    get live_session_recap_path(live.code)
+    assert_response :success
+    assert_select ".ps-live-recap li a[href=?]", open_passage_path("john-4"), text: "John 4"
+  end
+
+  test "an ended session's farewell lists tonight's scriptures" do
+    study = users(:one).studies.create!(name: "Sunday", pane_count: 1)
+    live = study.live_sessions.create!(osis: "John", chapter: 3, translation_code: "KJV")
+    live.log_passage!
+    live.end!
+    get live_session_path(live.code)
+    assert_response :success
+    assert_select ".ps-live-ended .ps-live-recap li", text: "John 3"
+  end
 end

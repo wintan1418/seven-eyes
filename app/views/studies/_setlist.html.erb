@@ -1,0 +1,61 @@
+<%# locals: study, errored (optional invalid item) — the queue's Turbo Frame %>
+<% errored = local_assigns[:errored] %>
+<%= turbo_frame_tag "setlist" do %>
+  <% items = study.setlist_items.in_order.to_a %>
+  <ol class="ps-setlist-items">
+    <% if items.empty? %>
+      <li class="ps-setlist-empty">Nothing queued yet &mdash; add the first item below.</li>
+    <% end %>
+    <% items.each_with_index do |item, idx| %>
+      <li class="ps-setlist-item kind-<%= item.kind %>"
+          data-kind="<%= item.scripture? ? "scripture" : "slide" %>"
+          data-reference="<%= item.reference %>"
+          data-title="<%= item.title %>"
+          data-body="<%= item.body %>">
+        <button type="button" class="present" data-action="setlist#present"
+                title="Put this on the screen (preach mode)">
+          <span class="icon"><%= item.scripture? ? "&#167;".html_safe : (item.song? ? "&#9835;".html_safe : "&#10086;".html_safe) %></span>
+          <span class="lbl"><%= item.label %></span>
+          <% if !item.scripture? && item.stanzas.size > 1 %>
+            <span class="meta"><%= item.stanzas.size %> stanzas</span>
+          <% end %>
+        </button>
+        <span class="ops">
+          <%= button_to "&#8593;".html_safe, move_study_setlist_item_path(study, item, direction: :up),
+                method: :post, class: "op", disabled: idx.zero?, title: "Move up",
+                form: { style: "display:contents;" } %>
+          <%= button_to "&#8595;".html_safe, move_study_setlist_item_path(study, item, direction: :down),
+                method: :post, class: "op", disabled: idx == items.size - 1, title: "Move down",
+                form: { style: "display:contents;" } %>
+          <%= button_to "&#10005;".html_safe, study_setlist_item_path(study, item),
+                method: :delete, class: "op danger", title: "Remove",
+                form: { style: "display:contents;" } %>
+        </span>
+      </li>
+    <% end %>
+  </ol>
+
+  <% selected_kind = errored&.kind || "scripture" %>
+  <%= form_with url: study_setlist_items_path(study), method: :post,
+        class: "ps-setlist-form kind-#{selected_kind}", data: { setlist_target: "form" } do |f| %>
+    <% if errored %>
+      <div class="err"><%= errored.errors.full_messages.to_sentence %></div>
+    <% end %>
+    <div class="kinds">
+      <% { "scripture" => "&#167; Scripture", "song" => "&#9835; Song", "thought" => "&#10086; Thought" }.each do |kind, lbl| %>
+        <label class="<%= "is-on" if kind == selected_kind %>">
+          <input type="radio" name="setlist_item[kind]" value="<%= kind %>" <%= "checked" if kind == selected_kind %>
+                 data-action="setlist#kindChanged">
+          <%= lbl.html_safe %>
+        </label>
+      <% end %>
+    </div>
+    <input type="text" name="setlist_item[reference]" class="ref-field" autocomplete="off"
+           value="<%= errored&.reference %>" placeholder="e.g. Romans 8:28 or Psalm 23">
+    <input type="text" name="setlist_item[title]" class="title-field" autocomplete="off"
+           value="<%= errored&.title %>" placeholder="Title — e.g. Amazing Grace, or Welcome">
+    <textarea name="setlist_item[body]" rows="5" class="body-field"
+              placeholder="Words to project. Leave a blank line between stanzas — each stanza becomes its own slide."><%= errored&.body %></textarea>
+    <button type="submit" class="add">&#43; Add to queue</button>
+  <% end %>
+<% end %>

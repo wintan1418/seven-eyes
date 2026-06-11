@@ -164,12 +164,15 @@ palette/fonts are also exposed as `@theme` tokens in `application.tailwind.css`.
 - **Bible browser** — slide-over book/chapter navigator (`book_browser` Stimulus controller on
   `.ps-root`, `studies/_book_browser`). Opened from each pane's 📖 button; browsing is client-side
   (chapter counts from `Bible::Canon`), loading reuses the pane's own Turbo Frame form.
-- **AI "Find a Verse"** — describe a thought → GPT returns *references only*, which we validate via
-  `ReferenceParser` and load from our DB (`ScriptureSuggester`, `gpt-4o-mini`, JSON mode). The LLM
+- **AI "Find a Verse"** — describe a thought → the LLM returns *references only*, which we validate
+  via `ReferenceParser` and load from our DB (`ScriptureSuggester`, now routed through `AiChat`:
+  Gemini first, Abacus RouteLLM fail-over — see `app/services/ai_chat.rb` for keys). The LLM
   never supplies verse text — words always come from our vetted public-domain translations. UI:
   `ai_search` Stimulus controller + `studies/_ai_search` / `_ai_results`; endpoint `GET
-  /studies/:id/suggest`. **Key**: `OPENAI_API_KEY` via `.env` (dotenv-rails, gitignored) or Rails
-  credentials `openai.api_key`. Missing key degrades gracefully to a "configure your key" notice.
+  /studies/:id/suggest`. Missing key degrades gracefully to a "configure your key" notice.
+  The same service powers the preach-mode **AI quick search**: `GET /studies/:id/quick_find`
+  (JSON) — the Go box falls back to it when `/reference_check` can't parse the input, and offers
+  the results as one-tap chips (`_quickFind` in `presentation_controller`).
 - **Live follow-along ("Go Live")** — congregants follow the pulpit on their phones in real time.
   Operator: "Go Live" in the preach bar (`live` Stimulus controller) creates a `LiveSession`
   (short join code + QR via `rqrcode`) and PATCHes preach state to `/studies/:id/live`; the server
@@ -179,6 +182,29 @@ palette/fonts are also exposed as `@theme` tokens in `application.tailwind.css`.
   ended overlay linking to `/p/:slug/open`. Preach mode emits `preach:state` / `preach:exit`
   window events that the live controller relays; the dual-screen output window
   (`?output=1`, BroadcastChannel) is same-device only and unrelated to cable.
+  `LiveSession#passages` (jsonb) logs each chapter preached (`log_passage!`, consecutive dedup);
+  the ended overlay fetches `/live/:code/recap` — "tonight's scriptures" with `/p/:slug/open` links.
+- **Preach queue ("setlist")** — `SetlistItem` (study-scoped; kind enum scripture/song/thought;
+  scripture validates through `ReferenceParser`, song/thought split `body` into stanzas on blank
+  lines). CRUD + `move` re-render the `setlist` Turbo Frame (`studies/_setlist`, drawer
+  `studies/_setlist_drawer`, `setlist` Stimulus controller). Clicking an item dispatches
+  `setlist:present`; the presentation controller chases scriptures or projects **content slides**
+  (`is-slide`, `[data-preach-slide]` layer, next/prev walk stanzas). Slides flow to the output
+  window (BroadcastChannel `slide` field) and to live followers (`kind=slide` + `slide_*` columns
+  on `live_sessions`; the follower page renders stanzas client-side).
+- **Stage display** — `?stage=1` window (`⌗ Stage` button): NOW small / NEXT big / clock, painted
+  by `_paintStage()` from the same BroadcastChannel state; hello role `"stage"` so it never flips
+  the operator into console mode.
+- **Projection screen prefs** — `✦ Screen` panel: theme (vellum/ink/paper → `out-theme-*` classes
+  on the output root) + text scale (`--ps-out-scale`), persisted in localStorage, broadcast as
+  `{type:"screen"}` and re-sent on output hello.
+- **Phone remote** — `☎ Remote` mints a secret 6-char pairing code + QR (`RemotesController#create`,
+  nothing persisted); phone opens `/remote/:code` (`remote_pad` Stimulus controller) and both ends
+  join `RemoteChannel` (pure relay with presence ping). Pad commands (next/prev/chase) reach the
+  presentation controller as `preach:command` window events. The code is never shown on the
+  projector — only the holder of the QR can drive the screen.
+- **Admin ("Overseer")** — `/admin`, `users.admin` flag (`bin/rails admin:grant EMAIL=...`),
+  read-only overview: totals, live-now sessions, recent accounts/studies/live services.
 
 ## Access model — open app, gated saves (by user request)
 

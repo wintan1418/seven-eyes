@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_10_182714) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_11_132712) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -88,7 +88,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_10_182714) do
     t.datetime "created_at", null: false
     t.datetime "ended_at"
     t.integer "followers_count", default: 0, null: false
+    t.string "kind", default: "scripture", null: false
     t.string "osis"
+    t.jsonb "passages", default: [], null: false
+    t.text "slide_body"
+    t.integer "slide_index"
+    t.string "slide_title"
     t.bigint "study_id", null: false
     t.string "translation_code"
     t.datetime "updated_at", null: false
@@ -152,6 +157,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_10_182714) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "setlist_items", force: :cascade do |t|
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.integer "kind", default: 0, null: false
+    t.integer "position", default: 0, null: false
+    t.string "reference"
+    t.bigint "study_id", null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.index ["study_id", "position"], name: "index_setlist_items_on_study_id_and_position"
+    t.index ["study_id"], name: "index_setlist_items_on_study_id"
+  end
+
   create_table "studies", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "last_opened_at"
@@ -177,6 +195,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_10_182714) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.boolean "admin", default: false, null: false
     t.datetime "created_at", null: false
     t.string "email_address", null: false
     t.integer "font_size", default: 0, null: false
@@ -216,6 +235,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_10_182714) do
   add_foreign_key "plan_days", "reading_plans"
   add_foreign_key "reading_plans", "users"
   add_foreign_key "sessions", "users"
+  add_foreign_key "setlist_items", "studies"
   add_foreign_key "studies", "users"
   add_foreign_key "verses", "books"
   add_foreign_key "verses", "translations"

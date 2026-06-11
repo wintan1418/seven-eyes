@@ -1,0 +1,17 @@
+<%# locals: study — the preach queue drawer (works before and during preach mode) %>
+<div class="ps-setlist-host" data-setlist-target="host">
+  <div class="ps-book-backdrop" data-action="setlist#close"></div>
+  <aside class="ps-setlist-panel">
+    <div class="ps-drawer-head">
+      <div class="ps-drawer-eyebrow">
+        <span>&#9835; &nbsp; Preach Queue</span>
+        <button class="close" type="button" data-action="setlist#close">&#10005;</button>
+      </div>
+      <div class="ps-drawer-sub">
+        Line up the service in order &mdash; scriptures, songs, thoughts.
+        In preach mode, click an item to put it on the screen.
+      </div>
+    </div>
+    <%= render "studies/setlist", study: study %>
+  </aside>
+</div>
