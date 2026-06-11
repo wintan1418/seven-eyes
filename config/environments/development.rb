@@ -12,6 +12,12 @@ Rails.application.configure do
   # Show full error reports.
   config.consider_all_requests_local = true
 
+  # Phones on the same Wi-Fi scan the Go Live / remote QR codes against this
+  # machine's LAN address — let those requests (and their cable sockets) in.
+  config.hosts << /\A192\.168\.\d+\.\d+\z/ << /\A10\.\d+\.\d+\.\d+\z/ <<
+                  /\A172\.(1[6-9]|2\d|3[01])\.\d+\.\d+\z/
+  config.action_cable.disable_request_forgery_protection = true
+
   # Enable server timing.
   config.server_timing = true
 

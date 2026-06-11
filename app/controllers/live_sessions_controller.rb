@@ -5,6 +5,7 @@
 # current_study, so they work for signed-in owners AND session-scoped guests.
 # Follower endpoints (show/passage) are public — no account, no study access.
 class LiveSessionsController < ApplicationController
+  include LanHost
   allow_unauthenticated_access
 
   # POST /studies/:study_id/live — go live (idempotent: reuses the active session)
@@ -108,7 +109,7 @@ class LiveSessionsController < ApplicationController
   end
 
   def live_payload(live)
-    url = live_session_url(live.code)
+    url = lan_visible_url(live_session_url(live.code))
     {
       code: live.code,
       url: url,

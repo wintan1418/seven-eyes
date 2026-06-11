@@ -48,16 +48,18 @@ class StudiesController < ApplicationController
     render partial: "studies/ai_results", locals: { study: @study, query: @query, result: @result }
   end
 
-  # Preach-mode quick search (JSON): the projection volunteer types a described
-  # thought or event ("the walls of Jericho falling") and gets back validated
-  # references to chase. The AI returns references only — the projected words
-  # still come from our own DB.
+  # Preach-mode quick search (JSON): the projection volunteer types anything
+  # the preacher mentioned — "the walls of jericho", "azusa street", "the
+  # crusaders" — and gets a short projectable explanation card plus validated
+  # Scripture references. Verse text still comes only from our own DB.
   def quick_find
-    result = ScriptureSuggester.call(params[:q].to_s)
+    result = PulpitSearch.call(params[:q].to_s)
     return render json: { ok: false, error: result.error } unless result.ok?
 
     render json: {
       ok: true,
+      topic: result.topic,
+      summary: result.summary,
       suggestions: result.suggestions.map do |s|
         book = Bible::Canon.find(s.osis)
         {

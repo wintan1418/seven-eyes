@@ -230,7 +230,9 @@ export default class extends Controller {
     } catch { return }
     if (!parsed.ok) {
       if (silent) return
-      if (this.hasQuickFindUrlValue && /\s/.test(raw)) { this._quickFind(raw); return }
+      // Not a reference — treat it as a question for the AI study assistant
+      // ("azusa street", "the crusaders", "walls of jericho"...).
+      if (this.hasQuickFindUrlValue) { this._quickFind(raw); return }
       this._flashJumpError(raw)
       return
     }
@@ -304,7 +306,7 @@ export default class extends Controller {
       data = await res.json()
     } catch { data = null }
     if (!this._findsOpen) return // the operator moved on while we searched
-    if (!data?.ok || !data.suggestions?.length) {
+    if (!data?.ok || (!data.summary && !data.suggestions?.length)) {
       this._closeFinds()
       this._flashJumpError(q)
       return
@@ -312,10 +314,30 @@ export default class extends Controller {
     box.innerHTML = ""
     const head = document.createElement("div")
     head.className = "head"
-    head.innerHTML = `<span class="lbl">&#10038; Found in the Scriptures</span>` +
+    head.innerHTML = `<span class="lbl">&#10038; ${data.summary ? "Study assistant" : "Found in the Scriptures"}</span>` +
                      `<button type="button" class="close" data-action="presentation#cancelFinds">&#10005;</button>`
     box.appendChild(head)
-    data.suggestions.forEach(s => {
+    // The answer card: a short explanation the volunteer can project as a slide.
+    if (data.summary) {
+      const card = document.createElement("div")
+      card.className = "card"
+      const topic = document.createElement("div")
+      topic.className = "topic"
+      topic.textContent = data.topic || q
+      const sum = document.createElement("div")
+      sum.className = "sum"
+      sum.textContent = data.summary
+      const project = document.createElement("button")
+      project.type = "button"
+      project.className = "project"
+      project.dataset.action = "presentation#projectFind"
+      project.dataset.title = data.topic || q
+      project.dataset.body = data.summary
+      project.innerHTML = "&#10697; Put this on the screen"
+      card.append(topic, sum, project)
+      box.appendChild(card)
+    }
+    ;(data.suggestions || []).forEach(s => {
       const btn = document.createElement("button")
       btn.type = "button"
       btn.className = "find"
@@ -338,6 +360,14 @@ export default class extends Controller {
     const d = event.currentTarget.dataset
     this._closeFinds()
     this._loadPassage(d.chapterReference, d.verseStart ? parseInt(d.verseStart, 10) : null)
+  }
+
+  // Project the AI answer card as a content slide (same path as songs/thoughts).
+  projectFind(event) {
+    event?.preventDefault?.()
+    const d = event.currentTarget.dataset
+    this._closeFinds()
+    this._presentSlide({ title: d.title, body: d.body, index: 0 })
   }
 
   cancelFinds(event) {
@@ -557,6 +587,7 @@ export default class extends Controller {
     url.searchParams.set("stage", "1")
     url.searchParams.set("pane", String(Math.max(0, this._workspacePanes().indexOf(pane))))
     this._stageWindow = window.open(url.toString(), "ps-preach-stage", "popup=yes,width=1100,height=650")
+    if (!this._stageWindow) alert("The browser blocked the stage window — allow pop-ups for this site, then click Stage again.")
   }
 
   _paintStage() {
@@ -622,6 +653,7 @@ export default class extends Controller {
     url.searchParams.set("output", "1")
     url.searchParams.set("pane", String(Math.max(0, this._workspacePanes().indexOf(pane))))
     this._outputWindow = window.open(url.toString(), "ps-preach-output", "popup=yes,width=1280,height=720")
+    if (!this._outputWindow) alert("The browser blocked the output window — allow pop-ups for this site, then click Project again.")
   }
 
   // Output window: browsers only allow fullscreen from a user gesture, so the

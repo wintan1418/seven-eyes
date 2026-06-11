@@ -3,6 +3,7 @@
 # page the phone lands on. No record is stored — the code only lives in the
 # two subscribed cable clients.
 class RemotesController < ApplicationController
+  include LanHost
   allow_unauthenticated_access
 
   CODE_LENGTH = 6
@@ -11,7 +12,7 @@ class RemotesController < ApplicationController
   def create
     current_study(params[:study_id]) # authorization: only someone who can open the study may pair
     code = Array.new(CODE_LENGTH) { LiveSession::CODE_ALPHABET.sample }.join
-    url = remote_pad_url(code)
+    url = lan_visible_url(remote_pad_url(code))
     render json: {
       code: code,
       url: url,
