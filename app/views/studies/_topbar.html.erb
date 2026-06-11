@@ -110,6 +110,12 @@
         <button type="button" class="ps-tb-btn" data-action="auth-gate#open">&#9745; Save</button>
       <% end %>
     <% end %>
+    <%= link_to whats_new_path, class: "ps-tb-btn ps-new-btn", style: "text-decoration:none;",
+          title: "What's new — the latest features, animated",
+          data: { controller: "whats-new", whats_new_mode_value: "badge",
+                  whats_new_version_value: WhatsNewController::VERSION } do %>
+      &#10024; New<span class="new-dot" aria-hidden="true"></span>
+    <% end %>
     <% if authenticated? %>
       <%= link_to "Plans", reading_plans_path, class: "ps-tb-btn", style: "text-decoration:none;" %>
       <% if current_user.guide_dismissed_at.present? %>

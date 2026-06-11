@@ -43,6 +43,7 @@ Rails.application.routes.draw do
 
   resource :preferences, only: %i[ update ]
 
+  get    "/whats-new",     to: "whats_new#show", as: :whats_new
   get    "/guide",         to: "guide#show",    as: :guide
   post   "/guide/dismiss", to: "guide#dismiss", as: :dismiss_guide
   delete "/guide/dismiss", to: "guide#restore", as: :restore_guide

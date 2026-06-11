@@ -1,0 +1,136 @@
+<% content_for :title, "What's New · BiblioRata" %>
+
+<div class="ps-news" data-controller="whats-new"
+     data-whats-new-mode-value="seen"
+     data-whats-new-version-value="<%= @version %>">
+
+  <%# floating ornaments behind the header %>
+  <span class="float-orn o1">&#10038;</span>
+  <span class="float-orn o2">&#10086;</span>
+  <span class="float-orn o3">&#9835;</span>
+  <span class="float-orn o4">&#10022;</span>
+  <span class="float-orn o5">&#10070;</span>
+
+  <header class="news-head">
+    <div class="eyebrow">&#10038; Fresh from the scriptorium &#10038;</div>
+    <h1>What&rsquo;s new in BiblioRata</h1>
+    <p class="sub">Built for the pulpit, the projection desk, and every phone in the pews.</p>
+  </header>
+
+  <div class="news-grid">
+
+    <%# 1 — Preach Queue %>
+    <section class="news-card c-rubric" style="--d: 0s">
+      <div class="mock">
+        <div class="mock-queue">
+          <div class="mock-qtitle">&#9835; Preach Queue</div>
+          <div class="mock-qitem q1"><span class="ic">&#167;</span> Romans 8:28</div>
+          <div class="mock-qitem q2"><span class="ic">&#9835;</span> Amazing Grace <em>4 stanzas</em></div>
+          <div class="mock-qitem q3"><span class="ic">&#10086;</span> Welcome &amp; announcements</div>
+        </div>
+      </div>
+      <h2><span class="orn">&#9835;</span> The Preach Queue</h2>
+      <p>Line up the whole service before it starts &mdash; scriptures, songs, and thoughts, in order.
+         During the sermon, one click puts each item on the big screen.</p>
+    </section>
+
+    <%# 2 — Songs & thoughts as slides %>
+    <section class="news-card c-gold" style="--d: .12s">
+      <div class="mock">
+        <div class="mock-screen mock-slide">
+          <div class="slide-t">AMAZING GRACE</div>
+          <div class="stanzas">
+            <span class="stanzaA">Amazing grace, how sweet the sound,<br>that saved a wretch like me&hellip;</span>
+            <span class="stanzaB">Through many dangers, toils and snares,<br>I have already come&hellip;</span>
+          </div>
+        </div>
+      </div>
+      <h2><span class="orn">&#9836;</span> Songs &amp; thoughts, projected</h2>
+      <p>Type lyrics or a note, leave a blank line between stanzas, and each stanza becomes its own
+         beautiful slide &mdash; on the projector <em>and</em> on every phone following live.</p>
+    </section>
+
+    <%# 3 — AI study assistant %>
+    <section class="news-card c-sage" style="--d: .24s">
+      <div class="mock">
+        <div class="mock-ask">
+          <div class="mock-go"><span class="lbl">Go to</span><span class="typed">azusa street</span><span class="caret"></span></div>
+          <div class="mock-answer">
+            <div class="t">AZUSA STREET REVIVAL</div>
+            <div class="s">A 1906 revival in Los Angeles led by William J. Seymour&hellip;</div>
+            <div class="b">&#10697; Put this on the screen</div>
+          </div>
+        </div>
+      </div>
+      <h2><span class="orn">&#10038;</span> Ask anything, mid-sermon</h2>
+      <p>The preacher mentions the crusaders, Azusa Street, the walls of Jericho&hellip; type it in the
+         Go box and the study assistant answers with a projectable card plus the Scriptures that go with it.</p>
+    </section>
+
+    <%# 4 — Phone remote %>
+    <section class="news-card c-cobalt" style="--d: .36s">
+      <div class="mock">
+        <div class="mock-phone">
+          <div class="ph-head"><span class="dot"></span> Connected</div>
+          <div class="ph-pad">
+            <div class="ph-btn">&#8249;</div>
+            <div class="ph-btn next">&#8250;<span class="tapring"></span></div>
+          </div>
+          <div class="ph-verse">verse <span class="nums"><span>16</span><span>17</span><span>18</span></span></div>
+        </div>
+      </div>
+      <h2><span class="orn">&#9742;</span> Your phone is the clicker</h2>
+      <p>Scan a secret QR and walk anywhere in the room &mdash; next, previous, even chasing a called
+         reference, straight from your pocket.</p>
+    </section>
+
+    <%# 5 — Stage display %>
+    <section class="news-card c-ink" style="--d: .48s">
+      <div class="mock">
+        <div class="mock-stage">
+          <div class="st-head"><span>JOHN 3</span><span class="clock">10<i>:</i>42</span></div>
+          <div class="st-now"><span class="l">now &middot; v16</span>For God so loved the world&hellip;</div>
+          <div class="st-next"><span class="l">next &middot; v17</span>For God sent not his Son to condemn&hellip;</div>
+        </div>
+      </div>
+      <h2><span class="orn">&#8983;</span> The stage display</h2>
+      <p>A confidence monitor for the pulpit: the current verse small, the <strong>next verse big</strong>,
+         and a clock &mdash; the preacher always knows what&rsquo;s coming.</p>
+    </section>
+
+    <%# 6 — Screen themes %>
+    <section class="news-card c-rose" style="--d: .6s">
+      <div class="mock">
+        <div class="mock-screen mock-themes">
+          <span class="th-verse">For God so loved the world</span>
+        </div>
+      </div>
+      <h2><span class="orn">&#10022;</span> Dress the projection</h2>
+      <p>Vellum, deep ink, or clean paper &mdash; pick the projector&rsquo;s look and text size from the
+         console. It remembers your choice for next Sunday.</p>
+    </section>
+
+    <%# 7 — Go Live recap %>
+    <section class="news-card c-ochre" style="--d: .72s">
+      <div class="mock">
+        <div class="mock-live">
+          <div class="lv-head"><span class="dot"></span> Following live <span class="chip"><span class="nums"><span>23</span><span>24</span><span>25</span></span> following</span></div>
+          <div class="lv-lines">
+            <span class="ln"></span><span class="ln"></span><span class="ln"></span><span class="ln"></span>
+            <span class="hl"></span>
+          </div>
+        </div>
+      </div>
+      <h2><span class="orn">&#9737;</span> Go Live &mdash; now with a takeaway</h2>
+      <p>The congregation follows on their phones, verse by verse. And when the service ends, every
+         phone receives <em>tonight&rsquo;s scriptures</em> &mdash; the full list, ready to keep reading at home.</p>
+    </section>
+
+  </div>
+
+  <footer class="news-foot">
+    <div class="rule-orn"><span class="line"></span><span>&#10086;</span><span class="line"></span></div>
+    <%= link_to "Open a study and try it &rarr;".html_safe, root_path, class: "cta" %>
+    <%= link_to "Read the field guide", guide_path, class: "cta secondary" %>
+  </footer>
+</div>
