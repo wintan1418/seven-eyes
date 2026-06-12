@@ -408,19 +408,21 @@ export default class extends Controller {
       return
     }
     if (detail.kind === "slide" && this.element.classList.contains("is-preaching")) {
-      this._presentSlide({ title: detail.title, body: detail.body, index: 0 })
+      this._presentSlide({ title: detail.title, body: detail.body, image: detail.image, index: 0 })
     }
   }
 
-  // Project a song/thought instead of the verse. Blank lines in the body split
-  // it into stanzas; next/prev walk the stanzas until scripture returns.
-  _presentSlide({ title, body, index }) {
+  // Project a song/thought/picture instead of the verse. Blank lines in the
+  // body split it into stanzas; next/prev walk the stanzas until scripture
+  // returns. A picture is a single full-screen slide.
+  _presentSlide({ title, body, image, index }) {
     const stanzas = (body || "").split(/\n\s*\n/).map(s => s.trim()).filter(Boolean)
-    if (stanzas.length === 0 && !title) return
+    if (stanzas.length === 0 && !title && !image) return
     this._remember()
     this._slide = {
       title: title || "",
       body: body || "",
+      image: image || null,
       stanzas: stanzas.length ? stanzas : [title || ""],
       index: Math.max(0, Math.min(index || 0, Math.max(stanzas.length - 1, 0)))
     }
@@ -439,22 +441,34 @@ export default class extends Controller {
     const layer = this.element.querySelector("[data-preach-slide]")
     if (!layer || !this._slide) return
     const render = () => {
-      const { title, stanzas, index } = this._slide
+      const { title, image, stanzas, index } = this._slide
       layer.innerHTML = ""
-      if (title) {
+      if (title && !image) {
         const t = document.createElement("div")
         t.className = "slide-title"
         t.textContent = title
         layer.appendChild(t)
       }
-      const stanza = document.createElement("div")
-      stanza.className = "slide-stanza"
-      stanza.textContent = stanzas[index] || ""
-      layer.appendChild(stanza)
-      this._fitSlide(layer, stanza)
+      if (image) {
+        const wrap = document.createElement("div")
+        wrap.className = "slide-img"
+        const img = document.createElement("img")
+        img.src = image
+        img.alt = title || ""
+        wrap.appendChild(img)
+        layer.appendChild(wrap)
+      } else {
+        const stanza = document.createElement("div")
+        stanza.className = "slide-stanza"
+        stanza.textContent = stanzas[index] || ""
+        layer.appendChild(stanza)
+        this._fitSlide(layer, stanza)
+      }
       const counter = this.element.querySelector("[data-preach-counter]")
       if (counter) {
-        counter.innerHTML = `<span class="num">stanza ${index + 1}</span><span class="of">of ${stanzas.length}</span>`
+        counter.innerHTML = image
+          ? `<span class="num">picture</span>`
+          : `<span class="num">stanza ${index + 1}</span><span class="of">of ${stanzas.length}</span>`
       }
       this._paintSlideNextPreview()
       if (this._isStage) this._paintStage()
@@ -474,6 +488,10 @@ export default class extends Controller {
   _paintSlideNextPreview() {
     const box = this.element.querySelector("[data-preach-next]")
     if (!box || this._isOutput) return
+    if (this._slide.image) {
+      box.innerHTML = `<span class="lbl">On screen</span><span class="txt end">— picture —</span>`
+      return
+    }
     const { stanzas, index } = this._slide
     if (index + 1 >= stanzas.length) {
       box.innerHTML = `<span class="lbl">Next</span><span class="txt end">— end —</span>`
@@ -513,7 +531,8 @@ export default class extends Controller {
 
   _snapshot() {
     if (this._slide) {
-      return { kind: "slide", title: this._slide.title, body: this._slide.body, index: this._slide.index }
+      return { kind: "slide", title: this._slide.title, body: this._slide.body,
+               image: this._slide.image, index: this._slide.index }
     }
     const pane = this.element.querySelector(".ps-pane.is-presented")
     const reference = pane?.querySelector("input[name='pane[reference]']")?.value?.trim()
@@ -540,7 +559,7 @@ export default class extends Controller {
     if (!entry) return
     this._restoring = true
     if (entry.kind === "slide") {
-      this._presentSlide({ title: entry.title, body: entry.body, index: entry.index })
+      this._presentSlide({ title: entry.title, body: entry.body, image: entry.image, index: entry.index })
       this._restoring = false
       return
     }
@@ -667,7 +686,13 @@ export default class extends Controller {
     if (!now || !next) return
 
     if (this._slide) {
-      const { title, stanzas, index } = this._slide
+      const { title, image, stanzas, index } = this._slide
+      if (image) {
+        if (ref) ref.textContent = title || "Picture"
+        this._fillStagePanel(now, "on screen", "— picture —")
+        this._fillStagePanel(next, "next", "press Back or pick the next item")
+        return
+      }
       if (ref) ref.textContent = title || "Song"
       this._fillStagePanel(now, `stanza ${index + 1} of ${stanzas.length}`, stanzas[index] || "")
       this._fillStagePanel(next, "next", stanzas[index + 1] || "— end —")
@@ -816,7 +841,8 @@ export default class extends Controller {
   // Output/stage window: mirror a song/thought slide. Same slide → fade to the
   // new stanza; different slide → render it fresh.
   _applySlide(slide) {
-    if (this._slide && this._slide.body === slide.body && this._slide.title === slide.title) {
+    if (this._slide && this._slide.body === slide.body && this._slide.title === slide.title &&
+        (this._slide.image || null) === (slide.image || null)) {
       if (this._slide.index !== slide.index) {
         this._slide.index = slide.index
         this._paintSlide(true)
@@ -842,7 +868,7 @@ export default class extends Controller {
       verseStart: this._range?.first ?? null,
       verseEnd: this._range?.last ?? null,
       slide: this._slide
-        ? { title: this._slide.title, body: this._slide.body, index: this._slide.index }
+        ? { title: this._slide.title, body: this._slide.body, image: this._slide.image, index: this._slide.index }
         : null
     }
     this._send(state)

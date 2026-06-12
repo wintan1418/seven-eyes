@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_11_142811) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_12_103336) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -92,6 +92,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_142811) do
     t.string "osis"
     t.jsonb "passages", default: [], null: false
     t.text "slide_body"
+    t.string "slide_image_url"
     t.integer "slide_index"
     t.string "slide_title"
     t.bigint "study_id", null: false
@@ -161,6 +162,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_142811) do
     t.text "body"
     t.datetime "created_at", null: false
     t.integer "kind", default: 0, null: false
+    t.string "media_public_id"
+    t.string "media_url"
     t.integer "position", default: 0, null: false
     t.string "reference"
     t.bigint "study_id", null: false

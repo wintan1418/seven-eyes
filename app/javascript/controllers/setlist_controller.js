@@ -45,7 +45,8 @@ export default class extends Controller {
       kind: item.dataset.kind,
       reference: item.dataset.reference || null,
       title: item.dataset.title || null,
-      body: item.dataset.body || null
+      body: item.dataset.body || null,
+      image: item.dataset.image || null
     }
     this.element.querySelectorAll(".ps-setlist-item.is-live").forEach(i => i.classList.remove("is-live"))
     item.classList.add("is-live")

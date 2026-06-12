@@ -1,17 +1,19 @@
 # One entry in a study's preach queue (the service "setlist"): the planned
-# order of what goes on the big screen. Three kinds:
+# order of what goes on the big screen. Four kinds:
 #   scripture — a reference, chased through the presented pane like the Go box
 #   song      — title + lyrics; blank lines split the body into stanza slides
 #   thought   — a freeform note/announcement projected as a single slide
+#   picture   — a Cloudinary-hosted image (announcement slide, sermon graphic)
 class SetlistItem < ApplicationRecord
   belongs_to :study
 
-  enum :kind, { scripture: 0, song: 1, thought: 2 }
+  enum :kind, { scripture: 0, song: 1, thought: 2, picture: 3 }
 
   validates :position, presence: true
   validates :reference, presence: true, if: :scripture?
+  validates :media_url, presence: true, if: :picture?
   validate :reference_must_parse, if: :scripture?
-  validate :slide_must_have_content, unless: :scripture?
+  validate :slide_must_have_content, if: -> { song? || thought? }
 
   scope :in_order, -> { order(:position, :id) }
 
@@ -20,6 +22,7 @@ class SetlistItem < ApplicationRecord
   # What the queue list shows for this item.
   def label
     return parsed&.label || reference if scripture?
+    return title.presence || "Picture" if picture?
     title.presence || body.to_s.strip.lines.first.to_s.strip.truncate(60)
   end
 

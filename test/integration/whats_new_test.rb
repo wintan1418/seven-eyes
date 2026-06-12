@@ -7,6 +7,7 @@ class WhatsNewTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "What&rsquo;s new in BiblioRata"
     [ "The Preach Queue", "Songs &amp; thoughts, projected", "Ask anything, mid-sermon",
       "Your phone is the clicker", "The stage display", "Dress the projection",
+      "One press back", "Pictures on the screen",
       "Go Live &mdash; now with a takeaway" ].each do |title|
       assert_includes response.body, title
     end

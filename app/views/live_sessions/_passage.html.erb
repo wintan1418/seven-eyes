@@ -1,13 +1,18 @@
 <% if live.slide? %>
-  <%# A song stanza / projected thought is on the screen right now. %>
-  <article class="ps-live-slide" data-title="<%= live.slide_title %>" data-body="<%= live.slide_body %>">
+  <%# A song stanza / thought / picture is on the screen right now. %>
+  <article class="ps-live-slide" data-title="<%= live.slide_title %>" data-body="<%= live.slide_body %>"
+           data-image="<%= live.slide_image_url %>">
     <% if live.slide_title.present? %>
       <div class="ref-title"><%= live.slide_title %></div>
       <div class="rule"></div>
     <% end %>
-    <% stanzas = live.slide_stanzas.presence || [ live.slide_title.to_s ] %>
-    <% stanzas.each_with_index do |stanza, i| %>
-      <p class="ps-live-stanza <%= "is-now" if i == live.slide_index.to_i %>" data-idx="<%= i %>"><%= stanza %></p>
+    <% if live.slide_image_url.present? %>
+      <img class="ps-live-picture" src="<%= live.slide_image_url %>" alt="<%= live.slide_title %>">
+    <% else %>
+      <% stanzas = live.slide_stanzas.presence || [ live.slide_title.to_s ] %>
+      <% stanzas.each_with_index do |stanza, i| %>
+        <p class="ps-live-stanza <%= "is-now" if i == live.slide_index.to_i %>" data-idx="<%= i %>"><%= stanza %></p>
+      <% end %>
     <% end %>
   </article>
 <% else %>

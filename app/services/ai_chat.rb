@@ -75,8 +75,8 @@ class AiChat
         ENV["GOOGLE_GEMINI_API_KEY"].presence ||
         Rails.application.credentials.dig(:gemini, :api_key)
     when :routellm
-      ENV["ROUTELLM_API_KEY"].presence || ENV["ABACUS_ROUTELLM_API_KEY"].presence ||
-        ENV["ABACUS_API_KEY"].presence ||
+      ENV["ROUTELLM_API_KEY"].presence || ENV["Route_LLM_API_KEY"].presence ||
+        ENV["ABACUS_ROUTELLM_API_KEY"].presence || ENV["ABACUS_API_KEY"].presence ||
         Rails.application.credentials.dig(:routellm, :api_key)
     end
   end

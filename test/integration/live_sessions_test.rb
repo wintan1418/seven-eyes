@@ -141,6 +141,19 @@ class LiveSessionsTest < ActionDispatch::IntegrationTest
     assert_equal "scripture", live.reload.kind
   end
 
+  test "a picture slide reaches the pews" do
+    study = owner_study
+    post study_live_path(study), as: :json
+    patch study_live_path(study), params: { kind: "slide", slide_title: "Harvest Sunday",
+                                            slide_image_url: "https://res.cloudinary.com/demo/x.jpg" }, as: :json
+    assert_response :success
+    live = study.live_session.reload
+    assert_equal "https://res.cloudinary.com/demo/x.jpg", live.slide_image_url
+
+    get live_session_passage_path(live.code)
+    assert_select ".ps-live-slide img.ps-live-picture[src='https://res.cloudinary.com/demo/x.jpg']"
+  end
+
   test "an empty slide push is rejected" do
     study = owner_study
     post study_live_path(study), as: :json

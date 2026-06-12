@@ -93,6 +93,7 @@ export default class extends Controller {
         kind: "slide",
         slide_title: state.slide.title,
         slide_body: state.slide.body,
+        slide_image_url: state.slide.image,
         slide_index: state.slide.index
       }
     }

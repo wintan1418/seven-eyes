@@ -5,7 +5,7 @@ class WhatsNewController < ApplicationController
   allow_unauthenticated_access
 
   # Bump when a new batch ships — un-dims the topbar badge for everyone.
-  VERSION = "2026-06".freeze
+  VERSION = "2026-06b".freeze
 
   def show
     @version = VERSION

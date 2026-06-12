@@ -11,12 +11,17 @@
           data-kind="<%= item.scripture? ? "scripture" : "slide" %>"
           data-reference="<%= item.reference %>"
           data-title="<%= item.title %>"
-          data-body="<%= item.body %>">
+          data-body="<%= item.body %>"
+          data-image="<%= item.media_url %>">
         <button type="button" class="present" data-action="setlist#present"
                 title="Put this on the screen (preach mode)">
-          <span class="icon"><%= item.scripture? ? "&#167;".html_safe : (item.song? ? "&#9835;".html_safe : "&#10086;".html_safe) %></span>
+          <% if item.picture? %>
+            <img class="thumb" src="<%= item.media_url %>" alt="" loading="lazy">
+          <% else %>
+            <span class="icon"><%= item.scripture? ? "&#167;".html_safe : (item.song? ? "&#9835;".html_safe : "&#10086;".html_safe) %></span>
+          <% end %>
           <span class="lbl"><%= item.label %></span>
-          <% if !item.scripture? && item.stanzas.size > 1 %>
+          <% if (item.song? || item.thought?) && item.stanzas.size > 1 %>
             <span class="meta"><%= item.stanzas.size %> stanzas</span>
           <% end %>
         </button>
@@ -37,12 +42,15 @@
 
   <% selected_kind = errored&.kind || "scripture" %>
   <%= form_with url: study_setlist_items_path(study), method: :post,
-        class: "ps-setlist-form kind-#{selected_kind}", data: { setlist_target: "form" } do |f| %>
+        class: "ps-setlist-form kind-#{selected_kind}",
+        html: { enctype: "multipart/form-data" },
+        data: { setlist_target: "form" } do |f| %>
     <% if errored %>
       <div class="err"><%= errored.errors.full_messages.to_sentence %></div>
     <% end %>
     <div class="kinds">
-      <% { "scripture" => "&#167; Scripture", "song" => "&#9835; Song", "thought" => "&#10086; Thought" }.each do |kind, lbl| %>
+      <% { "scripture" => "&#167; Scripture", "song" => "&#9835; Song",
+           "thought" => "&#10086; Thought", "picture" => "&#9670; Picture" }.each do |kind, lbl| %>
         <label class="<%= "is-on" if kind == selected_kind %>">
           <input type="radio" name="setlist_item[kind]" value="<%= kind %>" <%= "checked" if kind == selected_kind %>
                  data-action="setlist#kindChanged">
@@ -56,6 +64,8 @@
            value="<%= errored&.title %>" placeholder="Title — e.g. Amazing Grace, or Welcome">
     <textarea name="setlist_item[body]" rows="5" class="body-field"
               placeholder="Words to project. Leave a blank line between stanzas — each stanza becomes its own slide."><%= errored&.body %></textarea>
+    <input type="file" name="setlist_item[image]" class="image-field" accept="image/*">
+    <div class="image-hint image-field">Pictures only, up to 5&nbsp;MB &mdash; projected full-screen.</div>
     <button type="submit" class="add">&#43; Add to queue</button>
   <% end %>
 <% end %>

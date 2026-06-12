@@ -8,7 +8,17 @@ class SetlistItemsController < ApplicationController
   before_action :set_study
 
   def create
-    item = @study.setlist_items.create(item_params)
+    attrs = item_params
+    if attrs[:kind] == "picture"
+      upload = PictureUpload.call(params.dig(:setlist_item, :image))
+      unless upload.ok?
+        @errored = @study.setlist_items.new(attrs)
+        @errored.errors.add(:base, PictureUpload.message_for(upload.error))
+        return render_setlist
+      end
+      attrs = attrs.merge(media_url: upload.url, media_public_id: upload.public_id)
+    end
+    item = @study.setlist_items.create(attrs)
     @errored = item unless item.persisted?
     render_setlist
   end
@@ -20,6 +30,7 @@ class SetlistItemsController < ApplicationController
 
   def destroy
     item.destroy
+    PictureUpload.purge(item.media_public_id) if item.picture?
     render_setlist
   end
 

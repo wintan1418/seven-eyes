@@ -66,10 +66,11 @@ class LiveSessionsController < ApplicationController
   # the slide; the next scripture push swaps them back.
   def apply_state(live)
     if params[:kind].to_s == "slide"
-      return false if params[:slide_title].blank? && params[:slide_body].blank?
+      return false if params[:slide_title].blank? && params[:slide_body].blank? && params[:slide_image_url].blank?
       return live.update(kind: "slide",
                          slide_title: params[:slide_title].to_s.presence,
                          slide_body: params[:slide_body].to_s.presence,
+                         slide_image_url: params[:slide_image_url].to_s.presence,
                          slide_index: params[:slide_index].to_i)
     end
 
@@ -97,6 +98,7 @@ class LiveSessionsController < ApplicationController
     if live.slide?
       { type: "state", kind: "slide",
         slide_title: live.slide_title, slide_body: live.slide_body,
+        slide_image_url: live.slide_image_url,
         slide_index: live.slide_index.to_i,
         reference: live.slide_title.presence || "—" }
     else

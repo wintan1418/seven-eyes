@@ -45,6 +45,9 @@ gem "image_processing", "~> 1.2"
 # QR codes (pure Ruby, rendered as inline SVG) for joining a live session
 gem "rqrcode", "~> 3.1"
 
+# Cloudinary-hosted pictures for the preach queue (announcement slides etc.)
+gem "cloudinary", "~> 2.2"
+
 # Load environment variables from .env in development/test (e.g. OPENAI_API_KEY)
 gem "dotenv-rails", groups: %i[ development test ]
 

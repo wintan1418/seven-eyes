@@ -58,13 +58,16 @@ export default class extends Controller {
   _renderSlide(data) {
     const title = data.slide_title || ""
     const body = data.slide_body || ""
+    const image = data.slide_image_url || ""
     const index = data.slide_index || 0
     let slide = this.bodyTarget.querySelector(".ps-live-slide")
-    if (!slide || slide.dataset.title !== title || slide.dataset.body !== body) {
+    if (!slide || slide.dataset.title !== title || slide.dataset.body !== body ||
+        (slide.dataset.image || "") !== image) {
       slide = document.createElement("article")
       slide.className = "ps-live-slide"
       slide.dataset.title = title
       slide.dataset.body = body
+      slide.dataset.image = image
       if (title) {
         const head = document.createElement("div")
         head.className = "ref-title"
@@ -74,14 +77,22 @@ export default class extends Controller {
         rule.className = "rule"
         slide.appendChild(rule)
       }
-      const stanzas = body.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean)
-      ;(stanzas.length ? stanzas : [title]).forEach((stanza, i) => {
-        const p = document.createElement("p")
-        p.className = "ps-live-stanza"
-        p.dataset.idx = String(i)
-        p.textContent = stanza
-        slide.appendChild(p)
-      })
+      if (image) {
+        const img = document.createElement("img")
+        img.className = "ps-live-picture"
+        img.src = image
+        img.alt = title
+        slide.appendChild(img)
+      } else {
+        const stanzas = body.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean)
+        ;(stanzas.length ? stanzas : [title]).forEach((stanza, i) => {
+          const p = document.createElement("p")
+          p.className = "ps-live-stanza"
+          p.dataset.idx = String(i)
+          p.textContent = stanza
+          slide.appendChild(p)
+        })
+      }
       this.bodyTarget.innerHTML = ""
       this.bodyTarget.appendChild(slide)
     }

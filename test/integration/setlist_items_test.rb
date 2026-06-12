@@ -51,6 +51,26 @@ class SetlistItemsTest < ActionDispatch::IntegrationTest
     assert_equal %w[B], study.setlist_items.in_order.map(&:title)
   end
 
+  test "a picture upload without hosting configured shows the friendly error" do
+    study = owner_study
+    file = Rack::Test::UploadedFile.new(StringIO.new("fake"), "image/png", original_filename: "slide.png")
+    assert_no_difference -> { SetlistItem.count } do
+      post study_setlist_items_path(study), params: { setlist_item: { kind: "picture", title: "Harvest", image: file } }
+    end
+    assert_response :success
+    assert_select ".ps-setlist-form .err", text: /hosting isn't configured/
+  end
+
+  test "a stored picture renders with its thumbnail and slide data" do
+    study = owner_study
+    study.setlist_items.create!(kind: :picture, title: "Harvest Sunday",
+                                media_url: "https://res.cloudinary.com/demo/x.jpg",
+                                media_public_id: "demo/x")
+    get study_path(study)
+    assert_select ".ps-setlist-item[data-kind='slide'][data-image='https://res.cloudinary.com/demo/x.jpg']"
+    assert_select ".ps-setlist-item img.thumb[src='https://res.cloudinary.com/demo/x.jpg']"
+  end
+
   test "a guest can build a queue on their session study" do
     post studies_path # creates the guest's session-scoped study
     study = Study.last
