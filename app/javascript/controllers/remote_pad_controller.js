@@ -38,6 +38,11 @@ export default class extends Controller {
     this._command("prev")
   }
 
+  back(event) {
+    event?.preventDefault?.()
+    this._command("back")
+  }
+
   chase(event) {
     event?.preventDefault?.()
     const value = this.inputTarget.value.trim()

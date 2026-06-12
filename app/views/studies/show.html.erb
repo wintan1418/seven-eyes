@@ -52,6 +52,10 @@
                   title="<%= n %> verse#{'s' if n > 1} per slide"><%= n %></button>
         <% end %>
       </div>
+      <button type="button" class="ps-preach-tool" disabled
+              data-preach-back
+              data-action="presentation#goBack"
+              title="Back to where you were — the previous scripture or song (B)">&#10558; Back</button>
       <button type="button" class="ps-preach-tool"
               data-action="setlist#toggle"
               title="The preach queue — scriptures, songs and thoughts lined up for the service">&#9835; Queue</button>

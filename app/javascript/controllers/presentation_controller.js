@@ -36,6 +36,7 @@ export default class extends Controller {
     this._preachIndex = 0
     this._groupSize = 1
     this._slide = null // {title, body, stanzas, index} while a song/thought is projected
+    this._history = [] // where we were before each chase/queue/AI jump — for ⟲ Back
   }
 
   connect() {
@@ -113,6 +114,8 @@ export default class extends Controller {
     this._unbindKeys()
     this._unbindSwipe()
     this._groupSize = 1
+    this._history = []
+    this._syncBackButton()
     this._syncGroupButtons()
     this.element.querySelectorAll(".ps-pane.is-paired").forEach(p => p.classList.remove("is-paired"))
   }
@@ -245,6 +248,7 @@ export default class extends Controller {
     const pane = this.element.querySelector(".ps-pane.is-presented")
     const input = pane?.querySelector("input[name='pane[reference]']")
     if (!input) return
+    this._remember()
     this._clearSlide({ repaint: false })
     input.value = chapterReference
     pane.addEventListener("turbo:frame-load", () => {
@@ -413,6 +417,7 @@ export default class extends Controller {
   _presentSlide({ title, body, index }) {
     const stanzas = (body || "").split(/\n\s*\n/).map(s => s.trim()).filter(Boolean)
     if (stanzas.length === 0 && !title) return
+    this._remember()
     this._slide = {
       title: title || "",
       body: body || "",
@@ -501,12 +506,77 @@ export default class extends Controller {
     }
   }
 
+  // ----- ⟲ Back: return to where you were before a chase / queue / AI jump -----
+  // The preacher detours ("let me show you something…") and then says "back to
+  // our text" — one press restores the exact previous spot: same chapter, same
+  // verse, or the same song stanza.
+
+  _snapshot() {
+    if (this._slide) {
+      return { kind: "slide", title: this._slide.title, body: this._slide.body, index: this._slide.index }
+    }
+    const pane = this.element.querySelector(".ps-pane.is-presented")
+    const reference = pane?.querySelector("input[name='pane[reference]']")?.value?.trim()
+    if (!reference) return null
+    return { kind: "passage", reference, index: this._preachIndex }
+  }
+
+  _remember() {
+    if (this._isOutput || this._restoring) return
+    if (!this.element.classList.contains("is-preaching")) return
+    const snap = this._snapshot()
+    if (!snap) return
+    const top = this._history[this._history.length - 1]
+    if (top && JSON.stringify(top) === JSON.stringify(snap)) return
+    this._history.push(snap)
+    if (this._history.length > 20) this._history.shift()
+    this._syncBackButton()
+  }
+
+  goBack(event) {
+    event?.preventDefault?.()
+    const entry = this._history.pop()
+    this._syncBackButton()
+    if (!entry) return
+    this._restoring = true
+    if (entry.kind === "slide") {
+      this._presentSlide({ title: entry.title, body: entry.body, index: entry.index })
+      this._restoring = false
+      return
+    }
+    const pane = this.element.querySelector(".ps-pane.is-presented")
+    const input = pane?.querySelector("input[name='pane[reference]']")
+    if (!input) { this._restoring = false; return }
+    if (input.value.trim().toLowerCase() === entry.reference.toLowerCase()) {
+      // Same chapter is still loaded (e.g. an AI card over it) — instant return.
+      this._clearSlide({ repaint: false })
+      this._transition(() => { this._preachIndex = entry.index })
+      this._restoring = false
+      return
+    }
+    input.value = entry.reference
+    pane.addEventListener("turbo:frame-load", () => {
+      this._pairForParallel()
+      this._preachIndex = entry.index
+      this._paint()
+      requestAnimationFrame(() => this._autoFit())
+      this._restoring = false
+    }, { once: true })
+    input.form?.requestSubmit()
+  }
+
+  _syncBackButton() {
+    const btn = this.element.querySelector("[data-preach-back]")
+    if (btn) btn.disabled = this._history.length === 0
+  }
+
   // ----- phone remote commands (relayed by the remote controller) -----
 
   _runCommand(detail) {
     if (!detail || !this.element.classList.contains("is-preaching")) return
     if (detail.action === "next") this.next()
     else if (detail.action === "prev") this.prev()
+    else if (detail.action === "back") this.goBack()
     else if (detail.action === "chase" && detail.value) this._chase(detail.value, { silent: true })
   }
 
@@ -961,6 +1031,7 @@ export default class extends Controller {
       else if (e.key === "Home") { e.preventDefault(); this._transition(() => { this._preachIndex = 0 }) }
       else if (e.key === "g" || e.key === "G") { e.preventDefault(); this.openJump() }
       else if (e.key === "p" || e.key === "P") { e.preventDefault(); this.toggleParallel() }
+      else if (e.key === "b" || e.key === "B" || e.key === "Backspace") { e.preventDefault(); this.goBack() }
       else if (e.key >= "1" && e.key <= "5") {
         e.preventDefault()
         this._groupSize = parseInt(e.key, 10)
