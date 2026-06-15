@@ -9,6 +9,7 @@ class WhatsNewTest < ActionDispatch::IntegrationTest
       "Your phone is the clicker", "The stage display", "Dress the projection",
       "One press back", "Pictures on the screen",
       "Blank the screen in a tap", "Songs you don&rsquo;t retype",
+      "It survives a hiccup",
       "Go Live &mdash; now with a takeaway" ].each do |title|
       assert_includes response.body, title
     end

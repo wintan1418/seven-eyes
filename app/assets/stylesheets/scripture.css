@@ -3365,3 +3365,33 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
   0%, 55%, 100% { background: #fbf3df; border-color: rgba(216, 181, 80, 0.5); transform: translateX(0); }
   70%, 85% { background: #f4e6c0; border-color: #8a2418; transform: translateX(3px); }
 }
+
+/* What's New — card 12: reconnect / refresh reliability */
+.mock-rejoin { width: 140px; }
+.mock-rejoin .ph-head .dot { animation: newsRejoinDot 4s ease-in-out infinite; }
+.mock-rejoin .rj-status { animation: newsRejoinText 4s step-end infinite; }
+.mock-rejoin .rj-lines {
+  width: 100%; display: flex; flex-direction: column; gap: 7px; padding: 2px;
+}
+.mock-rejoin .rj-lines .ln,
+.mock-rejoin .rj-lines .hl {
+  height: 7px; border-radius: 3px; background: rgba(159, 194, 232, 0.28);
+}
+.mock-rejoin .rj-lines .ln:nth-child(2) { width: 80%; }
+.mock-rejoin .rj-lines .ln:nth-child(4) { width: 70%; }
+.mock-rejoin .rj-lines .hl {
+  width: 100%; background: #8a2418;
+  animation: newsRejoinHl 4s ease-in-out infinite;
+}
+@keyframes newsRejoinDot {
+  0%, 45% { background: #c98a32; box-shadow: 0 0 8px #c98a32; }
+  60%, 100% { background: #4caf6e; box-shadow: 0 0 8px #4caf6e; }
+}
+@keyframes newsRejoinText {
+  0% { content: ""; }
+  60% { color: #4caf6e; }
+}
+@keyframes newsRejoinHl {
+  0%, 45% { opacity: 0.2; transform: translateY(6px); }
+  62%, 100% { opacity: 1; transform: translateY(0); }
+}
