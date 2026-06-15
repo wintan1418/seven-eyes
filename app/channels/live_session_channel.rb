@@ -19,6 +19,14 @@ class LiveSessionChannel < ApplicationCable::Channel
     broadcast_count(@live.adjust_followers(-1))
   end
 
+  # A (re)connecting follower asks for the current state. Action Cable's client
+  # re-subscribes silently after a Wi-Fi blip, so without this a phone that
+  # dropped mid-service would keep showing a stale verse. We reply to just this
+  # subscriber (transmit), not the whole stream.
+  def resync
+    transmit(@live.live_state) if @live
+  end
+
   private
 
   def operator?

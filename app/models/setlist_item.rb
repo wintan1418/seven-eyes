@@ -19,6 +19,29 @@ class SetlistItem < ApplicationRecord
 
   before_create :assign_position
 
+  # Songs the pastor can drop into the queue without retyping the lyrics: the
+  # ones this account has used before (most-recent first), then the public-domain
+  # hymnal starter set. A signed-in owner sees songs from all their studies; a
+  # guest only sees their own session study. Deduped by title (the operator's own
+  # version wins over the hymnal default, since they may have tweaked it).
+  PAST_SONG_LIMIT = 40
+
+  def self.song_library_for(study)
+    scope = study.user_id ? where(study: Study.where(user_id: study.user_id)) : where(study: study)
+    used = scope.song.where.not(body: [ nil, "" ])
+                .order(updated_at: :desc).limit(PAST_SONG_LIMIT)
+                .map { |s| { title: s.title.to_s, body: s.body.to_s, source: "yours" } }
+    hymns = Hymnal::HYMNS.map { |h| { title: h[:title], body: h[:body], source: "hymnal" } }
+
+    seen = {}
+    (used + hymns).each do |song|
+      key = song[:title].downcase.strip
+      next if key.blank?
+      seen[key] ||= song
+    end
+    seen.values
+  end
+
   # What the queue list shows for this item.
   def label
     return parsed&.label || reference if scripture?

@@ -23,7 +23,7 @@ class LiveSessionsController < ApplicationController
     return head :not_found unless live
     return head :unprocessable_entity unless apply_state(live)
 
-    LiveSessionChannel.broadcast_to(live, state_payload(live))
+    LiveSessionChannel.broadcast_to(live, live.live_state)
     head :ok
   end
 
@@ -92,22 +92,6 @@ class LiveSessionsController < ApplicationController
 
     attrs[:kind] = "scripture"
     live.update(attrs).tap { |ok| live.log_passage! if ok }
-  end
-
-  def state_payload(live)
-    if live.slide?
-      { type: "state", kind: "slide",
-        slide_title: live.slide_title, slide_body: live.slide_body,
-        slide_image_url: live.slide_image_url,
-        slide_index: live.slide_index.to_i,
-        reference: live.slide_title.presence || "—" }
-    else
-      { type: "state", kind: "scripture",
-        osis: live.osis, chapter: live.chapter,
-        verse_start: live.verse_start, verse_end: live.verse_end,
-        translation: live.translation_code,
-        reference: live.reference_label }
-    end
   end
 
   def live_payload(live)

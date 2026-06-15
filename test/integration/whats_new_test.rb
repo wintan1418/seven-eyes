@@ -8,6 +8,7 @@ class WhatsNewTest < ActionDispatch::IntegrationTest
     [ "The Preach Queue", "Songs &amp; thoughts, projected", "Ask anything, mid-sermon",
       "Your phone is the clicker", "The stage display", "Dress the projection",
       "One press back", "Pictures on the screen",
+      "Blank the screen in a tap", "Songs you don&rsquo;t retype",
       "Go Live &mdash; now with a takeaway" ].each do |title|
       assert_includes response.body, title
     end

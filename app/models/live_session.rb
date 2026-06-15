@@ -64,6 +64,23 @@ class LiveSession < ApplicationRecord
     "#{Bible::Canon.find(book.osis_code)&.name || book.name} #{chapter}"
   end
 
+  # The cable payload for the current state. Used both when broadcasting a change
+  # to every follower AND when a single (re)connecting follower asks to resync —
+  # e.g. after the phone's Wi-Fi dropped and Action Cable silently reconnected.
+  def live_state
+    if slide?
+      { type: "state", kind: "slide",
+        slide_title: slide_title, slide_body: slide_body,
+        slide_image_url: slide_image_url, slide_index: slide_index.to_i,
+        reference: slide_title.presence || "—" }
+    else
+      { type: "state", kind: "scripture",
+        osis: osis, chapter: chapter,
+        verse_start: verse_start, verse_end: verse_end,
+        translation: translation_code, reference: reference_label }
+    end
+  end
+
   def adjust_followers(delta)
     self.class.update_counters(id, followers_count: delta)
     reload

@@ -37,6 +37,7 @@ export default class extends Controller {
     this._groupSize = 1
     this._slide = null // {title, body, stanzas, index} while a song/thought is projected
     this._history = [] // where we were before each chase/queue/AI jump — for ⟲ Back
+    this._blank = false // projector held on a calm blank screen (between segments)
   }
 
   connect() {
@@ -115,6 +116,8 @@ export default class extends Controller {
     this._unbindSwipe()
     this._groupSize = 1
     this._history = []
+    this._blank = false
+    this._applyBlank()
     this._syncBackButton()
     this._syncGroupButtons()
     this.element.querySelectorAll(".ps-pane.is-paired").forEach(p => p.classList.remove("is-paired"))
@@ -589,6 +592,29 @@ export default class extends Controller {
     if (btn) btn.disabled = this._history.length === 0
   }
 
+  // ----- blank / holding screen -----
+  // Between segments (before the service, during prayer, while the band sets up)
+  // the operator snaps the projector to a calm holding screen — one press, and
+  // again to bring the verse back. The operator can keep cueing the next verse
+  // underneath; only the projector (and live followers) go dark.
+
+  toggleBlank(event) {
+    event?.preventDefault?.()
+    if (!this.element.classList.contains("is-preaching")) return
+    this._blank = !this._blank
+    this._applyBlank()
+    this._broadcast()
+  }
+
+  _applyBlank() {
+    // On the projector/output the .is-blank class reveals the holding layer and
+    // hides the verse; on the operator console it just lights the button so the
+    // operator can still see (and pre-cue) what's queued underneath.
+    this.element.classList.toggle("is-blank", this._blank)
+    const btn = this.element.querySelector("[data-preach-blank]")
+    if (btn) btn.classList.toggle("is-on", this._blank)
+  }
+
   // ----- phone remote commands (relayed by the remote controller) -----
 
   _runCommand(detail) {
@@ -596,6 +622,7 @@ export default class extends Controller {
     if (detail.action === "next") this.next()
     else if (detail.action === "prev") this.prev()
     else if (detail.action === "back") this.goBack()
+    else if (detail.action === "blank") this.toggleBlank()
     else if (detail.action === "chase" && detail.value) this._chase(detail.value, { silent: true })
   }
 
@@ -803,6 +830,9 @@ export default class extends Controller {
   // park it in _afterFade (applied when the fade ends) so rapid Next-Next from
   // the operator can't desync the two windows.
   _applyState(msg) {
+    // Holding screen mirrors the operator — including across an output refresh,
+    // since the operator re-broadcasts the full state (blank included) on hello.
+    this.element.classList.toggle("is-blank", !!msg.blank)
     if (msg.slide) { this._applySlide(msg.slide); return }
     if (this._slide) this._clearSlide({ repaint: false })
     if (this._fading) { this._afterFade = msg; return }
@@ -863,6 +893,7 @@ export default class extends Controller {
       index: this._preachIndex,
       group: this._groupSize,
       parallel: this.element.classList.contains("is-parallel"),
+      blank: this._blank,
       reference: pane.querySelector("input[name='pane[reference]']")?.value || null,
       translation: pane.querySelector("select[name='pane[translation_id]']")?.value || null,
       verseStart: this._range?.first ?? null,
@@ -1058,6 +1089,7 @@ export default class extends Controller {
       else if (e.key === "g" || e.key === "G") { e.preventDefault(); this.openJump() }
       else if (e.key === "p" || e.key === "P") { e.preventDefault(); this.toggleParallel() }
       else if (e.key === "b" || e.key === "B" || e.key === "Backspace") { e.preventDefault(); this.goBack() }
+      else if (e.key === "." || e.key === "0") { e.preventDefault(); this.toggleBlank() }
       else if (e.key >= "1" && e.key <= "5") {
         e.preventDefault()
         this._groupSize = parseInt(e.key, 10)

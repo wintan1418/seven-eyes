@@ -71,6 +71,16 @@ class SetlistItemsTest < ActionDispatch::IntegrationTest
     assert_select ".ps-setlist-item img.thumb[src='https://res.cloudinary.com/demo/x.jpg']"
   end
 
+  test "the library endpoint returns the hymnal plus the owner's past songs" do
+    study = owner_study
+    study.setlist_items.create!(kind: :song, title: "Our Anthem", body: "verse one")
+    get library_study_setlist_items_path(study), headers: { "Accept" => "application/json" }
+    assert_response :success
+    titles = JSON.parse(response.body)["songs"].map { |s| s["title"] }
+    assert_includes titles, "Our Anthem"
+    assert_includes titles, "Amazing Grace"
+  end
+
   test "a guest can build a queue on their session study" do
     post studies_path # creates the guest's session-scoped study
     study = Study.last

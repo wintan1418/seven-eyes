@@ -36,6 +36,34 @@ class SetlistItemTest < ActiveSupport::TestCase
     assert_equal "Amazing grace how sweet\nthe sound", item.stanzas.first
   end
 
+  test "the song library offers the hymnal plus the account's own songs, deduped" do
+    @study.setlist_items.create!(kind: :song, title: "Our Anthem", body: "verse one")
+    # A second study under the same owner contributes too.
+    other = users(:one).studies.create!(name: "Midweek", pane_count: 1)
+    other.setlist_items.create!(kind: :song, title: "Amazing Grace", body: "our edited words")
+
+    library = SetlistItem.song_library_for(@study)
+    titles = library.map { |s| s[:title] }
+    assert_includes titles, "Our Anthem"
+    assert_includes titles, "Holy, Holy, Holy" # straight from the hymnal
+
+    # The owner's own "Amazing Grace" wins over the hymnal default (deduped).
+    grace = library.find { |s| s[:title] == "Amazing Grace" }
+    assert_equal "our edited words", grace[:body]
+    assert_equal "yours", grace[:source]
+    assert_equal 1, titles.count("Amazing Grace")
+  end
+
+  test "a guest's song library is scoped to their own session study" do
+    guest = Study.create!(name: "Guest", pane_count: 1) # user_id nil
+    users(:one).studies.create!(name: "Someone else", pane_count: 1)
+            .setlist_items.create!(kind: :song, title: "Private Song", body: "x")
+
+    titles = SetlistItem.song_library_for(guest).map { |s| s[:title] }
+    refute_includes titles, "Private Song"
+    assert_includes titles, "Amazing Grace" # the hymnal is still offered
+  end
+
   test "move! swaps neighbours and clamps at the edges" do
     a = @study.setlist_items.create!(kind: :song, title: "A")
     b = @study.setlist_items.create!(kind: :song, title: "B")

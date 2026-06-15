@@ -17,7 +17,12 @@ export default class extends Controller {
     this._consumer = createConsumer()
     this._sub = this._consumer.subscriptions.create(
       { channel: "LiveSessionChannel", code: this.codeValue },
-      { received: (data) => this._received(data) }
+      {
+        // Fires on first connect AND on every silent reconnect (Wi-Fi blips):
+        // ask the pulpit for the current state so we never linger on a stale verse.
+        connected: () => this._sub?.perform("resync"),
+        received: (data) => this._received(data)
+      }
     )
     this._onScroll = () => this._scrolled()
     window.addEventListener("scroll", this._onScroll, { passive: true })

@@ -60,9 +60,17 @@
     </div>
     <input type="text" name="setlist_item[reference]" class="ref-field" autocomplete="off"
            value="<%= errored&.reference %>" placeholder="e.g. Romans 8:28 or Psalm 23">
+    <div class="ps-song-library">
+      <button type="button" class="lib-toggle" data-action="setlist#toggleLibrary">
+        &#9835; Pick from your songs &amp; the hymnal
+      </button>
+      <div class="lib-list" data-setlist-target="libraryList" hidden></div>
+    </div>
     <input type="text" name="setlist_item[title]" class="title-field" autocomplete="off"
+           data-setlist-target="title"
            value="<%= errored&.title %>" placeholder="Title — e.g. Amazing Grace, or Welcome">
     <textarea name="setlist_item[body]" rows="5" class="body-field"
+              data-setlist-target="body"
               placeholder="Words to project. Leave a blank line between stanzas — each stanza becomes its own slide."><%= errored&.body %></textarea>
     <input type="file" name="setlist_item[image]" class="image-field" accept="image/*">
     <div class="image-hint image-field">Pictures only, up to 5&nbsp;MB &mdash; projected full-screen.</div>

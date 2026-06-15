@@ -40,6 +40,12 @@ class SetlistItemsController < ApplicationController
     render_setlist
   end
 
+  # GET /studies/:study_id/setlist/library — songs to drop in without retyping:
+  # the public-domain hymnal plus songs this account has queued before.
+  def library
+    render json: { songs: SetlistItem.song_library_for(@study) }
+  end
+
   private
 
   def set_study

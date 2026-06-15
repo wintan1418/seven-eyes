@@ -30,4 +30,18 @@ class LiveSessionChannelTest < ActionCable::Channel::TestCase
     subscribe code: @live.code
     assert subscription.rejected?
   end
+
+  test "resync transmits the current state to the (re)connecting follower" do
+    Book.create!(osis_code: "John", name: "John", testament: :new, position: 43, chapter_count: 21)
+    @live.update!(kind: "scripture", osis: "John", chapter: 3, verse_start: 16, verse_end: 16,
+                  translation_code: "KJV")
+    subscribe code: @live.code
+    perform :resync
+    state = transmissions.last
+    assert_equal "state", state["type"]
+    assert_equal "John", state["osis"]
+    assert_equal 3, state["chapter"]
+    assert_equal 16, state["verse_start"]
+    assert_equal "John 3", state["reference"]
+  end
 end

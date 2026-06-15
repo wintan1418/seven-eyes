@@ -20,6 +20,7 @@ Rails.application.routes.draw do
     resource :remote, only: %i[ create ], controller: "remotes"
     resources :setlist_items, only: %i[ create update destroy ], path: "setlist" do
       post :move, on: :member
+      get :library, on: :collection
     end
   end
 

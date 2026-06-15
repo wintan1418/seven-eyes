@@ -2,6 +2,7 @@
      data-controller="book-browser ai-search search xref commentary lexicon rabbi tour shortcuts auth-gate new-study font-size presentation diff interlinear live setlist remote"
      data-live-url-value="<%= study_live_path(@study) %>"
      data-remote-url-value="<%= study_remote_path(@study) %>"
+     data-setlist-library-url-value="<%= library_study_setlist_items_path(@study) %>"
      data-presentation-quick-find-url-value="<%= quick_find_study_path(@study) %>"
      data-font-size="<%= authenticated? ? current_user.font_size : 0 %>"
      data-font-size-url-value="<%= preferences_path %>"
@@ -76,6 +77,10 @@
       <button type="button" class="ps-preach-tool"
               data-action="presentation#toggleScreenPanel"
               title="Projection screen look — theme and text size">&#10022; Screen</button>
+      <button type="button" class="ps-preach-tool"
+              data-preach-blank
+              data-action="presentation#toggleBlank"
+              title="Blank the projector — a calm holding screen for before the service and between segments (. key)">&#9634; Blank</button>
       <button type="button" class="ps-preach-tool ps-golive"
               data-live-target="button"
               data-action="live#toggle"
@@ -99,6 +104,11 @@
 
   <%# Content slide layer — a song stanza or thought projected instead of the verse %>
   <div class="ps-preach-slide" data-preach-slide></div>
+
+  <%# Holding / blank screen — snaps the projector to a calm hold between segments %>
+  <div class="ps-preach-hold" data-preach-hold aria-hidden="true">
+    <span class="orn">&#10022;</span>
+  </div>
 
   <%# AI quick-search results for the Go box ("the walls of jericho" → chips) %>
   <div class="ps-preach-finds" data-preach-finds hidden></div>
