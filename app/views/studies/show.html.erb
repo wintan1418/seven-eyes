@@ -53,6 +53,15 @@
                   title="<%= n %> verse#{'s' if n > 1} per slide"><%= n %></button>
         <% end %>
       </div>
+      <div class="ps-preach-group ps-preach-anchor">
+        <span class="lbl">Text</span>
+        <button type="button" data-preach-anchor-pin
+                data-action="presentation#pinAnchor"
+                title="Anchor the passage on screen as your main teaching text">&#9875;</button>
+        <button type="button" data-preach-anchor-home disabled
+                data-action="presentation#goAnchor"
+                title="Pin a passage as your teaching text first">&#8962;</button>
+      </div>
       <button type="button" class="ps-preach-tool" disabled
               data-preach-back
               data-action="presentation#goBack"
@@ -67,6 +76,10 @@
               data-preach-parallel
               data-action="presentation#toggleParallel"
               title="Show two translations side-by-side (P)">&#9783; Parallel</button>
+      <button type="button" class="ps-preach-tool"
+              data-preach-emph
+              data-action="presentation#toggleEmphasis"
+              title="Emphasise the minister's key word — tap words on the verse to make them glow on screen">&#10038; Emphasise</button>
       <button type="button" class="ps-preach-tool"
               data-preach-project
               data-action="presentation#openOutput"
@@ -99,6 +112,10 @@
   </div>
 
   <div class="ps-preach-next" data-preach-next aria-hidden="true"></div>
+
+  <%# Reference banner — so the congregation sees "John 3:16 · KJV", not just "16" %>
+  <div class="ps-preach-ref" data-preach-ref aria-hidden="true"></div>
+
   <button type="button" class="ps-out-full" data-action="presentation#toggleFullscreen"
           title="Fullscreen on this screen">&#9974; Fullscreen</button>
 

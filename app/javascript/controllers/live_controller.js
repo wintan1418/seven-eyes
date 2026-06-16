@@ -101,7 +101,8 @@ export default class extends Controller {
       reference: state.reference,
       translation_id: state.translation,
       verse_start: state.verseStart,
-      verse_end: state.verseEnd
+      verse_end: state.verseEnd,
+      emphasis: state.emphasis || {}
     }
   }
 

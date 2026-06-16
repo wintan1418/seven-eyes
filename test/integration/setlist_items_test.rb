@@ -27,6 +27,29 @@ class SetlistItemsTest < ActionDispatch::IntegrationTest
     assert_select ".ps-setlist-item .meta", text: "2 stanzas"
   end
 
+  test "several comma-separated scriptures are queued in one submit" do
+    study = owner_study
+    Book.create!(osis_code: "John", name: "John", testament: :new, position: 43, chapter_count: 21)
+    Book.create!(osis_code: "Ps", name: "Psalms", testament: :old, position: 19, chapter_count: 150)
+    assert_difference -> { SetlistItem.count }, 3 do
+      post study_setlist_items_path(study),
+           params: { setlist_item: { kind: "scripture", reference: "rom 8:28, John 3:16, Ps 23" } }
+    end
+    assert_response :success
+    assert_equal [ "rom 8:28", "John 3:16", "Ps 23" ], study.setlist_items.in_order.map(&:reference)
+  end
+
+  test "a batch adds the readable scriptures and reports the unreadable ones" do
+    study = owner_study
+    assert_difference -> { SetlistItem.count }, 1 do
+      post study_setlist_items_path(study),
+           params: { setlist_item: { kind: "scripture", reference: "rom 8:28, blorbity 9" } }
+    end
+    assert_response :success
+    assert_equal [ "rom 8:28" ], study.setlist_items.in_order.map(&:reference)
+    assert_select ".ps-setlist-form .err", text: /blorbity 9/
+  end
+
   test "an unreadable reference re-renders the form with the error and keeps the text" do
     study = owner_study
     assert_no_difference -> { SetlistItem.count } do

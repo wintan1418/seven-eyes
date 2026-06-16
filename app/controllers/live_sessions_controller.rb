@@ -91,7 +91,19 @@ class LiveSessionsController < ApplicationController
     return true if attrs.empty?
 
     attrs[:kind] = "scripture"
+    attrs[:emphasis] = emphasis_param
     live.update(attrs).tap { |ok| live.log_passage! if ok }
+  end
+
+  # The minister's emphasised words, keyed by verse number → word indices.
+  # Sanitised to integers since the keys are arbitrary (per-verse).
+  def emphasis_param
+    raw = params[:emphasis]
+    raw = raw.to_unsafe_h if raw.respond_to?(:to_unsafe_h)
+    return {} unless raw.is_a?(Hash)
+    raw.each_with_object({}) do |(verse, words), out|
+      out[verse.to_s] = Array(words).map(&:to_i)
+    end
   end
 
   def live_payload(live)

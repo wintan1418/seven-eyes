@@ -9,6 +9,8 @@ class SetlistItemsController < ApplicationController
 
   def create
     attrs = item_params
+    return create_scriptures(attrs[:reference]) if attrs[:kind] == "scripture"
+
     if attrs[:kind] == "picture"
       upload = PictureUpload.call(params.dig(:setlist_item, :image))
       unless upload.ok?
@@ -47,6 +49,28 @@ class SetlistItemsController < ApplicationController
   end
 
   private
+
+  # Queue one or several scriptures at once. A fast minister can drop in a whole
+  # block — "John 3:16, Rom 8:28, Ps 23" or one reference per line — and each
+  # becomes its own queue item in a single submit. Any that can't be read are
+  # reported together while the rest are still added.
+  def create_scriptures(raw)
+    refs = raw.to_s.split(/[\n,;]+/).map(&:strip).reject(&:blank?)
+    refs = [ raw.to_s ] if refs.empty? # let the model report the blank/invalid one
+
+    failed = []
+    refs.each do |ref|
+      item = @study.setlist_items.create(kind: "scripture", reference: ref)
+      failed << ref unless item.persisted?
+    end
+
+    if failed.any?
+      @errored = @study.setlist_items.new(kind: "scripture", reference: failed.join(", "))
+      @errored.errors.add(:reference,
+        "couldn't be read: #{failed.to_sentence}. Try something like John 3:16.")
+    end
+    render_setlist
+  end
 
   def set_study
     @study = current_study(params[:study_id])

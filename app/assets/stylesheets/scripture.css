@@ -3395,3 +3395,153 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
   0%, 45% { opacity: 0.2; transform: translateY(6px); }
   62%, 100% { opacity: 1; transform: translateY(0); }
 }
+
+/* ============================================================================
+   Reference banner — so the congregation reads "John 3:16 · KJV", not just "16".
+   Shown across the top in preach mode on the operator's own projection AND the
+   second-screen output window; hidden for slides, the blank screen, the stage.
+   ========================================================================== */
+.ps-preach-ref { display: none; }
+.ps-root.is-preaching .ps-preach-ref {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px 24px;
+  z-index: 95;
+  pointer-events: none;
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-size: clamp(13px, 1.5vw, 22px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--rubric);
+  background: linear-gradient(180deg, rgba(20, 16, 10, 0.06), transparent);
+}
+.ps-root.is-output .ps-preach-ref { padding: 22px 24px; }
+.ps-root.is-output.out-theme-ink .ps-preach-ref {
+  color: #d8b550;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35), transparent);
+}
+.ps-preach-ref:empty,
+.ps-root.is-preaching.is-blank .ps-preach-ref,
+.ps-root.is-preaching.is-slide .ps-preach-ref,
+.ps-root.is-stage .ps-preach-ref { display: none; }
+
+/* ============================================================================
+   ⌂ Teaching-text anchor — pin the main passage, snap home from any detour.
+   Reuses the .ps-preach-group cluster chrome; pinned state glows rubric.
+   ========================================================================== */
+.ps-preach-group button:disabled { opacity: 0.4; cursor: default; }
+.ps-preach-group button:disabled:hover { background: transparent; color: #d8c389; }
+.ps-preach-anchor button { font-size: 16px; }
+.ps-preach-anchor button[data-preach-anchor-pin].is-on {
+  background: var(--rubric);
+  color: var(--vellum-0);
+  border-color: var(--rubric-deep);
+}
+
+/* ============================================================================
+   ✷ Emphasis — the minister's key word glows on every screen (operator console,
+   projector output, and following phones). Keyed by verse number + word index
+   so all three renderers light the same word. Words are tappable on the
+   operator only while Emphasise is armed.
+   ========================================================================== */
+.ps-eword { transition: color 0.15s ease, background 0.15s ease, text-shadow 0.15s ease; }
+.ps-root.is-emphasising .ps-pane.is-presented .ps-verse.is-preach-current .ps-eword {
+  cursor: pointer;
+  border-radius: 5px;
+}
+.ps-root.is-emphasising .ps-pane.is-presented .ps-verse.is-preach-current .ps-eword:hover {
+  background: rgba(216, 181, 80, 0.2);
+}
+.ps-eword.is-emph {
+  color: var(--rubric);
+  font-weight: 600;
+  background: linear-gradient(transparent 60%, rgba(216, 181, 80, 0.4) 60%);
+}
+/* Keep emphasis luminous on the dark projector theme. */
+.ps-root.is-output.out-theme-ink .ps-eword.is-emph {
+  color: #f0c64e;
+  text-shadow: 0 0 18px rgba(240, 198, 78, 0.4);
+  background: linear-gradient(transparent 64%, rgba(240, 198, 78, 0.2) 64%);
+}
+/* Armed: a quiet hint at the top of the operator console. */
+.ps-root.is-emphasising:not(.is-output) .ps-preach-ref::after {
+  content: "✷ tap a word to emphasise";
+  display: block;
+  margin-left: 18px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--gold);
+  opacity: 0.85;
+}
+
+/* Multi-add hint under the queue's reference field. */
+.ps-setlist-form .ref-hint { display: none; }
+.ps-setlist-form.kind-scripture .ref-hint {
+  display: block;
+  font: 400 11px "EB Garamond", serif;
+  color: var(--sepia);
+  line-height: 1.45;
+  margin: -2px 2px 8px;
+}
+.ps-setlist-form .ref-hint .eg { color: var(--rubric); font-style: italic; }
+
+/* ============================================================================
+   What's New mocks — cards 13–16 (reference banner, emphasis, anchor, batch).
+   ========================================================================== */
+/* 13 — reference named across the top of the projected verse */
+.mock-ref { justify-content: flex-start; gap: 7px; }
+.mock-ref .ref-banner {
+  align-self: stretch; margin: -12px -12px 4px;
+  padding: 7px; background: rgba(138, 36, 24, 0.12);
+  border-bottom: 1px solid rgba(216, 181, 80, 0.5);
+  font: 600 9px "Cinzel", serif; letter-spacing: 0.22em; color: #8a2418;
+  animation: newsRefGlow 4s ease-in-out infinite;
+}
+.mock-ref .ref-vnum { font: 600 24px "Cinzel", serif; color: #8a2418; line-height: 1; }
+.mock-ref .ref-line { font: 500 13px "EB Garamond", serif; color: #2a2118; }
+@keyframes newsRefGlow {
+  0%, 100% { background: rgba(138, 36, 24, 0.08); }
+  50% { background: rgba(138, 36, 24, 0.22); }
+}
+
+/* 14 — the minister's key word glowing inside the verse */
+.mock-emph p { margin: 0; font: 500 14px "EB Garamond", serif; color: #2a2118; line-height: 1.55; }
+.mock-emph .glow {
+  font-weight: 600; border-radius: 3px; padding: 0 2px;
+  animation: newsEmphGlow 3s ease-in-out infinite;
+}
+@keyframes newsEmphGlow {
+  0%, 100% { background: linear-gradient(transparent 58%, rgba(216, 181, 80, 0) 58%); color: #2a2118; }
+  40%, 75% { background: linear-gradient(transparent 58%, rgba(216, 181, 80, 0.62) 58%); color: #8a2418; }
+}
+
+/* 15 — pinned teaching text, with detours returning home */
+.mock-anchor { width: 82%; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.mock-anchor .home {
+  padding: 9px 16px; border-radius: 3px; background: #8a2418; color: #fff7e0;
+  font: 600 12px "Cinzel", serif; letter-spacing: 0.16em;
+  box-shadow: 0 0 0 3px rgba(216, 181, 80, 0.35);
+}
+.mock-anchor .trail { display: flex; gap: 8px; align-items: center; }
+.mock-anchor .trail span {
+  padding: 5px 9px; border-radius: 3px;
+  background: rgba(255, 247, 224, 0.12); border: 1px solid rgba(163, 129, 46, 0.5);
+  color: #d8c389; font: 600 9px "Cinzel", serif; letter-spacing: 0.14em;
+}
+.mock-anchor .trail .ret {
+  background: #d8b550; color: #1d1107; border-color: #d8b550;
+  animation: newsAnchorRet 3.5s ease-in-out infinite;
+}
+@keyframes newsAnchorRet {
+  0%, 58% { opacity: 0.45; transform: scale(0.95); }
+  74%, 100% { opacity: 1; transform: scale(1); }
+}
+
+/* 16 — a stack of scriptures arriving together */
+.mock-batch .mock-qtitle { color: #6fd0c0; }
+.mock-qitem.b1 { animation-delay: 0.1s; }
+.mock-qitem.b2 { animation-delay: 0.28s; }
+.mock-qitem.b3 { animation-delay: 0.46s; }

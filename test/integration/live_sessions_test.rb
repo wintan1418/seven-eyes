@@ -68,6 +68,20 @@ class LiveSessionsTest < ActionDispatch::IntegrationTest
     assert_equal "John 3", live.reference_label
   end
 
+  test "an emphasis push is stored and carried in the broadcast state" do
+    study = owner_study
+    post study_live_path(study), params: { reference: "John 3", translation_id: @kjv.id,
+                                           verse_start: 16, verse_end: 16 }, as: :json
+    live = study.live_session
+
+    patch study_live_path(study), params: { reference: "John 3", translation_id: @kjv.id,
+                                            verse_start: 16, verse_end: 16,
+                                            emphasis: { "16" => [ 3, 4 ] } }, as: :json
+    assert_response :success
+    assert_equal({ "16" => [ 3, 4 ] }, live.reload.emphasis)
+    assert_equal({ "16" => [ 3, 4 ] }, live.live_state[:emphasis])
+  end
+
   test "a garbled reference push is rejected without blanking the state" do
     study = owner_study
     post study_live_path(study), params: { reference: "John 3", translation_id: @kjv.id }, as: :json

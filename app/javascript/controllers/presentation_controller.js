@@ -38,6 +38,9 @@ export default class extends Controller {
     this._slide = null // {title, body, stanzas, index} while a song/thought is projected
     this._history = [] // where we were before each chase/queue/AI jump — for ⟲ Back
     this._blank = false // projector held on a calm blank screen (between segments)
+    this._anchor = null // pinned "teaching text" — {reference, index} — for ⌂ Home
+    this._emphasis = {} // verse number → emphasised word indices, for the minister's key point
+    this._emphArmed = false // operator is arming emphasis: current verse words become clickable
   }
 
   connect() {
@@ -110,6 +113,8 @@ export default class extends Controller {
     this._closeJump()
     this._closeFinds()
     this._clearSlide({ repaint: false })
+    this._unwrapAll()
+    this.element.classList.remove("is-emphasising")
     this._clear()
     this._clearAutoFit()
     this._unbindKeys()
@@ -117,8 +122,13 @@ export default class extends Controller {
     this._groupSize = 1
     this._history = []
     this._blank = false
+    this._anchor = null
+    this._emphasis = {}
+    this._emphArmed = false
     this._applyBlank()
     this._syncBackButton()
+    this._syncAnchorButtons()
+    this._syncEmphasisButton()
     this._syncGroupButtons()
     this.element.querySelectorAll(".ps-pane.is-paired").forEach(p => p.classList.remove("is-paired"))
   }
@@ -474,6 +484,7 @@ export default class extends Controller {
           : `<span class="num">stanza ${index + 1}</span><span class="of">of ${stanzas.length}</span>`
       }
       this._paintSlideNextPreview()
+      this._paintRef()
       if (this._isStage) this._paintStage()
       this._broadcast()
     }
@@ -560,6 +571,12 @@ export default class extends Controller {
     const entry = this._history.pop()
     this._syncBackButton()
     if (!entry) return
+    this._restore(entry)
+  }
+
+  // Restore a snapshot ({kind:"slide"|"passage"}). Shared by ⟲ Back and ⌂ Home.
+  // The _restoring flag stops _remember() from snapshotting the move itself.
+  _restore(entry) {
     this._restoring = true
     if (entry.kind === "slide") {
       this._presentSlide({ title: entry.title, body: entry.body, image: entry.image, index: entry.index })
@@ -592,6 +609,52 @@ export default class extends Controller {
     if (btn) btn.disabled = this._history.length === 0
   }
 
+  // ----- ⌂ Home: the pinned "teaching text" -----
+  // During a long teaching the preacher detours to many places, then says "back
+  // to our text". ⟲ Back steps one detour at a time; ⌂ Home snaps straight to the
+  // pinned passage no matter how far the wandering went. As the operator reads
+  // through the pinned passage the anchor follows the verse, so Home returns to
+  // exactly where the teaching paused, not to verse 1.
+
+  pinAnchor(event) {
+    event?.preventDefault?.()
+    if (!this.element.classList.contains("is-preaching")) return
+    if (this._isOutput || this._slide) return // a song can't be the teaching text
+    const snap = this._snapshot()
+    if (!snap || snap.kind !== "passage") return
+    this._anchor = { reference: snap.reference, index: snap.index }
+    this._syncAnchorButtons()
+  }
+
+  goAnchor(event) {
+    event?.preventDefault?.()
+    if (!this._anchor) return
+    this._remember() // so ⟲ Back can return from the jump home
+    this._restore({ kind: "passage", reference: this._anchor.reference, index: this._anchor.index })
+  }
+
+  // Keep the anchor's verse in step while the operator reads through the pinned
+  // passage (called from _paint). Detours sit on other references and leave it.
+  _trackAnchor() {
+    if (this._isOutput || !this._anchor || this._slide) return
+    const ref = this.element.querySelector(".ps-pane.is-presented input[name='pane[reference]']")?.value?.trim()
+    if (ref && ref.toLowerCase() === this._anchor.reference.toLowerCase()) {
+      this._anchor.index = this._preachIndex
+    }
+  }
+
+  _syncAnchorButtons() {
+    const pin = this.element.querySelector("[data-preach-anchor-pin]")
+    const home = this.element.querySelector("[data-preach-anchor-home]")
+    if (pin) pin.classList.toggle("is-on", !!this._anchor)
+    if (home) {
+      home.disabled = !this._anchor
+      home.title = this._anchor
+        ? `Jump back to your teaching text — ${this._anchor.reference} (H)`
+        : "Pin a passage as your teaching text first"
+    }
+  }
+
   // ----- blank / holding screen -----
   // Between segments (before the service, during prayer, while the band sets up)
   // the operator snaps the projector to a calm holding screen — one press, and
@@ -615,6 +678,128 @@ export default class extends Controller {
     if (btn) btn.classList.toggle("is-on", this._blank)
   }
 
+  // ----- ✷ Emphasise: mark the minister's key word on the live verse -----
+  // The preacher lands on "peace" or "grace". The operator arms Emphasise, taps
+  // the word(s) on the console, and they glow on the projector and on every
+  // following phone. Emphasis is keyed by verse number + word index so all three
+  // renderers (operator, output, live) agree no matter the screen.
+
+  toggleEmphasis(event) {
+    event?.preventDefault?.()
+    if (this._isOutput || !this.element.classList.contains("is-preaching")) return
+    this._emphArmed = !this._emphArmed
+    this.element.classList.toggle("is-emphasising", this._emphArmed)
+    this._syncEmphasisButton()
+    this._applyEmphasisToCurrent() // wrap (arm) or leave the current verse words
+  }
+
+  _syncEmphasisButton() {
+    const btn = this.element.querySelector("[data-preach-emph]")
+    if (btn) btn.classList.toggle("is-on", this._emphArmed)
+  }
+
+  // Operator: a word in the live verse was tapped — toggle its emphasis.
+  emphasizeWord(event) {
+    const span = event.target.closest(".ps-eword")
+    if (!span) return
+    event.preventDefault?.()
+    const verse = span.closest(".ps-verse")
+    const num = parseInt(verse?.dataset.verseNum, 10)
+    const widx = parseInt(span.dataset.widx, 10)
+    if (Number.isNaN(num) || Number.isNaN(widx)) return
+    const words = new Set(this._emphasis[num] || [])
+    if (words.has(widx)) words.delete(widx)
+    else words.add(widx)
+    if (words.size) this._emphasis[num] = [ ...words ].sort((a, b) => a - b)
+    else delete this._emphasis[num]
+    span.classList.toggle("is-emph")
+    this._broadcast()
+  }
+
+  // Wrap / re-apply emphasis on the verse(s) currently on screen. On the operator
+  // the words become clickable while Emphasise is armed; on the output they only
+  // glow. A verse with neither emphasis nor arming is restored to its normal
+  // (drop-cap, Strong's, highlight) rendering.
+  _applyEmphasisToCurrent() {
+    const pane = this.element.querySelector(".ps-pane.is-presented")
+    if (!pane) return
+    const clickable = !this._isOutput && this._emphArmed
+    pane.querySelectorAll(".ps-verse.is-preach-current").forEach(verse => {
+      const num = parseInt(verse.dataset.verseNum, 10)
+      const indices = this._emphasis[num] || []
+      if (indices.length || clickable) this._renderVerseWords(verse, indices, clickable)
+      else if (verse.dataset.psWrapped === "1") this._unwrapVerse(verse)
+    })
+  }
+
+  // Rebuild a verse's text as word spans, glowing the emphasised indices. Keeps a
+  // .ps-verse-text wrapper (the stage/next-preview read it) and the number link.
+  // The original markup is stashed so we can put Strong's/highlights back later.
+  _renderVerseWords(verse, indices, clickable) {
+    const full = this._verseFullText(verse)
+    if (!full) return
+    if (verse.dataset.psWrapped !== "1") {
+      verse._psOrig = verse.innerHTML
+      verse.dataset.psWrapped = "1"
+    }
+    const set = new Set(indices)
+    const textSpan = document.createElement("span")
+    textSpan.className = "ps-verse-text"
+    let wi = -1
+    full.split(/(\s+)/).forEach(token => {
+      if (token === "") return
+      if (/^\s+$/.test(token)) { textSpan.appendChild(document.createTextNode(token)); return }
+      wi += 1
+      const word = document.createElement("span")
+      word.className = set.has(wi) ? "ps-eword is-emph" : "ps-eword"
+      word.dataset.widx = String(wi)
+      word.textContent = token
+      if (clickable) word.dataset.action = "presentation#emphasizeWord"
+      textSpan.appendChild(word)
+    })
+    const vnum = verse.querySelector(".ps-vnum")
+    verse.replaceChildren(...(vnum ? [ vnum ] : []), textSpan, document.createTextNode(" "))
+  }
+
+  // Put a verse's original (server-rendered) markup back — used when its emphasis
+  // is cleared, Emphasise is disarmed, or preach mode exits.
+  _unwrapVerse(verse) {
+    if (verse._psOrig != null) verse.innerHTML = verse._psOrig
+    delete verse._psOrig
+    delete verse.dataset.psWrapped
+  }
+
+  _unwrapAll() {
+    this.element.querySelectorAll(".ps-verse[data-ps-wrapped]").forEach(v => this._unwrapVerse(v))
+  }
+
+  // The verse's full displayed text, drop cap included (the cap lives in its own
+  // span with the first letter, so we stitch it back on for correct word indices).
+  _verseFullText(verse) {
+    const cap = verse.querySelector(".ps-dropcap")?.textContent || ""
+    const text = verse.querySelector(".ps-verse-text")?.textContent || ""
+    return (cap + text).trim()
+  }
+
+  // ----- the reference banner (so the congregation sees "John 3:16", not "16") -----
+
+  _referenceLabel() {
+    const pane = this.element.querySelector(".ps-pane.is-presented")
+    const raw = pane?.querySelector("input[name='pane[reference]']")?.value?.trim()
+    if (!raw) return ""
+    const base = raw.replace(/\s*[:.]\s*\d+\s*(?:[-–]\s*\d+)?\s*$/, "") // drop any typed verse
+    let label = base
+    const r = this._range
+    if (r && r.first) label += r.first === r.last ? `:${r.first}` : `:${r.first}–${r.last}`
+    const trans = pane.querySelector("select[name='pane[translation_id]'] option:checked")?.textContent?.trim()
+    return trans ? `${label} · ${trans}` : label
+  }
+
+  _paintRef() {
+    const el = this.element.querySelector("[data-preach-ref]")
+    if (el) el.textContent = this._slide ? "" : this._referenceLabel()
+  }
+
   // ----- phone remote commands (relayed by the remote controller) -----
 
   _runCommand(detail) {
@@ -622,6 +807,7 @@ export default class extends Controller {
     if (detail.action === "next") this.next()
     else if (detail.action === "prev") this.prev()
     else if (detail.action === "back") this.goBack()
+    else if (detail.action === "home") this.goAnchor()
     else if (detail.action === "blank") this.toggleBlank()
     else if (detail.action === "chase" && detail.value) this._chase(detail.value, { silent: true })
   }
@@ -833,6 +1019,7 @@ export default class extends Controller {
     // Holding screen mirrors the operator — including across an output refresh,
     // since the operator re-broadcasts the full state (blank included) on hello.
     this.element.classList.toggle("is-blank", !!msg.blank)
+    this._emphasis = msg.emphasis || {}
     if (msg.slide) { this._applySlide(msg.slide); return }
     if (this._slide) this._clearSlide({ repaint: false })
     if (this._fading) { this._afterFade = msg; return }
@@ -862,10 +1049,23 @@ export default class extends Controller {
       return
     }
 
-    this._groupSize = Math.max(1, Math.min(5, msg.group || 1))
-    this.element.classList.toggle("is-parallel", !!msg.parallel)
+    // If only the emphasis changed (operator tapped a word), re-glow in place
+    // instead of fading the whole verse — no flicker on the projector.
+    const nextGroup = Math.max(1, Math.min(5, msg.group || 1))
+    const nextIndex = msg.index || 0
+    const nextParallel = !!msg.parallel
+    const sameSpot = this._preachIndex === nextIndex && this._groupSize === nextGroup &&
+      this.element.classList.contains("is-parallel") === nextParallel &&
+      this.element.querySelector(".ps-verse.is-preach-current")
+    this._groupSize = nextGroup
+    this.element.classList.toggle("is-parallel", nextParallel)
     this._pairForParallel()
-    this._transition(() => { this._preachIndex = msg.index || 0 })
+    if (sameSpot) {
+      this._applyEmphasisToCurrent()
+      this._paintRef()
+    } else {
+      this._transition(() => { this._preachIndex = nextIndex })
+    }
   }
 
   // Output/stage window: mirror a song/thought slide. Same slide → fade to the
@@ -894,6 +1094,7 @@ export default class extends Controller {
       group: this._groupSize,
       parallel: this.element.classList.contains("is-parallel"),
       blank: this._blank,
+      emphasis: this._emphasis,
       reference: pane.querySelector("input[name='pane[reference]']")?.value || null,
       translation: pane.querySelector("select[name='pane[translation_id]']")?.value || null,
       verseStart: this._range?.first ?? null,
@@ -1006,6 +1207,9 @@ export default class extends Controller {
       counter.innerHTML = `<span class="num">verse ${range}</span><span class="of">of ${total}</span>`
     }
 
+    this._applyEmphasisToCurrent()
+    this._trackAnchor()
+    this._paintRef()
     this._paintNextPreview(primary, end)
     if (this._isStage) this._paintStage()
     this._broadcast()
@@ -1089,6 +1293,7 @@ export default class extends Controller {
       else if (e.key === "g" || e.key === "G") { e.preventDefault(); this.openJump() }
       else if (e.key === "p" || e.key === "P") { e.preventDefault(); this.toggleParallel() }
       else if (e.key === "b" || e.key === "B" || e.key === "Backspace") { e.preventDefault(); this.goBack() }
+      else if (e.key === "h" || e.key === "H") { e.preventDefault(); this.goAnchor() }
       else if (e.key === "." || e.key === "0") { e.preventDefault(); this.toggleBlank() }
       else if (e.key >= "1" && e.key <= "5") {
         e.preventDefault()

@@ -49,6 +49,7 @@ export default class extends Controller {
     if (data.type !== "state") return
     this._setReference(data.reference)
     if (data.kind === "slide") { this._renderSlide(data); return }
+    this._emph = data.emphasis || {}
     const current = this.bodyTarget.querySelector(".ps-live-passage")
     const samePassage = current &&
         current.dataset.osis === String(data.osis) &&
@@ -132,7 +133,38 @@ export default class extends Controller {
       const n = parseInt(v.dataset.num, 10)
       v.classList.toggle("is-now", n >= start && n <= last)
     })
+    this._applyEmphasis()
     if (this._autoFollow) this._scrollToNow()
+  }
+
+  // Glow the minister's emphasised words on the matching verses, keyed by verse
+  // number → word indices (the same indexing the pulpit projector uses). The
+  // original text is stashed so clearing the emphasis restores the plain verse.
+  _applyEmphasis() {
+    const emph = this._emph || {}
+    this.bodyTarget.querySelectorAll(".ps-live-verse").forEach(v => {
+      const vtext = v.querySelector(".vtext")
+      if (!vtext) return
+      const indices = emph[v.dataset.num] || []
+      if (!indices.length && vtext.dataset.full == null) return // never wrapped
+      const full = vtext.dataset.full || vtext.textContent
+      vtext.dataset.full = full
+      vtext.innerHTML = this._emphasisHTML(full, indices)
+    })
+  }
+
+  _emphasisHTML(full, indices) {
+    const set = new Set(indices)
+    let wi = -1
+    return full.split(/(\s+)/).map(token => {
+      if (token === "") return ""
+      if (/^\s+$/.test(token)) return token
+      wi += 1
+      const span = document.createElement("span")
+      span.className = set.has(wi) ? "ps-eword is-emph" : "ps-eword"
+      span.textContent = token
+      return span.outerHTML
+    }).join("")
   }
 
   _scrollToNow() {

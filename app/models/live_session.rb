@@ -77,6 +77,7 @@ class LiveSession < ApplicationRecord
       { type: "state", kind: "scripture",
         osis: osis, chapter: chapter,
         verse_start: verse_start, verse_end: verse_end,
+        emphasis: emphasis || {},
         translation: translation_code, reference: reference_label }
     end
   end
