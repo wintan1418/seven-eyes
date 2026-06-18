@@ -1459,6 +1459,46 @@
   padding: 3vh 3vw;
 }
 
+/* Split projection — up to four DIFFERENT passages side-by-side, one active.
+   Frozen regions reuse .is-paired; the active region keeps .is-presented. */
+.ps-root.is-presenting.is-split .ps-pane.is-paired { display: flex !important; }
+/* Clicking a region picks the active side, so the full-screen tap-zones step
+   aside (advance with the chevrons, arrow keys, swipe, or the bottom bar). */
+.ps-root.is-split .ps-preach-zone { display: none !important; }
+.ps-root.is-presenting.is-split .ps-workspace {
+  gap: 14px;
+  padding: 18px 24px 96px;
+}
+.ps-root.is-presenting.is-split.split-2 .ps-workspace {
+  grid-template-columns: 1fr 1fr !important;
+  grid-template-rows: 1fr !important;
+}
+.ps-root.is-presenting.is-split.split-3 .ps-workspace {
+  grid-template-columns: repeat(3, 1fr) !important;
+  grid-template-rows: 1fr !important;
+}
+.ps-root.is-presenting.is-split.split-4 .ps-workspace {
+  grid-template-columns: 1fr 1fr !important;
+  grid-template-rows: 1fr 1fr !important;
+}
+/* A touch smaller per region so several passages fit legibly. */
+.ps-root.is-presenting.is-split .ps-pane.is-presented .ps-verse.is-preach-current,
+.ps-root.is-presenting.is-split .ps-pane.is-paired .ps-verse.is-preach-current {
+  font-size: clamp(22px, 2.4vw, 46px);
+  padding: 2.4vh 1.8vw;
+}
+/* On the operator console: ring the active region, gently dim the frozen ones,
+   so the volunteer always knows which side Next/Go will move. On the projector
+   (.is-output) every region reads equally — no ring, no dimming. */
+.ps-root.is-presenting.is-split:not(.is-output) .ps-pane { cursor: pointer; }
+.ps-root.is-presenting.is-split:not(.is-output) .ps-pane.is-paired {
+  opacity: 0.62;
+  transition: opacity 140ms ease;
+}
+.ps-root.is-presenting.is-split:not(.is-output) .ps-pane.is-presented {
+  box-shadow: inset 0 0 0 2px var(--gold);
+}
+
 /* Jump-to-verse input overlay — center top, big and obvious. */
 .ps-preach-jump { display: none; }
 .ps-root.is-preaching .ps-preach-jump:not([hidden]) {

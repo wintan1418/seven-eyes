@@ -6,6 +6,11 @@ import { Controller } from "@hotwired/stimulus"
 //   .is-presenting  — focus mode: one pane fills the screen, chrome hidden.
 //   .is-preaching   — preach sub-mode: one verse at a time, big, smooth fade.
 //   .is-parallel    — two panes side-by-side showing the same verse number.
+//   .is-split       — up to four panes side-by-side, each showing a DIFFERENT
+//                     passage at its own verse. One region is "active"
+//                     (.is-presented); Next/Prev/Go step only the active region.
+//                     Frozen regions carry .is-paired (so they reuse the same
+//                     big-verse styling). split-2/3/4 set the grid.
 //
 // Esc unwinds one layer at a time: jump-input → preach → focus → workspace.
 //
@@ -41,6 +46,7 @@ export default class extends Controller {
     this._anchor = null // pinned "teaching text" — {reference, index} — for ⌂ Home
     this._emphasis = {} // verse number → emphasised word indices, for the minister's key point
     this._emphArmed = false // operator is arming emphasis: current verse words become clickable
+    this._splitIndices = new Map() // split mode: pane element → its own current verse index
   }
 
   connect() {
@@ -109,6 +115,7 @@ export default class extends Controller {
       // The live controller ends any congregation session.
       window.dispatchEvent(new CustomEvent("preach:exit"))
     }
+    this._exitSplit({ repaint: false })
     this.element.classList.remove("is-preaching", "is-parallel")
     this._closeJump()
     this._closeFinds()
@@ -136,6 +143,7 @@ export default class extends Controller {
   next(event) {
     event?.preventDefault?.()
     if (this._slide) { this._stepSlide(+1); return }
+    if (this._isSplit()) { this._stepActiveRegion(+1); return }
     const verses = this._primaryVerses()
     if (this._preachIndex + this._groupSize >= verses.length) return
     this._transition(() => { this._preachIndex += this._groupSize })
@@ -144,6 +152,7 @@ export default class extends Controller {
   prev(event) {
     event?.preventDefault?.()
     if (this._slide) { this._stepSlide(-1); return }
+    if (this._isSplit()) { this._stepActiveRegion(-1); return }
     if (this._preachIndex <= 0) return
     this._transition(() => { this._preachIndex = Math.max(0, this._preachIndex - this._groupSize) })
   }
@@ -169,6 +178,7 @@ export default class extends Controller {
   toggleParallel(event) {
     event?.preventDefault?.()
     if (!this.element.classList.contains("is-preaching")) return
+    if (this._isSplit()) this._exitSplit({ repaint: false }) // the two modes are exclusive
     const on = !this.element.classList.contains("is-parallel")
     this.element.classList.toggle("is-parallel", on)
     this._pairForParallel()
@@ -179,6 +189,7 @@ export default class extends Controller {
   // Pick the pane shown beside the presented one: same book+chapter if any
   // sibling has it (a different translation), else the first other pane.
   _pairForParallel() {
+    if (this._isSplit()) return // split owns the .is-paired marks; never repair them
     this.element.querySelectorAll(".ps-pane.is-paired").forEach(p => p.classList.remove("is-paired"))
     if (!this.element.classList.contains("is-parallel")) return
     const focused = this.element.querySelector(".ps-pane.is-presented")
@@ -198,6 +209,188 @@ export default class extends Controller {
     const verse = pane.querySelector(".ps-verse")
     if (!verse) return null
     return `${verse.dataset.osis}:${verse.dataset.chapter}`
+  }
+
+  // ----- split projection: different passages side-by-side -----
+  // The big screen is divided into up to four regions, each holding its OWN
+  // reference at its OWN verse. One region is "active" (the operator's focus);
+  // Next/Prev/Go/the tap-zones step only that region. Click (or press 1–4) to
+  // switch which region is active. Frozen regions carry .is-paired so they reuse
+  // the existing big-verse styling; the active region keeps .is-presented.
+
+  _isSplit() { return this.element.classList.contains("is-split") }
+
+  // Workspace panes that actually have a passage loaded — the candidate regions.
+  _splitRegions() {
+    return this._workspacePanes().filter(p => p.querySelector(".ps-verse"))
+  }
+
+  toggleSplit(event) {
+    event?.preventDefault?.()
+    if (!this.element.classList.contains("is-preaching")) return
+    if (this._isSplit()) { this._exitSplit(); this._broadcast(); return }
+    const regions = this._splitRegions()
+    if (regions.length < 2) {
+      alert("Split needs at least two panes with a passage loaded.\n\nBefore entering Preach mode, set up 2–4 panes (top-right pane count) and load a different scripture in each, then press Split.")
+      return
+    }
+    this.element.classList.remove("is-parallel")
+    this._syncParallelButton()
+    this.element.classList.add("is-split")
+    this._setSplitGridClass(regions.length)
+    this._groupSize = 1 // each region steps one verse at a time in split
+    this._syncGroupButtons()
+    // The pane already presented stays active; the rest become frozen regions.
+    const active = this.element.querySelector(".ps-pane.is-presented") || regions[0]
+    this._splitIndices = new Map()
+    regions.forEach(pane => {
+      this._splitIndices.set(pane, pane === active ? this._preachIndex : 0)
+      pane.classList.toggle("is-presented", pane === active)
+      pane.classList.toggle("is-paired", pane !== active)
+    })
+    this._bindRegionClicks()
+    this._paintSplit()
+    requestAnimationFrame(() => this._autoFit())
+    this._syncSplitButton()
+  }
+
+  _exitSplit({ repaint = true } = {}) {
+    if (!this._isSplit()) return
+    this._unbindRegionClicks()
+    const active = this.element.querySelector(".ps-pane.is-presented")
+    this._preachIndex = active ? this._splitIndexFor(active) : 0
+    this.element.classList.remove("is-split", "split-2", "split-3", "split-4")
+    this.element.querySelectorAll(".ps-pane.is-paired").forEach(p => p.classList.remove("is-paired"))
+    this._splitIndices = new Map()
+    this._syncSplitButton()
+    if (repaint && this.element.classList.contains("is-preaching")) {
+      this._paint()
+      requestAnimationFrame(() => this._autoFit())
+    }
+  }
+
+  _setSplitGridClass(count) {
+    const n = Math.max(2, Math.min(4, count))
+    ;["split-2", "split-3", "split-4"].forEach(c => this.element.classList.remove(c))
+    this.element.classList.add(`split-${n}`)
+  }
+
+  _syncSplitButton() {
+    const btn = this.element.querySelector("[data-preach-split]")
+    if (btn) btn.classList.toggle("is-on", this._isSplit())
+  }
+
+  _splitIndexFor(pane) {
+    return this._splitIndices.get(pane) || 0
+  }
+
+  _setSplitIndex(pane, idx) {
+    this._splitIndices.set(pane, idx)
+  }
+
+  // Operator clicked a region — make it the active one (Go/Next now target it).
+  activateRegion(event) {
+    if (this._isOutput) return
+    if (event.target.closest(".ps-eword")) return // emphasis taps own the word
+    const pane = event.target.closest(".ps-pane")
+    if (!pane || !pane.classList.contains("is-paired") && !pane.classList.contains("is-presented")) return
+    event.preventDefault?.()
+    this._setActiveRegion(pane)
+  }
+
+  _setActiveRegion(pane) {
+    if (!pane || pane.classList.contains("is-presented")) return
+    this._unwrapAll() // the old active region's emphasis spans go back to normal
+    this._splitRegions().forEach(p => {
+      p.classList.toggle("is-presented", p === pane)
+      p.classList.toggle("is-paired", p !== pane)
+    })
+    this._paintSplit() // re-marks current verses, then re-applies emphasis to the new active
+  }
+
+  _stepActiveRegion(delta) {
+    const pane = this.element.querySelector(".ps-pane.is-presented")
+    if (!pane) return
+    const verses = Array.from(pane.querySelectorAll(".ps-verse"))
+    const idx = this._splitIndexFor(pane) + delta
+    if (idx < 0 || idx >= verses.length) return
+    const body = pane.querySelector(".ps-verse-body")
+    this._transition(() => this._setSplitIndex(pane, idx), { bodies: body ? [body] : [] })
+  }
+
+  // Highlight every region at its own current verse; the active region also
+  // drives emphasis, the reference footer, the counter and the next preview.
+  _paintSplit() {
+    const regions = this._splitRegions()
+    if (regions.length === 0) return
+    regions.forEach(pane => this._paintRegion(pane))
+
+    const active = this.element.querySelector(".ps-pane.is-presented")
+    const verses = active ? Array.from(active.querySelectorAll(".ps-verse")) : []
+    const idx = active ? this._splitIndexFor(active) : 0
+    const num = verses[idx] ? parseInt(verses[idx].dataset.verseNum, 10) : null
+    this._range = { first: num, last: num } // for live-follower relay (active region)
+
+    this._applyEmphasisToCurrent()
+    this._trackAnchor()
+    this._paintSplitRef(regions, active)
+    this._paintSplitCounter(regions, active)
+    this._paintNextPreview(verses, idx + 1)
+    if (this._isStage) this._paintStage()
+    this._broadcast()
+  }
+
+  _paintRegion(pane) {
+    const verses = Array.from(pane.querySelectorAll(".ps-verse"))
+    if (verses.length === 0) return
+    let idx = Math.max(0, Math.min(this._splitIndexFor(pane), verses.length - 1))
+    this._setSplitIndex(pane, idx)
+    const num = parseInt(verses[idx].dataset.verseNum, 10)
+    verses.forEach(v => v.classList.toggle("is-preach-current", parseInt(v.dataset.verseNum, 10) === num))
+  }
+
+  // Footer: every region's reference, the active one marked, so the congregation
+  // can see which passages are on screen (e.g. "Romans 8:28 · KJV — Jer 29:11 · KJV").
+  _paintSplitRef(regions, active) {
+    const el = this.element.querySelector("[data-preach-ref]")
+    if (!el) return
+    el.textContent = regions.map(pane => this._refLabelFor(pane)).filter(Boolean).join("   —   ")
+  }
+
+  _paintSplitCounter(regions, active) {
+    const counter = this.element.querySelector("[data-preach-counter]")
+    if (!counter || this._isOutput) return
+    const verses = active ? Array.from(active.querySelectorAll(".ps-verse")) : []
+    const idx = active ? this._splitIndexFor(active) : 0
+    const num = verses[idx]?.dataset.verseNum
+    const pos = this._workspacePanes().indexOf(active)
+    const numeral = ["I", "II", "III", "IV"][pos] || (pos + 1)
+    counter.innerHTML = `<span class="num">region ${numeral}${num ? ` · v${num}` : ""}</span><span class="of">of ${regions.length}</span>`
+  }
+
+  // The reference label for one pane: "John 3:16 · KJV", from its own inputs.
+  _refLabelFor(pane) {
+    const raw = pane.querySelector("input[name='pane[reference]']")?.value?.trim()
+    if (!raw) return ""
+    const verses = Array.from(pane.querySelectorAll(".ps-verse"))
+    const idx = Math.max(0, Math.min(this._splitIndexFor(pane), verses.length - 1))
+    const num = verses[idx]?.dataset.verseNum
+    const base = raw.replace(/\s*[:.]\s*\d+\s*(?:[-–]\s*\d+)?\s*$/, "")
+    let label = num ? `${base}:${num}` : base
+    const trans = pane.querySelector("select[name='pane[translation_id]'] option:checked")?.textContent?.trim()
+    return trans ? `${label} · ${trans}` : label
+  }
+
+  _bindRegionClicks() {
+    if (this._regionClickHandler || this._isOutput) return
+    this._regionClickHandler = (e) => this.activateRegion(e)
+    this.element.addEventListener("click", this._regionClickHandler)
+  }
+
+  _unbindRegionClicks() {
+    if (!this._regionClickHandler) return
+    this.element.removeEventListener("click", this._regionClickHandler)
+    this._regionClickHandler = null
   }
 
   // ----- jump-to-verse -----
@@ -264,15 +457,22 @@ export default class extends Controller {
     this._remember()
     this._clearSlide({ repaint: false })
     input.value = chapterReference
+    const split = this._isSplit()
     pane.addEventListener("turbo:frame-load", () => {
       this._pairForParallel()
-      const verses = this._primaryVerses()
+      const verses = Array.from(pane.querySelectorAll(".ps-verse"))
       let idx = 0
       if (verseStart) {
         const found = verses.findIndex(v => parseInt(v.dataset.verseNum, 10) === verseStart)
         if (found >= 0) idx = found
       }
-      this._preachIndex = idx
+      if (split) {
+        pane.classList.add("is-presented") // a freshly-loaded passage becomes active
+        this._setSplitGridClass(this._splitRegions().length)
+        this._setSplitIndex(pane, idx)
+      } else {
+        this._preachIndex = idx
+      }
       this._paint()
       requestAnimationFrame(() => this._autoFit())
     }, { once: true })
@@ -1022,6 +1222,13 @@ export default class extends Controller {
     this._emphasis = msg.emphasis || {}
     if (msg.slide) { this._applySlide(msg.slide); return }
     if (this._slide) this._clearSlide({ repaint: false })
+    if (msg.split) { this._applySplitState(msg); return }
+    // The operator left split — drop the region layout before single-cursor paint.
+    if (this._isSplit()) {
+      this.element.classList.remove("is-split", "split-2", "split-3", "split-4")
+      this.element.querySelectorAll(".ps-pane.is-paired").forEach(p => p.classList.remove("is-paired"))
+      this._splitIndices = new Map()
+    }
     if (this._fading) { this._afterFade = msg; return }
     const panes = this._workspacePanes()
     const pane = panes[msg.pane] || panes[0]
@@ -1082,9 +1289,68 @@ export default class extends Controller {
     this._presentSlide(slide)
   }
 
+  // Output/stage window: mirror split projection. Load any region whose passage
+  // differs from what we hold, then lay out every region at its own verse with
+  // the active one marked. A region whose verse moved fades; the rest snap.
+  _applySplitState(msg) {
+    this.element.classList.add("is-split")
+    this.element.classList.remove("is-parallel")
+    const panes = this._workspacePanes()
+    const wanted = (msg.regions || []).filter(r => panes[r.pane])
+    if (wanted.length === 0) return
+    this._setSplitGridClass(wanted.length)
+
+    let pending = 0
+    const finalize = () => {
+      panes.forEach(p => p.classList.remove("is-presented", "is-paired"))
+      wanted.forEach(r => {
+        const pane = panes[r.pane]
+        const isActive = r.pane === msg.active
+        pane.classList.toggle("is-presented", isActive)
+        pane.classList.toggle("is-paired", !isActive)
+        const idx = r.index || 0
+        const moved = this._splitIndexFor(pane) !== idx
+        this._setSplitIndex(pane, idx)
+        const body = pane.querySelector(".ps-verse-body")
+        if (moved && body) {
+          body.classList.add("is-changing")
+          setTimeout(() => {
+            this._paintRegion(pane)
+            requestAnimationFrame(() => body.classList.remove("is-changing"))
+          }, FADE_MS)
+        } else {
+          this._paintRegion(pane)
+        }
+      })
+      this._emphasis = msg.emphasis || {}
+      this._applyEmphasisToCurrent()
+      this._paintSplitRef(this._splitRegions(), this.element.querySelector(".ps-pane.is-presented"))
+      if (this._isStage) this._paintStage()
+      requestAnimationFrame(() => this._autoFit())
+    }
+
+    wanted.forEach(r => {
+      const pane = panes[r.pane]
+      const refInput = pane.querySelector("input[name='pane[reference]']")
+      const transSelect = pane.querySelector("select[name='pane[translation_id]']")
+      const sameRef = !r.reference || !refInput ||
+          refInput.value.trim().toLowerCase() === r.reference.trim().toLowerCase()
+      const sameTrans = !r.translation || !transSelect || transSelect.value === String(r.translation)
+      if (!(sameRef && sameTrans)) {
+        pending++
+        if (refInput) refInput.value = r.reference
+        if (transSelect && r.translation) transSelect.value = String(r.translation)
+        pane.addEventListener("turbo:frame-load", () => { if (--pending === 0) finalize() }, { once: true })
+        refInput?.form?.requestSubmit()
+      }
+    })
+    if (pending === 0) finalize()
+  }
+
   _broadcast() {
     if (this._isOutput) return
     if (!this.element.classList.contains("is-preaching")) return
+    if (this._isSplit()) { this._broadcastSplit(); return }
     const pane = this.element.querySelector(".ps-pane.is-presented")
     if (!pane) return
     const state = {
@@ -1106,6 +1372,39 @@ export default class extends Controller {
     this._send(state)
     // The live controller relays this to the congregation's phones.
     window.dispatchEvent(new CustomEvent("preach:state", { detail: state }))
+  }
+
+  // Split: send the projector the full set of regions (each its own passage +
+  // verse + which is active), and send live phones a flattened view of the
+  // ACTIVE region so a follower's single-passage screen tracks the preacher.
+  _broadcastSplit() {
+    const panes = this._workspacePanes()
+    const regions = this._splitRegions().map(pane => {
+      const verses = Array.from(pane.querySelectorAll(".ps-verse"))
+      const idx = Math.max(0, Math.min(this._splitIndexFor(pane), verses.length - 1))
+      const num = verses[idx] ? parseInt(verses[idx].dataset.verseNum, 10) : null
+      return {
+        pane: panes.indexOf(pane),
+        reference: pane.querySelector("input[name='pane[reference]']")?.value || null,
+        translation: pane.querySelector("select[name='pane[translation_id]']")?.value || null,
+        index: idx,
+        verseStart: num,
+        verseEnd: num
+      }
+    })
+    const active = this.element.querySelector(".ps-pane.is-presented")
+    const activePos = panes.indexOf(active)
+    this._send({
+      type: "state", split: true, active: activePos, regions,
+      blank: this._blank, emphasis: this._emphasis, slide: null
+    })
+    const a = regions.find(r => r.pane === activePos) || regions[0] || {}
+    window.dispatchEvent(new CustomEvent("preach:state", { detail: {
+      type: "state",
+      reference: a.reference, translation: a.translation,
+      verseStart: a.verseStart, verseEnd: a.verseEnd,
+      emphasis: this._emphasis, slide: null
+    } }))
   }
 
   _send(msg) {
@@ -1132,6 +1431,7 @@ export default class extends Controller {
     this._channel = null
     if (this._onSetlist) window.removeEventListener("setlist:present", this._onSetlist)
     if (this._onCommand) window.removeEventListener("preach:command", this._onCommand)
+    this._unbindRegionClicks()
     clearInterval(this._clockTimer)
     this._unbindEsc()
     this._unbindKeys()
@@ -1140,9 +1440,9 @@ export default class extends Controller {
 
   // ----- internals: rendering, transitions, auto-fit -----
 
-  _transition(mutate) {
+  _transition(mutate, { bodies } = {}) {
     if (this._fading) return // ignore rapid taps mid-fade
-    const bodies = this._activeBodies()
+    bodies = bodies || this._activeBodies()
     if (bodies.length === 0) { mutate(); this._paint(); return }
     this._fading = true
     bodies.forEach(b => b.classList.add("is-changing"))
@@ -1178,6 +1478,7 @@ export default class extends Controller {
   }
 
   _paint() {
+    if (this._isSplit()) { this._paintSplit(); return }
     const primary = this._primaryVerses()
     if (primary.length === 0) return
     this._preachIndex = Math.max(0, Math.min(this._preachIndex, primary.length - 1))
@@ -1297,6 +1598,13 @@ export default class extends Controller {
       else if (e.key === "." || e.key === "0") { e.preventDefault(); this.toggleBlank() }
       else if (e.key >= "1" && e.key <= "5") {
         e.preventDefault()
+        // In split, number keys pick which region is active; otherwise they set
+        // the verse-group size.
+        if (this._isSplit()) {
+          const region = this._splitRegions()[parseInt(e.key, 10) - 1]
+          if (region) this._setActiveRegion(region)
+          return
+        }
         this._groupSize = parseInt(e.key, 10)
         this._syncGroupButtons()
         this._transition(() => {})
