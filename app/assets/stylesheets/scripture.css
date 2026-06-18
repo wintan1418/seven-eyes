@@ -3673,8 +3673,30 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
   96%, 100% { opacity: 0; transform: translateX(12px); }
 }
 
+/* 17 — split projection: two different passages, the active side ringed in gold */
+.mock-split { width: 92%; height: 76%; display: flex; gap: 7px; }
+.mock-split .sp-region {
+  flex: 1; border-radius: 4px; padding: 9px 8px; background: #f3e7c8;
+  box-shadow: inset 0 0 0 1px rgba(216, 181, 80, 0.5);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  text-align: center; position: relative;
+}
+.mock-split .sp-ref {
+  font: 600 8.5px "Cinzel", serif; letter-spacing: 0.14em; color: #8a2418;
+}
+.mock-split .sp-text { font: 500 12px/1.42 "EB Garamond", serif; color: #2a2118; }
+.mock-split .sp-region::after {
+  content: ""; position: absolute; inset: 0; border-radius: 4px;
+  box-shadow: inset 0 0 0 2px #d8b550; opacity: 0;
+}
+.mock-split .sp-region.a::after { animation: newsSplitRing 6s ease-in-out infinite; }
+.mock-split .sp-region.b::after { animation: newsSplitRing 6s ease-in-out infinite; animation-delay: 3s; }
+@keyframes newsSplitRing { 0%, 38% { opacity: 1; } 46%, 96% { opacity: 0; } 100% { opacity: 1; } }
+
 /* keep the new cards legible when motion is turned off */
 @media (prefers-reduced-motion: reduce) {
+  .mock-split .sp-region.a::after { opacity: 1 !important; }
+  .mock-split .sp-region.b::after { opacity: 0 !important; }
   .mock-ref .nums span:not(:first-child),
   .mock-ref .ref-lines span:not(:first-child) { opacity: 0 !important; }
   .mock-ref .nums span:first-child,
