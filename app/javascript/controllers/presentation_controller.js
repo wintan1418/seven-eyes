@@ -48,7 +48,6 @@ export default class extends Controller {
     this._emphArmed = false // operator is arming emphasis: current verse words become clickable
     this._splitIndices = new Map() // split mode: pane element → its own current verse index
     this._join = null // {qr, code, url} while the Go-Live join card is on the projector
-    this._autoRevealPending = false // projector opened blank; reveal on the first item picked
   }
 
   connect() {
@@ -133,8 +132,6 @@ export default class extends Controller {
     this._groupSize = 1
     this._history = []
     this._blank = false
-    this._autoRevealPending = false
-    this.element.classList.remove("is-awaiting-start")
     this._anchor = null
     this._emphasis = {}
     this._emphArmed = false
@@ -149,7 +146,6 @@ export default class extends Controller {
 
   next(event) {
     event?.preventDefault?.()
-    if (this._maybeAutoReveal()) return // first Next off the calm start lifts the hold
     if (this._slide) { this._stepSlide(+1); return }
     if (this._isSplit()) { this._stepActiveRegion(+1); return }
     const verses = this._primaryVerses()
@@ -159,7 +155,6 @@ export default class extends Controller {
 
   prev(event) {
     event?.preventDefault?.()
-    if (this._maybeAutoReveal()) return // first Prev off the calm start lifts the hold
     if (this._slide) { this._stepSlide(-1); return }
     if (this._isSplit()) { this._stepActiveRegion(-1); return }
     if (this._preachIndex <= 0) return
@@ -483,7 +478,6 @@ export default class extends Controller {
         this._preachIndex = idx
       }
       this._paint()
-      this._maybeAutoReveal()
       requestAnimationFrame(() => this._autoFit())
     }, { once: true })
     input.form?.requestSubmit()
@@ -651,7 +645,6 @@ export default class extends Controller {
     }
     this.element.classList.add("is-slide")
     this._paintSlide()
-    this._maybeAutoReveal()
   }
 
   _stepSlide(delta) {
@@ -899,8 +892,6 @@ export default class extends Controller {
   toggleBlank(event) {
     event?.preventDefault?.()
     if (!this.element.classList.contains("is-preaching")) return
-    this._autoRevealPending = false // a manual Blank means the operator owns it now
-    this.element.classList.remove("is-awaiting-start")
     this._blank = !this._blank
     this._applyBlank()
     this._broadcast()
@@ -1234,39 +1225,9 @@ export default class extends Controller {
     this._outputWindow = window.open(url.toString(), "ps-preach-output", "popup=yes,width=1280,height=720")
     if (!this._outputWindow) {
       alert("The browser blocked the output window — allow pop-ups for this site, then click Project again.")
-      return
     }
-    // Open the projector on the calm holding screen rather than throwing the
-    // staged scripture up the instant the window appears. The operator then
-    // picks what to start with (a scripture, a song, the queue…) and the first
-    // deliberate pick reveals it. Only on the FIRST open — clicking Project
-    // again mid-service just refocuses the window and must NOT re-blank a live
-    // screen. Manual Blank still works exactly as before.
-    if (!this.element.classList.contains("is-projecting") && !this._blank) {
-      this._blank = true
-      this._autoRevealPending = true
-      this.element.classList.add("is-awaiting-start")
-      this._applyBlank()
-      this._broadcast()
-    }
-  }
-
-  // The projector was opened on the calm "ready" hold. The first deliberate move
-  // — Next/Prev, a chase, a queue pick, an AI find, a song — lifts it. Returns
-  // true when this call actually lifted the hold, so Next/Prev can treat the
-  // first press as "begin" rather than also advancing past the opening verse.
-  _maybeAutoReveal() {
-    if (this._isOutput || !this._autoRevealPending) return false
-    this._autoRevealPending = false
-    this.element.classList.remove("is-awaiting-start")
-    if (this._blank) {
-      this._blank = false
-      this._applyBlank()
-      this._broadcast()
-      return true
-    }
-    this._broadcast() // clear the awaiting flag on the projector
-    return false
+    // The projector shows the staged scripture immediately. To start on a calm
+    // hold instead, tap Blank — it's an option, not the default.
   }
 
   // Output window: browsers only allow fullscreen from a user gesture, so the
@@ -1326,7 +1287,6 @@ export default class extends Controller {
     // Holding screen mirrors the operator — including across an output refresh,
     // since the operator re-broadcasts the full state (blank included) on hello.
     this.element.classList.toggle("is-blank", !!msg.blank)
-    this.element.classList.toggle("is-awaiting-start", !!msg.awaitingStart)
     this._emphasis = msg.emphasis || {}
     if (msg.slide) { this._applySlide(msg.slide); return }
     if (this._slide) this._clearSlide({ repaint: false })
@@ -1468,7 +1428,6 @@ export default class extends Controller {
       group: this._groupSize,
       parallel: this.element.classList.contains("is-parallel"),
       blank: this._blank,
-      awaitingStart: this._autoRevealPending,
       emphasis: this._emphasis,
       reference: pane.querySelector("input[name='pane[reference]']")?.value || null,
       translation: pane.querySelector("select[name='pane[translation_id]']")?.value || null,
