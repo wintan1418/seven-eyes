@@ -818,8 +818,17 @@ export default class extends Controller {
 
   pinAnchor(event) {
     event?.preventDefault?.()
-    if (!this.element.classList.contains("is-preaching")) return
-    if (this._isOutput || this._slide) return // a song can't be the teaching text
+    if (!this.element.classList.contains("is-preaching") || this._isOutput) return
+    // A second press RELEASES the anchor. Without this a mis-pin (e.g. anchoring
+    // the wrong scripture mid-service) could never be undone — the home button
+    // stayed stuck on the wrong passage. Click the lit pin to clear it, then
+    // pin again wherever you actually want home to be.
+    if (this._anchor) {
+      this._anchor = null
+      this._syncAnchorButtons()
+      return
+    }
+    if (this._slide) return // a song/thought can't be the teaching text
     const snap = this._snapshot()
     if (!snap || snap.kind !== "passage") return
     this._anchor = { reference: snap.reference, index: snap.index }
@@ -846,7 +855,12 @@ export default class extends Controller {
   _syncAnchorButtons() {
     const pin = this.element.querySelector("[data-preach-anchor-pin]")
     const home = this.element.querySelector("[data-preach-anchor-home]")
-    if (pin) pin.classList.toggle("is-on", !!this._anchor)
+    if (pin) {
+      pin.classList.toggle("is-on", !!this._anchor)
+      pin.title = this._anchor
+        ? `Anchored to ${this._anchor.reference} — click to release`
+        : "Anchor the passage on screen as your main teaching text"
+    }
     if (home) {
       home.disabled = !this._anchor
       home.title = this._anchor
@@ -1587,6 +1601,12 @@ export default class extends Controller {
     if (this._keyHandler) return
     this._keyHandler = (e) => {
       if (!this.element.classList.contains("is-preaching")) return
+      // Never let preach shortcuts hijack typing. When the operator is in ANY
+      // text field — the queue, notes, a pane's reference box, AI search — the
+      // keystroke belongs to that field, not to the projector. This is the bug
+      // that once sent a Backspace to "⟲ Back" and yanked the live slide off the
+      // screen while a wrong letter was being deleted in the queue.
+      if (this._isEditableTarget(e.target)) return
       if (this._jumpOpen) return
       if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") { e.preventDefault(); this.next() }
       else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); this.prev() }
@@ -1617,6 +1637,16 @@ export default class extends Controller {
     if (!this._keyHandler) return
     document.removeEventListener("keydown", this._keyHandler)
     this._keyHandler = null
+  }
+
+  // True when the keystroke is being typed into an editable field, so the global
+  // preach shortcuts (Backspace=Back, b/p/g/h, 0–5…) must stand down and let the
+  // character through instead of driving the projector.
+  _isEditableTarget(target) {
+    const el = target || document.activeElement
+    if (!el || !el.tagName) return false
+    if (el.isContentEditable) return true
+    return el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT"
   }
 
   _bindSwipe() {
