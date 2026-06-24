@@ -3541,7 +3541,7 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
 }
 /* Armed: a quiet hint at the top of the operator console. */
 .ps-root.is-emphasising:not(.is-output) .ps-preach-ref::after {
-  content: "✷ tap a word to emphasise";
+  content: "✷ tap a word on your screen to emphasise";
   display: block;
   margin-left: 18px;
   font-size: 11px;
@@ -3549,6 +3549,17 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
   color: var(--gold);
   opacity: 0.85;
 }
+
+/* The verse on screen must not be a minefield of links while preaching. Tapping
+   a verse number (cross-references) or a Strong's word (lexicon) used to open a
+   drawer and break the projection — most confusingly when the operator was
+   trying to tap a word to emphasise it. While preaching, the live verse takes
+   ONLY emphasis taps; the projector/output window is display-only and inert. */
+.ps-root.is-preaching .ps-verse-body { user-select: none; }
+.ps-root.is-preaching .ps-verse-body .ps-vnum,
+.ps-root.is-preaching .ps-verse-body .ps-word { pointer-events: none; }
+.ps-root.is-preaching .ps-eword { pointer-events: auto; }
+.ps-root.is-output .ps-verse-body { pointer-events: none; }
 
 /* Multi-add hint under the queue's reference field. */
 .ps-setlist-form .ref-hint { display: none; }
