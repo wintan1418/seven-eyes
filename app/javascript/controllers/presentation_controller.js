@@ -134,6 +134,7 @@ export default class extends Controller {
     this._history = []
     this._blank = false
     this._autoRevealPending = false
+    this.element.classList.remove("is-awaiting-start")
     this._anchor = null
     this._emphasis = {}
     this._emphArmed = false
@@ -148,6 +149,7 @@ export default class extends Controller {
 
   next(event) {
     event?.preventDefault?.()
+    if (this._maybeAutoReveal()) return // first Next off the calm start lifts the hold
     if (this._slide) { this._stepSlide(+1); return }
     if (this._isSplit()) { this._stepActiveRegion(+1); return }
     const verses = this._primaryVerses()
@@ -157,6 +159,7 @@ export default class extends Controller {
 
   prev(event) {
     event?.preventDefault?.()
+    if (this._maybeAutoReveal()) return // first Prev off the calm start lifts the hold
     if (this._slide) { this._stepSlide(-1); return }
     if (this._isSplit()) { this._stepActiveRegion(-1); return }
     if (this._preachIndex <= 0) return
@@ -897,6 +900,7 @@ export default class extends Controller {
     event?.preventDefault?.()
     if (!this.element.classList.contains("is-preaching")) return
     this._autoRevealPending = false // a manual Blank means the operator owns it now
+    this.element.classList.remove("is-awaiting-start")
     this._blank = !this._blank
     this._applyBlank()
     this._broadcast()
@@ -1241,23 +1245,28 @@ export default class extends Controller {
     if (!this.element.classList.contains("is-projecting") && !this._blank) {
       this._blank = true
       this._autoRevealPending = true
+      this.element.classList.add("is-awaiting-start")
       this._applyBlank()
       this._broadcast()
     }
   }
 
-  // The projector was opened blank; the first item the operator deliberately
-  // puts up (a chase, a queue pick, an AI find, a song) lifts the hold. Plain
-  // verse-stepping while still blank stays a quiet pre-cue, so this fires only
-  // once — afterwards Blank is a manual toggle again.
+  // The projector was opened on the calm "ready" hold. The first deliberate move
+  // — Next/Prev, a chase, a queue pick, an AI find, a song — lifts it. Returns
+  // true when this call actually lifted the hold, so Next/Prev can treat the
+  // first press as "begin" rather than also advancing past the opening verse.
   _maybeAutoReveal() {
-    if (this._isOutput || !this._autoRevealPending) return
+    if (this._isOutput || !this._autoRevealPending) return false
     this._autoRevealPending = false
+    this.element.classList.remove("is-awaiting-start")
     if (this._blank) {
       this._blank = false
       this._applyBlank()
       this._broadcast()
+      return true
     }
+    this._broadcast() // clear the awaiting flag on the projector
+    return false
   }
 
   // Output window: browsers only allow fullscreen from a user gesture, so the
@@ -1317,6 +1326,7 @@ export default class extends Controller {
     // Holding screen mirrors the operator — including across an output refresh,
     // since the operator re-broadcasts the full state (blank included) on hello.
     this.element.classList.toggle("is-blank", !!msg.blank)
+    this.element.classList.toggle("is-awaiting-start", !!msg.awaitingStart)
     this._emphasis = msg.emphasis || {}
     if (msg.slide) { this._applySlide(msg.slide); return }
     if (this._slide) this._clearSlide({ repaint: false })
@@ -1458,6 +1468,7 @@ export default class extends Controller {
       group: this._groupSize,
       parallel: this.element.classList.contains("is-parallel"),
       blank: this._blank,
+      awaitingStart: this._autoRevealPending,
       emphasis: this._emphasis,
       reference: pane.querySelector("input[name='pane[reference]']")?.value || null,
       translation: pane.querySelector("select[name='pane[translation_id]']")?.value || null,

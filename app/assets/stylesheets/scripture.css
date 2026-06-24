@@ -3342,6 +3342,16 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
   color: rgba(208, 176, 116, 0.42);
   animation: holdGlow 5s ease-in-out infinite;
 }
+/* Opening "ready" caption — only while the projector is waiting for the first
+   item, so a plain mid-service Blank still shows just the calm ornament. */
+.ps-preach-hold .ready { display: none; }
+.ps-root.is-output.is-blank.is-awaiting-start:not(.is-stage) .ps-preach-hold .ready {
+  display: block; position: absolute; bottom: 9%; left: 50%; transform: translateX(-50%);
+  max-width: 74vw; text-align: center;
+  font: 500 clamp(15px, 1.8vw, 26px)/1.5 "EB Garamond", serif;
+  color: rgba(238, 224, 188, 0.74); letter-spacing: 0.01em;
+}
+.ps-preach-hold .ready b { color: rgba(240, 198, 78, 0.92); font-weight: 600; }
 /* While blanked, the projector's verse and any content slide stay dark. */
 .ps-root.is-output.is-blank:not(.is-stage) .ps-verses,
 .ps-root.is-output.is-blank:not(.is-stage) .ps-preach-slide { visibility: hidden; }
