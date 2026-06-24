@@ -1311,9 +1311,28 @@
   align-items: center;
   gap: 10px;
 }
-.ps-preach-bar-left { min-width: 180px; }
-.ps-preach-bar-right { min-width: 180px; justify-content: flex-end; }
-.ps-preach-bar-center { justify-content: center; flex: 1; flex-wrap: wrap; }
+.ps-preach-bar-left { min-width: 160px; }
+.ps-preach-bar-right { min-width: 160px; justify-content: flex-end; }
+/* The center holds ~16 tools. It must NEVER wrap: a fixed-height bar with
+   wrapping content spills the buttons up over the verse (at z-index 96), which
+   both looks broken and swallows taps meant for the words (e.g. Emphasise). So
+   it stays one row and scrolls horizontally when a screen is too narrow. */
+.ps-preach-bar-center {
+  justify-content: safe center;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(163, 129, 46, 0.5) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+.ps-preach-bar-center > * { flex: none; }
+.ps-preach-bar-center::-webkit-scrollbar { height: 5px; }
+.ps-preach-bar-center::-webkit-scrollbar-thumb {
+  background: rgba(163, 129, 46, 0.5); border-radius: 3px;
+}
 
 .ps-preach-bar .ps-preach-counter {
   font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
@@ -1363,16 +1382,17 @@
 }
 
 .ps-preach-tool {
-  padding: 10px 16px;
+  padding: 9px 12px;
   background: transparent;
   color: var(--vellum-0);
   border: 1px solid rgba(163, 129, 46, 0.55);
   border-radius: 4px;
   font: 600 11px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
   cursor: pointer;
-  min-height: 40px;
+  min-height: 38px;
+  white-space: nowrap;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
 .ps-preach-tool:hover { background: rgba(216, 181, 80, 0.14); border-color: var(--gold); }
@@ -1467,6 +1487,9 @@
    Emphasise needs the same: while arming, taps land on words, not the zones. */
 .ps-root.is-split .ps-preach-zone,
 .ps-root.is-emphasising .ps-preach-zone { display: none !important; }
+/* While arming Emphasise, also clear the next-verse strip so nothing overlays
+   the words you're tapping. */
+.ps-root.is-emphasising .ps-preach-next { display: none !important; }
 .ps-root.is-presenting.is-split .ps-workspace {
   gap: 14px;
   padding: 18px 24px 96px;
