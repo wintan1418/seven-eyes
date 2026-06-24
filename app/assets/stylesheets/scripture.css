@@ -3726,6 +3726,46 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
 .mock-split .sp-region.b::after { animation: newsSplitRing 6s ease-in-out infinite; animation-delay: 3s; }
 @keyframes newsSplitRing { 0%, 38% { opacity: 1; } 46%, 96% { opacity: 0; } 100% { opacity: 1; } }
 
+/* 18 — Go-Live join code projected for the whole room */
+.mock-join { background: #14110b; box-shadow: 0 0 0 3px rgba(20, 17, 11, 0.5); gap: 7px; }
+.mock-join .mj-eyebrow {
+  font: 600 8px "Cinzel", serif; letter-spacing: 0.22em; text-transform: uppercase;
+  color: rgba(216, 181, 80, 0.9);
+}
+.mock-join .mj-qr {
+  width: 74px; height: 74px; border-radius: 4px; padding: 6px; background: #fff;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+  animation: newsJoinPulse 4s ease-in-out infinite;
+}
+.mock-join .mj-qr::before {
+  content: ""; display: block; width: 100%; height: 100%;
+  /* three filled finder corners over a fine module field — reads as a QR */
+  background:
+    linear-gradient(#1a140c, #1a140c) 0 0 / 16px 16px no-repeat,
+    linear-gradient(#1a140c, #1a140c) 100% 0 / 16px 16px no-repeat,
+    linear-gradient(#1a140c, #1a140c) 0 100% / 16px 16px no-repeat,
+    repeating-conic-gradient(#1a140c 0 25%, #fff 0 50%) 0 0 / 8px 8px;
+}
+.mock-join .mj-code {
+  font: 700 19px "Cinzel", serif; letter-spacing: 0.14em; color: #f4e9c9;
+}
+.mock-join .mj-url { font: 500 10px "EB Garamond", serif; color: rgba(238, 224, 188, 0.8); }
+@keyframes newsJoinPulse {
+  0%, 100% { box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45); }
+  50% { box-shadow: 0 8px 26px rgba(216, 181, 80, 0.5); }
+}
+
+/* 19 — projection opens on a calm holding screen */
+.mock-calm { background: #14110b; box-shadow: 0 0 0 3px rgba(20, 17, 11, 0.5); gap: 12px; }
+.mock-calm .cm-orn {
+  font: 600 34px "Cinzel", serif; color: rgba(208, 176, 116, 0.5);
+  animation: newsBlankGlow 4.5s ease-in-out infinite;
+}
+.mock-calm .cm-cap {
+  font: italic 11px "EB Garamond", serif; letter-spacing: 0.04em;
+  color: rgba(238, 224, 188, 0.6);
+}
+
 /* keep the new cards legible when motion is turned off */
 @media (prefers-reduced-motion: reduce) {
   .mock-split .sp-region.a::after { opacity: 1 !important; }
@@ -3741,4 +3781,5 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
   .mock-anchor .trail span { opacity: 1 !important; transform: none !important; }
   .mock-batch .batch-type .typed { max-width: none !important; }
   .mock-batch .bi { opacity: 1 !important; transform: none !important; }
+  .mock-join .mj-qr { animation: none !important; }
 }
