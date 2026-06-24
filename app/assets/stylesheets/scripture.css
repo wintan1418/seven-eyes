@@ -1463,8 +1463,10 @@
    Frozen regions reuse .is-paired; the active region keeps .is-presented. */
 .ps-root.is-presenting.is-split .ps-pane.is-paired { display: flex !important; }
 /* Clicking a region picks the active side, so the full-screen tap-zones step
-   aside (advance with the chevrons, arrow keys, swipe, or the bottom bar). */
-.ps-root.is-split .ps-preach-zone { display: none !important; }
+   aside (advance with the chevrons, arrow keys, swipe, or the bottom bar).
+   Emphasise needs the same: while arming, taps land on words, not the zones. */
+.ps-root.is-split .ps-preach-zone,
+.ps-root.is-emphasising .ps-preach-zone { display: none !important; }
 .ps-root.is-presenting.is-split .ps-workspace {
   gap: 14px;
   padding: 18px 24px 96px;
