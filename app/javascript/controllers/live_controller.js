@@ -40,6 +40,9 @@ export default class extends Controller {
     const data = await res.json()
     this._live = true
     this._joinUrl = data.url
+    this._qrSvg = data.qr_svg
+    this._code = data.code
+    this._onScreen = false
     this.element.classList.add("is-live-session")
     if (this.hasButtonTarget) this.buttonTarget.classList.add("is-on")
     if (this.hasQrTarget) this.qrTarget.innerHTML = data.qr_svg
@@ -66,6 +69,10 @@ export default class extends Controller {
     clearTimeout(this._pushTimer)
     this.element.classList.remove("is-live-session")
     if (this.hasButtonTarget) this.buttonTarget.classList.remove("is-on")
+    if (this._onScreen) { // pull the join card off the projector
+      this._onScreen = false
+      window.dispatchEvent(new CustomEvent("preach:join", { detail: null }))
+    }
     this.closePanel()
     this._sub?.unsubscribe()
     this._sub = null
@@ -75,6 +82,25 @@ export default class extends Controller {
   copyLink(event) {
     event?.preventDefault?.()
     if (this._joinUrl) navigator.clipboard?.writeText(this._joinUrl)
+  }
+
+  // Put the join QR + code up on the projector so the whole room can scan from
+  // their seats — no one has to crowd the laptop. Toggles on/off; the
+  // presentation controller relays it to the output window.
+  projectJoin(event) {
+    event?.preventDefault?.()
+    if (!this._live) return
+    this._onScreen = !this._onScreen
+    window.dispatchEvent(new CustomEvent("preach:join", {
+      detail: this._onScreen
+        ? { qr_svg: this._qrSvg, code: this._code, url: this._joinUrl }
+        : null
+    }))
+    const btn = event.currentTarget
+    if (btn) {
+      btn.classList.toggle("is-on", this._onScreen)
+      btn.innerHTML = this._onScreen ? "&#9744; Hide from screen" : "&#10697; Show on screen"
+    }
   }
 
   closePanel(event) {

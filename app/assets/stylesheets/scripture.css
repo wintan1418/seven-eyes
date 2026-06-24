@@ -3350,6 +3350,39 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
   0%, 100% { opacity: 0.42; }
   50% { opacity: 0.72; }
 }
+
+/* ====== Go-Live join card on the projector (whole-room QR) ====== */
+/* Pushed to the output window so the congregation can scan from their seats
+   instead of crowding the laptop. Full-screen, above the verse and any slide. */
+.ps-preach-join { display: none; }
+.ps-root.is-output.is-joining .ps-preach-join:not([hidden]) {
+  display: flex; position: fixed; inset: 0; z-index: 70;
+  flex-direction: column; align-items: center; justify-content: center; gap: 2.2vh;
+  background: #14110b; text-align: center; animation: holdFade 0.4s ease;
+}
+.ps-root.is-output.is-joining .ps-verses,
+.ps-root.is-output.is-joining .ps-preach-slide { visibility: hidden; }
+.ps-preach-join .join-eyebrow {
+  font: 600 clamp(14px, 1.8vw, 26px) "Cinzel", serif;
+  letter-spacing: 0.24em; text-transform: uppercase; color: rgba(216, 181, 80, 0.92);
+}
+.ps-preach-join .join-qr {
+  background: #fff; padding: clamp(14px, 1.8vw, 28px); border-radius: 10px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5); line-height: 0;
+}
+.ps-preach-join .join-qr svg {
+  width: clamp(180px, 30vh, 360px); height: clamp(180px, 30vh, 360px); display: block;
+}
+.ps-preach-join .join-code {
+  font: 700 clamp(34px, 6vw, 90px) "Cinzel", serif; letter-spacing: 0.18em; color: #f4e9c9;
+}
+.ps-preach-join .join-url {
+  font: 500 clamp(16px, 2vw, 30px) "EB Garamond", serif; color: rgba(238, 224, 188, 0.86);
+}
+.ps-preach-join .join-hint {
+  font: italic clamp(13px, 1.4vw, 20px) "EB Garamond", serif;
+  color: rgba(238, 224, 188, 0.6); max-width: 70vw;
+}
 /* Operator console: a faint pulse on the lit Blank button so the desk never
    forgets the big screen is dark. */
 .ps-root:not(.is-output) [data-preach-blank].is-on {

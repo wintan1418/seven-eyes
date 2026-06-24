@@ -47,6 +47,8 @@ export default class extends Controller {
     this._emphasis = {} // verse number → emphasised word indices, for the minister's key point
     this._emphArmed = false // operator is arming emphasis: current verse words become clickable
     this._splitIndices = new Map() // split mode: pane element → its own current verse index
+    this._join = null // {qr, code, url} while the Go-Live join card is on the projector
+    this._autoRevealPending = false // projector opened blank; reveal on the first item picked
   }
 
   connect() {
@@ -63,8 +65,10 @@ export default class extends Controller {
       // Operator: queue items and phone-remote commands arrive as window events.
       this._onSetlist = (e) => this.presentItem(e.detail)
       this._onCommand = (e) => this._runCommand(e.detail)
+      this._onJoin = (e) => this._showJoin(e.detail)
       window.addEventListener("setlist:present", this._onSetlist)
       window.addEventListener("preach:command", this._onCommand)
+      window.addEventListener("preach:join", this._onJoin)
       this._screen = this._loadScreenPrefs()
     }
   }
@@ -129,9 +133,11 @@ export default class extends Controller {
     this._groupSize = 1
     this._history = []
     this._blank = false
+    this._autoRevealPending = false
     this._anchor = null
     this._emphasis = {}
     this._emphArmed = false
+    if (this._join) this._showJoin(null)
     this._applyBlank()
     this._syncBackButton()
     this._syncAnchorButtons()
@@ -474,6 +480,7 @@ export default class extends Controller {
         this._preachIndex = idx
       }
       this._paint()
+      this._maybeAutoReveal()
       requestAnimationFrame(() => this._autoFit())
     }, { once: true })
     input.form?.requestSubmit()
@@ -641,6 +648,7 @@ export default class extends Controller {
     }
     this.element.classList.add("is-slide")
     this._paintSlide()
+    this._maybeAutoReveal()
   }
 
   _stepSlide(delta) {
@@ -828,10 +836,12 @@ export default class extends Controller {
       this._syncAnchorButtons()
       return
     }
-    if (this._slide) return // a song/thought can't be the teaching text
+    // The teaching text can be a scripture OR a content slide (a song, a thought,
+    // an AI card) — whatever is on screen right now. _snapshot() already captures
+    // either, so Home can return to a "Morning Teaching" slide, not only verses.
     const snap = this._snapshot()
-    if (!snap || snap.kind !== "passage") return
-    this._anchor = { reference: snap.reference, index: snap.index }
+    if (!snap) return
+    this._anchor = snap
     this._syncAnchorButtons()
   }
 
@@ -839,17 +849,25 @@ export default class extends Controller {
     event?.preventDefault?.()
     if (!this._anchor) return
     this._remember() // so ⟲ Back can return from the jump home
-    this._restore({ kind: "passage", reference: this._anchor.reference, index: this._anchor.index })
+    this._restore({ ...this._anchor })
   }
 
-  // Keep the anchor's verse in step while the operator reads through the pinned
-  // passage (called from _paint). Detours sit on other references and leave it.
+  // Keep a passage anchor's verse in step while the operator reads through the
+  // pinned text (called from _paint). Detours sit on other references and leave
+  // it. A slide anchor stays exactly where it was pinned.
   _trackAnchor() {
-    if (this._isOutput || !this._anchor || this._slide) return
+    if (this._isOutput || !this._anchor || this._anchor.kind !== "passage" || this._slide) return
     const ref = this.element.querySelector(".ps-pane.is-presented input[name='pane[reference]']")?.value?.trim()
     if (ref && ref.toLowerCase() === this._anchor.reference.toLowerCase()) {
       this._anchor.index = this._preachIndex
     }
+  }
+
+  // A short label for whatever the anchor holds — a reference or a slide title.
+  _anchorLabel() {
+    if (!this._anchor) return ""
+    if (this._anchor.kind === "slide") return this._anchor.title || "this slide"
+    return this._anchor.reference
   }
 
   _syncAnchorButtons() {
@@ -858,14 +876,14 @@ export default class extends Controller {
     if (pin) {
       pin.classList.toggle("is-on", !!this._anchor)
       pin.title = this._anchor
-        ? `Anchored to ${this._anchor.reference} — click to release`
-        : "Anchor the passage on screen as your main teaching text"
+        ? `Anchored to ${this._anchorLabel()} — click to release`
+        : "Anchor what's on screen (a passage or a slide) as your main teaching text"
     }
     if (home) {
       home.disabled = !this._anchor
       home.title = this._anchor
-        ? `Jump back to your teaching text — ${this._anchor.reference} (H)`
-        : "Pin a passage as your teaching text first"
+        ? `Jump back to your teaching text — ${this._anchorLabel()} (H)`
+        : "Pin a passage or slide as your teaching text first"
     }
   }
 
@@ -878,6 +896,7 @@ export default class extends Controller {
   toggleBlank(event) {
     event?.preventDefault?.()
     if (!this.element.classList.contains("is-preaching")) return
+    this._autoRevealPending = false // a manual Blank means the operator owns it now
     this._blank = !this._blank
     this._applyBlank()
     this._broadcast()
@@ -890,6 +909,40 @@ export default class extends Controller {
     this.element.classList.toggle("is-blank", this._blank)
     const btn = this.element.querySelector("[data-preach-blank]")
     if (btn) btn.classList.toggle("is-on", this._blank)
+  }
+
+  // ----- the Go-Live join card on the big screen -----
+  // So the whole room can scan from their seats. The live controller hands us
+  // the QR (an inline SVG), the short code and the join URL; we push them to the
+  // projector as a full-screen overlay. A null detail clears it.
+
+  _showJoin(detail) {
+    if (this._isOutput) return
+    this._join = detail && detail.qr_svg
+      ? { qr: detail.qr_svg, code: detail.code || "", url: detail.url || "" }
+      : null
+    this._send(this._join ? { type: "join", ...this._join } : { type: "join", clear: true })
+  }
+
+  // Output/projector: paint (or clear) the join overlay.
+  _applyJoin(msg) {
+    const layer = this.element.querySelector("[data-preach-join]")
+    if (!layer) return
+    if (msg.clear || !msg.qr) {
+      layer.hidden = true
+      layer.innerHTML = ""
+      this.element.classList.remove("is-joining")
+      return
+    }
+    const url = (msg.url || "").replace(/^https?:\/\//, "")
+    layer.innerHTML =
+      `<div class="join-eyebrow">Follow along on your phone</div>` +
+      `<div class="join-qr">${msg.qr}</div>` +
+      `<div class="join-code">${msg.code || ""}</div>` +
+      `<div class="join-url">${url}</div>` +
+      `<div class="join-hint">Scan the code, or open the address and enter the code. No app, no account.</div>`
+    layer.hidden = false
+    this.element.classList.add("is-joining")
   }
 
   // ----- ✷ Emphasise: mark the minister's key word on the live verse -----
@@ -1175,7 +1228,36 @@ export default class extends Controller {
     url.searchParams.set("output", "1")
     url.searchParams.set("pane", String(Math.max(0, this._workspacePanes().indexOf(pane))))
     this._outputWindow = window.open(url.toString(), "ps-preach-output", "popup=yes,width=1280,height=720")
-    if (!this._outputWindow) alert("The browser blocked the output window — allow pop-ups for this site, then click Project again.")
+    if (!this._outputWindow) {
+      alert("The browser blocked the output window — allow pop-ups for this site, then click Project again.")
+      return
+    }
+    // Open the projector on the calm holding screen rather than throwing the
+    // staged scripture up the instant the window appears. The operator then
+    // picks what to start with (a scripture, a song, the queue…) and the first
+    // deliberate pick reveals it. Only on the FIRST open — clicking Project
+    // again mid-service just refocuses the window and must NOT re-blank a live
+    // screen. Manual Blank still works exactly as before.
+    if (!this.element.classList.contains("is-projecting") && !this._blank) {
+      this._blank = true
+      this._autoRevealPending = true
+      this._applyBlank()
+      this._broadcast()
+    }
+  }
+
+  // The projector was opened blank; the first item the operator deliberately
+  // puts up (a chase, a queue pick, an AI find, a song) lifts the hold. Plain
+  // verse-stepping while still blank stays a quiet pre-cue, so this fires only
+  // once — afterwards Blank is a manual toggle again.
+  _maybeAutoReveal() {
+    if (this._isOutput || !this._autoRevealPending) return
+    this._autoRevealPending = false
+    if (this._blank) {
+      this._blank = false
+      this._applyBlank()
+      this._broadcast()
+    }
   }
 
   // Output window: browsers only allow fullscreen from a user gesture, so the
@@ -1212,6 +1294,7 @@ export default class extends Controller {
     if (this._isOutput) {
       if (msg.type === "state") this._applyState(msg)
       else if (msg.type === "screen") this._applyScreen(msg)
+      else if (msg.type === "join") this._applyJoin(msg)
       else if (msg.type === "exit") window.close()
     } else {
       // Only the projector output flips the operator into console mode; the
@@ -1220,6 +1303,7 @@ export default class extends Controller {
         if (msg.role !== "stage") this._setProjecting(true)
         this._sendScreen()
         this._broadcast()
+        if (this._join) this._send({ type: "join", ...this._join }) // survive an output refresh
       } else if (msg.type === "bye") {
         if (msg.role !== "stage") this._setProjecting(false)
       }
@@ -1445,6 +1529,7 @@ export default class extends Controller {
     this._channel = null
     if (this._onSetlist) window.removeEventListener("setlist:present", this._onSetlist)
     if (this._onCommand) window.removeEventListener("preach:command", this._onCommand)
+    if (this._onJoin) window.removeEventListener("preach:join", this._onJoin)
     this._unbindRegionClicks()
     clearInterval(this._clockTimer)
     this._unbindEsc()
