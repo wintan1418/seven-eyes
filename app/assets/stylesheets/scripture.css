@@ -3555,14 +3555,20 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
 }
 .ps-eword.is-emph {
   color: var(--rubric);
-  font-weight: 600;
-  background: linear-gradient(transparent 60%, rgba(216, 181, 80, 0.4) 60%);
+  font-weight: 700;
+  /* A full highlighter swipe + ring so it reads clearly on the light vellum of
+     both the operator console and the default projector theme — the old 40%
+     underline was nearly invisible against dark ink text on cream. */
+  background: rgba(216, 181, 80, 0.55);
+  box-shadow: 0 0 0 3px rgba(216, 181, 80, 0.55);
+  border-radius: 4px;
 }
 /* Keep emphasis luminous on the dark projector theme. */
 .ps-root.is-output.out-theme-ink .ps-eword.is-emph {
-  color: #f0c64e;
-  text-shadow: 0 0 18px rgba(240, 198, 78, 0.4);
-  background: linear-gradient(transparent 64%, rgba(240, 198, 78, 0.2) 64%);
+  color: #f7d56b;
+  text-shadow: 0 0 20px rgba(240, 198, 78, 0.55);
+  background: rgba(240, 198, 78, 0.22);
+  box-shadow: 0 0 0 3px rgba(240, 198, 78, 0.22);
 }
 /* Armed: a quiet hint at the top of the operator console. */
 .ps-root.is-emphasising:not(.is-output) .ps-preach-ref::after {

@@ -125,6 +125,7 @@ export default class extends Controller {
     this._clearSlide({ repaint: false })
     this._unwrapAll()
     this.element.classList.remove("is-emphasising")
+    this._unbindEmphasisClicks()
     this._clear()
     this._clearAutoFit()
     this._unbindKeys()
@@ -951,6 +952,8 @@ export default class extends Controller {
     if (this._isOutput || !this.element.classList.contains("is-preaching")) return
     this._emphArmed = !this._emphArmed
     this.element.classList.toggle("is-emphasising", this._emphArmed)
+    if (this._emphArmed) this._bindEmphasisClicks()
+    else this._unbindEmphasisClicks()
     this._syncEmphasisButton()
     this._applyEmphasisToCurrent() // wrap (arm) or leave the current verse words
   }
@@ -958,6 +961,23 @@ export default class extends Controller {
   _syncEmphasisButton() {
     const btn = this.element.querySelector("[data-preach-emph]")
     if (btn) btn.classList.toggle("is-on", this._emphArmed)
+  }
+
+  // While armed, one delegated click handler catches taps on any word span.
+  // (Binding here rather than a per-span data-action avoids any Stimulus
+  // binding-timing question on dynamically rebuilt verse markup.)
+  _bindEmphasisClicks() {
+    if (this._emphClickHandler || this._isOutput) return
+    this._emphClickHandler = (e) => {
+      if (e.target.closest(".ps-eword")) this.emphasizeWord(e)
+    }
+    this.element.addEventListener("click", this._emphClickHandler)
+  }
+
+  _unbindEmphasisClicks() {
+    if (!this._emphClickHandler) return
+    this.element.removeEventListener("click", this._emphClickHandler)
+    this._emphClickHandler = null
   }
 
   // Operator: a word in the live verse was tapped — toggle its emphasis.
@@ -1016,7 +1036,9 @@ export default class extends Controller {
       word.className = set.has(wi) ? "ps-eword is-emph" : "ps-eword"
       word.dataset.widx = String(wi)
       word.textContent = token
-      if (clickable) word.dataset.action = "presentation#emphasizeWord"
+      // Taps are caught by a delegated listener bound while Emphasise is armed
+      // (see _bindEmphasisClicks) — more reliable than a per-span Stimulus action
+      // on freshly-created nodes, and clickable just gates the cursor styling.
       textSpan.appendChild(word)
     })
     const vnum = verse.querySelector(".ps-vnum")
@@ -1501,6 +1523,7 @@ export default class extends Controller {
     if (this._onCommand) window.removeEventListener("preach:command", this._onCommand)
     if (this._onJoin) window.removeEventListener("preach:join", this._onJoin)
     this._unbindRegionClicks()
+    this._unbindEmphasisClicks()
     clearInterval(this._clockTimer)
     this._unbindEsc()
     this._unbindKeys()
