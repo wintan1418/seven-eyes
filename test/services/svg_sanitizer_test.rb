@@ -32,10 +32,16 @@ class SvgSanitizerTest < ActiveSupport::TestCase
     assert_not_includes out, "href"
   end
 
-  test "rejects an attribute value carrying a url() or javascript payload" do
-    svg = "<svg viewBox='0 0 10 10'><rect width='5' height='5' fill='url(http://evil)'/></svg>"
-    out = SvgSanitizer.call(svg)
-    assert_not_includes out, "url("
+  test "rejects an EXTERNAL url() payload but keeps an internal url(#id) reference" do
+    external = "<svg viewBox='0 0 10 10'><rect width='5' height='5' fill='url(http://evil)'/></svg>"
+    assert_not_includes SvgSanitizer.call(external), "url(http"
+
+    internal = "<svg viewBox='0 0 10 10'><defs><linearGradient id='g'>" \
+               "<stop offset='0' stop-color='#a3812e'/></linearGradient></defs>" \
+               "<rect width='5' height='5' fill='url(#g)'/></svg>"
+    out = SvgSanitizer.call(internal)
+    assert_includes out, "url(#g)" # gradient fill survives
+    assert_includes out.downcase, "lineargradient"
   end
 
   test "returns nil for blank, oversize, or svg-less input" do

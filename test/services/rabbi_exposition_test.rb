@@ -3,14 +3,16 @@ require "test_helper"
 class RabbiExpositionTest < ActiveSupport::TestCase
   # Test double: overrides the network seam so no live API call is made.
   class FakeRabbi < RabbiExposition
-    def initialize(verse:, selection:, study:, result: nil)
+    def initialize(verse:, selection:, study:, result: nil, diagram_result: nil)
       super(verse:, selection:, study:)
       @result = result
+      @diagram_result = diagram_result
     end
 
     private
 
     def chat_completion = @result
+    def diagram_completion(_subject) = @diagram_result
   end
 
   def fake_ok(content) = AiChat::Result.new(ok: true, content: content, provider: :gemini)
@@ -59,21 +61,23 @@ class RabbiExpositionTest < ActiveSupport::TestCase
     assert_equal :gemini, r.provider
   end
 
-  test "parses background and a sanitised diagram for a physical passage" do
+  test "parses background and draws a sanitised diagram for a physical subject" do
     json = {
       summary: "Instructions for the ark.",
       background: "In the ancient Near East a god's throne sat in the innermost room.",
       context: "Exodus 25 gives the tabernacle blueprint.",
       meaning: "The ark is the meeting place of God and Israel.",
-      diagram: "<svg viewBox='0 0 100 60'><script>x()</script>" \
-               "<rect x='2' y='2' width='60' height='30' stroke='#3a2a18' fill='none'/>" \
-               "<text x='6' y='50'>2.5 cubits (~3.75 ft)</text></svg>",
+      draw_subject: "the ark of the covenant: a gold chest 2.5x1.5x1.5 cubits",
       cross_references: [],
       caution: "Don't allegorise the gold.",
       application: "Teach God's nearness."
     }.to_json
+    svg = "<svg viewBox='0 0 100 60'><script>x()</script>" \
+          "<rect x='2' y='2' width='60' height='30' stroke='#3a2a18' fill='none'/>" \
+          "<text x='6' y='50'>2.5 cubits (~3.75 ft)</text></svg>"
 
-    r = FakeRabbi.new(verse: @v16, selection: "make an ark", study: @study, result: fake_ok(json)).call
+    r = FakeRabbi.new(verse: @v16, selection: "make an ark", study: @study,
+                      result: fake_ok(json), diagram_result: fake_ok(svg)).call
     assert r.ok?
     assert_equal "In the ancient Near East a god's throne sat in the innermost room.", r.exposition.background
     assert r.exposition.diagram.present?
@@ -82,10 +86,20 @@ class RabbiExpositionTest < ActiveSupport::TestCase
     assert_not_includes r.exposition.diagram, "script" # scrubbed
   end
 
-  test "a non-physical passage yields no diagram" do
-    json = { summary: "ok", diagram: "", cross_references: [] }.to_json
+  test "a non-physical passage draws no diagram (no second call needed)" do
+    json = { summary: "ok", draw_subject: "", cross_references: [] }.to_json
     r = FakeRabbi.new(verse: @v16, selection: "loved", study: @study, result: fake_ok(json)).call
     assert r.ok?
+    assert_nil r.exposition.diagram
+  end
+
+  test "a failed drawing pass still returns the exposition" do
+    json = { summary: "ok", draw_subject: "the ark", cross_references: [] }.to_json
+    r = FakeRabbi.new(verse: @v16, selection: "ark", study: @study,
+                      result: fake_ok(json),
+                      diagram_result: AiChat::Result.new(ok: false, error: :api)).call
+    assert r.ok?
+    assert_equal "ok", r.exposition.summary
     assert_nil r.exposition.diagram
   end
 

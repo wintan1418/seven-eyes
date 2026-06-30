@@ -30,7 +30,10 @@ class SvgSanitizer
     orient refx refy viewbox preserveaspectratio
   ].to_set
 
-  UNSAFE_VALUE = /javascript:|expression\(|url\(|data:(?!image\/)/i
+  # Block javascript:, CSS expression(), data: payloads, and EXTERNAL url(...)
+  # references — but allow url(#id), the safe in-document reference a gradient or
+  # marker fill needs (fill='url(#gold)').
+  UNSAFE_VALUE = /javascript:|expression\(|data:(?!image\/)|url\(\s*(?!#)/i
 
   def self.call(raw) = new(raw).call
 

@@ -48,8 +48,8 @@ class RabbiExposition
     8. DRAW IT WHEN IT HELPS. When the passage describes a physical object,
        structure, or measured layout — the ark, the tabernacle and its curtains,
        the bronze altar, the lampstand, Solomon's or Ezekiel's temple, a vision's
-       architecture — a list of cubits puts hearers to sleep. Provide a "diagram"
-       so a teacher can SHOW it. For EVERY other passage, leave "diagram" as "".
+       architecture — a recital of cubits puts hearers to sleep. Set "draw_subject"
+       so a diagram can be drawn for the teacher. For EVERY other passage leave it "".
 
     Respond ONLY as minified JSON with exactly these keys:
     {
@@ -57,7 +57,7 @@ class RabbiExposition
       "background": "The world behind the passage — setting, customs, what the first hearers knew that we don't. 2-4 sentences. Use \\"\\" if there is nothing notable.",
       "context": "How the surrounding chapter and genre frame these words.",
       "meaning": "The careful exposition, grounded in the text and the witness of Scripture.",
-      "diagram": "USUALLY \\"\\". ONLY when the passage describes a physical object/structure/measured layout, a SIMPLE labelled SVG schematic of it, roughly to scale, showing the given measurements and converting cubits to approximate feet in the labels (1 cubit is about 1.5 ft). Use ONLY <svg><g><rect><line><polyline><polygon><path><circle><ellipse><text><tspan>; include a viewBox (about 0 0 480 320); use SINGLE QUOTES for every attribute value so the JSON stays valid; dark sepia strokes (#3a2a18) with gold (#a3812e) accents on a transparent background; readable <text> labels; NO scripts, NO style attribute, NO external links, NO <image> or <foreignObject>. Keep it compact.",
+      "draw_subject": "USUALLY \\"\\". ONLY when the passage describes a physical object/structure/measured layout, a short phrase naming WHAT to draw and the key dimensions to label — e.g. \\"the ark of the covenant: a gold chest 2.5x1.5x1.5 cubits, two cherubim on the lid, carrying poles through gold rings\\" or \\"the tabernacle court: 100x50 cubits, linen curtains 5 cubits high on bronze posts\\". Just the phrase, not a drawing.",
       "cross_references": ["Book C:V", "..."],
       "caution": "What NOT to conclude; where godly interpreters differ; guard against misreading.",
       "application": "A sober, faithful application for teaching or living. May be brief."
@@ -65,6 +65,25 @@ class RabbiExposition
     Keep each field tight and pastoral. cross_references: at most 8, standard English
     book names with chapter:verse, ordered by relevance, drawn from those provided or
     plainly relevant. No commentary outside the JSON.
+  PROMPT
+
+  # A second, focused pass dedicated to ONE job: drawing. Asking for the SVG on
+  # its own (rather than as a field buried in the exposition JSON) is far more
+  # reliable — the model actually produces the picture.
+  DIAGRAM_PROMPT = <<~PROMPT.freeze
+    You are a precise draughtsman drawing a clean, labelled schematic of a biblical
+    object for a teacher to show a congregation. Draw it roughly to scale.
+
+    Output ONLY one <svg>…</svg> element — no prose, no markdown fences, no JSON.
+    - viewBox='0 0 480 320'.
+    - Use ONLY these tags: <g> <rect> <line> <polyline> <polygon> <path> <circle>
+      <ellipse> <text> <tspan> <defs> <linearGradient> <stop>.
+    - Show the given measurements as <text> labels and convert cubits to approximate
+      feet in the label (1 cubit ≈ 1.5 ft), e.g. "2.5 cubits (~3.75 ft)".
+    - Dark sepia strokes (#3a2a18), gold (#a3812e) fills/accents, transparent
+      background, readable labels (font-size 13–16, font-family Georgia, serif).
+    - NO script, NO style attribute, NO external links, NO <image>, NO <foreignObject>.
+    Keep it uncluttered: the shape, the proportions, and the key labels.
   PROMPT
 
   Exposition = Struct.new(:summary, :background, :context, :meaning, :diagram, :caution, :application, keyword_init: true)
@@ -102,7 +121,7 @@ class RabbiExposition
       selection: @selection,
       exposition: Exposition.new(
         summary: data["summary"], background: data["background"], context: data["context"],
-        meaning: data["meaning"], diagram: SvgSanitizer.call(data["diagram"]),
+        meaning: data["meaning"], diagram: draw_diagram(data["draw_subject"]),
         caution: data["caution"], application: data["application"]
       ),
       cross_references: build_cross_references(data["cross_references"]),
@@ -120,6 +139,32 @@ class RabbiExposition
   # Network seam — overridden in tests to avoid a live API call.
   def chat_completion
     AiChat.call(system: SYSTEM_PROMPT, user: user_prompt, json: true)
+  end
+
+  # When the exposition flags a physical subject, draw it in a dedicated call and
+  # sanitise the result. Any failure (no key, API error, unusable SVG) simply
+  # yields nil so the exposition still renders without a picture.
+  def draw_diagram(subject)
+    subject = subject.to_s.strip
+    return nil if subject.empty?
+    res = diagram_completion(subject)
+    return nil unless res&.ok?
+    SvgSanitizer.call(res.content)
+  rescue => e
+    Rails.logger.warn("[RabbiExposition] diagram: #{e.class}: #{e.message}")
+    nil
+  end
+
+  # Network seam for the drawing pass — overridden in tests.
+  def diagram_completion(subject)
+    AiChat.call(system: DIAGRAM_PROMPT, user: diagram_prompt(subject), json: false)
+  end
+
+  def diagram_prompt(subject)
+    <<~TEXT
+      Passage: #{origin_label}
+      Draw this: #{subject}
+    TEXT
   end
 
   def book    = @verse.book
