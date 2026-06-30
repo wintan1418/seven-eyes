@@ -1,4 +1,4 @@
-<%# locals: study, result %>
+<%# locals: study, result, verse_id %>
 <%= turbo_frame_tag "rabbi_drawer", class: "ps-rabbi-body", data: { rabbi_target: "frame" } do %>
   <% if result.ok? %>
     <% ex = result.exposition %>
@@ -21,15 +21,11 @@
       <% end %>
     <% end %>
 
-    <% if ex.diagram.present? %>
-      <div class="ps-rabbi-section">
-        <div class="ps-rabbi-label">&#9635; A picture of it</div>
-        <figure class="ps-rabbi-figure">
-          <%= ex.diagram %>
-          <figcaption>Schematic from the description &mdash; proportions are approximate.</figcaption>
-        </figure>
-      </div>
-    <% end %>
+    <div class="ps-rabbi-section">
+      <div class="ps-rabbi-label">&#9635; A picture of it</div>
+      <%= render "studies/rabbi_diagram", study: study, verse_id: verse_id,
+            selection: result.selection, svg: ex.diagram, state: nil %>
+    </div>
 
     <% if result.cross_references.any? %>
       <div class="ps-rabbi-section">

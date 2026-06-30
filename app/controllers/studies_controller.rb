@@ -1,8 +1,8 @@
 class StudiesController < ApplicationController
   # The workspace is open to everyone; only saving (notes/highlights/account) needs auth.
-  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest quick_find search commentary lexicon rabbi sermon share_card prayer ]
+  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest quick_find search commentary lexicon rabbi rabbi_diagram sermon share_card prayer ]
 
-  before_action :set_study, only: %i[ show update destroy suggest quick_find search cross_references commentary lexicon rabbi sermon share share_card prayer ]
+  before_action :set_study, only: %i[ show update destroy suggest quick_find search cross_references commentary lexicon rabbi rabbi_diagram sermon share share_card prayer ]
 
   def index
     @studies = authenticated? ? current_user.studies.recent : []
@@ -131,7 +131,18 @@ class StudiesController < ApplicationController
     verse = Verse.includes(:book, :translation).find_by(id: params[:verse_id])
     @selection = params[:q].to_s
     @result = RabbiExposition.call(verse:, selection: @selection, study: @study)
-    render partial: "studies/rabbi_results", locals: { study: @study, result: @result }
+    render partial: "studies/rabbi_results",
+           locals: { study: @study, result: @result, verse_id: params[:verse_id] }
+  end
+
+  # On-demand "Draw this": render just the diagram frame for the Rabbi drawer.
+  def rabbi_diagram
+    verse = Verse.includes(:book, :translation).find_by(id: params[:verse_id])
+    diagram = RabbiDiagram.call(verse:, selection: params[:q], study: @study)
+    render partial: "studies/rabbi_diagram", locals: {
+      study: @study, verse_id: params[:verse_id], selection: params[:q],
+      svg: (diagram.ok? ? diagram.svg : nil), state: (diagram.ok? ? :ready : diagram.error)
+    }
   end
 
   # Metadata for the share modal: the canonical reference, the text to render on

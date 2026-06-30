@@ -680,6 +680,24 @@
 .ps-rabbi-figure figcaption {
   margin-top: 8px; font: italic 11.5px "EB Garamond", serif; color: var(--sepia-mute);
 }
+/* On-demand "Draw this" control + its frame */
+.ps-rabbi-diagram { display: block; }
+.ps-rabbi-draw {
+  display: inline-block; margin: 4px 20px 6px; padding: 8px 14px; cursor: pointer;
+  font: 600 10.5px "Cinzel", serif; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--rubric); background: var(--vellum-0); text-decoration: none;
+  border: 1px solid var(--gold); border-radius: 4px;
+}
+.ps-rabbi-draw:hover { background: var(--vellum-2); border-color: var(--rubric); }
+.ps-rabbi-draw-note {
+  margin: 4px 20px; font: italic 13px "EB Garamond", serif; color: var(--sepia-mute);
+}
+.ps-rabbi-drawing {
+  display: none; margin: 4px 20px; font: italic 13px "EB Garamond", serif; color: var(--gold-deep);
+}
+/* Turbo flags the frame [busy] while the drawing call runs */
+.ps-rabbi-diagram[busy] .ps-rabbi-drawing { display: inline-block; animation: ps-rabbi-pulse 1.4s ease-in-out infinite; }
+.ps-rabbi-diagram[busy] .ps-rabbi-draw { opacity: 0.5; pointer-events: none; }
 
 /* ===== share-as-image modal (passage card + chapter prayer) ===== */
 .ps-share-host { position: fixed; inset: 0; z-index: 44; visibility: hidden; pointer-events: none; }

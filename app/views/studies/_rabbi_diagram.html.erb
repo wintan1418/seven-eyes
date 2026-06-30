@@ -1,0 +1,23 @@
+<%# locals: study, verse_id, selection, svg (html_safe SVG or nil), state (symbol or nil) %>
+<%= turbo_frame_tag "rabbi_diagram_frame", class: "ps-rabbi-diagram" do %>
+  <% if svg.present? %>
+    <figure class="ps-rabbi-figure">
+      <%= svg %>
+      <figcaption>Schematic from the description &mdash; proportions are approximate.</figcaption>
+    </figure>
+  <% elsif state == :none %>
+    <div class="ps-rabbi-draw-note">Nothing physical to draw in this passage.</div>
+  <% elsif state == :no_key %>
+    <div class="ps-rabbi-draw-note">&#9888; No AI provider configured &mdash; can&rsquo;t draw just now.</div>
+  <% elsif state == :api %>
+    <div class="ps-rabbi-draw-note">Couldn&rsquo;t draw it just now &mdash; please try again.</div>
+  <% end %>
+
+  <% if verse_id.present? %>
+    <%= link_to rabbi_diagram_study_path(study, verse_id: verse_id, q: selection),
+          class: "ps-rabbi-draw", data: { turbo_frame: "rabbi_diagram_frame" } do %>
+      <%= svg.present? ? "↻ Redraw this" : "▣ Draw this passage" %>
+    <% end %>
+    <span class="ps-rabbi-drawing">&#10022; Drawing the schematic&hellip;</span>
+  <% end %>
+<% end %>
