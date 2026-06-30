@@ -41,12 +41,23 @@ class RabbiExposition
     6. CITE, DON'T QUOTE. Refer to supporting passages by reference (e.g. "Romans 5:1");
        do NOT reproduce verse text — the application already shows it. Only cite
        references that genuinely bear on the passage.
+    7. OPEN THE WORLD BEHIND IT. In "background", give the historical and cultural
+       setting an original hearer assumed but a modern reader misses — customs,
+       institutions, geography, the practices of that time (especially rich for OT
+       narrative and law: Exodus, Leviticus, the Gospels' Jewish world).
+    8. DRAW IT WHEN IT HELPS. When the passage describes a physical object,
+       structure, or measured layout — the ark, the tabernacle and its curtains,
+       the bronze altar, the lampstand, Solomon's or Ezekiel's temple, a vision's
+       architecture — a list of cubits puts hearers to sleep. Provide a "diagram"
+       so a teacher can SHOW it. For EVERY other passage, leave "diagram" as "".
 
     Respond ONLY as minified JSON with exactly these keys:
     {
       "summary": "1-2 sentences: the plain meaning of the highlighted words in context.",
+      "background": "The world behind the passage — setting, customs, what the first hearers knew that we don't. 2-4 sentences. Use \\"\\" if there is nothing notable.",
       "context": "How the surrounding chapter and genre frame these words.",
       "meaning": "The careful exposition, grounded in the text and the witness of Scripture.",
+      "diagram": "USUALLY \\"\\". ONLY when the passage describes a physical object/structure/measured layout, a SIMPLE labelled SVG schematic of it, roughly to scale, showing the given measurements and converting cubits to approximate feet in the labels (1 cubit is about 1.5 ft). Use ONLY <svg><g><rect><line><polyline><polygon><path><circle><ellipse><text><tspan>; include a viewBox (about 0 0 480 320); use SINGLE QUOTES for every attribute value so the JSON stays valid; dark sepia strokes (#3a2a18) with gold (#a3812e) accents on a transparent background; readable <text> labels; NO scripts, NO style attribute, NO external links, NO <image> or <foreignObject>. Keep it compact.",
       "cross_references": ["Book C:V", "..."],
       "caution": "What NOT to conclude; where godly interpreters differ; guard against misreading.",
       "application": "A sober, faithful application for teaching or living. May be brief."
@@ -56,7 +67,7 @@ class RabbiExposition
     plainly relevant. No commentary outside the JSON.
   PROMPT
 
-  Exposition = Struct.new(:summary, :context, :meaning, :caution, :application, keyword_init: true)
+  Exposition = Struct.new(:summary, :background, :context, :meaning, :diagram, :caution, :application, keyword_init: true)
   CrossRef   = Struct.new(:reference, :osis, :chapter, :verse_start, :verse_end, keyword_init: true)
 
   Result = Struct.new(:ok, :error, :origin, :selection, :exposition, :cross_references, :provider, keyword_init: true) do
@@ -90,7 +101,8 @@ class RabbiExposition
       origin: origin_label,
       selection: @selection,
       exposition: Exposition.new(
-        summary: data["summary"], context: data["context"], meaning: data["meaning"],
+        summary: data["summary"], background: data["background"], context: data["context"],
+        meaning: data["meaning"], diagram: SvgSanitizer.call(data["diagram"]),
         caution: data["caution"], application: data["application"]
       ),
       cross_references: build_cross_references(data["cross_references"]),

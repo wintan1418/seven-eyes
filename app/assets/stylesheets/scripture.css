@@ -670,6 +670,17 @@
 .ps-rabbi-loading .hint { margin-top: 4px; font: italic 12.5px "EB Garamond", serif; color: var(--sepia-mute); }
 @keyframes ps-rabbi-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 
+/* AI-drawn schematic (the ark, tabernacle, temple…) — vellum plate, gold frame */
+.ps-rabbi-figure {
+  margin: 6px 20px 4px; padding: 14px 14px 10px; text-align: center;
+  background: var(--vellum-0); border: 1px solid var(--gold); border-radius: 4px;
+  box-shadow: inset 0 0 0 3px rgba(216, 181, 80, 0.12);
+}
+.ps-rabbi-figure svg { display: inline-block; max-width: 100%; height: auto; }
+.ps-rabbi-figure figcaption {
+  margin-top: 8px; font: italic 11.5px "EB Garamond", serif; color: var(--sepia-mute);
+}
+
 /* ===== share-as-image modal (passage card + chapter prayer) ===== */
 .ps-share-host { position: fixed; inset: 0; z-index: 44; visibility: hidden; pointer-events: none; }
 .ps-share-host.is-open { visibility: visible; pointer-events: auto; }

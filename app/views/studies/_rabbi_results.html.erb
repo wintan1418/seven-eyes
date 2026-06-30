@@ -8,9 +8,10 @@
     </div>
 
     <% {
-         "Summary"     => ex.summary,
-         "In context"  => ex.context,
-         "What it means" => ex.meaning,
+         "Summary"            => ex.summary,
+         "The world behind it" => ex.background,
+         "In context"         => ex.context,
+         "What it means"      => ex.meaning,
        }.each do |label, text| %>
       <% if text.present? %>
         <div class="ps-rabbi-section">
@@ -18,6 +19,16 @@
           <div class="ps-rabbi-text"><%= simple_format(text) %></div>
         </div>
       <% end %>
+    <% end %>
+
+    <% if ex.diagram.present? %>
+      <div class="ps-rabbi-section">
+        <div class="ps-rabbi-label">&#9635; A picture of it</div>
+        <figure class="ps-rabbi-figure">
+          <%= ex.diagram %>
+          <figcaption>Schematic from the description &mdash; proportions are approximate.</figcaption>
+        </figure>
+      </div>
     <% end %>
 
     <% if result.cross_references.any? %>
