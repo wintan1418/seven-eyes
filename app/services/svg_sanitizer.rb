@@ -1,5 +1,6 @@
 require "nokogiri"
 require "set"
+require "json"
 
 # Strict allow-list sanitizer for inline SVG returned by the AI (the Rabbi's
 # diagrams). The model's output is rendered raw into the page, so we parse it,
@@ -36,6 +37,24 @@ class SvgSanitizer
   UNSAFE_VALUE = /javascript:|expression\(|data:(?!image\/)|url\(\s*(?!#)/i
 
   def self.call(raw) = new(raw).call
+
+  # Pull an <svg> out of an AI response that may be raw markup OR a JSON wrapper
+  # like {"svg":"<svg…>"} (optionally code-fenced), then sanitise it. Returns an
+  # html_safe SVG String, or nil when there is nothing drawable.
+  def self.from_ai(content)
+    raw = content.to_s.strip
+    return nil if raw.empty?
+
+    markup =
+      if raw.start_with?("{", "```")
+        cleaned = raw.sub(/\A```(?:json)?\s*/, "").sub(/```\z/, "")
+        (JSON.parse(cleaned)["svg"].to_s rescue raw)
+      else
+        raw
+      end
+    return nil unless markup.match?(/<svg/i)
+    call(markup)
+  end
 
   def initialize(raw)
     @raw = raw.to_s

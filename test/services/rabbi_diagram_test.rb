@@ -32,11 +32,11 @@ class RabbiDiagramTest < ActiveSupport::TestCase
     assert_equal :no_key, FakeDiagram.new(verse: @v10, study: @study, result: res).call.error
   end
 
-  test "returns a sanitised svg for a physical passage" do
+  test "returns a sanitised svg from a JSON {svg:...} response" do
     svg = "<svg viewBox='0 0 480 320'><script>x()</script>" \
           "<rect x='120' y='120' width='240' height='90' stroke='#3a2a18' fill='none'/>" \
           "<text x='240' y='240'>2.5 cubits (~3.75 ft)</text></svg>"
-    r = FakeDiagram.new(verse: @v10, study: @study, result: fake_ok(svg)).call
+    r = FakeDiagram.new(verse: @v10, study: @study, result: fake_ok({ svg: svg }.to_json)).call
     assert r.ok?
     assert r.svg.html_safe?
     assert_includes r.svg, "2.5 cubits"
@@ -44,15 +44,14 @@ class RabbiDiagramTest < ActiveSupport::TestCase
     assert_equal "Exodus 25:10", r.origin
   end
 
-  test "a NONE response (no svg) reports :none" do
-    r = FakeDiagram.new(verse: @v10, study: @study, result: fake_ok("NONE")).call
-    assert_equal :none, r.error
+  test "also accepts a raw <svg> response as a fallback" do
+    raw = "<svg viewBox='0 0 10 10'><rect width='5' height='5' stroke='#3a2a18'/></svg>"
+    r = FakeDiagram.new(verse: @v10, study: @study, result: fake_ok(raw)).call
+    assert r.ok?
   end
 
-  test "an svg that sanitises to nothing reports :none" do
-    r = FakeDiagram.new(verse: @v10, study: @study, result: fake_ok("<svg><script>only()</script></svg>")).call
-    # only a script inside -> sanitiser keeps an empty <svg/>, which is harmless;
-    # we still surface it as drawable since an <svg> tag was present
-    assert r.ok? || r.error == :none
+  test "an empty {svg:\"\"} response reports :none" do
+    r = FakeDiagram.new(verse: @v10, study: @study, result: fake_ok('{"svg":""}')).call
+    assert_equal :none, r.error
   end
 end

@@ -74,10 +74,12 @@ class RabbiExposition
     You are a precise draughtsman drawing a clean, labelled schematic of a biblical
     object for a teacher to show a congregation. Draw it roughly to scale.
 
-    Output ONLY one <svg>…</svg> element — no prose, no markdown fences, no JSON.
+    Respond ONLY as minified JSON: {"svg": "<svg>…</svg>"} — the value is a single
+    <svg> element and nothing else.
     - viewBox='0 0 480 320'.
     - Use ONLY these tags: <g> <rect> <line> <polyline> <polygon> <path> <circle>
       <ellipse> <text> <tspan> <defs> <linearGradient> <stop>.
+    - Use SINGLE QUOTES for every attribute value.
     - Show the given measurements as <text> labels and convert cubits to approximate
       feet in the label (1 cubit ≈ 1.5 ft), e.g. "2.5 cubits (~3.75 ft)".
     - Dark sepia strokes (#3a2a18), gold (#a3812e) fills/accents, transparent
@@ -149,7 +151,7 @@ class RabbiExposition
     return nil if subject.empty?
     res = diagram_completion(subject)
     return nil unless res&.ok?
-    SvgSanitizer.call(res.content)
+    SvgSanitizer.from_ai(res.content)
   rescue => e
     Rails.logger.warn("[RabbiExposition] diagram: #{e.class}: #{e.message}")
     nil
@@ -157,7 +159,7 @@ class RabbiExposition
 
   # Network seam for the drawing pass — overridden in tests.
   def diagram_completion(subject)
-    AiChat.call(system: DIAGRAM_PROMPT, user: diagram_prompt(subject), json: false)
+    AiChat.call(system: DIAGRAM_PROMPT, user: diagram_prompt(subject), json: true)
   end
 
   def diagram_prompt(subject)

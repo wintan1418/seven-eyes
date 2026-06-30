@@ -18,12 +18,15 @@ class RabbiDiagram
     lampstand, Solomon's or Ezekiel's temple, a vision's architecture — roughly to
     scale, for a teacher to show a congregation.
 
-    If the passage describes nothing physical to draw, output exactly: NONE
+    Respond ONLY as minified JSON: {"svg": "<svg>…</svg>"} — the value is a single
+    <svg> element and nothing else. If the passage describes nothing physical to
+    draw, respond with {"svg": ""}.
 
-    Otherwise output ONLY one <svg>…</svg> element — no prose, no markdown fences, no JSON.
+    The SVG:
     - viewBox='0 0 480 320'.
     - Use ONLY these tags: <g> <rect> <line> <polyline> <polygon> <path> <circle>
       <ellipse> <text> <tspan> <defs> <linearGradient> <stop>.
+    - Use SINGLE QUOTES for every attribute value.
     - Show the given measurements as <text> labels and convert cubits to approximate
       feet in the label (1 cubit is about 1.5 ft), e.g. "2.5 cubits (~3.75 ft)".
     - Dark sepia strokes (#3a2a18), gold (#a3812e) fills/accents, transparent
@@ -54,12 +57,8 @@ class RabbiDiagram
     return error(:no_key) if res.error == :no_key
     return error(:api) unless res.ok?
 
-    # No <svg> at all means the model judged there is nothing physical to draw
-    # (it returns "NONE"); otherwise hand the markup to the sanitiser.
-    content = res.content.to_s
-    return error(:none) unless content.match?(/<svg/i)
-
-    svg = SvgSanitizer.call(content)
+    # {"svg":""} (or anything without an <svg>) means nothing physical to draw.
+    svg = SvgSanitizer.from_ai(res.content)
     return error(:none) unless svg
 
     Result.new(ok: true, svg: svg, origin: origin_label, provider: res.provider)
@@ -72,9 +71,11 @@ class RabbiDiagram
 
   def error(code) = Result.new(ok: false, error: code, origin: origin_label)
 
-  # Network seam — overridden in tests to avoid a live API call.
+  # Network seam — overridden in tests to avoid a live API call. Uses the same
+  # proven json:true path as every other AI feature (the json:false path was
+  # returning empty on the live Gemini setup).
   def chat_completion
-    AiChat.call(system: SYSTEM_PROMPT, user: user_prompt, json: false)
+    AiChat.call(system: SYSTEM_PROMPT, user: user_prompt, json: true)
   end
 
   def book    = @verse.book

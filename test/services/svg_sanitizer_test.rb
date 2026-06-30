@@ -54,4 +54,14 @@ class SvgSanitizerTest < ActiveSupport::TestCase
   test "returns nil rather than raising on malformed markup" do
     assert_nothing_raised { SvgSanitizer.call("<svg viewBox='0 0 1 1'><rect") }
   end
+
+  test "from_ai extracts an svg from a JSON wrapper, raw markup, or a fence" do
+    svg = "<svg viewBox='0 0 10 10'><rect width='5' height='5'/></svg>"
+    assert_includes SvgSanitizer.from_ai({ svg: svg }.to_json), "<rect"
+    assert_includes SvgSanitizer.from_ai(svg), "<rect"
+    assert_includes SvgSanitizer.from_ai("```json\n#{{ svg: svg }.to_json}\n```"), "<rect"
+    assert_nil SvgSanitizer.from_ai('{"svg":""}')
+    assert_nil SvgSanitizer.from_ai("NONE")
+    assert_nil SvgSanitizer.from_ai("")
+  end
 end
