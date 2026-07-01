@@ -71,8 +71,8 @@
 
   <% elsif result.error == :no_key %>
     <div class="ps-ai-hint">
-      &#9888; No AI provider configured. Add <code>Google_GEMINI_API_KEY</code> (and optionally
-      <code>ROUTELLM_API_KEY</code> for fail-over) to your <code>.env</code>, then restart the server.
+      &#9888; No AI provider configured. Add <code>OPENAI_API_KEY</code> (or
+      <code>Google_GEMINI_API_KEY</code>) to your <code>.env</code>, then restart the server.
     </div>
   <% elsif result.error == :blank %>
     <div class="ps-ai-hint">Highlight a phrase in a verse first, then ask the Rabbi.</div>

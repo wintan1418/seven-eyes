@@ -13,18 +13,23 @@ require "json"
 # added to the environment — no code change.
 #
 # Supported providers and their env keys:
+#   :openai   — OpenAI Chat Completions           (OPENAI_API_KEY / OPENAI_KEY)
 #   :gemini   — Google Generative Language API   (Google_GEMINI_API_KEY / GEMINI_API_KEY)
 #   :routellm — Abacus.AI RouteLLM (OpenAI-shape) (ROUTELLM_API_KEY / ABACUS_API_KEY)
 #
 # Kept network-shaped exactly like ScriptureSuggester so it's unit-testable via
 # subclassing/overriding the per-provider request seams.
 class AiChat
+  OPENAI_DEFAULT_MODEL   = "gpt-4o-mini".freeze
+  OPENAI_DEFAULT_URL     = "https://api.openai.com/v1/chat/completions".freeze
   GEMINI_DEFAULT_MODEL   = "gemini-2.0-flash".freeze
   ROUTELLM_DEFAULT_MODEL = "route-llm".freeze
   ROUTELLM_DEFAULT_URL   = "https://routellm.abacus.ai/v1/chat/completions".freeze
 
-  # Order = priority. A provider is skipped if it has no key.
-  PROVIDERS = %i[ gemini routellm ].freeze
+  # Order = priority. A provider is skipped if it has no key. OpenAI is tried
+  # first (Gemini's free tier hit a hard limit:0 quota); Gemini then RouteLLM
+  # remain as automatic fail-overs.
+  PROVIDERS = %i[ openai gemini routellm ].freeze
 
   Result = Struct.new(:ok, :content, :provider, :error, keyword_init: true) do
     def ok? = ok
@@ -61,6 +66,7 @@ class AiChat
 
   def dispatch(provider)
     case provider
+    when :openai   then openai_request
     when :gemini   then gemini_request
     when :routellm then routellm_request
     end
@@ -70,6 +76,9 @@ class AiChat
 
   def key_for(provider)
     case provider
+    when :openai
+      ENV["OPENAI_API_KEY"].presence || ENV["OPENAI_KEY"].presence ||
+        Rails.application.credentials.dig(:openai, :api_key)
     when :gemini
       ENV["Google_GEMINI_API_KEY"].presence || ENV["GEMINI_API_KEY"].presence ||
         ENV["GOOGLE_GEMINI_API_KEY"].presence ||
@@ -79,6 +88,30 @@ class AiChat
         ENV["ABACUS_ROUTELLM_API_KEY"].presence || ENV["ABACUS_API_KEY"].presence ||
         Rails.application.credentials.dig(:routellm, :api_key)
     end
+  end
+
+  # ---- OpenAI (Chat Completions) ----
+
+  def openai_request
+    uri = URI(ENV["OPENAI_ENDPOINT"].presence || OPENAI_DEFAULT_URL)
+    model = ENV["OPENAI_MODEL"].presence || OPENAI_DEFAULT_MODEL
+
+    body = {
+      model: model,
+      temperature: @temperature,
+      messages: [
+        { role: "system", content: @system },
+        { role: "user", content: @user }
+      ]
+    }
+    # JSON mode requires the word "json" to appear in the messages — every one of
+    # our system prompts already asks for JSON, so this is safe.
+    body[:response_format] = { type: "json_object" } if @json
+
+    res = post_json(uri, body) { |req| req["Authorization"] = "Bearer #{key_for(:openai)}" }
+    return nil unless res
+
+    JSON.parse(res).dig("choices", 0, "message", "content")
   end
 
   # ---- Gemini (Google Generative Language API) ----
