@@ -529,8 +529,18 @@ export default class extends Controller {
     } catch { data = null }
     if (!this._findsOpen) return // the operator moved on while we searched
     if (!data?.ok || (!data.summary && !data.suggestions?.length)) {
-      this._closeFinds()
-      this._flashJumpError(q)
+      // A genuine miss (e.g. not a biblical subject) — tell the operator plainly
+      // instead of a silent flash, so the Go box never feels broken.
+      box.innerHTML =
+        `<div class="head"><span class="lbl">&#10038; Nothing found</span>` +
+        `<button type="button" class="close" data-action="presentation#cancelFinds">&#10005;</button></div>`
+      const card = document.createElement("div")
+      card.className = "card"
+      const sum = document.createElement("div")
+      sum.className = "sum"
+      sum.textContent = `No Scripture matched “${q}”. Try a fuller phrase — a name, place, story, or theme.`
+      card.appendChild(sum)
+      box.appendChild(card)
       return
     }
     box.innerHTML = ""
