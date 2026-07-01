@@ -15,15 +15,42 @@ export default class extends Controller {
     this.editing = null
     this._onUp = this.onMouseUp.bind(this)
     this._onDocDown = this.onDocPointerDown.bind(this)
+    this._onSelChange = this.onSelectionChange.bind(this)
     this.element.addEventListener("mouseup", this._onUp)
     this.element.addEventListener("click", this.onClick.bind(this))
     document.addEventListener("pointerdown", this._onDocDown, true)
+    // Touch devices don't fire a reliable mouseup after a text selection, so the
+    // popover (colours + Rabbi + Share) never appeared on phone/tablet. Watch
+    // selectionchange and, once the selection settles, raise the popover.
+    document.addEventListener("selectionchange", this._onSelChange)
   }
 
   disconnect() {
     this.closeEditor({ save: false })
     this.removePopover()
     document.removeEventListener("pointerdown", this._onDocDown, true)
+    document.removeEventListener("selectionchange", this._onSelChange)
+    clearTimeout(this._selTimer)
+  }
+
+  // Touch path: selectionchange fires as the finger/handles move the selection.
+  // Debounce so the popover only appears once the selection settles, and only on
+  // devices with a coarse pointer (desktop keeps using mouseup so the popover
+  // doesn't chase the caret mid-drag). The selection must be inside our verses.
+  onSelectionChange() {
+    if (!this._touchCapable()) return
+    clearTimeout(this._selTimer)
+    this._selTimer = setTimeout(() => {
+      const sel = window.getSelection()
+      if (!sel || sel.isCollapsed || sel.rangeCount === 0) return
+      const node = sel.getRangeAt(0).commonAncestorContainer
+      const el = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement
+      if (el && this.element.contains(el)) this.onMouseUp()
+    }, 320)
+  }
+
+  _touchCapable() {
+    return typeof window.matchMedia === "function" && window.matchMedia("(any-pointer: coarse)").matches
   }
 
   onMouseUp() {
@@ -85,13 +112,12 @@ export default class extends Controller {
     const pop = document.createElement("div")
     pop.className = "ps-hl-popover"
     pop.style.position = "fixed"
-    pop.style.left = `${Math.max(8, rect.left)}px`
-    pop.style.top = `${Math.max(8, rect.top - 44)}px`
     COLORS.forEach((c) => {
       const sw = document.createElement("span")
       sw.className = `ps-hl-swatch ${c}`
       sw.dataset.color = c
-      sw.addEventListener("mousedown", (e) => { e.preventDefault(); this.create(c) })
+      // pointerdown covers mouse AND touch (mousedown never fired on tap).
+      sw.addEventListener("pointerdown", (e) => { e.preventDefault(); this.create(c) })
       pop.appendChild(sw)
     })
 
@@ -104,18 +130,32 @@ export default class extends Controller {
     const rabbi = document.createElement("span")
     rabbi.className = "x-ref"
     rabbi.textContent = "✢ Rabbi"
-    rabbi.addEventListener("mousedown", (e) => { e.preventDefault(); this.askRabbi() })
+    rabbi.addEventListener("pointerdown", (e) => { e.preventDefault(); this.askRabbi() })
     pop.appendChild(rabbi)
 
     // "Share" — turn the selected words into a shareable picture + link.
     const share = document.createElement("span")
     share.className = "x-ref"
     share.textContent = "⤳ Share"
-    share.addEventListener("mousedown", (e) => { e.preventDefault(); this.shareSelection() })
+    share.addEventListener("pointerdown", (e) => { e.preventDefault(); this.shareSelection() })
     pop.appendChild(share)
 
     document.body.appendChild(pop)
     this.popover = pop
+    this.positionPopover(pop, rect)
+  }
+
+  // Place the popover above the selection, flipping below when it would clip the
+  // top, and clamped within the viewport so it's reachable on a phone screen.
+  positionPopover(pop, rect) {
+    const pad = 8
+    const w = pop.offsetWidth || 220
+    const h = pop.offsetHeight || 40
+    const left = Math.min(Math.max(pad, rect.left), window.innerWidth - w - pad)
+    let top = rect.top - h - 8
+    if (top < pad) top = Math.min(window.innerHeight - h - pad, rect.bottom + 10)
+    pop.style.left = `${left}px`
+    pop.style.top = `${top}px`
   }
 
   askRabbi() {
@@ -231,7 +271,7 @@ export default class extends Controller {
 
     // change color = immediate PATCH
     box.querySelectorAll(".ps-hl-swatch").forEach(sw => {
-      sw.addEventListener("mousedown", async (e) => {
+      sw.addEventListener("pointerdown", async (e) => {
         e.preventDefault()
         const color = sw.dataset.color
         await this.patchHighlight(span.dataset.highlightId, { color })
@@ -242,7 +282,7 @@ export default class extends Controller {
     })
 
     // delete
-    box.querySelector(".ps-hl-del").addEventListener("mousedown", async (e) => {
+    box.querySelector(".ps-hl-del").addEventListener("pointerdown", async (e) => {
       e.preventDefault()
       const id = span.dataset.highlightId
       // close the editor first so the outside-click handler doesn't try to save afterward
