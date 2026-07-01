@@ -626,6 +626,28 @@
   padding: 2px 4px;
 }
 .ps-hl-popover .x-ref:hover { color: var(--vellum-0); }
+/* Touch: a bottom action bar, clear of the phone's own selection menu (which
+   anchors to the selection up top), with finger-sized targets. */
+.ps-hl-popover.is-touch-bar {
+  position: fixed;
+  left: 50%;
+  right: auto;
+  top: auto !important;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 200;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.45);
+  max-width: calc(100vw - 24px);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ps-hl-popover.is-touch-bar::after { display: none; }
+.ps-hl-popover.is-touch-bar .ps-hl-swatch { width: 30px; height: 30px; border-radius: 5px; }
+.ps-hl-popover.is-touch-bar .x-ref { font-size: 13px; padding: 8px; letter-spacing: 0.1em; }
+.ps-hl-popover.is-touch-bar .divider { margin: 0 4px; }
 
 /* ----- AI Rabbi slide-over ----- */
 .ps-rabbi-host { position: fixed; inset: 0; z-index: 43; visibility: hidden; pointer-events: none; }

@@ -153,9 +153,12 @@ export default class extends Controller {
     this.positionPopover(pop, rect)
   }
 
-  // Place the popover above the selection, flipping below when it would clip the
-  // top, and clamped within the viewport so it's reachable on a phone screen.
+  // Place the popover. On touch, pin it to a bottom bar (CSS) so it never stacks
+  // on top of the phone's own selection menu, which anchors to the selection and
+  // was clashing/obstructing. On desktop, float it above the selection (flipping
+  // below when it would clip the top), clamped within the viewport.
   positionPopover(pop, rect) {
+    if (this._touchCapable()) { pop.classList.add("is-touch-bar"); return }
     const pad = 8
     const w = pop.offsetWidth || 220
     const h = pop.offsetHeight || 40
