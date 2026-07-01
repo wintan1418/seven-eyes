@@ -133,6 +133,14 @@ export default class extends Controller {
     rabbi.addEventListener("pointerdown", (e) => { e.preventDefault(); this.askRabbi() })
     pop.appendChild(rabbi)
 
+    // "Copy" — the selected verse text to the clipboard. The workhorse on touch,
+    // where the word-level Strong's links make native copy awkward.
+    const copy = document.createElement("span")
+    copy.className = "x-ref"
+    copy.textContent = "⧉ Copy"
+    copy.addEventListener("pointerdown", (e) => { e.preventDefault(); this.copySelection() })
+    pop.appendChild(copy)
+
     // "Share" — turn the selected words into a shareable picture + link.
     const share = document.createElement("span")
     share.className = "x-ref"
@@ -166,6 +174,53 @@ export default class extends Controller {
     window.dispatchEvent(new CustomEvent("rabbi:ask", {
       detail: { verseId: p.segments[0].verseId, text: p.text }
     }))
+  }
+
+  // Copy the selected text (with its reference, when we can name it) to the
+  // clipboard, then flash a confirmation. Reliable on touch where selecting over
+  // the Strong's links and using the native Copy is fiddly.
+  async copySelection() {
+    const p = this.pending
+    this.removePopover()
+    const text = p?.text?.trim()
+    if (!text) return
+    const ref = this.referenceFor(p.segments)
+    const payload = ref ? `${text}\n— ${ref}` : text
+    try {
+      await navigator.clipboard.writeText(payload)
+      this.flash("Copied")
+    } catch {
+      this.flash("Press and hold to copy")
+    }
+    window.getSelection()?.removeAllRanges()
+  }
+
+  // A human reference for the selected span, e.g. "John 3:16" or "John 3:16–18",
+  // built from the pane's loaded reference (book + chapter) plus the verse range.
+  referenceFor(segments) {
+    const verses = segments.map((s) => s.container.closest(".ps-verse")).filter(Boolean)
+    if (!verses.length) return null
+    const pane = verses[0].closest(".ps-pane")
+    const raw = pane?.querySelector("input[name='pane[reference]']")?.value?.trim()
+    const base = raw ? raw.replace(/\s*[:.]\s*\d+\s*(?:[-–]\s*\d+)?\s*$/, "") : null
+    if (!base) return null
+    const first = verses[0].dataset.verseNum
+    const last = verses[verses.length - 1].dataset.verseNum
+    const range = first === last ? first : `${first}–${last}`
+    return `${base}:${range}`
+  }
+
+  flash(text) {
+    let toast = document.querySelector(".ps-toast.js-flash")
+    if (!toast) {
+      toast = document.createElement("div")
+      toast.className = "ps-toast js-flash"
+      document.body.appendChild(toast)
+    }
+    toast.innerHTML = `<span class="check">✦</span> ${text}`
+    clearTimeout(this._toastTimer)
+    toast.style.opacity = "1"
+    this._toastTimer = setTimeout(() => { toast.style.opacity = "0" }, 1500)
   }
 
   shareSelection() {

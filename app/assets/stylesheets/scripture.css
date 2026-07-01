@@ -2388,7 +2388,15 @@ body[data-theme="candlelight"] .ps-backlink:hover { background: rgba(80, 55, 25,
 }
 
 /* ====== Translation diff (word-level highlight when comparing same verse) ====== */
-.ps-word { /* identity wrapper — keeps selection and copy intact */ }
+/* Strong's words are links; on touch a long-press over them would pop the OS
+   "Open/Copy Link" callout instead of selecting text. Suppress the callout and
+   keep the text selectable so verses can be selected and copied on mobile. */
+.ps-word {
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.ps-verse-text, .ps-verse-body { -webkit-user-select: text; user-select: text; }
 .ps-diff-only {
   background: rgba(216, 100, 50, 0.15);
   border-bottom: 1px dotted rgba(216, 100, 50, 0.55);
