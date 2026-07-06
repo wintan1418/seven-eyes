@@ -163,11 +163,12 @@ class StudiesController < ApplicationController
     quota.record! if illustration.ok?
 
     render_rabbi_illustration(verses,
-      image:   (illustration.ok? ? illustration.image : nil),
-      caption: (illustration.ok? ? illustration.caption : nil),
-      state:   (illustration.ok? ? :ready : illustration.error),
-      style:   illustration.style,
-      remaining: quota.remaining)
+      image:       (illustration.ok? ? illustration.image : nil),
+      caption:     (illustration.ok? ? illustration.caption : nil),
+      annotations: (illustration.ok? ? illustration.annotations : nil),
+      state:       (illustration.ok? ? :ready : illustration.error),
+      style:       illustration.style,
+      remaining:   quota.remaining)
   end
 
   # Metadata for the share modal: the canonical reference, the text to render on
@@ -229,10 +230,10 @@ class StudiesController < ApplicationController
     authenticated? ? "u#{current_user&.id}" : "g#{@study&.id}"
   end
 
-  def render_rabbi_illustration(verses, image: nil, caption: nil, state: nil, remaining: nil, style: nil)
+  def render_rabbi_illustration(verses, image: nil, caption: nil, annotations: nil, state: nil, remaining: nil, style: nil)
     render partial: "studies/rabbi_illustration", locals: {
       study: @study, verse_id: verses.first&.id, verse_ids: verses.map(&:id).join(","),
-      selection: params[:q], image:, caption:, state:, remaining:,
+      selection: params[:q], image:, caption:, annotations:, state:, remaining:,
       style: (style || params[:style])
     }
   end

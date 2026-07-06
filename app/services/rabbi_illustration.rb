@@ -13,42 +13,63 @@ require "json"
 class RabbiIllustration
   CHAPTER_CONTEXT_LIMIT = 60
 
-  # The reverence guardrail every style keeps: no lettering, and the divine shown
-  # only as light — never a face.
-  REVERENCE = "No lettering or text in the image. Do not depict the face of God; " \
-    "show the divine only as light, cloud, or glory.".freeze
+  MAX_ANNOTATIONS = 5
 
-  # Selectable rendering styles. "illuminated" is the warm manuscript look;
-  # "realistic" is the cleaner, modern, cinematic "AI view".
+  # The reverence guardrail every style keeps: the divine shown only as light,
+  # never a face.
+  REVERENCE = "Portray the divine only as light, cloud, or glory — never a face " \
+    "or body; keep it reverent and fit to project in a church.".freeze
+  NO_TEXT = " No lettering or text anywhere in the image.".freeze
+  # For the labeled look: ONLY small numbered circle badges (digits, never words) —
+  # the words live in the legend beneath the image, so nothing can be misspelled.
+  MARKERS = " Mark each key element with a small, clean, solid circular badge " \
+    "containing ONLY a single digit (1, 2, 3, …) in the order given, joined to its " \
+    "element by a thin leader line. Absolutely NO words, names, letters, or captions " \
+    "anywhere in the image — ONLY the numbered circles. The labels are supplied separately.".freeze
+
+  # Selectable rendering styles. "realistic" is the clean modern "AI view";
+  # "illuminated" is the warm manuscript look; "labeled" annotates the scene with
+  # numbered markers that map to the "what to notice" key beneath the image.
   STYLES = {
-    "illuminated" => " — rendered as an illuminated medieval manuscript illustration / " \
-      "fine old Bible engraving: warm vellum tones, sepia ink linework, gold-leaf accents, " \
-      "reverent and dignified, painterly, soft light. #{REVERENCE}",
     "realistic" => " — rendered as a clean, modern, photorealistic cinematic illustration: " \
       "soft natural light, lifelike textures and depth, an uncluttered and elegant composition, " \
-      "high detail, dignified and reverent, contemporary quality. #{REVERENCE}"
+      "high detail, dignified. #{REVERENCE}#{NO_TEXT}",
+    "illuminated" => " — rendered as an illuminated medieval manuscript illustration / " \
+      "fine old Bible engraving: warm vellum tones, sepia ink linework, gold-leaf accents, " \
+      "reverent and dignified, painterly, soft light. #{REVERENCE}#{NO_TEXT}",
+    "labeled" => " — rendered as a clean, modern educational illustration with an infographic " \
+      "feel: crisp, well-lit, uncluttered, the key parts clearly visible. #{REVERENCE}#{MARKERS}"
   }.freeze
   DEFAULT_STYLE = "realistic".freeze
 
   SYSTEM_PROMPT = <<~PROMPT.freeze
-    You are an art director for a reverent Bible-study tool. Given a highlighted
-    Scripture passage, write ONE vivid prompt describing a single scene or object
-    from it to illustrate for a congregation — the setting, figures (modest and
-    reverent), objects, landscape, time of day, mood. Ground it strictly in the
-    actual passage and its historical setting; invent no unbiblical elements.
+    You are an art director and Bible teacher for a reverent study tool. Given a
+    highlighted Scripture passage, write ONE vivid prompt describing a single scene
+    or object from it to illustrate for a congregation — the setting, figures
+    (modest and reverent), objects, landscape, time of day, mood. Ground it strictly
+    in the actual passage and its historical setting; invent no unbiblical elements.
+    THEN list the vital elements a viewer should notice to understand the passage.
 
     Reverence rules: portray God or the Lord ONLY as light, cloud, or glory —
     never a face or body. Avoid gore and anything a church could not project. If
     the passage is purely abstract (bare doctrine, an argument, a list of names)
-    with nothing to depict, return empty strings.
+    with nothing to depict, return an empty illustration.
 
     Respond ONLY as minified JSON:
     {"illustration": "the scene to draw, 1-3 sentences, concrete and visual",
-     "caption": "a short caption naming the scene, max 10 words"}
-    Use "" for both when there is nothing fitting to illustrate.
+     "caption": "a short caption naming the scene, max 10 words",
+     "annotations": [
+       {"label": "short name of a key element in the scene, max 6 words",
+        "note": "one clause on why it matters / what it means"}
+     ]}
+    Give 3-5 annotations, ordered by where a marker would sit in the scene (the same
+    order the picture should number them). Use an empty illustration and empty
+    annotations when there is nothing fitting to illustrate.
   PROMPT
 
-  Result = Struct.new(:ok, :error, :image, :caption, :origin, :provider, :style, keyword_init: true) do
+  Annotation = Struct.new(:label, :note, keyword_init: true)
+
+  Result = Struct.new(:ok, :error, :image, :caption, :annotations, :origin, :provider, :style, keyword_init: true) do
     def ok? = ok
   end
 
@@ -77,11 +98,12 @@ class RabbiIllustration
     scene = data && data["illustration"].to_s.strip
     return error(:none) if scene.blank?
 
-    img = generate_image(scene + STYLES[@style])
+    annotations = build_annotations(data["annotations"])
+    img = generate_image(scene + STYLES[@style] + marker_list(annotations))
     return error(img.error || :api) unless img.ok?
 
     Result.new(ok: true, image: img.data_url, caption: data["caption"].to_s.strip.presence,
-               origin: origin_label, provider: art.provider, style: @style)
+               annotations: annotations, origin: origin_label, provider: art.provider, style: @style)
   rescue => e
     Rails.logger.error("[RabbiIllustration] #{e.class}: #{e.message}")
     error(:api)
@@ -94,6 +116,25 @@ class RabbiIllustration
   # Network seams — overridden in tests to avoid live API calls.
   def art_direction = AiChat.call(system: SYSTEM_PROMPT, user: user_prompt, json: true)
   def generate_image(prompt) = OpenaiImage.generate(prompt)
+
+  # The vital points a viewer should notice, shown as a numbered key beneath the
+  # image (and, in the "labeled" style, matched to markers drawn on the picture).
+  def build_annotations(raw)
+    Array(raw).filter_map do |a|
+      next unless a.is_a?(Hash)
+      label = a["label"].to_s.strip
+      next if label.empty?
+      Annotation.new(label: label, note: a["note"].to_s.strip.presence)
+    end.first(MAX_ANNOTATIONS)
+  end
+
+  # In the labeled style, tell the image model exactly which elements to number,
+  # in order, so the on-picture markers line up with the key beneath it.
+  def marker_list(annotations)
+    return "" unless @style == "labeled" && annotations.any?
+    items = annotations.each_with_index.map { |a, i| "#{i + 1}) #{a.label}" }.join("; ")
+    " Number these elements in this exact order: #{items}."
+  end
 
   def book    = @verse.book
   def chapter = @verse.chapter

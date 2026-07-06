@@ -1,15 +1,28 @@
 <%# locals: study, verse_id, verse_ids, selection, image (data URL or nil), caption, state %>
-<%# optional: remaining (Integer or nil), style (String or nil) %>
+<%# optional: remaining (Integer or nil), style (String or nil), annotations (Array or nil) %>
 <% remaining = local_assigns.fetch(:remaining, nil) %>
+<% annotations = Array(local_assigns.fetch(:annotations, nil)) %>
 <% style = local_assigns.fetch(:style, nil).presence || RabbiIllustration::DEFAULT_STYLE %>
 <% exhausted = state == :quota || remaining == 0 %>
-<% style_labels = { "realistic" => "◐ Clean view", "illuminated" => "✦ Illuminated" } %>
+<% style_labels = { "realistic" => "◐ Clean view", "illuminated" => "✦ Illuminated", "labeled" => "① Labeled" } %>
 <%= turbo_frame_tag "rabbi_illustration_frame", class: "ps-rabbi-illus" do %>
   <% if image.present? %>
     <figure class="ps-rabbi-figure">
       <%= image_tag image, alt: (caption || "Illustration of the passage"), class: "ps-rabbi-illus-img" %>
       <figcaption><%= caption.presence || "An artist's rendering — imagined, not a photograph." %></figcaption>
     </figure>
+    <% if annotations.any? %>
+      <div class="ps-rabbi-notice">
+        <div class="ps-rabbi-notice-head">&#9635; What to notice</div>
+        <ol class="ps-rabbi-notice-list">
+          <% annotations.each do |a| %>
+            <li>
+              <span class="lbl"><%= a.label %></span><%= " — #{a.note}" if a.note.present? %>
+            </li>
+          <% end %>
+        </ol>
+      </div>
+    <% end %>
   <% elsif state == :quota %>
     <div class="ps-rabbi-draw-note">
       &#9203; You&rsquo;ve used today&rsquo;s <%= IllustrationQuota.limit %> illustrations.

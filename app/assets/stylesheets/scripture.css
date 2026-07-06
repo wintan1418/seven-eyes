@@ -741,6 +741,23 @@
   color: var(--rubric); border-color: var(--gold); background: rgba(216, 181, 80, 0.16);
 }
 .ps-rabbi-illus[busy] .ps-rabbi-style { opacity: 0.5; pointer-events: none; }
+/* "What to notice" — the numbered key beneath the illustration (matches the
+   markers drawn on the picture in the Labeled style) */
+.ps-rabbi-notice {
+  margin: 8px 20px 2px; padding: 12px 14px;
+  background: var(--vellum-0); border: 1px solid rgba(163, 129, 46, 0.4); border-radius: 4px;
+}
+.ps-rabbi-notice-head {
+  font: 600 10px "Cinzel", serif; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--gold-deep); margin-bottom: 6px;
+}
+.ps-rabbi-notice-list {
+  margin: 0; padding-left: 1.4em; list-style: decimal;
+  font: 14px/1.5 "EB Garamond", serif; color: var(--ink);
+}
+.ps-rabbi-notice-list li { margin: 3px 0; }
+.ps-rabbi-notice-list li::marker { color: var(--rubric); font-weight: 700; }
+.ps-rabbi-notice-list .lbl { font-weight: 600; color: var(--rubric); }
 /* Turbo flags the frame [busy] while the drawing call runs */
 .ps-rabbi-diagram[busy] .ps-rabbi-drawing { display: inline-block; animation: ps-rabbi-pulse 1.4s ease-in-out infinite; }
 .ps-rabbi-diagram[busy] .ps-rabbi-draw { opacity: 0.5; pointer-events: none; }

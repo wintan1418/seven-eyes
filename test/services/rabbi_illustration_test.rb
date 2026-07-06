@@ -46,14 +46,36 @@ class RabbiIllustrationTest < ActiveSupport::TestCase
     assert_equal :none, r.error
   end
 
-  test "a described scene renders an image data URL with its caption" do
-    art = fake_art({ illustration: "The golden ark under a tent", caption: "The Ark" }.to_json)
+  test "a described scene renders an image data URL with its caption and annotations" do
+    art = fake_art({ illustration: "The golden ark under a tent", caption: "The Ark",
+                     annotations: [ { label: "Mercy seat", note: "where God met Israel" },
+                                    { label: "Cherubim", note: nil }, { label: "", note: "dropped" } ] }.to_json)
     r = FakeIllustration.new(verse: @v10, study: @study, selection: "make an ark", art:, image: fake_image).call
     assert r.ok?
     assert_equal "The Ark", r.caption
     assert_match %r{\Adata:image/png;base64,}, r.image
     assert_equal "Exodus 25:10", r.origin
     assert_equal :openai, r.provider
+    # blank-label annotation is dropped; notes preserved/optional
+    assert_equal [ "Mercy seat", "Cherubim" ], r.annotations.map(&:label)
+    assert_equal "where God met Israel", r.annotations.first.note
+  end
+
+  test "the labeled style tells the image to number the key elements in order" do
+    art = fake_art({ illustration: "scene", caption: "c",
+                     annotations: [ { label: "Ark" }, { label: "Poles" } ] }.to_json)
+    f = FakeIllustration.new(verse: @v10, study: @study, style: "labeled", art:, image: fake_image)
+    r = f.call
+    assert_equal "labeled", r.style
+    assert_includes f.prompt_seen, "Number these elements"
+    assert_includes f.prompt_seen, "1) Ark; 2) Poles"
+  end
+
+  test "non-labeled styles do not inject a marker list" do
+    art = fake_art({ illustration: "scene", caption: "c", annotations: [ { label: "Ark" } ] }.to_json)
+    f = FakeIllustration.new(verse: @v10, study: @study, style: "realistic", art:, image: fake_image)
+    f.call
+    assert_not_includes f.prompt_seen, "Number these elements"
   end
 
   test "a failed image generation surfaces the image error" do
