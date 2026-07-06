@@ -17,8 +17,10 @@ class RabbiExposition
 
   SYSTEM_PROMPT = <<~PROMPT.freeze
     You are a careful, reverent biblical expositor — a "Rabbi" in the teacher sense.
-    A pastor has highlighted part of a verse and asked what it means. Explain it
-    under STRICT rules of sound, historic-orthodox interpretation:
+    A pastor has highlighted a passage — which may be a single clause OR span
+    several verses — and asked what it means. Explain the WHOLE highlighted span,
+    not merely its first verse: cover each highlighted verse and how they connect.
+    Work under STRICT rules of sound, historic-orthodox interpretation:
 
     1. CONTEXT FIRST. Never take the highlighted words out of context. Read them in
        light of the WHOLE CHAPTER provided, the immediate sentence, the book's
@@ -95,15 +97,19 @@ class RabbiExposition
     def ok? = ok
   end
 
-  def self.call(verse:, selection:, study:, translation: nil)
-    new(verse:, selection:, study:, translation:).call
+  def self.call(verse:, selection:, study:, translation: nil, verses: nil)
+    new(verse:, selection:, study:, translation:, verses:).call
   end
 
-  def initialize(verse:, selection:, study:, translation: nil)
+  def initialize(verse:, selection:, study:, translation: nil, verses: nil)
     @verse = verse
+    # The pastor may highlight a span of verses (John 3:16-18), not just one.
+    # @verses is the full highlighted set (ordered); @verse anchors the chapter.
+    @verses = Array(verses).compact.presence || [ verse ].compact
+    @verse ||= @verses.first
     @selection = selection.to_s.strip
     @study = study
-    @translation = translation || verse&.translation
+    @translation = translation || @verse&.translation
   end
 
   def call
@@ -174,14 +180,17 @@ class RabbiExposition
 
   def origin_label
     return nil unless @verse
-    "#{book.name} #{chapter}:#{@verse.verse_number}"
+    nums = @verses.map(&:verse_number)
+    first, last = nums.min, nums.max
+    range = (first == last) ? first.to_s : "#{first}–#{last}"
+    "#{book.name} #{chapter}:#{range}"
   end
 
   def user_prompt
     <<~TEXT
       PASSAGE: #{origin_label} (#{@translation&.name || "KJV"})
 
-      HIGHLIGHTED WORDS (what to explain):
+      HIGHLIGHTED TEXT (explain ALL of this — it may span several verses):
       "#{@selection}"
 
       FULL CHAPTER FOR CONTEXT — #{book.name} #{chapter}:
@@ -202,11 +211,18 @@ class RabbiExposition
          .join("\n")
   end
 
+  # Gather cross-references for EVERY highlighted verse (not just the first),
+  # merged in order and de-duplicated, so a highlighted span is served fully.
   def xref_rows
-    @xref_rows ||= CrossReferenceLookup.for_verse(
-      book: book, chapter: chapter, verse: @verse.verse_number,
-      translation: @translation, limit: XREF_LIMIT
-    )
+    @xref_rows ||= begin
+      seen = Set.new
+      @verses.flat_map do |v|
+        CrossReferenceLookup.for_verse(
+          book: book, chapter: chapter, verse: v.verse_number,
+          translation: @translation, limit: XREF_LIMIT
+        )
+      end.select { |r| seen.add?(r.reference) }.first(XREF_LIMIT)
+    end
   end
 
   def xref_lines

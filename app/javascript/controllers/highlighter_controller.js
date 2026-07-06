@@ -173,9 +173,12 @@ export default class extends Controller {
     const p = this.pending
     this.removePopover()
     if (!p || !p.segments?.length || !p.text.trim()) return
-    // The Rabbi reads the whole chapter for context; the first verse anchors it.
+    // Pass EVERY verse the selection touched so the Rabbi explains the whole
+    // span (John 3:16–18), not just the first verse. The first still anchors
+    // the chapter context.
+    const verseIds = [...new Set(p.segments.map((s) => s.verseId).filter(Boolean))]
     window.dispatchEvent(new CustomEvent("rabbi:ask", {
-      detail: { verseId: p.segments[0].verseId, text: p.text }
+      detail: { verseId: verseIds[0], verseIds, text: p.text }
     }))
   }
 

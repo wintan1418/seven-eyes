@@ -11,6 +11,7 @@ Rails.application.routes.draw do
     get :commentary, on: :member
     get :rabbi, on: :member
     get :rabbi_diagram, on: :member
+    get :rabbi_illustration, on: :member
     get :sermon, on: :member
     post :share, on: :member
     get :share_card, on: :member

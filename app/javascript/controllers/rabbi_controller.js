@@ -12,7 +12,7 @@ const LOADING = `
   </div>`
 
 export default class extends Controller {
-  static targets = ["host", "form", "verseId", "query", "frame"]
+  static targets = ["host", "form", "verseId", "verseIds", "query", "frame"]
 
   connect() {
     this._onKey = (e) => { if (e.key === "Escape") this.close() }
@@ -35,9 +35,10 @@ export default class extends Controller {
     document.removeEventListener("keydown", this._onKey)
   }
 
-  ask({ verseId, text }) {
+  ask({ verseId, verseIds, text }) {
     if (!verseId || !text || !text.trim()) return
     this.verseIdTarget.value = verseId
+    if (this.hasVerseIdsTarget) this.verseIdsTarget.value = (verseIds || [verseId]).join(",")
     this.queryTarget.value = text.trim()
     this.open()
     if (this.hasFrameTarget) this.frameTarget.innerHTML = LOADING

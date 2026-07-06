@@ -19,6 +19,7 @@
     <%= form_with url: rabbi_study_path(study), method: :get,
           data: { turbo_frame: "rabbi_drawer", rabbi_target: "form" }, class: "ps-rabbi-form" do %>
       <input type="hidden" name="verse_id" data-rabbi-target="verseId">
+      <input type="hidden" name="verse_ids" data-rabbi-target="verseIds">
       <input type="hidden" name="q" data-rabbi-target="query">
     <% end %>
 

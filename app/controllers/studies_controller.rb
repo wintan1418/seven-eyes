@@ -1,8 +1,8 @@
 class StudiesController < ApplicationController
   # The workspace is open to everyone; only saving (notes/highlights/account) needs auth.
-  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest quick_find search commentary lexicon rabbi rabbi_diagram sermon share_card prayer ]
+  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest quick_find search commentary lexicon rabbi rabbi_diagram rabbi_illustration sermon share_card prayer ]
 
-  before_action :set_study, only: %i[ show update destroy suggest quick_find search cross_references commentary lexicon rabbi rabbi_diagram sermon share share_card prayer ]
+  before_action :set_study, only: %i[ show update destroy suggest quick_find search cross_references commentary lexicon rabbi rabbi_diagram rabbi_illustration sermon share share_card prayer ]
 
   def index
     @studies = authenticated? ? current_user.studies.recent : []
@@ -128,11 +128,13 @@ class StudiesController < ApplicationController
   # The "AI Rabbi": explain a highlighted span of Scripture with full-chapter
   # context + cross-references, under strict interpretive guardrails.
   def rabbi
-    verse = Verse.includes(:book, :translation).find_by(id: params[:verse_id])
+    verses = rabbi_verses
+    verse = verses.first
     @selection = params[:q].to_s
-    @result = RabbiExposition.call(verse:, selection: @selection, study: @study)
+    @result = RabbiExposition.call(verse:, verses:, selection: @selection, study: @study)
     render partial: "studies/rabbi_results",
-           locals: { study: @study, result: @result, verse_id: params[:verse_id] }
+           locals: { study: @study, result: @result,
+                     verse_id: verse&.id, verse_ids: verses.map(&:id).join(",") }
   end
 
   # On-demand "Draw this": render just the diagram frame for the Rabbi drawer.
@@ -142,6 +144,20 @@ class StudiesController < ApplicationController
     render partial: "studies/rabbi_diagram", locals: {
       study: @study, verse_id: params[:verse_id], selection: params[:q],
       svg: (diagram.ok? ? diagram.svg : nil), state: (diagram.ok? ? :ready : diagram.error)
+    }
+  end
+
+  # On-demand "Illustrate this passage": render just the illustration frame with
+  # a real, painted picture of the scene (illuminated-manuscript style).
+  def rabbi_illustration
+    verses = rabbi_verses
+    illustration = RabbiIllustration.call(verse: verses.first, verses:, selection: params[:q], study: @study)
+    render partial: "studies/rabbi_illustration", locals: {
+      study: @study, verse_id: verses.first&.id, verse_ids: verses.map(&:id).join(","),
+      selection: params[:q],
+      image: (illustration.ok? ? illustration.image : nil),
+      caption: (illustration.ok? ? illustration.caption : nil),
+      state: (illustration.ok? ? :ready : illustration.error)
     }
   end
 
@@ -187,6 +203,16 @@ class StudiesController < ApplicationController
   end
 
   private
+
+  # The highlight popover sends every verse the selection touched (verse_ids),
+  # falling back to a single verse_id. Load them all, ordered, same chapter.
+  def rabbi_verses
+    ids = Array(params[:verse_ids].presence || params[:verse_id]).flat_map { |v| v.to_s.split(",") }
+              .map { |s| s.strip.to_i }.reject(&:zero?).uniq
+    return [] if ids.empty?
+    Verse.includes(:book, :translation).where(id: ids)
+         .sort_by { |v| [ v.chapter, v.verse_number ] }
+  end
 
   def build_share_card
     verse = params[:verse_id].present? &&

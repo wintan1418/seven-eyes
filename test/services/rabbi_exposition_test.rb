@@ -3,8 +3,8 @@ require "test_helper"
 class RabbiExpositionTest < ActiveSupport::TestCase
   # Test double: overrides the network seam so no live API call is made.
   class FakeRabbi < RabbiExposition
-    def initialize(verse:, selection:, study:, result: nil, diagram_result: nil)
-      super(verse:, selection:, study:)
+    def initialize(verse:, selection:, study:, result: nil, diagram_result: nil, verses: nil)
+      super(verse:, selection:, study:, verses:)
       @result = result
       @diagram_result = diagram_result
     end
@@ -113,5 +113,14 @@ class RabbiExpositionTest < ActiveSupport::TestCase
   test "unparseable model output reports :api" do
     r = FakeRabbi.new(verse: @v16, selection: "loved", study: @study, result: fake_ok("not json at all")).call
     assert_equal :api, r.error
+  end
+
+  test "a highlighted span labels the whole verse range, not just the first" do
+    v17 = Verse.find_by(book: @john, chapter: 3, verse_number: 17)
+    json = { summary: "ok", cross_references: [] }.to_json
+    r = FakeRabbi.new(verse: @v16, verses: [ @v16, v17 ], selection: "loved... sent",
+                      study: @study, result: fake_ok(json)).call
+    assert r.ok?
+    assert_equal "John 3:16–17", r.origin
   end
 end

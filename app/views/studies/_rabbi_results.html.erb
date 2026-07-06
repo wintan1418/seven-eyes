@@ -1,4 +1,5 @@
-<%# locals: study, result, verse_id %>
+<%# locals: study, result, verse_id, verse_ids %>
+<% verse_ids = local_assigns.fetch(:verse_ids, verse_id) %>
 <%= turbo_frame_tag "rabbi_drawer", class: "ps-rabbi-body", data: { rabbi_target: "frame" } do %>
   <% if result.ok? %>
     <% ex = result.exposition %>
@@ -22,7 +23,14 @@
     <% end %>
 
     <div class="ps-rabbi-section">
-      <div class="ps-rabbi-label">&#9635; A picture of it</div>
+      <div class="ps-rabbi-label">&#10022; A picture of it</div>
+      <%= render "studies/rabbi_illustration", study: study, verse_id: verse_id,
+            verse_ids: verse_ids, selection: result.selection,
+            image: nil, caption: nil, state: nil %>
+    </div>
+
+    <div class="ps-rabbi-section">
+      <div class="ps-rabbi-label">&#9635; Measured schematic</div>
       <%= render "studies/rabbi_diagram", study: study, verse_id: verse_id,
             selection: result.selection, svg: ex.diagram, state: nil %>
     </div>

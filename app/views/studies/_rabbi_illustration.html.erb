@@ -1,0 +1,23 @@
+<%# locals: study, verse_id, verse_ids, selection, image (data URL or nil), caption, state %>
+<%= turbo_frame_tag "rabbi_illustration_frame", class: "ps-rabbi-illus" do %>
+  <% if image.present? %>
+    <figure class="ps-rabbi-figure">
+      <%= image_tag image, alt: (caption || "Illustration of the passage"), class: "ps-rabbi-illus-img" %>
+      <figcaption><%= caption.presence || "An artist's rendering — imagined, not a photograph." %></figcaption>
+    </figure>
+  <% elsif state == :none %>
+    <div class="ps-rabbi-draw-note">Nothing to picture in this passage.</div>
+  <% elsif state == :no_key %>
+    <div class="ps-rabbi-draw-note">&#9888; No image provider configured &mdash; add <code>OPENAI_API_KEY</code> to illustrate.</div>
+  <% elsif state == :api %>
+    <div class="ps-rabbi-draw-note">Couldn&rsquo;t create the image just now &mdash; please try again.</div>
+  <% end %>
+
+  <% if verse_id.present? %>
+    <%= link_to rabbi_illustration_study_path(study, verse_id: verse_id, verse_ids: verse_ids, q: selection),
+          class: "ps-rabbi-draw", data: { turbo_frame: "rabbi_illustration_frame" } do %>
+      <%= image.present? ? "↻ A new illustration" : "✦ Illustrate this passage" %>
+    <% end %>
+    <span class="ps-rabbi-drawing">&#10022; Painting the scene&hellip; this can take ~15 seconds.</span>
+  <% end %>
+<% end %>
