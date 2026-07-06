@@ -13,10 +13,22 @@ require "json"
 class RabbiIllustration
   CHAPTER_CONTEXT_LIMIT = 60
 
-  STYLE_SUFFIX = " — rendered as an illuminated medieval manuscript illustration / " \
-    "fine old Bible engraving: warm vellum tones, sepia ink linework, gold-leaf accents, " \
-    "reverent and dignified, painterly, soft light. No lettering or text in the image. " \
-    "Do not depict the face of God; show the divine only as light, cloud, or glory.".freeze
+  # The reverence guardrail every style keeps: no lettering, and the divine shown
+  # only as light — never a face.
+  REVERENCE = "No lettering or text in the image. Do not depict the face of God; " \
+    "show the divine only as light, cloud, or glory.".freeze
+
+  # Selectable rendering styles. "illuminated" is the warm manuscript look;
+  # "realistic" is the cleaner, modern, cinematic "AI view".
+  STYLES = {
+    "illuminated" => " — rendered as an illuminated medieval manuscript illustration / " \
+      "fine old Bible engraving: warm vellum tones, sepia ink linework, gold-leaf accents, " \
+      "reverent and dignified, painterly, soft light. #{REVERENCE}",
+    "realistic" => " — rendered as a clean, modern, photorealistic cinematic illustration: " \
+      "soft natural light, lifelike textures and depth, an uncluttered and elegant composition, " \
+      "high detail, dignified and reverent, contemporary quality. #{REVERENCE}"
+  }.freeze
+  DEFAULT_STYLE = "realistic".freeze
 
   SYSTEM_PROMPT = <<~PROMPT.freeze
     You are an art director for a reverent Bible-study tool. Given a highlighted
@@ -36,21 +48,22 @@ class RabbiIllustration
     Use "" for both when there is nothing fitting to illustrate.
   PROMPT
 
-  Result = Struct.new(:ok, :error, :image, :caption, :origin, :provider, keyword_init: true) do
+  Result = Struct.new(:ok, :error, :image, :caption, :origin, :provider, :style, keyword_init: true) do
     def ok? = ok
   end
 
-  def self.call(verse:, study:, selection: nil, translation: nil, verses: nil)
-    new(verse:, study:, selection:, translation:, verses:).call
+  def self.call(verse:, study:, selection: nil, translation: nil, verses: nil, style: nil)
+    new(verse:, study:, selection:, translation:, verses:, style:).call
   end
 
-  def initialize(verse:, study:, selection: nil, translation: nil, verses: nil)
+  def initialize(verse:, study:, selection: nil, translation: nil, verses: nil, style: nil)
     @verse = verse
     @verses = Array(verses).compact.presence || [ verse ].compact
     @verse ||= @verses.first
     @selection = selection.to_s.strip
     @study = study
     @translation = translation || @verse&.translation
+    @style = STYLES.key?(style.to_s) ? style.to_s : DEFAULT_STYLE
   end
 
   def call
@@ -64,11 +77,11 @@ class RabbiIllustration
     scene = data && data["illustration"].to_s.strip
     return error(:none) if scene.blank?
 
-    img = generate_image(scene + STYLE_SUFFIX)
+    img = generate_image(scene + STYLES[@style])
     return error(img.error || :api) unless img.ok?
 
     Result.new(ok: true, image: img.data_url, caption: data["caption"].to_s.strip.presence,
-               origin: origin_label, provider: art.provider)
+               origin: origin_label, provider: art.provider, style: @style)
   rescue => e
     Rails.logger.error("[RabbiIllustration] #{e.class}: #{e.message}")
     error(:api)
@@ -76,7 +89,7 @@ class RabbiIllustration
 
   private
 
-  def error(code) = Result.new(ok: false, error: code, origin: origin_label)
+  def error(code) = Result.new(ok: false, error: code, origin: origin_label, style: @style)
 
   # Network seams — overridden in tests to avoid live API calls.
   def art_direction = AiChat.call(system: SYSTEM_PROMPT, user: user_prompt, json: true)

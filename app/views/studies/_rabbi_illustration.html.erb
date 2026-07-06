@@ -1,7 +1,9 @@
 <%# locals: study, verse_id, verse_ids, selection, image (data URL or nil), caption, state %>
-<%# optional: remaining (Integer or nil) %>
+<%# optional: remaining (Integer or nil), style (String or nil) %>
 <% remaining = local_assigns.fetch(:remaining, nil) %>
+<% style = local_assigns.fetch(:style, nil).presence || RabbiIllustration::DEFAULT_STYLE %>
 <% exhausted = state == :quota || remaining == 0 %>
+<% style_labels = { "realistic" => "◐ Clean view", "illuminated" => "✦ Illuminated" } %>
 <%= turbo_frame_tag "rabbi_illustration_frame", class: "ps-rabbi-illus" do %>
   <% if image.present? %>
     <figure class="ps-rabbi-figure">
@@ -22,13 +24,25 @@
   <% end %>
 
   <% if verse_id.present? && !exhausted %>
-    <%= link_to rabbi_illustration_study_path(study, verse_id: verse_id, verse_ids: verse_ids, q: selection),
-          class: "ps-rabbi-draw", data: { turbo_frame: "rabbi_illustration_frame" } do %>
-      <%= image.present? ? "↻ A new illustration" : "✦ Illustrate this passage" %>
-    <% end %>
-    <span class="ps-rabbi-drawing">&#10022; Painting the scene&hellip; this can take ~15 seconds.</span>
-    <% if remaining %>
-      <span class="ps-rabbi-quota"><%= remaining %> left today</span>
-    <% end %>
+    <div class="ps-rabbi-illus-controls">
+      <%# Style chooser — each choice generates in that look. The current style is marked. %>
+      <div class="ps-rabbi-styles" role="group" aria-label="Illustration style">
+        <% RabbiIllustration::STYLES.each_key do |key| %>
+          <%= link_to style_labels[key],
+                rabbi_illustration_study_path(study, verse_id: verse_id, verse_ids: verse_ids, q: selection, style: key),
+                class: "ps-rabbi-style #{'is-on' if key == style}",
+                data: { turbo_frame: "rabbi_illustration_frame" } %>
+        <% end %>
+      </div>
+
+      <%= link_to rabbi_illustration_study_path(study, verse_id: verse_id, verse_ids: verse_ids, q: selection, style: style),
+            class: "ps-rabbi-draw", data: { turbo_frame: "rabbi_illustration_frame" } do %>
+        <%= image.present? ? "↻ A new illustration" : "✦ Illustrate this passage" %>
+      <% end %>
+      <span class="ps-rabbi-drawing">&#10022; Painting the scene&hellip; this can take ~15 seconds.</span>
+      <% if remaining %>
+        <span class="ps-rabbi-quota"><%= remaining %> left today</span>
+      <% end %>
+    </div>
   <% end %>
 <% end %>

@@ -158,13 +158,15 @@ class StudiesController < ApplicationController
       return render_rabbi_illustration(verses, state: :quota, remaining: 0)
     end
 
-    illustration = RabbiIllustration.call(verse: verses.first, verses:, selection: params[:q], study: @study)
+    illustration = RabbiIllustration.call(verse: verses.first, verses:, selection: params[:q],
+                                          study: @study, style: params[:style])
     quota.record! if illustration.ok?
 
     render_rabbi_illustration(verses,
       image:   (illustration.ok? ? illustration.image : nil),
       caption: (illustration.ok? ? illustration.caption : nil),
       state:   (illustration.ok? ? :ready : illustration.error),
+      style:   illustration.style,
       remaining: quota.remaining)
   end
 
@@ -227,10 +229,11 @@ class StudiesController < ApplicationController
     authenticated? ? "u#{current_user&.id}" : "g#{@study&.id}"
   end
 
-  def render_rabbi_illustration(verses, image: nil, caption: nil, state: nil, remaining: nil)
+  def render_rabbi_illustration(verses, image: nil, caption: nil, state: nil, remaining: nil, style: nil)
     render partial: "studies/rabbi_illustration", locals: {
       study: @study, verse_id: verses.first&.id, verse_ids: verses.map(&:id).join(","),
-      selection: params[:q], image:, caption:, state:, remaining:
+      selection: params[:q], image:, caption:, state:, remaining:,
+      style: (style || params[:style])
     }
   end
 

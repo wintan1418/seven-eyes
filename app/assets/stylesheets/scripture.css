@@ -729,6 +729,18 @@
   display: inline-block; margin: 4px 6px; vertical-align: middle;
   font: 600 9.5px "Cinzel", serif; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sepia-mute);
 }
+/* Style chooser: pick a clean/modern or illuminated look */
+.ps-rabbi-styles { display: inline-flex; gap: 6px; margin: 4px 20px 2px; }
+.ps-rabbi-style {
+  font: 600 9.5px "Cinzel", serif; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--sepia-mute); text-decoration: none;
+  padding: 5px 10px; border: 1px solid rgba(163, 129, 46, 0.45); border-radius: 999px; background: transparent;
+}
+.ps-rabbi-style:hover { border-color: var(--gold); color: var(--rubric); }
+.ps-rabbi-style.is-on {
+  color: var(--rubric); border-color: var(--gold); background: rgba(216, 181, 80, 0.16);
+}
+.ps-rabbi-illus[busy] .ps-rabbi-style { opacity: 0.5; pointer-events: none; }
 /* Turbo flags the frame [busy] while the drawing call runs */
 .ps-rabbi-diagram[busy] .ps-rabbi-drawing { display: inline-block; animation: ps-rabbi-pulse 1.4s ease-in-out infinite; }
 .ps-rabbi-diagram[busy] .ps-rabbi-draw { opacity: 0.5; pointer-events: none; }

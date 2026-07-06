@@ -4,8 +4,10 @@ class RabbiIllustrationTest < ActiveSupport::TestCase
   # Test double: overrides both network seams (art-direction chat + image gen)
   # so no live API call is made.
   class FakeIllustration < RabbiIllustration
-    def initialize(verse:, study:, selection: nil, verses: nil, art: nil, image: nil)
-      super(verse:, study:, selection:, verses:)
+    attr_reader :prompt_seen
+
+    def initialize(verse:, study:, selection: nil, verses: nil, style: nil, art: nil, image: nil)
+      super(verse:, study:, selection:, verses:, style:)
       @art = art
       @image = image
     end
@@ -13,7 +15,10 @@ class RabbiIllustrationTest < ActiveSupport::TestCase
     private
 
     def art_direction = @art
-    def generate_image(_prompt) = @image
+    def generate_image(prompt)
+      @prompt_seen = prompt
+      @image
+    end
   end
 
   def fake_art(content) = AiChat::Result.new(ok: true, content: content, provider: :openai)
@@ -55,5 +60,27 @@ class RabbiIllustrationTest < ActiveSupport::TestCase
     art = fake_art({ illustration: "a scene", caption: "c" }.to_json)
     img = OpenaiImage::Result.new(ok: false, error: :api)
     assert_equal :api, FakeIllustration.new(verse: @v10, study: @study, art:, image: img).call.error
+  end
+
+  test "defaults to the realistic (clean) style and reports it" do
+    art = fake_art({ illustration: "a scene", caption: "c" }.to_json)
+    f = FakeIllustration.new(verse: @v10, study: @study, art:, image: fake_image)
+    r = f.call
+    assert_equal "realistic", r.style
+    assert_includes f.prompt_seen, "photorealistic"
+  end
+
+  test "an illuminated style request renders in that look" do
+    art = fake_art({ illustration: "a scene", caption: "c" }.to_json)
+    f = FakeIllustration.new(verse: @v10, study: @study, style: "illuminated", art:, image: fake_image)
+    r = f.call
+    assert_equal "illuminated", r.style
+    assert_includes f.prompt_seen, "illuminated"
+  end
+
+  test "an unknown style falls back to the default" do
+    art = fake_art({ illustration: "a scene", caption: "c" }.to_json)
+    r = FakeIllustration.new(verse: @v10, study: @study, style: "crayon", art:, image: fake_image).call
+    assert_equal RabbiIllustration::DEFAULT_STYLE, r.style
   end
 end
