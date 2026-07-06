@@ -49,16 +49,16 @@ class AiChatTest < ActiveSupport::TestCase
     assert_equal :api, res.error
   end
 
-  test "prefers OpenAI when its key is present" do
+  test "prefers Gemini when its key is present" do
     res = FakeChat.new(keys: { openai: "k", gemini: "g" }, openai: "from-openai", gemini: "from-gemini").call
     assert res.ok?
-    assert_equal :openai, res.provider
-    assert_equal "from-openai", res.content
+    assert_equal :gemini, res.provider
+    assert_equal "from-gemini", res.content
   end
 
-  test "fails over from OpenAI to Gemini when OpenAI errors" do
-    res = FakeChat.new(keys: { openai: "k", gemini: "g" }, openai: :raise, gemini: "saved").call
+  test "fails over from Gemini to OpenAI when Gemini is unavailable" do
+    res = FakeChat.new(keys: { openai: "k", gemini: "g" }, gemini: :raise, openai: "saved").call
     assert res.ok?
-    assert_equal :gemini, res.provider
+    assert_equal :openai, res.provider
   end
 end

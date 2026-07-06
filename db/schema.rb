@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_16_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_06_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -67,6 +67,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_120000) do
     t.index ["user_id", "verse_id"], name: "index_highlights_on_user_id_and_verse_id"
     t.index ["user_id"], name: "index_highlights_on_user_id"
     t.index ["verse_id"], name: "index_highlights_on_verse_id"
+  end
+
+  create_table "illustration_quotas", force: :cascade do |t|
+    t.integer "count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.date "day", null: false
+    t.string "owner_key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["owner_key", "day"], name: "index_illustration_quotas_on_owner_key_and_day", unique: true
   end
 
   create_table "lexicon_entries", force: :cascade do |t|

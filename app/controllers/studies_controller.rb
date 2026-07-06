@@ -148,17 +148,24 @@ class StudiesController < ApplicationController
   end
 
   # On-demand "Illustrate this passage": render just the illustration frame with
-  # a real, painted picture of the scene (illuminated-manuscript style).
+  # a real, painted picture of the scene (illuminated-manuscript style). Capped at
+  # a few generations per user per day so it can't run up an OpenAI bill.
   def rabbi_illustration
     verses = rabbi_verses
+    quota = IllustrationQuota.for(illustration_owner_key)
+
+    if quota.exceeded?
+      return render_rabbi_illustration(verses, state: :quota, remaining: 0)
+    end
+
     illustration = RabbiIllustration.call(verse: verses.first, verses:, selection: params[:q], study: @study)
-    render partial: "studies/rabbi_illustration", locals: {
-      study: @study, verse_id: verses.first&.id, verse_ids: verses.map(&:id).join(","),
-      selection: params[:q],
-      image: (illustration.ok? ? illustration.image : nil),
+    quota.record! if illustration.ok?
+
+    render_rabbi_illustration(verses,
+      image:   (illustration.ok? ? illustration.image : nil),
       caption: (illustration.ok? ? illustration.caption : nil),
-      state: (illustration.ok? ? :ready : illustration.error)
-    }
+      state:   (illustration.ok? ? :ready : illustration.error),
+      remaining: quota.remaining)
   end
 
   # Metadata for the share modal: the canonical reference, the text to render on
@@ -212,6 +219,19 @@ class StudiesController < ApplicationController
     return [] if ids.empty?
     Verse.includes(:book, :translation).where(id: ids)
          .sort_by { |v| [ v.chapter, v.verse_number ] }
+  end
+
+  # Who a daily illustration allowance belongs to: the member, or the guest's
+  # session-scoped study.
+  def illustration_owner_key
+    authenticated? ? "u#{current_user&.id}" : "g#{@study&.id}"
+  end
+
+  def render_rabbi_illustration(verses, image: nil, caption: nil, state: nil, remaining: nil)
+    render partial: "studies/rabbi_illustration", locals: {
+      study: @study, verse_id: verses.first&.id, verse_ids: verses.map(&:id).join(","),
+      selection: params[:q], image:, caption:, state:, remaining:
+    }
   end
 
   def build_share_card

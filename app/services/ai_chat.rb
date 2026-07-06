@@ -26,10 +26,12 @@ class AiChat
   ROUTELLM_DEFAULT_MODEL = "route-llm".freeze
   ROUTELLM_DEFAULT_URL   = "https://routellm.abacus.ai/v1/chat/completions".freeze
 
-  # Order = priority. A provider is skipped if it has no key. OpenAI is tried
-  # first (Gemini's free tier hit a hard limit:0 quota); Gemini then RouteLLM
-  # remain as automatic fail-overs.
-  PROVIDERS = %i[ openai gemini routellm ].freeze
+  # Order = priority. A provider is skipped if it has no key. Gemini is tried
+  # first (preferred when its quota is healthy); OpenAI is the automatic fail-over
+  # when Gemini is unavailable (e.g. its free tier hit a hard limit:0 quota), then
+  # RouteLLM last. Fail-over is transparent — a dead provider just costs one failed
+  # request before the next is tried.
+  PROVIDERS = %i[ gemini openai routellm ].freeze
 
   Result = Struct.new(:ok, :content, :provider, :error, keyword_init: true) do
     def ok? = ok
