@@ -40,6 +40,64 @@ class RabbiTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Romans 5:8"
   end
 
+  # Swap OpenaiImage.generate for a canned result (same juggling as with_ai_result).
+  def with_image_result(result)
+    original = OpenaiImage.method(:generate)
+    OpenaiImage.singleton_class.define_method(:generate) { |*, **| result }
+    yield
+  ensure
+    OpenaiImage.singleton_class.define_method(:generate, original)
+  end
+
+  test "illustrating is POST-only — a GET (Turbo hover-prefetch) must never generate" do
+    post studies_path
+    study = Study.last
+
+    get "/studies/#{study.id}/rabbi_illustration?verse_id=#{@v16.id}"
+    assert_response :not_found
+    get "/studies/#{study.id}/rabbi_diagram?verse_id=#{@v16.id}"
+    assert_response :not_found
+    assert_equal 0, IllustrationQuota.for("g#{study.id}").count
+  end
+
+  test "a POST generates an illustration and spends one of today's allowance" do
+    post studies_path
+    study = Study.last
+
+    art = AiChat::Result.new(ok: true, provider: :openai, content: {
+      illustration: "A father embracing his son", caption: "So loved",
+      annotations: [ { label: "The embrace", note: "the Father's heart" } ]
+    }.to_json)
+    image = OpenaiImage::Result.new(ok: true, data_url: "data:image/png;base64,AAAA")
+
+    with_ai_result(art) do
+      with_image_result(image) do
+        post rabbi_illustration_study_path(study), params: { verse_id: @v16.id, q: "God so loved" }
+      end
+    end
+
+    assert_response :success
+    assert_includes response.body, "data:image/png;base64,AAAA"
+    assert_includes response.body, "The embrace"
+    assert_equal 1, IllustrationQuota.for("g#{study.id}").count
+  end
+
+  test "an exhausted daily allowance renders the quota notice without touching the AI" do
+    post studies_path
+    study = Study.last
+    IllustrationQuota.for("g#{study.id}").update!(count: IllustrationQuota.limit)
+
+    ai_called = false
+    with_ai_result(AiChat::Result.new(ok: true, content: "{}")) do
+      AiChat.singleton_class.define_method(:call) { |*, **| ai_called = true }
+      post rabbi_illustration_study_path(study), params: { verse_id: @v16.id, q: "God so loved" }
+    end
+
+    assert_response :success
+    assert_includes response.body, "used today&rsquo;s"
+    assert_not ai_called, "the image pipeline must not run once the quota is spent"
+  end
+
   test "the Rabbi degrades gracefully when no provider key is set" do
     post studies_path
     study = Study.last

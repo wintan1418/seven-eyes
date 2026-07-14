@@ -38,18 +38,20 @@
 
   <% if verse_id.present? && !exhausted %>
     <div class="ps-rabbi-illus-controls">
-      <%# Style chooser — each choice generates in that look. The current style is marked. %>
+      <%# Style chooser — each choice generates in that look. The current style is marked.
+          POST, never a GET link: Turbo prefetches links on hover, and a prefetch here
+          would silently generate an image and burn the daily quota. %>
       <div class="ps-rabbi-styles" role="group" aria-label="Illustration style">
         <% RabbiIllustration::STYLES.each_key do |key| %>
-          <%= link_to style_labels[key],
+          <%= button_to style_labels[key],
                 rabbi_illustration_study_path(study, verse_id: verse_id, verse_ids: verse_ids, q: selection, style: key),
                 class: "ps-rabbi-style #{'is-on' if key == style}",
-                data: { turbo_frame: "rabbi_illustration_frame" } %>
+                form: { data: { turbo_frame: "rabbi_illustration_frame" }, style: "display:contents;" } %>
         <% end %>
       </div>
 
-      <%= link_to rabbi_illustration_study_path(study, verse_id: verse_id, verse_ids: verse_ids, q: selection, style: style),
-            class: "ps-rabbi-draw", data: { turbo_frame: "rabbi_illustration_frame" } do %>
+      <%= button_to rabbi_illustration_study_path(study, verse_id: verse_id, verse_ids: verse_ids, q: selection, style: style),
+            class: "ps-rabbi-draw", form: { data: { turbo_frame: "rabbi_illustration_frame" }, style: "display:contents;" } do %>
         <%= image.present? ? "↻ A new illustration" : "✦ Illustrate this passage" %>
       <% end %>
       <span class="ps-rabbi-drawing">&#10022; Painting the scene&hellip; this can take ~15 seconds.</span>

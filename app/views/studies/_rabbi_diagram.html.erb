@@ -14,8 +14,9 @@
   <% end %>
 
   <% if verse_id.present? %>
-    <%= link_to rabbi_diagram_study_path(study, verse_id: verse_id, q: selection),
-          class: "ps-rabbi-draw", data: { turbo_frame: "rabbi_diagram_frame" } do %>
+    <%# POST, never a GET link — Turbo hover-prefetch would fire the AI drawing unasked. %>
+    <%= button_to rabbi_diagram_study_path(study, verse_id: verse_id, q: selection),
+          class: "ps-rabbi-draw", form: { data: { turbo_frame: "rabbi_diagram_frame" }, style: "display:contents;" } do %>
       <%= svg.present? ? "↻ Redraw this" : "▣ Draw this passage" %>
     <% end %>
     <span class="ps-rabbi-drawing">&#10022; Drawing the schematic&hellip;</span>

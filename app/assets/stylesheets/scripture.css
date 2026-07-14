@@ -733,7 +733,7 @@
 .ps-rabbi-styles { display: inline-flex; gap: 6px; margin: 4px 20px 2px; }
 .ps-rabbi-style {
   font: 600 9.5px "Cinzel", serif; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--sepia-mute); text-decoration: none;
+  color: var(--sepia-mute); text-decoration: none; cursor: pointer;
   padding: 5px 10px; border: 1px solid rgba(163, 129, 46, 0.45); border-radius: 999px; background: transparent;
 }
 .ps-rabbi-style:hover { border-color: var(--gold); color: var(--rubric); }
