@@ -45,6 +45,9 @@ gem "image_processing", "~> 1.2"
 # QR codes (pure Ruby, rendered as inline SVG) for joining a live session
 gem "rqrcode", "~> 3.1"
 
+# Read seed-time zip archives (TSK cross-references) without a system `unzip`
+gem "rubyzip", "~> 3.0", require: false
+
 # Cloudinary-hosted pictures for the preach queue (announcement slides etc.)
 gem "cloudinary", "~> 2.2"
 

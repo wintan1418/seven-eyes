@@ -24,6 +24,9 @@ class CrossReferenceSeeder
   end
 
   def run
+    if Book.none?
+      raise "No books in the database — run `bin/rails bibles:seed` first, then re-run bibles:seed_refs."
+    end
     if CrossReference.exists? && !@force
       say "Cross-references already seeded (#{CrossReference.count}) — skipping."
       return
@@ -96,17 +99,22 @@ class CrossReferenceSeeder
 
   def ensure_extracted
     txt = self.class.cache_dir.join(ENTRY)
-    return txt if txt.exist? && !@force_download
+    return txt if txt.exist? && !@force
 
     zip = self.class.cache_dir.join("cross-references.zip")
-    unless zip.exist?
+    if !zip.exist? || @force
       say "Downloading TSK cross-references from #{URL} ..."
       body = URI.parse(URL).open(read_timeout: 120, &:read)
       File.binwrite(zip, body)
     end
     say "Extracting #{ENTRY} ..."
-    extracted = IO.popen([ "unzip", "-p", zip.to_s, ENTRY ], &:read)
-    raise "Failed to extract #{ENTRY} (is `unzip` installed?)" if extracted.blank?
+    require "zip" # rubyzip — no system `unzip` needed (hosts often lack it)
+    extracted = Zip::File.open(zip.to_s) do |archive|
+      entry = archive.find_entry(ENTRY)
+      raise "#{ENTRY} not found inside #{zip}" unless entry
+      entry.get_input_stream.read
+    end
+    raise "Failed to extract #{ENTRY} from #{zip}" if extracted.blank?
     File.write(txt, extracted)
     txt
   end

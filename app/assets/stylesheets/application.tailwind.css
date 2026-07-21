@@ -753,12 +753,15 @@ a.ps-guide-card:hover { background: #fff7e0; border-color: var(--gold); }
   background: var(--ink); color: var(--vellum-0);
   font: 12px/1.5 "EB Garamond", serif; font-style: italic;
   border-radius: 3px; box-shadow: 0 6px 20px -8px rgba(0,0,0,0.5);
-  opacity: 0; visibility: hidden; transform: translateY(-2px);
-  transition: opacity 0.14s ease, transform 0.14s ease;
+  opacity: 0; visibility: hidden;
+  /* Fade only — animating transform here left ghosted/garbled text on
+     Chrome for Windows (stale pixels from the composited slide-in layer). */
+  transition: opacity 0.14s ease;
+  -webkit-font-smoothing: antialiased;
   pointer-events: none;
 }
 .ps-hint:hover::after, .ps-hint:focus::after {
-  opacity: 1; visibility: visible; transform: translateY(0);
+  opacity: 1; visibility: visible;
 }
 
 /* ====================================================================
