@@ -32,4 +32,12 @@ class StudiesManagementTest < ActionDispatch::IntegrationTest
     assert_select "input.ps-study-name-input[value=?]", "Romans study"
     assert_select "form[action=?]", study_path(study) # delete button form present
   end
+
+  # The controller requires study-scoped params, so the rename form must post
+  # study[name] — an unscoped `name` field was a 400 and the rename never saved.
+  test "the rename form posts the study-scoped field the controller requires" do
+    study = users(:one).studies.create!(name: "Romans study", pane_count: 1)
+    get study_path(study)
+    assert_select "input.ps-study-name-input[name=?]", "study[name]"
+  end
 end

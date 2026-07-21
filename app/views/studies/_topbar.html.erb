@@ -9,7 +9,9 @@
     <% end %>
   </div>
   <% if study %>
-    <%= form_with url: study_path(study), method: :patch, data: { controller: "auto-submit" }, class: "ps-study-name" do |f| %>
+    <%# scope: :study so the field posts as study[name] — studies#update requires
+        the study-scoped params; a bare `name` was a 400 and the rename never saved. %>
+    <%= form_with url: study_path(study), method: :patch, scope: :study, data: { controller: "auto-submit" }, class: "ps-study-name" do |f| %>
       <span class="orn">&#10086;</span>
       <%= f.text_field :name, value: study.name, class: "ps-study-name-input", autocomplete: "off",
             "aria-label": "Study name", data: { action: "blur->auto-submit#submit" } %>
