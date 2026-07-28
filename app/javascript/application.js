@@ -1,5 +1,6 @@
 // Entry point for the build script in your package.json
 import "@hotwired/turbo-rails"
+import "./lib/frame_guard"
 import "./controllers"
 
 // PWA: register the service worker for offline / installable use. Conservative —
