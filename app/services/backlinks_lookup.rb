@@ -45,8 +45,8 @@ class BacklinksLookup
     needle = "[[#{ref_text}]]"
     idx = notes.index(needle)
     return notes.to_s.first(140) unless idx
-    from = [idx - 50, 0].max
-    to = [idx + needle.length + 50, notes.length].min
+    from = [ idx - 50, 0 ].max
+    to = [ idx + needle.length + 50, notes.length ].min
     snippet = notes[from...to]
     snippet = "…#{snippet}" if from > 0
     snippet = "#{snippet}…" if to < notes.length
