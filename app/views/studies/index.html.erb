@@ -3,28 +3,45 @@
   <div class="ps-shell">
     <%= render "sidebar", studies: @studies %>
     <main class="ps-workspace is-doc" style="grid-template-columns: 1fr;">
-      <div class="ps-welcome">
-        <div class="eyebrow">&#9769; &nbsp; A Quiet Desk For The Word &nbsp; &#9769;</div>
+      <div class="ps-welcome ps-welcome--grand">
+        <div class="eyebrow rise">&#9769; &nbsp; A Quiet Desk For The Word &nbsp; &#9769;</div>
         <% if authenticated? %>
-          <h1>Welcome back.</h1>
+          <h1 class="rise">Welcome back.</h1>
         <% else %>
-          <h1>Parallel Scripture</h1>
+          <h1 class="rise">Parallel Scripture</h1>
         <% end %>
-        <div class="rule-orn">
+        <div class="rule-orn rise">
           <span class="line"></span>
           <span>&#10086;</span>
           <span class="line"></span>
         </div>
-        <div class="verse-of-day">
-          <% if @verse_of_day %>
-            &ldquo;<%= @verse_of_day.text %>&rdquo;
-            <span class="ref"><%= @verse_of_day.reference_label %> &middot; <%= @verse_of_day.translation_code %></span>
-          <% else %>
-            &ldquo;Open thou mine eyes, that I may behold wondrous things out of thy law.&rdquo;
-            <span class="ref">Psalm 119:18 &middot; KJV</span>
-          <% end %>
-        </div>
-        <div class="cta-row">
+
+        <%# Quick-open: type a reference, land in a fresh two-pane study. %>
+        <%= form_with url: studies_path, method: :post, class: "ps-quick-open rise" do %>
+          <span class="qo-orn">&#10038;</span>
+          <%= text_field_tag :reference, nil, class: "qo-input", autocomplete: "off",
+                spellcheck: "false", autocapitalize: "none", inputmode: "search", enterkeyhint: "go",
+                placeholder: "Open the Word — try “John 3:16”, “Ps 23”, “rom 8”…",
+                "aria-label": "Open a passage" %>
+          <%= hidden_field_tag :pane_count, 2 %>
+          <button type="submit" class="qo-go">Read</button>
+        <% end %>
+        <div class="qo-hint rise">One line opens a fresh side-by-side study &mdash; no account needed.</div>
+
+        <%# The verse of the day as an illuminated plate. %>
+        <% vod_text = @verse_of_day&.text || "Open thou mine eyes, that I may behold wondrous things out of thy law." %>
+        <% vod_ref = @verse_of_day ? "#{@verse_of_day.reference_label} · #{@verse_of_day.translation_code}" : "Psalm 119:18 · KJV" %>
+        <figure class="ps-illumined rise">
+          <span class="corner tl">&#10086;</span>
+          <span class="corner tr">&#10086;</span>
+          <span class="corner bl">&#10086;</span>
+          <span class="corner br">&#10086;</span>
+          <div class="plate-eyebrow">Verse For The Day</div>
+          <blockquote><span class="dc"><%= vod_text.first %></span><%= vod_text[1..] %></blockquote>
+          <figcaption><%= vod_ref %></figcaption>
+        </figure>
+
+        <div class="cta-row rise">
           <button type="button" class="cta" data-action="new-study#open">&#10010; &nbsp; Begin a New Study</button>
           <% if (resume = @studies.first) %>
             <%= link_to "↻  Resume #{truncate(resume.name, length: 28)}", study_path(resume),
@@ -37,7 +54,7 @@
         </div>
 
         <% if @active_plan && @plan_today %>
-          <div class="ps-today-panel">
+          <div class="ps-today-panel rise">
             <div class="ps-today-label">Today &middot; <%= @active_plan.name %> &middot; day <%= @plan_today.day_number %></div>
             <div class="ps-today-refs"><%= @plan_today.refs.presence || "No passages set for today." %></div>
             <div class="ps-today-cta">
@@ -50,7 +67,7 @@
           </div>
         <% elsif authenticated? && @studies.empty? %>
           <%# gentle nudge for new users %>
-          <div class="ps-today-panel ps-today-panel--soft">
+          <div class="ps-today-panel ps-today-panel--soft rise">
             <div class="ps-today-label">A Daily Rhythm</div>
             <div class="ps-today-refs">Build a reading plan to keep your time in the Word steady — pace a single book, the whole New Testament, the year-long Bible, or your own custom path.</div>
             <div class="ps-today-cta">
@@ -59,13 +76,39 @@
           </div>
         <% end %>
 
+        <% if authenticated? && @studies.present? %>
+          <section class="ps-recent-shelf rise">
+            <div class="shelf-head">
+              <span class="line"></span>
+              <span class="t">Return To The Desk</span>
+              <span class="line"></span>
+            </div>
+            <div class="shelf-grid">
+              <% @studies.first(6).each do |study| %>
+                <%= link_to study_path(study), class: "ps-study-card" do %>
+                  <span class="orn">&#10087;</span>
+                  <span class="nm"><%= study.name %></span>
+                  <% refs = study.panes.filter_map { |p| p.reference.presence } %>
+                  <span class="refs"><%= refs.any? ? refs.first(3).join(" · ") : "An empty codex, awaiting ink" %></span>
+                  <span class="meta"><%= %w[I II III IV][study.pane_count - 1] %> &middot; <%= pluralize(study.pane_count, "pane") %> &middot; <%= time_ago_in_words(study.last_opened_at || study.updated_at) %> ago</span>
+                <% end %>
+              <% end %>
+            </div>
+          </section>
+        <% end %>
+
         <% if @show_guide %>
           <%= render "studies/guide" %>
         <% end %>
-        <div style="margin-top: 38px; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.22em; color: var(--sepia-mute); text-transform: uppercase;">
-          <span>kjv &middot; asv &middot; bsb &middot; web &middot; darby &middot; ylt</span>
-          <span style="margin: 0 10px; color: var(--gold);">&middot;</span>
-          <span>tsk cross-references &middot; seeded locally</span>
+
+        <div class="ps-canon-stats rise">
+          <span><b><%= @canon_stats[:translations] %></b> translations</span>
+          <span class="sep">&middot;</span>
+          <span><b><%= number_with_delimiter(@canon_stats[:verses]) %></b> verses</span>
+          <span class="sep">&middot;</span>
+          <span><b><%= number_with_delimiter(@canon_stats[:cross_references]) %></b> cross-references</span>
+          <span class="sep">&middot;</span>
+          <span>all seeded on this desk &mdash; no external APIs</span>
         </div>
       </div>
     </main>

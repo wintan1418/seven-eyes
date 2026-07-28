@@ -3948,3 +3948,184 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
   .mock-batch .bi { opacity: 1 !important; transform: none !important; }
   .mock-join .mj-qr { animation: none !important; }
 }
+
+/* ----- grand welcome (home revamp) ----- */
+.ps-welcome--grand { gap: 6px; padding: 48px 60px 56px; }
+
+@keyframes psRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ps-welcome--grand .rise { animation: psRise 0.55s cubic-bezier(0.22, 0.7, 0.3, 1) both; }
+  .ps-welcome--grand .rise:nth-child(2) { animation-delay: 0.05s; }
+  .ps-welcome--grand .rise:nth-child(3) { animation-delay: 0.1s; }
+  .ps-welcome--grand .rise:nth-child(4) { animation-delay: 0.15s; }
+  .ps-welcome--grand .rise:nth-child(5) { animation-delay: 0.2s; }
+  .ps-welcome--grand .rise:nth-child(6) { animation-delay: 0.25s; }
+  .ps-welcome--grand .rise:nth-child(7) { animation-delay: 0.3s; }
+  .ps-welcome--grand .rise:nth-child(8) { animation-delay: 0.35s; }
+  .ps-welcome--grand .rise:nth-child(n+9) { animation-delay: 0.4s; }
+}
+
+/* quick-open — one line into the Word */
+.ps-quick-open {
+  margin-top: 26px;
+  display: flex; align-items: center; gap: 10px;
+  width: min(620px, 92%);
+  background: var(--vellum-0);
+  border: 1px solid rgba(163, 129, 46, 0.55);
+  border-radius: 3px;
+  padding: 6px 8px 6px 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 12px 28px -20px rgba(50, 30, 10, 0.6);
+}
+.ps-quick-open:focus-within {
+  border-color: var(--rubric);
+  box-shadow: 0 0 0 3px rgba(138, 36, 24, 0.08), 0 12px 28px -20px rgba(50, 30, 10, 0.6);
+}
+.ps-quick-open .qo-orn { color: var(--rubric); font-size: 15px; }
+.ps-quick-open .qo-input {
+  flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+  font-family: "EB Garamond", serif;
+  font-size: 18px; font-style: italic; color: var(--ink);
+  padding: 8px 0;
+}
+.ps-quick-open .qo-input::placeholder { color: var(--sepia-mute); opacity: 0.9; }
+.ps-quick-open .qo-go {
+  border: 1px solid var(--rubric-deep); background: var(--rubric); color: var(--vellum-0);
+  font: 600 10.5px "Cinzel", serif; letter-spacing: 0.24em; text-transform: uppercase;
+  padding: 11px 20px; border-radius: 2px; cursor: pointer;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
+}
+.ps-quick-open .qo-go:hover { background: var(--rubric-deep); }
+.ps-welcome--grand .qo-hint {
+  margin-top: 8px;
+  font-family: "EB Garamond", serif; font-style: italic;
+  font-size: 13.5px; color: var(--sepia);
+}
+
+/* the verse of the day, set as an illuminated plate */
+.ps-illumined {
+  position: relative;
+  margin: 32px 0 0;
+  padding: 26px 44px 22px;
+  width: min(660px, 94%);
+  background: linear-gradient(160deg, var(--vellum-0), var(--vellum-1));
+  border: 1px solid rgba(163, 129, 46, 0.55);
+  outline: 1px solid rgba(163, 129, 46, 0.25);
+  outline-offset: 4px;
+  border-radius: 2px;
+  box-shadow: 0 20px 44px -30px rgba(50, 30, 10, 0.65);
+}
+.ps-illumined .corner { position: absolute; color: var(--gold); font-size: 12px; opacity: 0.75; }
+.ps-illumined .corner.tl { top: 6px; left: 9px; }
+.ps-illumined .corner.tr { top: 6px; right: 9px; }
+.ps-illumined .corner.bl { bottom: 6px; left: 9px; }
+.ps-illumined .corner.br { bottom: 6px; right: 9px; }
+.ps-illumined .plate-eyebrow {
+  font-family: "Cinzel", serif; font-weight: 600; font-size: 9.5px;
+  letter-spacing: 0.32em; color: var(--rubric); text-transform: uppercase;
+  text-align: center; margin-bottom: 12px;
+}
+.ps-illumined blockquote {
+  margin: 0;
+  font-family: "EB Garamond", serif;
+  font-size: 21px; line-height: 1.75; font-style: italic;
+  color: var(--ink); text-align: center;
+}
+.ps-illumined .dc {
+  font-family: "UnifrakturMaguntia", serif;
+  font-style: normal; font-size: 42px; line-height: 1;
+  color: var(--rubric);
+  padding-right: 4px; position: relative; top: 5px;
+}
+.ps-illumined figcaption {
+  margin-top: 14px;
+  font-family: "Cinzel", serif; font-weight: 600; font-size: 10.5px;
+  letter-spacing: 0.26em; color: var(--sepia); text-transform: uppercase;
+  text-align: center;
+}
+
+/* recent studies, laid out as a shelf of codices */
+.ps-recent-shelf { margin-top: 42px; width: min(880px, 96%); }
+.ps-recent-shelf .shelf-head {
+  display: flex; align-items: center; gap: 16px; justify-content: center;
+  margin-bottom: 16px;
+  font-family: "Cinzel", serif; font-weight: 600; font-size: 10.5px;
+  letter-spacing: 0.3em; color: var(--sepia); text-transform: uppercase;
+}
+.ps-recent-shelf .shelf-head .line { flex: 1; max-width: 140px; border-top: 1px dashed rgba(138, 116, 68, 0.5); }
+.ps-recent-shelf .shelf-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px;
+  text-align: left;
+}
+.ps-study-card {
+  position: relative; text-decoration: none;
+  background: var(--vellum-0);
+  border: 1px solid var(--vellum-edge); border-radius: 2px;
+  padding: 15px 40px 13px 18px;
+  display: flex; flex-direction: column; gap: 5px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 20px -16px rgba(50, 30, 10, 0.5);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+.ps-study-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(163, 129, 46, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 16px 28px -16px rgba(50, 30, 10, 0.55);
+}
+.ps-study-card .orn { position: absolute; top: 10px; right: 12px; color: var(--gold); opacity: 0.7; font-size: 13px; }
+.ps-study-card .nm {
+  font-family: "EB Garamond", serif; font-size: 17px; font-weight: 500; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ps-study-card .refs {
+  font-family: "EB Garamond", serif; font-style: italic; font-size: 13px; color: var(--sepia);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ps-study-card .meta {
+  margin-top: 2px;
+  font-family: "Cinzel", serif; font-weight: 600; font-size: 9.5px;
+  letter-spacing: 0.2em; color: var(--sepia-mute); text-transform: uppercase;
+}
+
+/* the canon, counted */
+.ps-canon-stats {
+  margin-top: 40px;
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+  font-family: "Cinzel", serif; font-size: 10px;
+  letter-spacing: 0.22em; color: var(--sepia-mute); text-transform: uppercase;
+}
+.ps-canon-stats b { color: var(--rubric); font-weight: 700; }
+.ps-canon-stats .sep { color: var(--gold); }
+
+@media (max-width: 900px) {
+  .ps-welcome--grand { padding: 36px 22px 44px; }
+  .ps-illumined { padding: 22px 24px 18px; }
+}
+
+/* what's-new mock: the grander welcome */
+.mock-welcome { display: flex; flex-direction: column; gap: 10px; width: 100%; padding: 8px 10px; }
+.mock-welcome .mw-bar {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--vellum-0); border: 1px solid rgba(163, 129, 46, 0.55); border-radius: 3px;
+  padding: 7px 10px;
+  font-family: "EB Garamond", serif; font-style: italic; font-size: 13px; color: var(--ink);
+}
+.mock-welcome .mw-bar .orn { color: var(--rubric); font-style: normal; }
+.mock-welcome .mw-bar .go {
+  margin-left: auto; background: var(--rubric); color: var(--vellum-0);
+  font: 600 8px "Cinzel", serif; letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 5px 9px; border-radius: 2px;
+}
+.mock-welcome .mw-plate {
+  background: linear-gradient(160deg, var(--vellum-0), var(--vellum-1));
+  border: 1px solid rgba(163, 129, 46, 0.5);
+  outline: 1px solid rgba(163, 129, 46, 0.25); outline-offset: 3px;
+  border-radius: 2px; padding: 12px 14px; text-align: center;
+}
+.mock-welcome .mw-eyebrow {
+  font-family: "Cinzel", serif; font-weight: 600; font-size: 7.5px;
+  letter-spacing: 0.3em; color: var(--rubric); text-transform: uppercase; margin-bottom: 6px;
+}
+.mock-welcome .mw-verse { font-family: "EB Garamond", serif; font-style: italic; font-size: 13px; color: var(--ink); }
+.mock-welcome .mw-verse .dc { font-family: "UnifrakturMaguntia", serif; font-style: normal; color: var(--rubric); font-size: 20px; }

@@ -5,9 +5,12 @@ class StudiesController < ApplicationController
   before_action :set_study, only: %i[ show update destroy suggest quick_find search cross_references commentary lexicon rabbi rabbi_diagram rabbi_illustration sermon share share_card prayer ]
 
   def index
-    @studies = authenticated? ? current_user.studies.recent : []
+    @studies = authenticated? ? current_user.studies.recent.includes(:panes) : []
     @verse_of_day = DailyVerse.for
     @show_guide = !authenticated? || current_user.guide_dismissed_at.blank?
+    @canon_stats = Rails.cache.fetch("home_canon_stats_v1", expires_in: 12.hours) do
+      { translations: Translation.count, verses: Verse.count, cross_references: CrossReference.count }
+    end
     if authenticated?
       @active_plan = current_user.reading_plans.recent.first
       @plan_today = @active_plan&.todays_day
@@ -28,6 +31,12 @@ class StudiesController < ApplicationController
           session[:guest_study_id] = s.id
         end
       end
+    # Quick-open from the welcome page: drop the typed reference straight into
+    # pane I. Even an unparseable string goes in — the pane renders its own
+    # gentle "not found" state, which beats bouncing the visitor back.
+    if params[:reference].present?
+      study.panes.first&.update(reference: params[:reference].to_s.strip)
+    end
     redirect_to study
   end
 
@@ -283,7 +292,13 @@ class StudiesController < ApplicationController
   end
 
   def study_name
-    params[:name].presence || "Untitled Study"
+    return params[:name] if params[:name].present?
+    # Quick-open studies name themselves after the passage ("John 3:16").
+    if params[:reference].present?
+      parsed = ReferenceParser.call(params[:reference].to_s)
+      return parsed.label if parsed.valid?
+    end
+    "Untitled Study"
   end
 
   def study_params
