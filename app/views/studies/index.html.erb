@@ -4,17 +4,21 @@
     <%= render "sidebar", studies: @studies %>
     <main class="ps-workspace is-doc" style="grid-template-columns: 1fr;">
       <div class="ps-welcome ps-welcome--grand">
+        <span class="float-orn fo1" aria-hidden="true">&#10038;</span>
+        <span class="float-orn fo2" aria-hidden="true">&#10086;</span>
+        <span class="float-orn fo3" aria-hidden="true">&#10070;</span>
+        <span class="float-orn fo4" aria-hidden="true">&#9769;</span>
+        <span class="float-orn fo5" aria-hidden="true">&#10087;</span>
         <div class="eyebrow rise">&#9769; &nbsp; A Quiet Desk For The Word &nbsp; &#9769;</div>
         <% if authenticated? %>
-          <h1 class="rise">Welcome back.</h1>
+          <h1 class="rise"><span class="h1dc">W</span>elcome back.</h1>
         <% else %>
-          <h1 class="rise">Parallel Scripture</h1>
+          <h1 class="rise"><span class="h1dc">P</span>arallel Scripture</h1>
         <% end %>
-        <div class="rule-orn rise">
-          <span class="line"></span>
-          <span>&#10086;</span>
-          <span class="line"></span>
-        </div>
+        <svg class="ps-flourish rise" viewBox="0 0 260 34" width="260" height="34" aria-hidden="true">
+          <path d="M6 22 C 40 2, 74 30, 104 20 S 150 4, 130 14 S 166 30, 196 16 C 220 6, 240 20, 254 12" />
+          <path d="M118 26 c 6 -8, 18 -8, 24 0" />
+        </svg>
 
         <%# Quick-open: type a reference, land in a fresh two-pane study. %>
         <%= form_with url: studies_path, method: :post, class: "ps-quick-open rise" do %>
@@ -31,14 +35,15 @@
         <%# The verse of the day as an illuminated plate. %>
         <% vod_text = @verse_of_day&.text || "Open thou mine eyes, that I may behold wondrous things out of thy law." %>
         <% vod_ref = @verse_of_day ? "#{@verse_of_day.reference_label} · #{@verse_of_day.translation_code}" : "Psalm 119:18 · KJV" %>
-        <figure class="ps-illumined rise">
+        <figure class="ps-illumined ps-illumined--folio rise">
           <span class="corner tl">&#10086;</span>
           <span class="corner tr">&#10086;</span>
           <span class="corner bl">&#10086;</span>
           <span class="corner br">&#10086;</span>
-          <div class="plate-eyebrow">Verse For The Day</div>
+          <div class="plate-eyebrow">&#10022; &nbsp; Verse For The Day &nbsp; &#10022;</div>
           <blockquote><span class="dc"><%= vod_text.first %></span><%= vod_text[1..] %></blockquote>
           <figcaption><%= vod_ref %></figcaption>
+          <span class="seal" aria-hidden="true">&#9769;</span>
         </figure>
 
         <div class="cta-row rise">
@@ -80,13 +85,14 @@
           <section class="ps-recent-shelf rise">
             <div class="shelf-head">
               <span class="line"></span>
+              <span class="fl">&#10087;</span>
               <span class="t">Return To The Desk</span>
+              <span class="fl">&#10087;</span>
               <span class="line"></span>
             </div>
             <div class="shelf-grid">
               <% @studies.first(6).each do |study| %>
                 <%= link_to study_path(study), class: "ps-study-card" do %>
-                  <span class="orn">&#10087;</span>
                   <span class="nm"><%= study.name %></span>
                   <% refs = study.panes.filter_map { |p| p.reference.presence } %>
                   <span class="refs"><%= refs.any? ? refs.first(3).join(" · ") : "An empty codex, awaiting ink" %></span>

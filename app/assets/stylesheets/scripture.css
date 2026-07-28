@@ -4129,3 +4129,152 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
 }
 .mock-welcome .mw-verse { font-family: "EB Garamond", serif; font-style: italic; font-size: 13px; color: var(--ink); }
 .mock-welcome .mw-verse .dc { font-family: "UnifrakturMaguntia", serif; font-style: normal; color: var(--rubric); font-size: 20px; }
+
+/* ----- grand welcome, illuminated edition ----- */
+.ps-welcome--grand { position: relative; }
+
+/* candlelight breathing behind the title */
+.ps-welcome--grand::before {
+  content: "";
+  position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+  width: min(760px, 96%); height: 460px;
+  background: radial-gradient(closest-side, rgba(216, 181, 80, 0.22), rgba(216, 181, 80, 0));
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ps-welcome--grand::before { animation: psGlow 6s ease-in-out infinite; }
+}
+@keyframes psGlow { 0%, 100% { opacity: 0.65; } 50% { opacity: 1; } }
+
+/* drifting marginalia */
+.ps-welcome--grand .float-orn {
+  position: absolute; color: var(--gold); opacity: 0.14; pointer-events: none; z-index: 0;
+}
+.ps-welcome--grand .float-orn.fo1 { top: 12%; left: 7%; font-size: 44px; }
+.ps-welcome--grand .float-orn.fo2 { top: 30%; right: 6%; font-size: 36px; }
+.ps-welcome--grand .float-orn.fo3 { bottom: 26%; left: 5%; font-size: 40px; }
+.ps-welcome--grand .float-orn.fo4 { top: 6%; right: 16%; font-size: 30px; }
+.ps-welcome--grand .float-orn.fo5 { bottom: 12%; right: 12%; font-size: 46px; }
+@media (prefers-reduced-motion: no-preference) {
+  .ps-welcome--grand .float-orn { animation: psFloat 9s ease-in-out infinite; }
+  .ps-welcome--grand .float-orn.fo2 { animation-delay: 1.4s; animation-duration: 11s; }
+  .ps-welcome--grand .float-orn.fo3 { animation-delay: 2.8s; animation-duration: 10s; }
+  .ps-welcome--grand .float-orn.fo4 { animation-delay: 0.9s; animation-duration: 12s; }
+  .ps-welcome--grand .float-orn.fo5 { animation-delay: 2s; animation-duration: 13s; }
+}
+@keyframes psFloat {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50%      { transform: translateY(-16px) rotate(5deg); }
+}
+
+/* blackletter initial on the headline */
+.ps-welcome--grand h1 { font-size: 60px; position: relative; z-index: 1; }
+.ps-welcome--grand h1 .h1dc {
+  font-family: "UnifrakturMaguntia", serif;
+  font-style: normal; font-size: 1.28em; line-height: 1;
+  color: var(--rubric);
+  padding-right: 3px;
+  text-shadow: 0 2px 0 rgba(216, 181, 80, 0.35);
+}
+
+/* the self-drawing quill flourish */
+.ps-flourish {
+  width: 260px; height: 34px; margin-top: 6px;
+  display: block; flex: none;
+  color: var(--gold-deep); opacity: 0.9;
+}
+.ps-flourish path {
+  stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round;
+  stroke-dasharray: 620; stroke-dashoffset: 0; /* visible at rest — animation only rewinds it */
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ps-flourish path { animation: psDraw 2.4s ease both 0.35s; }
+}
+@keyframes psDraw { from { stroke-dashoffset: 620; } to { stroke-dashoffset: 0; } }
+
+/* the folio: a true little manuscript leaf */
+.ps-illumined--folio { padding: 28px 46px 30px; margin-bottom: 18px; }
+.ps-illumined--folio blockquote {
+  text-align: left;
+  font-size: 22px;
+  line-height: 1.7;
+}
+.ps-illumined--folio .dc {
+  float: left;
+  font-size: 68px; line-height: 0.86;
+  padding: 6px 10px 0 0;
+  top: 0;
+  text-shadow: 0 2px 0 rgba(216, 181, 80, 0.3);
+}
+/* shimmering gold leaf running around the frame */
+.ps-illumined--folio::after {
+  content: "";
+  position: absolute; inset: -1px;
+  border-radius: 2px;
+  padding: 1px;
+  background: linear-gradient(110deg,
+    rgba(216, 181, 80, 0) 20%, rgba(216, 181, 80, 0.85) 50%, rgba(216, 181, 80, 0) 80%);
+  background-size: 260% 100%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask-composite: exclude;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ps-illumined--folio::after { animation: psLeaf 6s linear infinite; }
+}
+@keyframes psLeaf { from { background-position: 260% 0; } to { background-position: -60% 0; } }
+/* the wax seal */
+.ps-illumined--folio .seal {
+  position: absolute; bottom: -17px; left: 50%; transform: translateX(-50%);
+  width: 36px; height: 36px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #b04a33, var(--rubric) 58%, var(--rubric-deep));
+  border: 1px solid var(--rubric-deep);
+  color: var(--vellum-0); font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.25);
+}
+
+/* quick-open, warmed up */
+.ps-quick-open { padding: 8px 10px 8px 18px; border-width: 1px; position: relative; z-index: 1; }
+.ps-quick-open .qo-input { font-size: 19px; }
+.ps-quick-open:focus-within {
+  border-color: var(--rubric);
+  box-shadow: 0 0 0 4px rgba(216, 181, 80, 0.16), 0 12px 28px -18px rgba(50, 30, 10, 0.65);
+}
+
+/* shelf heads gain fleurons */
+.ps-recent-shelf .shelf-head .fl { color: var(--rubric); font-size: 13px; letter-spacing: 0; }
+
+/* papers on a desk: resting tilt, ribbon bookmark, straighten on hover */
+.shelf-grid .ps-study-card { z-index: 1; }
+.shelf-grid .ps-study-card:nth-child(3n+1) { transform: rotate(-0.5deg); }
+.shelf-grid .ps-study-card:nth-child(3n+2) { transform: rotate(0.4deg); }
+.shelf-grid .ps-study-card:nth-child(3n)   { transform: rotate(-0.25deg); }
+.shelf-grid .ps-study-card:hover {
+  transform: translateY(-3px) rotate(0deg);
+  border-color: rgba(163, 129, 46, 0.65);
+}
+.ps-study-card::after {
+  content: "";
+  position: absolute; top: -3px; right: 16px;
+  width: 13px; height: 36px;
+  background: linear-gradient(180deg, var(--rubric), var(--rubric-deep));
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.25);
+  opacity: 0.9;
+}
+
+/* stats as a footer colophon */
+.ps-canon-stats {
+  padding: 14px 26px 12px;
+  border-top: 1px solid rgba(163, 129, 46, 0.4);
+  border-bottom: 3px double rgba(163, 129, 46, 0.4);
+}
+.ps-canon-stats b { font-family: "EB Garamond", serif; font-size: 15px; }
+
+@media (max-width: 900px) {
+  .ps-welcome--grand h1 { font-size: 44px; }
+  .ps-illumined--folio blockquote { font-size: 19px; }
+}
