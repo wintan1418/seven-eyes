@@ -40,4 +40,18 @@ class TestimonialsTest < ActionDispatch::IntegrationTest
     get root_path
     assert_select ".ps-marginalia", count: 0
   end
+
+  # Regression: after a visitor submits, testimonials_tag re-renders their
+  # existing entry — which touches the (optional) video attachment. Without
+  # the Active Storage tables that 500'd every subsequent page for them.
+  test "a visitor who has submitted can still browse the app" do
+    post "/testimonials", params: {
+      testimonial: { body: "A quiet desk indeed — my sermon prep is transformed.", rating: 5, consent_given: "1", source: "page" }
+    }, as: :json
+    assert_response :created
+
+    get "/" # literal — after an engine request, root_path resolves to the engine's root
+    assert_response :success
+    assert_select ".ps-welcome"
+  end
 end
