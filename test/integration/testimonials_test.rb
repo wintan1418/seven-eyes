@@ -32,8 +32,9 @@ class TestimonialsTest < ActionDispatch::IntegrationTest
       name: "Hidden", status: "pending"
     )
     get root_path
-    assert_select ".ps-marginalia-card blockquote", text: /revival week/
-    assert_select ".ps-marginalia-card", count: 1
+    assert_select ".ps-scroll blockquote", text: /revival week/
+    assert_select ".ps-scroll", count: 1
+    assert_select ".ps-scroll .scroll-avatar", text: "P" # circular initial medallion
   end
 
   test "the welcome shows no marginalia section when nothing is publishable" do

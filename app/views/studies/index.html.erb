@@ -112,17 +112,22 @@
               <span class="fl">&#10086;</span>
               <span class="line"></span>
             </div>
-            <div class="marginalia-grid">
-              <% @testimonials.each do |t| %>
-                <figure class="ps-marginalia-card">
-                  <% if t.rating.present? %>
-                    <div class="stars" aria-label="<%= t.rating %> of 5"><%= ("&#10022; " * t.rating).html_safe %></div>
-                  <% end %>
-                  <blockquote>&ldquo;<%= t.best_line.presence || truncate(t.body, length: 180) %>&rdquo;</blockquote>
-                  <figcaption>
-                    <span class="who"><%= t.name.presence || "A reader" %></span>
-                    <% if t.title_company.present? %><span class="role"><%= t.title_company %></span><% end %>
-                  </figcaption>
+            <div class="scroll-grid">
+              <% @testimonials.each_with_index do |t, i| %>
+                <figure class="ps-scroll" style="--unroll-delay: <%= 0.2 * i %>s">
+                  <span class="rod rod-top" aria-hidden="true"></span>
+                  <span class="scroll-avatar" aria-hidden="true"><%= (t.name.presence || "A").strip[0].upcase %></span>
+                  <div class="scroll-body">
+                    <% if t.rating.present? %>
+                      <div class="stars" aria-label="<%= t.rating %> of 5"><%= ("&#10022; " * t.rating).html_safe %></div>
+                    <% end %>
+                    <blockquote>&ldquo;<%= t.best_line.presence || truncate(t.body, length: 160) %>&rdquo;</blockquote>
+                    <figcaption>
+                      <span class="who"><%= t.name.presence || "A reader" %></span>
+                      <% if t.title_company.present? %><span class="role"><%= t.title_company %></span><% end %>
+                    </figcaption>
+                  </div>
+                  <span class="rod rod-bottom" aria-hidden="true"></span>
                 </figure>
               <% end %>
             </div>

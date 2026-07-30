@@ -4338,3 +4338,90 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
   text-decoration: none; border-bottom: 1px dashed rgba(138, 116, 68, 0.6); padding-bottom: 2px;
 }
 .ps-marginalia-invite .ml-link:hover { color: var(--rubric); border-color: var(--rubric); }
+
+/* ----- testimonial scrolls + welcome rhythm ----- */
+/* one column ladder: 640 (interactive) / 720 (folio) / 880 (collections) */
+.ps-welcome--grand .float-orn { opacity: 0.1; }
+.ps-quick-open { width: min(640px, 92%); }
+.ps-welcome--grand .ps-illumined { margin-top: 36px; width: min(720px, 94%); }
+.ps-welcome--grand .cta-row { margin-top: 34px; }
+.ps-recent-shelf, .ps-marginalia { margin-top: 44px; }
+.ps-welcome--grand .ps-guide { width: min(880px, 96%); margin: 44px auto 0; }
+.ps-welcome--grand .ps-canon-stats { margin-top: 44px; }
+
+.ps-marginalia .scroll-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 22px;
+  align-items: start;
+}
+.ps-scroll { margin: 0; position: relative; padding: 26px 0 9px; }
+
+/* the wooden rollers */
+.ps-scroll .rod {
+  position: absolute; left: -7px; right: -7px; height: 15px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #c2a266, #8a6f3b 55%, #64491a);
+  box-shadow: 0 2px 4px rgba(50, 30, 10, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.ps-scroll .rod::before, .ps-scroll .rod::after {
+  content: ""; position: absolute; top: 1.5px; width: 12px; height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #a88450, #6f5318 70%, #52400f);
+}
+.ps-scroll .rod::before { left: -2px; }
+.ps-scroll .rod::after { right: -2px; }
+.ps-scroll .rod-top { top: 18px; z-index: 2; }
+.ps-scroll .rod-bottom { bottom: 0; z-index: 2; }
+
+/* the parchment between the rollers, curled at the edges */
+.ps-scroll .scroll-body {
+  position: relative; z-index: 1;
+  background:
+    linear-gradient(90deg, rgba(80, 55, 20, 0.10), rgba(80, 55, 20, 0) 9%, rgba(80, 55, 20, 0) 91%, rgba(80, 55, 20, 0.10)),
+    linear-gradient(175deg, var(--vellum-0), #f2e7c9);
+  border-left: 1px solid rgba(163, 129, 46, 0.35);
+  border-right: 1px solid rgba(163, 129, 46, 0.35);
+  padding: 30px 18px 16px;
+  text-align: center;
+  box-shadow: 0 10px 22px -16px rgba(50, 30, 10, 0.55);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ps-scroll .scroll-body {
+    clip-path: inset(0 0 0 0);
+    animation: psUnroll 0.9s cubic-bezier(0.25, 0.7, 0.3, 1) both;
+    animation-delay: calc(0.35s + var(--unroll-delay, 0s));
+  }
+  .ps-scroll .rod-bottom, .ps-scroll .scroll-avatar {
+    animation: psRise 0.5s ease both;
+    animation-delay: calc(0.6s + var(--unroll-delay, 0s));
+  }
+}
+@keyframes psUnroll {
+  from { clip-path: inset(0 0 92% 0); }
+  to   { clip-path: inset(0 0 0 0); }
+}
+
+/* circular initial medallion, seated on the top roller */
+.ps-scroll .scroll-avatar {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 40px; height: 40px; border-radius: 50%; z-index: 3;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 35% 28%, #fdf6e0, var(--vellum-1) 70%);
+  border: 1px solid var(--gold-deep);
+  box-shadow: 0 0 0 3px var(--vellum-0), 0 0 0 4px rgba(163, 129, 46, 0.45), 0 3px 8px rgba(50, 30, 10, 0.3);
+  font-family: "UnifrakturMaguntia", serif; font-size: 21px; line-height: 1;
+  color: var(--rubric);
+}
+.ps-scroll .stars { color: var(--gold-deep); font-size: 12px; letter-spacing: 2px; margin-bottom: 8px; }
+.ps-scroll blockquote {
+  margin: 0;
+  font-family: "EB Garamond", serif; font-style: italic;
+  font-size: 15.5px; line-height: 1.6; color: var(--ink-soft);
+}
+.ps-scroll figcaption { margin-top: 12px; display: flex; flex-direction: column; gap: 2px; }
+.ps-scroll .who {
+  font-family: "Cinzel", serif; font-weight: 600; font-size: 10px;
+  letter-spacing: 0.22em; color: var(--rubric); text-transform: uppercase;
+}
+.ps-scroll .role {
+  font-family: "EB Garamond", serif; font-style: italic; font-size: 12.5px; color: var(--sepia);
+}
