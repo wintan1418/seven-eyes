@@ -112,24 +112,31 @@
               <span class="fl">&#10086;</span>
               <span class="line"></span>
             </div>
-            <div class="scroll-grid">
-              <% @testimonials.each_with_index do |t, i| %>
-                <figure class="ps-scroll" style="--unroll-delay: <%= 0.2 * i %>s">
-                  <span class="rod rod-top" aria-hidden="true"></span>
-                  <span class="scroll-avatar" aria-hidden="true"><%= (t.name.presence || "A").strip[0].upcase %></span>
-                  <div class="scroll-body">
-                    <% if t.rating.present? %>
-                      <div class="stars" aria-label="<%= t.rating %> of 5"><%= ("&#10022; " * t.rating).html_safe %></div>
+            <div class="scroll-marquee <%= "is-drifting" if @testimonials.size > 1 %>">
+              <div class="scroll-track">
+                <%# Two identical sets make the drift loop seamless; one set when static. %>
+                <% (@testimonials.size > 1 ? 2 : 1).times do |set| %>
+                  <div class="scroll-set" <%= 'aria-hidden="true"'.html_safe if set == 1 %>>
+                    <% @testimonials.each_with_index do |t, i| %>
+                      <figure class="ps-scroll" style="--unroll-delay: <%= 0.2 * i %>s">
+                        <span class="rod rod-top" aria-hidden="true"></span>
+                        <span class="scroll-avatar" aria-hidden="true"><%= (t.name.presence || "A").strip[0].upcase %></span>
+                        <div class="scroll-body">
+                          <% if t.rating.present? %>
+                            <div class="stars" aria-label="<%= t.rating %> of 5"><%= ("&#10022; " * t.rating).html_safe %></div>
+                          <% end %>
+                          <blockquote>&ldquo;<%= t.best_line.presence || truncate(t.body, length: 160) %>&rdquo;</blockquote>
+                          <figcaption>
+                            <span class="who"><%= t.name.presence || "A reader" %></span>
+                            <% if t.title_company.present? %><span class="role"><%= t.title_company %></span><% end %>
+                          </figcaption>
+                        </div>
+                        <span class="rod rod-bottom" aria-hidden="true"></span>
+                      </figure>
                     <% end %>
-                    <blockquote>&ldquo;<%= t.best_line.presence || truncate(t.body, length: 160) %>&rdquo;</blockquote>
-                    <figcaption>
-                      <span class="who"><%= t.name.presence || "A reader" %></span>
-                      <% if t.title_company.present? %><span class="role"><%= t.title_company %></span><% end %>
-                    </figcaption>
                   </div>
-                  <span class="rod rod-bottom" aria-hidden="true"></span>
-                </figure>
-              <% end %>
+                <% end %>
+              </div>
             </div>
             <div class="marginalia-cta">
               <%= link_to "Add your line to the margins &rsaquo;".html_safe, "/testimonials/new", class: "ml-link" %>

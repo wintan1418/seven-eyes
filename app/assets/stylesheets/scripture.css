@@ -4425,3 +4425,34 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
 .ps-scroll .role {
   font-family: "EB Garamond", serif; font-style: italic; font-size: 12.5px; color: var(--sepia);
 }
+
+/* ----- scroll ribbon: equal heights + continuous drift ----- */
+.ps-marginalia .scroll-marquee {
+  width: 100%; overflow: hidden;
+  -webkit-mask: linear-gradient(90deg, transparent, #fff 6%, #fff 94%, transparent);
+          mask: linear-gradient(90deg, transparent, #fff 6%, #fff 94%, transparent);
+}
+.ps-marginalia .scroll-track { display: flex; width: max-content; }
+.ps-marginalia .scroll-set { display: flex; align-items: stretch; gap: 22px; padding-right: 22px; }
+
+/* fixed width + stretched bodies: every roller lines up top AND bottom */
+.ps-scroll { width: 300px; flex: none; display: flex; flex-direction: column; }
+.ps-scroll .scroll-body { flex: 1; display: flex; flex-direction: column; }
+.ps-scroll blockquote { flex: 1; }
+
+/* the slow drift — pauses under the reader's hand */
+@media (prefers-reduced-motion: no-preference) {
+  .scroll-marquee.is-drifting .scroll-track { animation: psDrift 45s linear infinite; }
+  .scroll-marquee.is-drifting:hover .scroll-track { animation-play-state: paused; }
+}
+@keyframes psDrift { to { transform: translateX(-50%); } }
+
+/* static fallback: no duplicate strip, centered row */
+@media (prefers-reduced-motion: reduce) {
+  .ps-marginalia .scroll-marquee { -webkit-mask: none; mask: none; }
+  .ps-marginalia .scroll-track { width: 100%; justify-content: center; flex-wrap: wrap; }
+  .ps-marginalia .scroll-set[aria-hidden="true"] { display: none; }
+}
+/* a lone testimonial sits centered, no drift */
+.ps-marginalia .scroll-marquee:not(.is-drifting) { -webkit-mask: none; mask: none; }
+.ps-marginalia .scroll-marquee:not(.is-drifting) .scroll-track { width: 100%; justify-content: center; }

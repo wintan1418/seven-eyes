@@ -11,7 +11,7 @@ class StudiesController < ApplicationController
     @canon_stats = Rails.cache.fetch("home_canon_stats_v1", expires_in: 12.hours) do
       { translations: Translation.count, verses: Verse.count, cross_references: CrossReference.count }
     end
-    @testimonials = Testimonials::Testimonial.publishable.featured_first.limit(3)
+    @testimonials = Testimonials::Testimonial.publishable.featured_first.limit(6)
     if authenticated?
       @active_plan = current_user.reading_plans.recent.first
       @plan_today = @active_plan&.todays_day
