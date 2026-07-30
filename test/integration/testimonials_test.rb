@@ -55,6 +55,6 @@ class TestimonialsTest < ActionDispatch::IntegrationTest
 
     get "/" # literal — after an engine request, root_path resolves to the engine's root
     assert_response :success
-    assert_select ".ps-welcome"
+    assert_select ".ps-landing"
   end
 end

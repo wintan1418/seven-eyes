@@ -28,10 +28,11 @@ class GuideTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
-  test "guests still see the guide on Scriptorium (the JS controller handles hiding for them)" do
+  test "guests land on the marketing page, with the field guide a link away" do
     delete session_path
     get root_path
-    assert_match(/What.s at your desk/, response.body)
+    assert_select ".ps-landing"
+    assert_select ".ld-foot-links a[href=?]", guide_path
   end
 
   test "the illustrated field guide renders for a signed-in user" do

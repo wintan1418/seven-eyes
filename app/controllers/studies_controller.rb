@@ -15,6 +15,9 @@ class StudiesController < ApplicationController
     if authenticated?
       @active_plan = current_user.reading_plans.recent.first
       @plan_today = @active_plan&.todays_day
+    else
+      # Visitors get the landing page; the workspace welcome is for keepers.
+      render :landing
     end
   end
 

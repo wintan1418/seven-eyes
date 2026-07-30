@@ -1,12 +1,12 @@
 require "application_system_test_case"
 
-# Browser smoke of the Scriptorium welcome: the page renders its hero,
+# Browser smoke of the landing page: the hero renders,
 # and the quick-open bar carries a guest straight into a study.
 class WelcomeTest < ApplicationSystemTestCase
-  test "the welcome renders and quick-open lands in a fresh study" do
+  test "the landing renders and quick-open lands in a fresh study" do
     visit root_path
 
-    assert_selector "h1", text: "Parallel Scripture"
+    assert_selector "h1", text: "The Word, laid open."
     assert_selector ".ps-illumined blockquote"
     assert_selector ".ps-canon-stats"
 
