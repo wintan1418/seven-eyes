@@ -130,6 +130,12 @@
               <%= link_to "Add your line to the margins &rsaquo;".html_safe, "/testimonials/new", class: "ml-link" %>
             </div>
           </section>
+        <% else %>
+          <%# No approved testimonials yet — still offer the quill. %>
+          <div class="ps-marginalia-invite rise">
+            <span class="orn">&#9998;</span> Has this desk served you?
+            <%= link_to "Add your line to the margins &rsaquo;".html_safe, "/testimonials/new", class: "ml-link" %>
+          </div>
         <% end %>
 
         <% if @show_guide %>

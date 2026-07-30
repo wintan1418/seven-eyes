@@ -4323,3 +4323,18 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
   text-decoration: none; border-bottom: 1px dashed rgba(138, 116, 68, 0.6); padding-bottom: 2px;
 }
 .ps-marginalia .ml-link:hover { color: var(--rubric); border-color: var(--rubric); }
+
+/* invitation shown while the margins are still empty */
+.ps-marginalia-invite {
+  margin-top: 36px;
+  display: flex; align-items: center; gap: 10px;
+  font-family: "EB Garamond", serif; font-style: italic;
+  font-size: 15px; color: var(--sepia);
+}
+.ps-marginalia-invite .orn { color: var(--rubric); font-style: normal; }
+.ps-marginalia-invite .ml-link {
+  font-family: "Cinzel", serif; font-weight: 600; font-size: 10px;
+  letter-spacing: 0.24em; color: var(--sepia); text-transform: uppercase;
+  text-decoration: none; border-bottom: 1px dashed rgba(138, 116, 68, 0.6); padding-bottom: 2px;
+}
+.ps-marginalia-invite .ml-link:hover { color: var(--rubric); border-color: var(--rubric); }

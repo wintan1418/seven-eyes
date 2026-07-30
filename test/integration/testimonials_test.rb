@@ -39,6 +39,8 @@ class TestimonialsTest < ActionDispatch::IntegrationTest
   test "the welcome shows no marginalia section when nothing is publishable" do
     get root_path
     assert_select ".ps-marginalia", count: 0
+    # ...but still invites the first testimonial.
+    assert_select ".ps-marginalia-invite a[href=?]", "/testimonials/new"
   end
 
   # Regression: after a visitor submits, testimonials_tag re-renders their
