@@ -51,6 +51,9 @@ gem "rubyzip", "~> 3.0", require: false
 # Cloudinary-hosted pictures for the preach queue (announcement slides etc.)
 gem "cloudinary", "~> 2.2"
 
+# Self-hosted testimonials + NPS (collection widget, moderation dashboard)
+gem "testimonials", "~> 0.6"
+
 # Load environment variables from .env in development/test (e.g. OPENAI_API_KEY)
 gem "dotenv-rails", groups: %i[ development test ]
 

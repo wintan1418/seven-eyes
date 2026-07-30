@@ -1,0 +1,57 @@
+# frozen_string_literal: true
+
+class CreateTestimonialsTables < ActiveRecord::Migration[8.1]
+  def change
+    create_table :testimonials_testimonials do |t|
+      t.string :kind, null: false, default: 'text'
+      t.text :body
+      t.integer :rating
+      t.text :best_line
+      t.string :status, null: false, default: 'pending'
+      t.boolean :featured, null: false, default: false
+      t.boolean :consent_given, null: false, default: false
+      t.string :consent_text
+      t.string :author_id
+      t.string :name
+      t.string :email
+      t.string :title_company
+      t.string :source, null: false, default: 'widget'
+      t.string :page_url
+      t.string :user_agent
+      t.string :locale
+      t.string :tenant # opaque per-tenant key; nil = single global collection
+
+      t.timestamps
+    end
+    add_index :testimonials_testimonials, :status
+    add_index :testimonials_testimonials, %i[tenant status]
+    add_index :testimonials_testimonials, %i[tenant status consent_given]
+
+    create_table :testimonials_nps_responses do |t|
+      t.integer :score, null: false
+      t.text :comment
+      t.string :author_id
+      t.string :name
+      t.string :email
+      t.string :page_url
+      t.string :user_agent
+      t.string :locale
+      t.string :tenant
+
+      t.timestamps
+    end
+    add_index :testimonials_nps_responses, %i[tenant score]
+
+    create_table :testimonials_prompt_events do |t|
+      t.string :kind, null: false
+      t.string :action, null: false
+      t.string :author_id
+      t.string :visitor_token
+      t.string :tenant
+
+      t.timestamps
+    end
+    add_index :testimonials_prompt_events, %i[tenant author_id kind]
+    add_index :testimonials_prompt_events, %i[tenant visitor_token kind]
+  end
+end

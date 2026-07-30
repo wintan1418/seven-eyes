@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  mount Testimonials::Engine => "/testimonials"
   resource :session
   resource :registration, only: %i[ new create ]
   resources :passwords, param: :token

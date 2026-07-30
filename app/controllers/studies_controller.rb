@@ -11,6 +11,7 @@ class StudiesController < ApplicationController
     @canon_stats = Rails.cache.fetch("home_canon_stats_v1", expires_in: 12.hours) do
       { translations: Translation.count, verses: Verse.count, cross_references: CrossReference.count }
     end
+    @testimonials = Testimonials::Testimonial.publishable.featured_first.limit(3)
     if authenticated?
       @active_plan = current_user.reading_plans.recent.first
       @plan_today = @active_plan&.todays_day
@@ -20,6 +21,9 @@ class StudiesController < ApplicationController
   def show
     @study.touch_opened!
     @studies = authenticated? ? current_user.studies.recent : []
+    # A returning reader with a shelf of studies is a happy one — offer the
+    # testimonial widget (the gem throttles: max 2 auto-prompts, 180 days apart).
+    testimonial_prompt! if authenticated? && @studies.size >= 2
   end
 
   def create

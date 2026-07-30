@@ -103,6 +103,35 @@
           </section>
         <% end %>
 
+        <% if @testimonials.present? %>
+          <section class="ps-marginalia rise">
+            <div class="shelf-head">
+              <span class="line"></span>
+              <span class="fl">&#10086;</span>
+              <span class="t">Marginalia From Fellow Readers</span>
+              <span class="fl">&#10086;</span>
+              <span class="line"></span>
+            </div>
+            <div class="marginalia-grid">
+              <% @testimonials.each do |t| %>
+                <figure class="ps-marginalia-card">
+                  <% if t.rating.present? %>
+                    <div class="stars" aria-label="<%= t.rating %> of 5"><%= ("&#10022; " * t.rating).html_safe %></div>
+                  <% end %>
+                  <blockquote>&ldquo;<%= t.best_line.presence || truncate(t.body, length: 180) %>&rdquo;</blockquote>
+                  <figcaption>
+                    <span class="who"><%= t.name.presence || "A reader" %></span>
+                    <% if t.title_company.present? %><span class="role"><%= t.title_company %></span><% end %>
+                  </figcaption>
+                </figure>
+              <% end %>
+            </div>
+            <div class="marginalia-cta">
+              <%= link_to "Add your line to the margins &rsaquo;".html_safe, "/testimonials/new", class: "ml-link" %>
+            </div>
+          </section>
+        <% end %>
+
         <% if @show_guide %>
           <%= render "studies/guide" %>
         <% end %>

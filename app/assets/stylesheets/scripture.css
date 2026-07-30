@@ -4278,3 +4278,48 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
   .ps-welcome--grand h1 { font-size: 44px; }
   .ps-illumined--folio blockquote { font-size: 19px; }
 }
+
+/* ----- marginalia: testimonials on the welcome ----- */
+.ps-marginalia { margin-top: 42px; width: min(880px, 96%); }
+.ps-marginalia .shelf-head {
+  display: flex; align-items: center; gap: 16px; justify-content: center;
+  margin-bottom: 16px;
+  font-family: "Cinzel", serif; font-weight: 600; font-size: 10.5px;
+  letter-spacing: 0.3em; color: var(--sepia); text-transform: uppercase;
+}
+.ps-marginalia .shelf-head .line { flex: 1; max-width: 140px; border-top: 1px dashed rgba(138, 116, 68, 0.5); }
+.ps-marginalia .shelf-head .fl { color: var(--rubric); font-size: 13px; letter-spacing: 0; }
+.ps-marginalia .marginalia-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px;
+}
+.ps-marginalia-card {
+  margin: 0; position: relative;
+  background: var(--vellum-0);
+  border: 1px solid var(--vellum-edge); border-radius: 2px;
+  padding: 18px 20px 14px;
+  text-align: left;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 20px -16px rgba(50, 30, 10, 0.5);
+}
+.ps-marginalia-card .stars { color: var(--gold-deep); font-size: 12px; letter-spacing: 2px; margin-bottom: 8px; }
+.ps-marginalia-card blockquote {
+  margin: 0;
+  font-family: "EB Garamond", serif; font-style: italic;
+  font-size: 15.5px; line-height: 1.6; color: var(--ink-soft);
+}
+.ps-marginalia-card figcaption {
+  margin-top: 12px; display: flex; flex-direction: column; gap: 2px;
+}
+.ps-marginalia-card .who {
+  font-family: "Cinzel", serif; font-weight: 600; font-size: 10px;
+  letter-spacing: 0.22em; color: var(--rubric); text-transform: uppercase;
+}
+.ps-marginalia-card .role {
+  font-family: "EB Garamond", serif; font-style: italic; font-size: 12.5px; color: var(--sepia);
+}
+.ps-marginalia .marginalia-cta { text-align: center; margin-top: 14px; }
+.ps-marginalia .ml-link {
+  font-family: "Cinzel", serif; font-weight: 600; font-size: 10px;
+  letter-spacing: 0.24em; color: var(--sepia); text-transform: uppercase;
+  text-decoration: none; border-bottom: 1px dashed rgba(138, 116, 68, 0.6); padding-bottom: 2px;
+}
+.ps-marginalia .ml-link:hover { color: var(--rubric); border-color: var(--rubric); }

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_06_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_30_111240) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -205,6 +205,58 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_130000) do
     t.index ["share_token"], name: "index_studies_on_share_token", unique: true, where: "(share_token IS NOT NULL)"
     t.index ["user_id", "last_opened_at"], name: "index_studies_on_user_id_and_last_opened_at"
     t.index ["user_id"], name: "index_studies_on_user_id"
+  end
+
+  create_table "testimonials_nps_responses", force: :cascade do |t|
+    t.string "author_id"
+    t.text "comment"
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.string "locale"
+    t.string "name"
+    t.string "page_url"
+    t.integer "score", null: false
+    t.string "tenant"
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.index ["tenant", "score"], name: "index_testimonials_nps_responses_on_tenant_and_score"
+  end
+
+  create_table "testimonials_prompt_events", force: :cascade do |t|
+    t.string "action", null: false
+    t.string "author_id"
+    t.datetime "created_at", null: false
+    t.string "kind", null: false
+    t.string "tenant"
+    t.datetime "updated_at", null: false
+    t.string "visitor_token"
+    t.index ["tenant", "author_id", "kind"], name: "idx_on_tenant_author_id_kind_7af0854255"
+    t.index ["tenant", "visitor_token", "kind"], name: "idx_on_tenant_visitor_token_kind_4e6d15c060"
+  end
+
+  create_table "testimonials_testimonials", force: :cascade do |t|
+    t.string "author_id"
+    t.text "best_line"
+    t.text "body"
+    t.boolean "consent_given", default: false, null: false
+    t.string "consent_text"
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.boolean "featured", default: false, null: false
+    t.string "kind", default: "text", null: false
+    t.string "locale"
+    t.string "name"
+    t.string "page_url"
+    t.integer "rating"
+    t.string "source", default: "widget", null: false
+    t.string "status", default: "pending", null: false
+    t.string "tenant"
+    t.string "title_company"
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.index ["status"], name: "index_testimonials_testimonials_on_status"
+    t.index ["tenant", "status", "consent_given"], name: "idx_on_tenant_status_consent_given_6feaac114c"
+    t.index ["tenant", "status"], name: "index_testimonials_testimonials_on_tenant_and_status"
   end
 
   create_table "translations", force: :cascade do |t|
