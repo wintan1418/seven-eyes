@@ -4456,3 +4456,10 @@ body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
 /* a lone testimonial sits centered, no drift */
 .ps-marginalia .scroll-marquee:not(.is-drifting) { -webkit-mask: none; mask: none; }
 .ps-marginalia .scroll-marquee:not(.is-drifting) .scroll-track { width: 100%; justify-content: center; }
+
+/* The drifting track is ~2000px of scrolls; without containment its
+   max-content width forced the whole welcome column wide and shoved the
+   page off-center. Size the marquee from its container, never its contents. */
+.ps-welcome--grand { min-width: 0; max-width: 100%; }
+.ps-marginalia { width: 96%; max-width: 880px; }
+.ps-marginalia .scroll-marquee { contain: inline-size; }
