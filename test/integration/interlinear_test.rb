@@ -27,14 +27,23 @@ class InterlinearTest < ActionDispatch::IntegrationTest
   test "tagged words carry data-strongs and data-gloss with translit · Strong's" do
     get study_path(@study)
     assert_response :success
-    assert_select "a.ps-word[data-strongs='G2316'][data-gloss=?]", "theos · G2316"
-    assert_select "a.ps-word[data-strongs='G25'][data-gloss=?]", "agapaō · G25"
+    assert_select "span.ps-word[data-strongs='G2316'][data-gloss=?]", "theos · G2316"
+    assert_select "span.ps-word[data-strongs='G25'][data-gloss=?]", "agapaō · G25"
+  end
+
+  # Regression: tagged words must NOT be real <a> links — Android Chrome's
+  # long-press link menu would block selecting Scripture text on mobile.
+  test "tagged words are spans with a data-href, never anchors" do
+    get study_path(@study)
+    assert_select ".ps-verse-text a.ps-word", count: 0
+    assert_select "span.ps-word[data-href=?][role='link']",
+                  lexicon_study_path(@study, strongs: "G2316")
   end
 
   test "tagged word without a lexicon entry still shows the Strong's number" do
     get study_path(@study)
     # G2889 (world) has no lexicon entry — gloss falls back to the code alone.
-    assert_select "a.ps-word[data-strongs='G2889'][data-gloss='G2889']"
+    assert_select "span.ps-word[data-strongs='G2889'][data-gloss='G2889']"
   end
 
   test "topbar exposes the Lemma toggle wired to the interlinear controller" do

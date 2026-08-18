@@ -2451,10 +2451,12 @@ body[data-theme="candlelight"] .ps-backlink:hover { background: rgba(80, 55, 25,
 }
 
 /* ====== Translation diff (word-level highlight when comparing same verse) ====== */
-/* Strong's words are links; on touch a long-press over them would pop the OS
-   "Open/Copy Link" callout instead of selecting text. Suppress the callout and
-   keep the text selectable so verses can be selected and copied on mobile. */
+/* Strong's words are plain spans, not <a> links — Android Chrome's long-press
+   link menu can't be suppressed and would block selecting Scripture text for
+   highlights / the Rabbi. Keep them selectable, with a pointer cursor for the
+   desktop tap-to-open-lexicon affordance. */
 .ps-word {
+  cursor: pointer;
   -webkit-touch-callout: none;
   -webkit-user-select: text;
   user-select: text;

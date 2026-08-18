@@ -42,7 +42,7 @@ class StudyWorkflowTest < ActionDispatch::IntegrationTest
 
     patch study_pane_path(study, pane), params: { pane: { reference: "Jn 3:16", translation_id: @kjv.id } }
     assert_response :success
-    assert_select "a.ps-word", minimum: 2
+    assert_select "span.ps-word", minimum: 2
     assert_includes response.body, lexicon_study_path(study, strongs: "G2316")
   end
 

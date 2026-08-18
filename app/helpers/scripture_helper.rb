@@ -144,10 +144,15 @@ module ScriptureHelper
   end
 
   # Render Strong's-tagged tokens: words with an "s" become clickable lexicon
-  # links; everything else is plain text. Joined so the verse reads normally.
+  # words; everything else is plain text. Joined so the verse reads normally.
   # When +lexicon+ is supplied, attaches a data-gloss attribute carrying the
   # transliteration (or lemma fallback) plus the Strong's code — interlinear
   # mode renders it underneath each word via CSS.
+  #
+  # Deliberately NOT real <a> links: mobile browsers treat a long-press on an
+  # anchor as "open the link menu", which blocks selecting Scripture text for
+  # highlights / the Rabbi. The lexicon controller loads the drawer frame from
+  # data-href instead.
   def strongs_tokens(tokens, study, lexicon: {})
     safe_join(tokens.map do |t|
       surface = t["w"].to_s
@@ -155,10 +160,11 @@ module ScriptureHelper
         entry = lexicon[t["s"]]
         readable = entry&.translit.presence || entry&.lemma.presence
         gloss = readable.present? ? "#{readable} · #{t["s"]}" : t["s"]
-        link_to(surface, lexicon_study_path(study, strongs: t["s"]),
-                class: "ps-word", title: gloss,
-                data: { strongs: t["s"], gloss: gloss,
-                        turbo_frame: "lexicon_drawer", action: "lexicon#open" })
+        tag.span(surface,
+                 class: "ps-word", title: gloss, role: "link", tabindex: "0",
+                 data: { strongs: t["s"], gloss: gloss,
+                         href: lexicon_study_path(study, strongs: t["s"]),
+                         action: "click->lexicon#open keydown.enter->lexicon#open" })
       else
         surface
       end
