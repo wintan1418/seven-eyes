@@ -1,12 +1,24 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Reads the pane's currently displayed verses aloud using the browser's built-in
-// speech synthesis (no network, no API). Toggling re-fires; a second click stops.
+// The Audio Bible. Preferred path: cached server-narrated chapter audio played
+// through a real <audio> element — it keeps playing when the phone locks or the
+// app goes to the background, with lock-screen controls via the Media Session
+// API, and flows into the next chapter automatically (prefetched while the
+// current one plays). Fallback path (no key, quota, failure): the old on-device
+// speech synthesis, which reads the visible verses in the foreground only.
+let active = null // one narration at a time across panes
+
+const POLL_MS = 4000
+const MAX_POLLS = 45 // ~3 minutes — long chapters take a while to narrate
+
 export default class extends Controller {
   static targets = ["button"]
 
   connect() {
-    this.speaking = false
+    this.state = "idle"
+    this._audio = null
+    this._poll = null
+    this._armed = null // info ready to play but blocked by autoplay policy
     this._onEnd = () => this.reset()
   }
 
@@ -15,41 +27,138 @@ export default class extends Controller {
   }
 
   toggle() {
-    if (!("speechSynthesis" in window)) return
-    this.speaking ? this.stop() : this.play()
+    if (this.state !== "idle") return this.stop()
+    if (this._armed) {
+      const info = this._armed
+      this._armed = null
+      return this.play(info)
+    }
+    this.start()
   }
 
-  play() {
-    const text = this.collectText()
-    if (!text) return
+  async start() {
+    active?.stop()
+    active = this
 
-    window.speechSynthesis.cancel() // stop any other pane mid-read
+    const params = this.chapterParams()
+    if (!params) return this.speakFallback()
+
+    this.setState("loading")
+    try {
+      const info = await this.fetchInfo(params)
+      if (this.state !== "loading") return // stopped while fetching
+      if (info.status === "ready") return this.play(info)
+      if (info.status === "preparing") return this.pollUntilReady(params)
+      this.speakFallback()
+    } catch {
+      this.speakFallback()
+    }
+  }
+
+  chapterParams() {
+    const d = this.hasButtonTarget ? this.buttonTarget.dataset : {}
+    if (!d.osis || !d.chapter || !d.translation) return null
+    return { osis: d.osis, chapter: d.chapter, translation: d.translation }
+  }
+
+  async fetchInfo({ osis, chapter, translation }) {
+    const url = `/audio/chapter?osis=${encodeURIComponent(osis)}&chapter=${encodeURIComponent(chapter)}&translation=${encodeURIComponent(translation)}`
+    const res = await fetch(url, { headers: { Accept: "application/json" } })
+    return res.json()
+  }
+
+  pollUntilReady(params, remaining = MAX_POLLS) {
+    if (remaining <= 0) return this.speakFallback()
+    this._poll = setTimeout(async () => {
+      if (this.state !== "loading") return
+      try {
+        const info = await this.fetchInfo(params)
+        if (this.state !== "loading") return
+        if (info.status === "ready") return this.play(info)
+        if (info.status === "preparing") return this.pollUntilReady(params, remaining - 1)
+        this.speakFallback()
+      } catch {
+        this.pollUntilReady(params, remaining - 1)
+      }
+    }, POLL_MS)
+  }
+
+  async play(info) {
+    this.releaseAudio()
+    const audio = new Audio(info.url)
+    audio.preload = "auto"
+    audio.addEventListener("ended", () => this.advance(info))
+    audio.addEventListener("error", () => { if (this._audio === audio) this.reset() })
+    this._audio = audio
+
+    try {
+      await audio.play()
+    } catch {
+      // Autoplay policy refused (too long since the tap) — arm it so the very
+      // next tap plays instantly.
+      this._armed = info
+      return this.setState("idle")
+    }
+    this.setState("playing")
+    this.setMediaSession(info)
+    if (info.next) this.fetchInfo(info.next).catch(() => {}) // warm the next chapter's cache
+  }
+
+  // Seamless-ish continuation: the next chapter was requested when this one
+  // started, so by the time it ends the narration is usually cached and ready.
+  async advance(info) {
+    if (!info.next || this.state !== "playing") return this.reset()
+    this.setState("loading")
+    try {
+      const next = await this.fetchInfo(info.next)
+      if (this.state !== "loading") return
+      if (next.status === "ready") return this.play(next)
+      if (next.status === "preparing") return this.pollUntilReady(info.next)
+      this.reset()
+    } catch {
+      this.reset()
+    }
+  }
+
+  setMediaSession(info) {
+    if (!("mediaSession" in navigator)) return
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: info.title,
+      artist: info.translation_name || info.translation,
+      album: "BiblioRata Audio Bible"
+    })
+    navigator.mediaSession.playbackState = "playing"
+    const audio = () => this._audio
+    navigator.mediaSession.setActionHandler("play", () => audio()?.play())
+    navigator.mediaSession.setActionHandler("pause", () => audio()?.pause())
+    navigator.mediaSession.setActionHandler("stop", () => this.stop())
+    navigator.mediaSession.setActionHandler("seekbackward", () => { const a = audio(); if (a) a.currentTime = Math.max(0, a.currentTime - 15) })
+    navigator.mediaSession.setActionHandler("seekforward", () => { const a = audio(); if (a) a.currentTime = Math.min(a.duration || 0, a.currentTime + 15) })
+  }
+
+  clearMediaSession() {
+    if (!("mediaSession" in navigator)) return
+    navigator.mediaSession.metadata = null
+    navigator.mediaSession.playbackState = "none"
+    for (const action of ["play", "pause", "stop", "seekbackward", "seekforward"]) {
+      try { navigator.mediaSession.setActionHandler(action, null) } catch {}
+    }
+  }
+
+  // ---- On-device speech synthesis (foreground-only fallback) ----
+
+  speakFallback() {
+    const text = this.collectText()
+    if (!("speechSynthesis" in window) || !text) return this.reset()
+
+    window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.rate = 0.92
     utterance.pitch = 1
     utterance.onend = this._onEnd
     utterance.onerror = this._onEnd
     window.speechSynthesis.speak(utterance)
-
-    this.speaking = true
-    this.mark(true)
-  }
-
-  stop() {
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel()
-    this.reset()
-  }
-
-  reset() {
-    this.speaking = false
-    this.mark(false)
-  }
-
-  mark(on) {
-    if (this.hasButtonTarget) {
-      this.buttonTarget.classList.toggle("is-on", on)
-      this.buttonTarget.innerHTML = on ? "&#9632;" : "&#9658;" // ■ / ▶
-    }
+    this.setState("playing")
   }
 
   collectText() {
@@ -57,5 +166,38 @@ export default class extends Controller {
       .map((el) => el.textContent.trim())
       .filter(Boolean)
       .join(" ")
+  }
+
+  // ---- Teardown ----
+
+  stop() {
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel()
+    this.reset()
+  }
+
+  reset() {
+    if (this._poll) { clearTimeout(this._poll); this._poll = null }
+    this.releaseAudio()
+    this.clearMediaSession()
+    this._armed = null
+    this.setState("idle")
+    if (active === this) active = null
+  }
+
+  releaseAudio() {
+    if (!this._audio) return
+    this._audio.pause()
+    this._audio.removeAttribute("src")
+    this._audio = null
+  }
+
+  setState(state) {
+    this.state = state
+    if (!this.hasButtonTarget) return
+    const btn = this.buttonTarget
+    btn.classList.toggle("is-on", state === "playing")
+    btn.classList.toggle("is-loading", state === "loading")
+    btn.innerHTML = { idle: "&#9658;", loading: "&#8987;", playing: "&#9632;" }[state] // ▶ ⌛ ■
+    btn.title = { idle: "Listen to this chapter", loading: "Preparing audio…", playing: "Stop listening" }[state]
   }
 }

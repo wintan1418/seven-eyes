@@ -43,6 +43,9 @@ Rails.application.routes.draw do
   get "/p/:slug/open", to: "passages#open", as: :open_passage
   get "/p/:slug",      to: "passages#show", as: :passage
 
+  # Audio Bible: cached per-chapter narration (JSON status + playable URL).
+  get "/audio/chapter", to: "audio_chapters#show", as: :audio_chapter
+
   resources :highlights, only: %i[ create update destroy ]
 
   resource :preferences, only: %i[ update ]

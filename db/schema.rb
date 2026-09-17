@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_30_113811) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_17_183250) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -52,6 +52,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_113811) do
     t.datetime "updated_at", null: false
     t.index ["osis_code"], name: "index_books_on_osis_code", unique: true
     t.index ["position"], name: "index_books_on_position", unique: true
+  end
+
+  create_table "chapter_audios", force: :cascade do |t|
+    t.bigint "book_id", null: false
+    t.integer "chapter", null: false
+    t.datetime "created_at", null: false
+    t.string "error"
+    t.datetime "generated_at"
+    t.integer "status", default: 0, null: false
+    t.bigint "translation_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "voice", default: "", null: false
+    t.index ["book_id"], name: "index_chapter_audios_on_book_id"
+    t.index ["translation_id", "book_id", "chapter", "voice"], name: "index_chapter_audios_on_chapter_and_voice", unique: true
+    t.index ["translation_id"], name: "index_chapter_audios_on_translation_id"
   end
 
   create_table "commentaries", force: :cascade do |t|
@@ -328,6 +343,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_113811) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "chapter_audios", "books"
+  add_foreign_key "chapter_audios", "translations"
   add_foreign_key "commentaries", "books"
   add_foreign_key "cross_references", "books", column: "from_book_id"
   add_foreign_key "cross_references", "books", column: "to_book_id"
