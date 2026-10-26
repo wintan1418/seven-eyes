@@ -23,6 +23,18 @@ class ReferenceCheckTest < ActionDispatch::IntegrationTest
     assert_nil data["verse_start"]
   end
 
+  test "a misspelled or bare book name is still understood" do
+    get reference_check_path(q: "romams 8:28") # one letter off
+    data = JSON.parse(response.body)
+    assert data["ok"]
+    assert_equal "Rom", data["osis"]
+
+    get reference_check_path(q: "Romans")
+    data = JSON.parse(response.body)
+    assert data["ok"]
+    assert_equal 1, data["chapter"]
+  end
+
   test "an unreadable reference is refused" do
     get reference_check_path(q: "blorbity 99")
     refute JSON.parse(response.body)["ok"]

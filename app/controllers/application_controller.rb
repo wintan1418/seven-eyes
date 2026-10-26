@@ -1,7 +1,8 @@
 class ApplicationController < ActionController::Base
   include Authentication
-  # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
-  allow_browser versions: :modern
+  # No allow_browser gate: it answered older church laptops and tablets with a
+  # bare 406 page, which inside a Turbo Frame looked like "the fetch failed".
+  # Older browsers degrade visually instead of being locked out.
 
   helper_method :current_user, :authenticated?
 

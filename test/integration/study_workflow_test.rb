@@ -55,4 +55,49 @@ class StudyWorkflowTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "one and only Son"
     assert_equal @bsb, pane.reload.translation
   end
+
+  # The pane must explain a miss instead of showing "not found": a misspelled
+  # book still loads, a chapter past the end names the book's length, and a
+  # verse past the end names the chapter's length.
+  test "a misspelled book name still loads its chapter" do
+    study = users(:one).studies.create!(name: "Test", pane_count: 1)
+    pane = study.panes.first
+    patch study_pane_path(study, pane), params: { pane: { reference: "jhon 3:16", translation_id: @kjv.id } }
+    assert_response :success
+    assert_select ".ps-verse", count: 1
+    assert_select ".ref-title", /John III/
+  end
+
+  test "a bare book name loads chapter 1" do
+    Verse.create!(translation: @kjv, book: @john, chapter: 1, verse_number: 1, text: "In the beginning was the Word")
+    study = users(:one).studies.create!(name: "Test", pane_count: 1)
+    pane = study.panes.first
+    patch study_pane_path(study, pane), params: { pane: { reference: "John", translation_id: @kjv.id } }
+    assert_response :success
+    assert_select ".ref-title", /John I\b/
+  end
+
+  test "a chapter past the end of the book says how many chapters it has" do
+    study = users(:one).studies.create!(name: "Test", pane_count: 1)
+    pane = study.panes.first
+    patch study_pane_path(study, pane), params: { pane: { reference: "John 99", translation_id: @kjv.id } }
+    assert_response :success
+    assert_select ".ps-pane-empty .lead", /John has 21 chapters/
+  end
+
+  test "a verse past the end of the chapter says how many verses it has" do
+    study = users(:one).studies.create!(name: "Test", pane_count: 1)
+    pane = study.panes.first
+    patch study_pane_path(study, pane), params: { pane: { reference: "John 3:40", translation_id: @kjv.id } }
+    assert_response :success
+    assert_select ".ps-pane-empty .lead", /John 3 has 16 verses/
+  end
+
+  test "an unknown book is named back to the reader" do
+    study = users(:one).studies.create!(name: "Test", pane_count: 1)
+    pane = study.panes.first
+    patch study_pane_path(study, pane), params: { pane: { reference: "Xylophone 4", translation_id: @kjv.id } }
+    assert_response :success
+    assert_select ".ps-pane-empty .lead", /No book called .Xylophone./
+  end
 end

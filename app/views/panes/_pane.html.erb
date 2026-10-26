@@ -103,19 +103,44 @@
       </div>
     </div>
   <% else %>
+    <% parsed = content.parsed %>
     <div class="ps-pane-empty">
       <div class="orn">&#9888;</div>
       <div class="lead">
         <% case content.error %>
+        <% when :verse_not_found %>
+          <%= content.book.name %> <%= parsed.chapter %> has <%= pluralize(content.max_verse, "verse") %>
         <% when :not_found %>
-          Not found in <%= content.translation&.code %>
+          Not in <%= content.translation&.code %>
+        <% when :unknown_book %>
+          <%= parsed.book_name %> isn&rsquo;t loaded yet
+        <% when :unparseable %>
+          <% case parsed&.error %>
+          <% when :bad_chapter %>
+            <%= parsed.book_name %> has <%= pluralize(parsed.chapter_count, "chapter") %>
+          <% when :bad_verse %>
+            Verses start at 1
+          <% else %>
+            No book called &ldquo;<%= pane.reference.to_s.sub(/\s*\d[\d:.,\-–\s]*\z/, "") %>&rdquo;
+          <% end %>
         <% else %>
           That reference could not be read
         <% end %>
       </div>
       <div class="hint">
-        <% if content.error == :not_found %>
-          &ldquo;<%= pane.reference %>&rdquo; isn&rsquo;t in this translation. Try another reference or version.
+        <% case content.error %>
+        <% when :verse_not_found %>
+          &ldquo;<%= pane.reference %>&rdquo; asks for more than this chapter holds. Try a verse up to <%= content.max_verse %>.
+        <% when :not_found %>
+          The <%= content.translation&.name %> has no text for <%= content.book.name %> <%= parsed.chapter %>. Try another version.
+        <% when :unknown_book %>
+          The text for <%= parsed.book_name %> hasn&rsquo;t been seeded on this server.
+        <% when :unparseable %>
+          <% if parsed&.error == :bad_chapter %>
+            Pick a chapter from 1 to <%= parsed.chapter_count %>.
+          <% else %>
+            Try a form like <em>John 3:16</em>, <em>Rom 5</em>, or <em>1 Cor 13:1-13</em>.
+          <% end %>
         <% else %>
           Try a form like <em>John 3:16</em>, <em>Rom 5</em>, or <em>1 Cor 13:1-13</em>.
         <% end %>
