@@ -23,6 +23,16 @@ export default class extends Controller {
     // popover (colours + Rabbi + Share) never appeared on phone/tablet. Watch
     // selectionchange and, once the selection settles, raise the popover.
     document.addEventListener("selectionchange", this._onSelChange)
+    if (this._touchCapable()) {
+      // Belt and braces for Android/iOS, whose long-press event order varies by
+      // browser and version: any touch release or long-press (contextmenu) also
+      // schedules a check, and a slow watchdog keeps the bottom bar in step with
+      // the live selection no matter which events did or didn't fire.
+      this._onTouchCheck = () => this._scheduleTouchCheck()
+      document.addEventListener("touchend", this._onTouchCheck, { passive: true })
+      document.addEventListener("contextmenu", this._onTouchCheck)
+      this._watchdog = setInterval(() => this._syncTouchBar(), 600)
+    }
   }
 
   disconnect() {
@@ -30,6 +40,11 @@ export default class extends Controller {
     this.removePopover()
     document.removeEventListener("pointerdown", this._onDocDown, true)
     document.removeEventListener("selectionchange", this._onSelChange)
+    if (this._onTouchCheck) {
+      document.removeEventListener("touchend", this._onTouchCheck)
+      document.removeEventListener("contextmenu", this._onTouchCheck)
+    }
+    clearInterval(this._watchdog)
     clearTimeout(this._selTimer)
   }
 
@@ -39,14 +54,40 @@ export default class extends Controller {
   // doesn't chase the caret mid-drag). The selection must be inside our verses.
   onSelectionChange() {
     if (!this._touchCapable()) return
+    this._scheduleTouchCheck()
+  }
+
+  _scheduleTouchCheck() {
     clearTimeout(this._selTimer)
-    this._selTimer = setTimeout(() => {
-      const sel = window.getSelection()
-      if (!sel || sel.isCollapsed || sel.rangeCount === 0) return
-      const node = sel.getRangeAt(0).commonAncestorContainer
-      const el = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement
-      if (el && this.element.contains(el)) this.onMouseUp()
-    }, 320)
+    this._selTimer = setTimeout(() => this._syncTouchBar(), 320)
+  }
+
+  // Bring the bottom bar in line with the current selection: show it (once) for
+  // a selection inside these verses, drop it when the selection collapses or
+  // moves elsewhere. Idempotent, so the watchdog can call it freely.
+  _syncTouchBar() {
+    const sel = window.getSelection()
+    const inside = sel && !sel.isCollapsed && sel.rangeCount > 0 && this._selectionInside(sel)
+    if (inside) {
+      const key = this._selectionKey(sel)
+      if (this.popover && this._barKey === key) return
+      this._barKey = key
+      this.onMouseUp()
+    } else if (this.popover && this.popover.classList.contains("is-touch-bar")) {
+      this._barKey = null
+      this.removePopover()
+    }
+  }
+
+  _selectionInside(sel) {
+    const node = sel.getRangeAt(0).commonAncestorContainer
+    const el = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement
+    return !!el && this.element.contains(el)
+  }
+
+  _selectionKey(sel) {
+    const r = sel.getRangeAt(0)
+    return `${sel.toString()}|${r.startOffset}|${r.endOffset}`
   }
 
   _touchCapable() {
@@ -250,7 +291,12 @@ export default class extends Controller {
   }
 
   onDocPointerDown(event) {
-    if (this.popover && !this.popover.contains(event.target)) this.removePopover()
+    if (this.popover && !this.popover.contains(event.target)) {
+      // On touch the bar follows the selection itself (see _syncTouchBar): a
+      // stray touch — adjusting a handle, steadying the phone — must not
+      // dismiss it while the words are still selected.
+      if (!this.popover.classList.contains("is-touch-bar")) this.removePopover()
+    }
     if (this.editor && !this.editor.contains(event.target) && !event.target.closest("[data-highlight-id]")) {
       this.closeEditor({ save: true })
     }
