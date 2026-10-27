@@ -35,8 +35,7 @@ module PassageGaps
       else
         locations = Array(locations).uniq
         return nil if locations.empty?
-        placeholders = ([ "(?, ?)" ] * locations.size).join(", ")
-        scope.where("(chapter, verse_number) IN (#{placeholders})", *locations.flatten)
+        scope.where([ :chapter, :verse_number ] => locations)
              .group(:translation_id).having("COUNT(*) = ?", locations.size).count.keys
       end
     preferred(candidates.select { |t| ids.include?(t.id) })

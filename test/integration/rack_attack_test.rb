@@ -6,6 +6,9 @@ class RackAttackTest < ActionDispatch::IntegrationTest
   setup do
     @original_store = Rack::Attack.cache.store
     Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new
+    # Throttles count per time window; pin the clock so a test never straddles
+    # a window boundary (that made this flaky in CI).
+    travel_to Time.utc(2026, 1, 1, 12, 0, 30)
   end
 
   teardown do

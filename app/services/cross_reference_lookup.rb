@@ -21,9 +21,8 @@ class CrossReferenceLookup
     return {} if refs.empty? || translation.nil?
 
     tuples = refs.map { |r| [ r.to_book_id, r.to_chapter_start, r.to_verse_start ] }.uniq
-    placeholders = ([ "(?, ?, ?)" ] * tuples.size).join(", ")
     Verse.where(translation: translation)
-         .where("(book_id, chapter, verse_number) IN (#{placeholders})", *tuples.flatten)
+         .where([ :book_id, :chapter, :verse_number ] => tuples)
          .each_with_object({}) do |v, map|
            map[[ v.book_id, v.chapter, v.verse_number ]] = v.text
          end

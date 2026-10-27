@@ -70,7 +70,11 @@ class StudySavingTest < ApplicationSystemTestCase
   test "Cmd/Ctrl+S saves notes immediately and says so" do
     sign_in
     visit study_path(@study)
-    find(".ps-pane-tool[title='Notes']").click
+    # On a slow CI box the first click can land before Stimulus connects; retry.
+    3.times do
+      find(".ps-pane-tool[title='Notes']").click
+      break if has_css?(".ps-notes-area", wait: 3)
+    end
     area = find(".ps-notes-area")
     area.fill_in(with: "Saved by the shortcut")
     area.send_keys([ :control, "s" ])
