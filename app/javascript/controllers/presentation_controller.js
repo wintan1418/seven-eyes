@@ -13,6 +13,10 @@ import { Controller } from "@hotwired/stimulus"
 //                     big-verse styling). split-2/3/4 set the grid.
 //
 // Esc unwinds one layer at a time: jump-input → preach → focus → workspace.
+// Esc typed into a field belongs to that field. While the projector or a live
+// session is up, leaving preach needs a second Esc within ESC_CONFIRM_MS — one
+// stray key must never close the projector mid-service. Leaving preach never
+// ends a live session (only the explicit "End live" button does).
 //
 // Transitions: _animate() fades the verse-body out (CSS opacity transition),
 // swaps which verses are .is-preach-current, runs _autoFit() to shrink the font
@@ -32,6 +36,16 @@ const FADE_MS = 160
 const AUTOFIT_MAX_ITERS = 24
 const AUTOFIT_MIN_PX = 18
 const SCREEN_PREFS_KEY = "ps-screen-prefs"
+const GROUP_MAX = 3 // the preach bar offers 1–3 verses per slide
+const ESC_CONFIRM_MS = 1500
+const LOAD_TIMEOUT_MS = 10_000 // a pane load that never answers stops blocking
+const SWIPE_IGNORE = ".ps-setlist-host, .ps-drawer, .ps-ai-drawer, .ps-book-drawer, .ps-search-drawer, " +
+  ".ps-rabbi-host, .ps-xref-host, .ps-share-host, .ps-modal, .ps-live-panel, .ps-screen-panel, " +
+  ".ps-preach-finds, .ps-preach-bar, .ps-preach-jump, .ps-preach-next, [data-no-swipe]"
+const PREACH_CLASSES = [
+  "is-presenting", "is-preaching", "is-projecting", "is-parallel", "is-split", "split-2", "split-3",
+  "split-4", "is-slide", "is-blank", "is-emphasising", "is-joining", "is-live-session"
+]
 
 export default class extends Controller {
   static targets = ["jumpInput"]
@@ -45,9 +59,16 @@ export default class extends Controller {
     this._blank = false // projector held on a calm blank screen (between segments)
     this._anchor = null // pinned "teaching text" — {reference, index} — for ⌂ Home
     this._emphasis = {} // verse number → emphasised word indices, for the minister's key point
+    this._emphasisScope = null // "osis:chapter|translation" the emphasis belongs to
     this._emphArmed = false // operator is arming emphasis: current verse words become clickable
     this._splitIndices = new Map() // split mode: pane element → its own current verse index
     this._join = null // {qr, code, url} while the Go-Live join card is on the projector
+    this._escArmedAt = 0 // first Esc of a "press Esc again" confirmation
+    // Output window: pane loads in flight while mirroring, and the newest
+    // state from the operator (applied once they land — never a stale one).
+    this._loadsPending = 0
+    this._latestState = null
+    this._mirrorRefs = new Map() // pane index → "reference|translation" requested
   }
 
   connect() {
@@ -65,10 +86,16 @@ export default class extends Controller {
       this._onSetlist = (e) => this.presentItem(e.detail)
       this._onCommand = (e) => this._runCommand(e.detail)
       this._onJoin = (e) => this._showJoin(e.detail)
+      this._onNotice = (e) => this._toast(e.detail?.message, { tone: e.detail?.tone })
       window.addEventListener("setlist:present", this._onSetlist)
       window.addEventListener("preach:command", this._onCommand)
       window.addEventListener("preach:join", this._onJoin)
+      window.addEventListener("preach:notice", this._onNotice)
       this._screen = this._loadScreenPrefs()
+      // Never let Turbo snapshot the page mid-sermon: a restored snapshot
+      // would come back "preaching" with no key bindings behind it.
+      this._onBeforeCache = () => this._teardownForCache()
+      document.addEventListener("turbo:before-cache", this._onBeforeCache)
     }
   }
 
@@ -108,15 +135,26 @@ export default class extends Controller {
     requestAnimationFrame(() => this._autoFit())
     this._bindKeys()
     this._bindSwipe()
+    this._expandToChapter()
   }
 
+  // A pane loaded with a single verse ("John 3:16") holds just that verse, so
+  // Next would have nowhere to go. Swap in the whole chapter (through the same
+  // validated path as a chase) and land on the verse that was loaded.
+  _expandToChapter() {
+    const raw = this.element.querySelector(".ps-pane.is-presented input[name='pane[reference]']")?.value?.trim()
+    if (!raw || !/\d\s*[:.]\s*\d/.test(raw)) return
+    this._chase(raw, { silent: true, remember: false })
+  }
+
+  // Leaving preach closes the projector window but deliberately does NOT end a
+  // live session: phones keep the last verse until the operator presses
+  // "End live" (or comes back into preach and carries on).
   exitPreach(event) {
     event?.preventDefault?.()
     if (!this._isOutput) {
       this._send({ type: "exit" }) // the output window closes itself
       this._setProjecting(false)
-      // The live controller ends any congregation session.
-      window.dispatchEvent(new CustomEvent("preach:exit"))
     }
     this._exitSplit({ repaint: false })
     this.element.classList.remove("is-preaching", "is-parallel")
@@ -135,7 +173,10 @@ export default class extends Controller {
     this._blank = false
     this._anchor = null
     this._emphasis = {}
+    this._emphasisScope = null
     this._emphArmed = false
+    this._escArmedAt = 0
+    this._queuedTransition = null
     if (this._join) this._showJoin(null)
     this._applyBlank()
     this._syncBackButton()
@@ -167,7 +208,7 @@ export default class extends Controller {
   setGroup(event) {
     event?.preventDefault?.()
     const n = parseInt(event.params?.size || event.currentTarget?.dataset?.preachGroup || "1", 10)
-    this._groupSize = Math.max(1, Math.min(5, n))
+    this._groupSize = Math.max(1, Math.min(GROUP_MAX, n))
     this._syncGroupButtons()
     this._transition(() => {})
   }
@@ -336,6 +377,7 @@ export default class extends Controller {
     const num = verses[idx] ? parseInt(verses[idx].dataset.verseNum, 10) : null
     this._range = { first: num, last: num } // for live-follower relay (active region)
 
+    this._scopeEmphasis()
     this._applyEmphasisToCurrent()
     this._trackAnchor()
     this._paintSplitRef(regions, active)
@@ -423,7 +465,7 @@ export default class extends Controller {
       this._clearSlide({ repaint: false })
       const verses = this._primaryVerses()
       const idx = verses.findIndex(v => parseInt(v.dataset.verseNum, 10) === parseInt(raw, 10))
-      if (idx >= 0) this._transition(() => { this._preachIndex = idx })
+      if (idx >= 0) this._transition(() => this._setCurrentIndex(idx))
       return
     }
     this._chase(raw)
@@ -435,7 +477,7 @@ export default class extends Controller {
   // Preach mode never exits; the output window and live followers pick the
   // move up through the normal broadcast. Text the parser can't read falls
   // through to the AI quick search ("the prodigal son" → references).
-  async _chase(raw, { silent = false } = {}) {
+  async _chase(raw, { silent = false, remember = true } = {}) {
     let parsed
     try {
       const res = await fetch(`/reference_check?q=${encodeURIComponent(raw)}`,
@@ -450,20 +492,22 @@ export default class extends Controller {
       this._flashJumpError(raw)
       return
     }
-    this._loadPassage(parsed.chapter_reference, parsed.verse_start)
+    this._loadPassage(parsed.chapter_reference, parsed.verse_start, { remember })
   }
 
   // Load a whole chapter through the presented pane's own Turbo Frame form,
   // then land on the given verse. Shared by chase, the queue, and AI finds.
-  _loadPassage(chapterReference, verseStart) {
+  _loadPassage(chapterReference, verseStart, { remember = true } = {}) {
     const pane = this.element.querySelector(".ps-pane.is-presented")
     const input = pane?.querySelector("input[name='pane[reference]']")
     if (!input) return
-    this._remember()
+    if (remember) this._remember()
     this._clearSlide({ repaint: false })
     input.value = chapterReference
     const split = this._isSplit()
-    pane.addEventListener("turbo:frame-load", () => {
+    this._onceLoaded(pane, (ok) => {
+      if (!ok) { this._toast(`Couldn't load ${chapterReference} — check the connection`, { tone: "error" }); return }
+      if (!this.element.classList.contains("is-preaching")) return
       this._pairForParallel()
       const verses = Array.from(pane.querySelectorAll(".ps-verse"))
       let idx = 0
@@ -480,8 +524,30 @@ export default class extends Controller {
       }
       this._paint()
       requestAnimationFrame(() => this._autoFit())
-    }, { once: true })
+    })
     input.form?.requestSubmit()
+  }
+
+  // Run `callback(ok)` exactly once when this pane's Turbo Frame finishes
+  // loading — or with ok=false if the request errors or never answers, so a
+  // dropped connection can't leave preach state (restoring, mirroring) stuck.
+  _onceLoaded(pane, callback) {
+    let done = false
+    const finish = (ok) => {
+      if (done) return
+      done = true
+      clearTimeout(timer)
+      pane.removeEventListener("turbo:frame-load", onLoad)
+      pane.removeEventListener("turbo:fetch-request-error", onError)
+      pane.removeEventListener("turbo:frame-missing", onError)
+      callback(ok)
+    }
+    const onLoad = () => finish(true)
+    const onError = () => finish(false)
+    const timer = setTimeout(() => finish(false), LOAD_TIMEOUT_MS)
+    pane.addEventListener("turbo:frame-load", onLoad)
+    pane.addEventListener("turbo:fetch-request-error", onError)
+    pane.addEventListener("turbo:frame-missing", onError)
   }
 
   // Reopen the jump box with the unreadable text kept for correction.
@@ -495,8 +561,12 @@ export default class extends Controller {
     setTimeout(() => wrapper.classList.remove("is-error"), 650)
   }
 
+  // Esc in the Go box closes the box — and stops there. Without
+  // stopPropagation the same keystroke reached the document-level Esc handler
+  // and also left preach mode (closing the projector).
   cancelJump(event) {
     event?.preventDefault?.()
+    event?.stopPropagation?.()
     this._closeJump()
   }
 
@@ -635,8 +705,13 @@ export default class extends Controller {
       }
       return
     }
-    if (detail.kind === "slide" && this.element.classList.contains("is-preaching")) {
-      this._presentSlide({ title: detail.title, body: detail.body, image: detail.image, index: 0 })
+    if (detail.kind === "slide") {
+      if (this.element.classList.contains("is-preaching")) {
+        this._presentSlide({ title: detail.title, body: detail.body, image: detail.image, index: 0 })
+      } else {
+        // The setlist doesn't mark it live either — nothing went on a screen.
+        this._toast("Enter Preach mode first, then pick the song or slide to put it on the screen")
+      }
     }
   }
 
@@ -766,7 +841,24 @@ export default class extends Controller {
     const pane = this.element.querySelector(".ps-pane.is-presented")
     const reference = pane?.querySelector("input[name='pane[reference]']")?.value?.trim()
     if (!reference) return null
-    return { kind: "passage", reference, index: this._preachIndex }
+    return { kind: "passage", reference, index: this._currentIndex() }
+  }
+
+  // The verse index the operator is "on": the active region's own index in
+  // split, the single preach cursor otherwise. Stage, snapshots, the anchor
+  // and the Go box all read/write through these two.
+  _currentIndex() {
+    if (this._isSplit()) {
+      const active = this.element.querySelector(".ps-pane.is-presented")
+      return active ? this._splitIndexFor(active) : 0
+    }
+    return this._preachIndex
+  }
+
+  _setCurrentIndex(idx) {
+    const active = this._isSplit() && this.element.querySelector(".ps-pane.is-presented")
+    if (active) this._setSplitIndex(active, idx)
+    else this._preachIndex = idx
   }
 
   _remember() {
@@ -791,32 +883,39 @@ export default class extends Controller {
 
   // Restore a snapshot ({kind:"slide"|"passage"}). Shared by ⟲ Back and ⌂ Home.
   // The _restoring flag stops _remember() from snapshotting the move itself.
+  // The flag only needs to cover the synchronous part (the slide path calls
+  // _remember() inline) — it's always cleared before returning, so a request
+  // that never answers can't leave ⟲ Back permanently disabled.
   _restore(entry) {
     this._restoring = true
-    if (entry.kind === "slide") {
-      this._presentSlide({ title: entry.title, body: entry.body, image: entry.image, index: entry.index })
-      this._restoring = false
-      return
-    }
-    const pane = this.element.querySelector(".ps-pane.is-presented")
-    const input = pane?.querySelector("input[name='pane[reference]']")
-    if (!input) { this._restoring = false; return }
-    if (input.value.trim().toLowerCase() === entry.reference.toLowerCase()) {
-      // Same chapter is still loaded (e.g. an AI card over it) — instant return.
+    try {
+      if (entry.kind === "slide") {
+        this._presentSlide({ title: entry.title, body: entry.body, image: entry.image, index: entry.index })
+        return
+      }
+      const pane = this.element.querySelector(".ps-pane.is-presented")
+      const input = pane?.querySelector("input[name='pane[reference]']")
+      if (!input) return
+      if (input.value.trim().toLowerCase() === entry.reference.toLowerCase()) {
+        // Same chapter is still loaded (e.g. an AI card over it) — instant return.
+        this._clearSlide({ repaint: false })
+        this._transition(() => this._setCurrentIndex(entry.index))
+        return
+      }
       this._clearSlide({ repaint: false })
-      this._transition(() => { this._preachIndex = entry.index })
+      input.value = entry.reference
+      this._onceLoaded(pane, (ok) => {
+        if (!ok) { this._toast(`Couldn't load ${entry.reference} — check the connection`, { tone: "error" }); return }
+        if (!this.element.classList.contains("is-preaching")) return
+        this._pairForParallel()
+        this._setCurrentIndex(entry.index)
+        this._paint()
+        requestAnimationFrame(() => this._autoFit())
+      })
+      input.form?.requestSubmit()
+    } finally {
       this._restoring = false
-      return
     }
-    input.value = entry.reference
-    pane.addEventListener("turbo:frame-load", () => {
-      this._pairForParallel()
-      this._preachIndex = entry.index
-      this._paint()
-      requestAnimationFrame(() => this._autoFit())
-      this._restoring = false
-    }, { once: true })
-    input.form?.requestSubmit()
   }
 
   _syncBackButton() {
@@ -866,7 +965,7 @@ export default class extends Controller {
     if (this._isOutput || !this._anchor || this._anchor.kind !== "passage" || this._slide) return
     const ref = this.element.querySelector(".ps-pane.is-presented input[name='pane[reference]']")?.value?.trim()
     if (ref && ref.toLowerCase() === this._anchor.reference.toLowerCase()) {
-      this._anchor.index = this._preachIndex
+      this._anchor.index = this._currentIndex()
     }
   }
 
@@ -1006,6 +1105,22 @@ export default class extends Controller {
     else delete this._emphasis[num]
     span.classList.toggle("is-emph")
     this._broadcast()
+  }
+
+  // Emphasis is keyed by verse number + word index, which only means something
+  // within one chapter in one translation. When the presented passage changes
+  // (chase, queue, Back, translation switch, another split region) the old
+  // marks are dropped so "verse 16, word 3" never lights up in the next
+  // passage — on the console, the projector, or the phones.
+  _scopeEmphasis() {
+    if (this._isOutput) return
+    const pane = this.element.querySelector(".ps-pane.is-presented")
+    const scope = pane
+      ? `${this._refSignatureFor(pane)}|${pane.querySelector("select[name='pane[translation_id]']")?.value || ""}`
+      : null
+    if (scope === this._emphasisScope) return
+    this._emphasisScope = scope
+    this._emphasis = {}
   }
 
   // Wrap / re-apply emphasis on the verse(s) currently on screen. On the operator
@@ -1182,8 +1297,25 @@ export default class extends Controller {
     const url = new URL(window.location.href)
     url.searchParams.set("stage", "1")
     url.searchParams.set("pane", String(Math.max(0, this._workspacePanes().indexOf(pane))))
-    this._stageWindow = window.open(url.toString(), "ps-preach-stage", "popup=yes,width=1100,height=650")
+    this._stageWindow = this._openNamedWindow(this._stageWindow, url, "ps-preach-stage", "popup=yes,width=1100,height=650")
     if (!this._stageWindow) alert("The browser blocked the stage window — allow pop-ups for this site, then click Stage again.")
+  }
+
+  // Focus an already-open projector/stage window instead of re-navigating it
+  // (a reload flashes white on the big screen and drops it out of fullscreen).
+  // window.open("", name) finds a same-named window even after this console
+  // reloaded; only a brand-new (about:blank) window is pointed at the URL.
+  _openNamedWindow(existing, url, name, features) {
+    let win = existing && !existing.closed ? existing : null
+    if (!win) {
+      win = window.open("", name, features)
+      if (!win) return null
+      let blank = true
+      try { blank = win.location.href === "about:blank" } catch { blank = true }
+      if (blank) win.location.href = url.toString()
+    }
+    win.focus?.()
+    return win
   }
 
   _paintStage() {
@@ -1206,9 +1338,11 @@ export default class extends Controller {
       return
     }
 
+    // Split: the active region drives the stage (its own index, one verse).
     const verses = this._primaryVerses()
-    const start = this._preachIndex
-    const end = Math.min(verses.length, start + this._groupSize)
+    const group = this._isSplit() ? 1 : this._groupSize
+    const start = this._currentIndex()
+    const end = Math.min(verses.length, start + group)
     const pane = this.element.querySelector(".ps-pane.is-presented")
     if (ref) ref.textContent = pane?.querySelector("input[name='pane[reference]']")?.value || ""
     const textOf = (list) => list.map(v =>
@@ -1218,7 +1352,7 @@ export default class extends Controller {
 
     const current = verses.slice(start, end)
     this._fillStagePanel(now, current.length ? `now · v${numsOf(current)}` : "now", textOf(current))
-    const upcoming = verses.slice(end, Math.min(verses.length, end + this._groupSize))
+    const upcoming = verses.slice(end, Math.min(verses.length, end + group))
     this._fillStagePanel(next, upcoming.length ? `next · v${numsOf(upcoming)}` : "next",
                          upcoming.length ? textOf(upcoming) : "— end of chapter —")
   }
@@ -1245,8 +1379,7 @@ export default class extends Controller {
 
   // ----- dual-screen projection -----
 
-  // Operator: open the output window. Reusing the window name means clicking
-  // Project again focuses the existing output instead of spawning another.
+  // Operator: open the output window — or focus it if it's already open.
   openOutput(event) {
     event?.preventDefault?.()
     if (!this.element.classList.contains("is-preaching")) return
@@ -1254,7 +1387,7 @@ export default class extends Controller {
     const url = new URL(window.location.href)
     url.searchParams.set("output", "1")
     url.searchParams.set("pane", String(Math.max(0, this._workspacePanes().indexOf(pane))))
-    this._outputWindow = window.open(url.toString(), "ps-preach-output", "popup=yes,width=1280,height=720")
+    this._outputWindow = this._openNamedWindow(this._outputWindow, url, "ps-preach-output", "popup=yes,width=1280,height=720")
     if (!this._outputWindow) {
       alert("The browser blocked the output window — allow pop-ups for this site, then click Project again.")
     }
@@ -1294,7 +1427,7 @@ export default class extends Controller {
   _onMessage(msg) {
     if (!msg || !msg.type) return
     if (this._isOutput) {
-      if (msg.type === "state") this._applyState(msg)
+      if (msg.type === "state") this._receiveState(msg)
       else if (msg.type === "screen") this._applyScreen(msg)
       else if (msg.type === "join") this._applyJoin(msg)
       else if (msg.type === "exit") window.close()
@@ -1310,6 +1443,55 @@ export default class extends Controller {
         if (msg.role !== "stage") this._setProjecting(false)
       }
     }
+  }
+
+  // Output window: always keep the NEWEST operator state. While a pane reload
+  // is in flight we only remember it; when the loads land we apply whatever is
+  // newest then — never the message that happened to trigger the load (that
+  // replay is what left the projector a few verses behind after quick Nexts).
+  _receiveState(msg) {
+    this._latestState = msg
+    if (this._loadsPending > 0) return
+    this._applyState(msg)
+  }
+
+  // Output window: make sure `pane` holds `reference` in `translation`,
+  // reloading it through its own form if not. Returns true when a load was
+  // started (the caller stops; the newest state is re-applied on completion).
+  _ensurePaneLoaded(pane, reference, translation) {
+    if (!pane || !reference) return false
+    const refInput = pane.querySelector("input[name='pane[reference]']")
+    const transSelect = pane.querySelector("select[name='pane[translation_id]']")
+    if (!refInput) return false
+    const key = this._workspacePanes().indexOf(pane)
+    const wanted = `${reference.trim().toLowerCase()}|${translation || ""}`
+    const sameRef = refInput.value.trim().toLowerCase() === reference.trim().toLowerCase()
+    const sameTrans = !translation || !transSelect || transSelect.value === String(translation)
+    // Also "same" if we already loaded exactly this request (the server may
+    // echo the reference back normalised) — never reload in a loop.
+    if ((sameRef && sameTrans) || this._mirrorRefs.get(key) === wanted) return false
+
+    this._mirrorRefs.set(key, wanted)
+    this._afterFade = null
+    refInput.value = reference
+    if (transSelect && translation) transSelect.value = String(translation)
+    // Mark this submit as the projector mirroring the console, not an edit:
+    // the operator's own submit already saved the reference, so panes#update
+    // can render without writing when params[:mirror] is present.
+    if (refInput.form && !refInput.form.querySelector("input[name='mirror']")) {
+      const flag = document.createElement("input")
+      flag.type = "hidden"
+      flag.name = "mirror"
+      flag.value = "1"
+      refInput.form.appendChild(flag)
+    }
+    this._loadsPending++
+    this._onceLoaded(pane, () => {
+      this._loadsPending = Math.max(0, this._loadsPending - 1)
+      if (this._loadsPending === 0 && this._latestState) this._applyState(this._latestState)
+    })
+    refInput.form?.requestSubmit()
+    return true
   }
 
   // Output window: mirror the operator's state. If a state lands mid-fade we
@@ -1338,35 +1520,34 @@ export default class extends Controller {
       pane.classList.add("is-presented")
     }
 
-    // Operator moved to a different passage/translation: reload our copy of
-    // the pane through its own form (Turbo Frame), then re-apply the state.
-    const refInput = pane.querySelector("input[name='pane[reference]']")
-    const transSelect = pane.querySelector("select[name='pane[translation_id]']")
-    const sameRef = !msg.reference || !refInput ||
-        refInput.value.trim().toLowerCase() === msg.reference.trim().toLowerCase()
-    const sameTrans = !msg.translation || !transSelect || transSelect.value === String(msg.translation)
-    if (!(sameRef && sameTrans)) {
-      this._afterFade = null
-      if (refInput) refInput.value = msg.reference
-      if (transSelect && msg.translation) transSelect.value = String(msg.translation)
-      pane.addEventListener("turbo:frame-load", () => {
-        this._applyState({ ...msg, reference: null, translation: null })
-      }, { once: true })
-      refInput?.form?.requestSubmit()
-      return
+    // Operator moved to a different passage/translation (or, in parallel, the
+    // paired pane did): reload our copies first; the newest state is applied
+    // once they land.
+    const nextParallel = !!msg.parallel
+    const pairPane = nextParallel && msg.pair ? panes[msg.pair.pane] : null
+    let loading = this._ensurePaneLoaded(pane, msg.reference, msg.translation)
+    if (pairPane && pairPane !== pane) {
+      loading = this._ensurePaneLoaded(pairPane, msg.pair.reference, msg.pair.translation) || loading
     }
+    if (loading) return
 
     // If only the emphasis changed (operator tapped a word), re-glow in place
     // instead of fading the whole verse — no flicker on the projector.
-    const nextGroup = Math.max(1, Math.min(5, msg.group || 1))
+    const nextGroup = Math.max(1, Math.min(GROUP_MAX, msg.group || 1))
     const nextIndex = msg.index || 0
-    const nextParallel = !!msg.parallel
+    const pairedNow = this.element.querySelector(".ps-pane.is-paired")
     const sameSpot = this._preachIndex === nextIndex && this._groupSize === nextGroup &&
       this.element.classList.contains("is-parallel") === nextParallel &&
+      (!pairPane || pairedNow === pairPane) &&
       this.element.querySelector(".ps-verse.is-preach-current")
     this._groupSize = nextGroup
     this.element.classList.toggle("is-parallel", nextParallel)
-    this._pairForParallel()
+    if (pairPane && pairPane !== pane) {
+      // The operator told us exactly which pane is beside the presented one.
+      panes.forEach(p => p.classList.toggle("is-paired", p === pairPane))
+    } else {
+      this._pairForParallel()
+    }
     if (sameSpot) {
       this._applyEmphasisToCurrent()
       this._paintRef()
@@ -1390,8 +1571,9 @@ export default class extends Controller {
   }
 
   // Output/stage window: mirror split projection. Load any region whose passage
-  // differs from what we hold, then lay out every region at its own verse with
-  // the active one marked. A region whose verse moved fades; the rest snap.
+  // differs from what we hold (the newest state is re-applied once they land),
+  // then lay out every region at its own verse with the active one marked. A
+  // region whose verse moved fades; the rest snap.
   _applySplitState(msg) {
     this.element.classList.add("is-split")
     this.element.classList.remove("is-parallel")
@@ -1400,111 +1582,111 @@ export default class extends Controller {
     if (wanted.length === 0) return
     this._setSplitGridClass(wanted.length)
 
-    let pending = 0
-    const finalize = () => {
-      panes.forEach(p => p.classList.remove("is-presented", "is-paired"))
-      wanted.forEach(r => {
-        const pane = panes[r.pane]
-        const isActive = r.pane === msg.active
-        pane.classList.toggle("is-presented", isActive)
-        pane.classList.toggle("is-paired", !isActive)
-        const idx = r.index || 0
-        const moved = this._splitIndexFor(pane) !== idx
-        this._setSplitIndex(pane, idx)
-        const body = pane.querySelector(".ps-verse-body")
-        if (moved && body) {
-          body.classList.add("is-changing")
-          setTimeout(() => {
-            this._paintRegion(pane)
-            requestAnimationFrame(() => body.classList.remove("is-changing"))
-          }, FADE_MS)
-        } else {
-          this._paintRegion(pane)
-        }
-      })
-      this._emphasis = msg.emphasis || {}
-      this._applyEmphasisToCurrent()
-      this._paintSplitRef(this._splitRegions(), this.element.querySelector(".ps-pane.is-presented"))
-      if (this._isStage) this._paintStage()
-      requestAnimationFrame(() => this._autoFit())
-    }
+    let loading = false
+    wanted.forEach(r => {
+      loading = this._ensurePaneLoaded(panes[r.pane], r.reference, r.translation) || loading
+    })
+    if (loading) return
 
+    panes.forEach(p => p.classList.remove("is-presented", "is-paired"))
     wanted.forEach(r => {
       const pane = panes[r.pane]
-      const refInput = pane.querySelector("input[name='pane[reference]']")
-      const transSelect = pane.querySelector("select[name='pane[translation_id]']")
-      const sameRef = !r.reference || !refInput ||
-          refInput.value.trim().toLowerCase() === r.reference.trim().toLowerCase()
-      const sameTrans = !r.translation || !transSelect || transSelect.value === String(r.translation)
-      if (!(sameRef && sameTrans)) {
-        pending++
-        if (refInput) refInput.value = r.reference
-        if (transSelect && r.translation) transSelect.value = String(r.translation)
-        pane.addEventListener("turbo:frame-load", () => { if (--pending === 0) finalize() }, { once: true })
-        refInput?.form?.requestSubmit()
+      const isActive = r.pane === msg.active
+      pane.classList.toggle("is-presented", isActive)
+      pane.classList.toggle("is-paired", !isActive)
+      const idx = r.index || 0
+      const moved = this._splitIndexFor(pane) !== idx
+      this._setSplitIndex(pane, idx)
+      const body = pane.querySelector(".ps-verse-body")
+      if (moved && body) {
+        body.classList.add("is-changing")
+        setTimeout(() => {
+          this._paintRegion(pane)
+          requestAnimationFrame(() => body.classList.remove("is-changing"))
+        }, FADE_MS)
+      } else {
+        this._paintRegion(pane)
       }
     })
-    if (pending === 0) finalize()
+    this._emphasis = msg.emphasis || {}
+    this._applyEmphasisToCurrent()
+    this._paintSplitRef(this._splitRegions(), this.element.querySelector(".ps-pane.is-presented"))
+    if (this._isStage) this._paintStage()
+    requestAnimationFrame(() => this._autoFit())
   }
 
-  _broadcast() {
-    if (this._isOutput) return
-    if (!this.element.classList.contains("is-preaching")) return
-    if (this._isSplit()) { this._broadcastSplit(); return }
+  // ----- the one picture of "what's on screen" -----
+  // Built once per paint and shared by the projector (BroadcastChannel), the
+  // live phones (preach:state → live controller) and anything else that needs
+  // the operator's current spot, so they can never disagree.
+  _currentState() {
+    if (this._isSplit()) return this._currentSplitState()
     const pane = this.element.querySelector(".ps-pane.is-presented")
-    if (!pane) return
-    const state = {
+    if (!pane) return null
+    const panes = this._workspacePanes()
+    const parallel = this.element.classList.contains("is-parallel")
+    const paired = parallel ? this.element.querySelector(".ps-pane.is-paired") : null
+    return {
       type: "state",
-      pane: Math.max(0, this._workspacePanes().indexOf(pane)),
+      pane: Math.max(0, panes.indexOf(pane)),
       index: this._preachIndex,
       group: this._groupSize,
-      parallel: this.element.classList.contains("is-parallel"),
+      parallel,
+      // The pane shown beside the presented one in parallel — so the projector
+      // loads the same translation the console shows, never a stale one.
+      pair: paired ? { pane: panes.indexOf(paired), ...this._paneSource(paired) } : null,
       blank: this._blank,
       emphasis: this._emphasis,
-      reference: pane.querySelector("input[name='pane[reference]']")?.value || null,
-      translation: pane.querySelector("select[name='pane[translation_id]']")?.value || null,
+      ...this._paneSource(pane),
       verseStart: this._range?.first ?? null,
       verseEnd: this._range?.last ?? null,
       slide: this._slide
         ? { title: this._slide.title, body: this._slide.body, image: this._slide.image, index: this._slide.index }
         : null
     }
-    this._send(state)
-    // The live controller relays this to the congregation's phones.
-    window.dispatchEvent(new CustomEvent("preach:state", { detail: state }))
   }
 
-  // Split: send the projector the full set of regions (each its own passage +
-  // verse + which is active), and send live phones a flattened view of the
-  // ACTIVE region so a follower's single-passage screen tracks the preacher.
-  _broadcastSplit() {
+  // Split: the projector gets every region (own passage + verse + which is
+  // active); `live` is a flattened view of the ACTIVE region so a follower's
+  // single-passage phone tracks the preacher.
+  _currentSplitState() {
     const panes = this._workspacePanes()
     const regions = this._splitRegions().map(pane => {
       const verses = Array.from(pane.querySelectorAll(".ps-verse"))
       const idx = Math.max(0, Math.min(this._splitIndexFor(pane), verses.length - 1))
       const num = verses[idx] ? parseInt(verses[idx].dataset.verseNum, 10) : null
-      return {
-        pane: panes.indexOf(pane),
-        reference: pane.querySelector("input[name='pane[reference]']")?.value || null,
-        translation: pane.querySelector("select[name='pane[translation_id]']")?.value || null,
-        index: idx,
-        verseStart: num,
-        verseEnd: num
-      }
+      return { pane: panes.indexOf(pane), ...this._paneSource(pane), index: idx, verseStart: num, verseEnd: num }
     })
-    const active = this.element.querySelector(".ps-pane.is-presented")
-    const activePos = panes.indexOf(active)
-    this._send({
-      type: "state", split: true, active: activePos, regions,
-      blank: this._blank, emphasis: this._emphasis, slide: null
-    })
+    const activePos = panes.indexOf(this.element.querySelector(".ps-pane.is-presented"))
     const a = regions.find(r => r.pane === activePos) || regions[0] || {}
-    window.dispatchEvent(new CustomEvent("preach:state", { detail: {
-      type: "state",
-      reference: a.reference, translation: a.translation,
-      verseStart: a.verseStart, verseEnd: a.verseEnd,
-      emphasis: this._emphasis, slide: null
-    } }))
+    return {
+      type: "state", split: true, active: activePos, regions,
+      blank: this._blank, emphasis: this._emphasis, slide: null,
+      live: {
+        type: "state",
+        reference: a.reference, translation: a.translation,
+        verseStart: a.verseStart, verseEnd: a.verseEnd,
+        emphasis: this._emphasis, slide: null
+      }
+    }
+  }
+
+  _paneSource(pane) {
+    return {
+      reference: pane.querySelector("input[name='pane[reference]']")?.value || null,
+      translation: pane.querySelector("select[name='pane[translation_id]']")?.value || null
+    }
+  }
+
+  _broadcast() {
+    if (this._isOutput) return
+    if (!this.element.classList.contains("is-preaching")) return
+    const state = this._currentState()
+    if (!state) return
+    const { live, ...projector } = state
+    this._send(projector)
+    // The live controller relays this to the congregation's phones.
+    window.dispatchEvent(new CustomEvent("preach:state", { detail: live || projector }))
   }
 
   _send(msg) {
@@ -1532,6 +1714,9 @@ export default class extends Controller {
     if (this._onSetlist) window.removeEventListener("setlist:present", this._onSetlist)
     if (this._onCommand) window.removeEventListener("preach:command", this._onCommand)
     if (this._onJoin) window.removeEventListener("preach:join", this._onJoin)
+    if (this._onNotice) window.removeEventListener("preach:notice", this._onNotice)
+    if (this._onBeforeCache) document.removeEventListener("turbo:before-cache", this._onBeforeCache)
+    clearTimeout(this._toastTimer)
     this._unbindRegionClicks()
     this._unbindEmphasisClicks()
     clearInterval(this._clockTimer)
@@ -1542,9 +1727,11 @@ export default class extends Controller {
 
   // ----- internals: rendering, transitions, auto-fit -----
 
-  _transition(mutate, { bodies } = {}) {
-    if (this._fading) return // ignore rapid taps mid-fade
-    bodies = bodies || this._activeBodies()
+  // A move requested mid-fade isn't dropped: the latest one is queued and runs
+  // as soon as the current fade ends (a quick double-tap of Next = two verses).
+  _transition(mutate, opts = {}) {
+    if (this._fading) { this._queuedTransition = { mutate, opts }; return }
+    const bodies = opts.bodies || this._activeBodies()
     if (bodies.length === 0) { mutate(); this._paint(); return }
     this._fading = true
     bodies.forEach(b => b.classList.add("is-changing"))
@@ -1556,9 +1743,14 @@ export default class extends Controller {
         bodies.forEach(b => b.classList.remove("is-changing"))
         this._fading = false
         if (this._afterFade) { // output window: state that arrived mid-fade
-          const queued = this._afterFade
+          const parked = this._afterFade
           this._afterFade = null
-          this._applyState(queued)
+          this._queuedTransition = null
+          this._applyState(this._latestState || parked) // the newest, not the parked one
+        } else if (this._queuedTransition) {
+          const { mutate: next, opts: nextOpts } = this._queuedTransition
+          this._queuedTransition = null
+          if (this.element.classList.contains("is-preaching")) this._transition(next, nextOpts)
         }
       })
     }, FADE_MS)
@@ -1610,6 +1802,7 @@ export default class extends Controller {
       counter.innerHTML = `<span class="num">verse ${range}</span><span class="of">of ${total}</span>`
     }
 
+    this._scopeEmphasis()
     this._applyEmphasisToCurrent()
     this._trackAnchor()
     this._paintRef()
@@ -1674,7 +1867,13 @@ export default class extends Controller {
   _bindEsc() {
     if (this._escHandler) return
     this._escHandler = (e) => {
-      if (e.key === "Escape" && this.element.classList.contains("is-presenting")) this.exit()
+      if (e.key !== "Escape" || !this.element.classList.contains("is-presenting")) return
+      // Esc in a text field (the Go box, the queue, notes…) belongs to that
+      // field; a modified Esc is someone else's shortcut.
+      if (e.defaultPrevented || this._isEditableTarget(e.target)) return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (this._escNeedsConfirm() && !this._confirmEsc()) return
+      this.exit()
     }
     document.addEventListener("keydown", this._escHandler)
   }
@@ -1683,6 +1882,29 @@ export default class extends Controller {
     if (!this._escHandler) return
     document.removeEventListener("keydown", this._escHandler)
     this._escHandler = null
+  }
+
+  // Would this Esc leave preach mode while the projector or a live session is
+  // up? (Closing the Go box / AI finds / a slide is a smaller step and stays
+  // one press.)
+  _escNeedsConfirm() {
+    if (!this.element.classList.contains("is-preaching")) return false
+    if (this._findsOpen || this._jumpOpen || this._slide) return false
+    return this.element.classList.contains("is-projecting") ||
+           this.element.classList.contains("is-live-session")
+  }
+
+  // First Esc arms and explains; a second within ESC_CONFIRM_MS goes through.
+  _confirmEsc() {
+    const now = Date.now()
+    if (now - this._escArmedAt < ESC_CONFIRM_MS) {
+      this._escArmedAt = 0
+      this._hideToast()
+      return true
+    }
+    this._escArmedAt = now
+    this._toast("Press Esc again to leave preach mode", { ms: ESC_CONFIRM_MS })
+    return false
   }
 
   _bindKeys() {
@@ -1696,24 +1918,30 @@ export default class extends Controller {
       // screen while a wrong letter was being deleted in the queue.
       if (this._isEditableTarget(e.target)) return
       if (this._jumpOpen) return
+      // Cmd/Ctrl/Alt chords belong to the browser and the OS (Cmd+0 zoom reset,
+      // Cmd+P print, Cmd+←/→ history…) — never to the projector.
+      if (e.metaKey || e.ctrlKey || e.altKey) return
       if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") { e.preventDefault(); this.next() }
       else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); this.prev() }
-      else if (e.key === "Home") { e.preventDefault(); this._transition(() => { this._preachIndex = 0 }) }
+      else if (e.key === "Home") { e.preventDefault(); this._transition(() => this._setCurrentIndex(0)) }
       else if (e.key === "g" || e.key === "G") { e.preventDefault(); this.openJump() }
       else if (e.key === "p" || e.key === "P") { e.preventDefault(); this.toggleParallel() }
       else if (e.key === "b" || e.key === "B" || e.key === "Backspace") { e.preventDefault(); this.goBack() }
       else if (e.key === "h" || e.key === "H") { e.preventDefault(); this.goAnchor() }
       else if (e.key === "." || e.key === "0") { e.preventDefault(); this.toggleBlank() }
-      else if (e.key >= "1" && e.key <= "5") {
-        e.preventDefault()
-        // In split, number keys pick which region is active; otherwise they set
-        // the verse-group size.
+      else if (e.key >= "1" && e.key <= "4") {
+        // In split, number keys pick which region is active (1–4); otherwise
+        // they set the verse-group size, matching the bar's 1–3 buttons.
         if (this._isSplit()) {
+          e.preventDefault()
           const region = this._splitRegions()[parseInt(e.key, 10) - 1]
           if (region) this._setActiveRegion(region)
           return
         }
-        this._groupSize = parseInt(e.key, 10)
+        const n = parseInt(e.key, 10)
+        if (n > GROUP_MAX) return
+        e.preventDefault()
+        this._groupSize = n
         this._syncGroupButtons()
         this._transition(() => {})
       }
@@ -1728,8 +1956,8 @@ export default class extends Controller {
   }
 
   // True when the keystroke is being typed into an editable field, so the global
-  // preach shortcuts (Backspace=Back, b/p/g/h, 0–5…) must stand down and let the
-  // character through instead of driving the projector.
+  // preach shortcuts (Backspace=Back, b/p/g/h, 0–4, Esc…) must stand down and let
+  // the character through instead of driving the projector.
   _isEditableTarget(target) {
     const el = target || document.activeElement
     if (!el || !el.tagName) return false
@@ -1741,7 +1969,9 @@ export default class extends Controller {
     if (this._touchStartHandler) return
     let start = null
     this._touchStartHandler = (e) => {
+      start = null
       if (!this.element.classList.contains("is-preaching")) return
+      if (e.touches.length !== 1 || this._swipeIgnored(e.target)) return
       start = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() }
     }
     this._touchEndHandler = (e) => {
@@ -1758,6 +1988,21 @@ export default class extends Controller {
     document.addEventListener("touchend", this._touchEndHandler, { passive: true })
   }
 
+  // A swipe that starts in a drawer, panel, field or anything that scrolls
+  // sideways is that element's gesture — not a verse change on the projector.
+  _swipeIgnored(target) {
+    if (!target || !target.closest) return true
+    if (this._isEditableTarget(target)) return true
+    if (target.closest(SWIPE_IGNORE)) return true
+    for (let el = target; el && el !== this.element && el !== document.body; el = el.parentElement) {
+      if (el.scrollWidth > el.clientWidth + 1) {
+        const overflow = getComputedStyle(el).overflowX
+        if (overflow === "auto" || overflow === "scroll") return true
+      }
+    }
+    return false
+  }
+
   _unbindSwipe() {
     if (this._touchStartHandler) {
       document.removeEventListener("touchstart", this._touchStartHandler)
@@ -1767,5 +2012,53 @@ export default class extends Controller {
       document.removeEventListener("touchend", this._touchEndHandler)
       this._touchEndHandler = null
     }
+  }
+
+  // ----- console toast (Esc confirmation, live/remote failures) -----
+
+  _toast(message, { tone = "info", ms = 4000 } = {}) {
+    if (!message || this._isOutput) return
+    let el = this.element.querySelector(".ps-preach-toast")
+    if (!el) {
+      el = document.createElement("div")
+      el.className = "ps-preach-toast"
+      el.setAttribute("role", "status")
+      el.setAttribute("aria-live", "polite")
+      this.element.appendChild(el)
+    }
+    el.textContent = message
+    el.classList.toggle("is-error", tone === "error")
+    el.hidden = false
+    clearTimeout(this._toastTimer)
+    this._toastTimer = setTimeout(() => this._hideToast(), ms)
+  }
+
+  _hideToast() {
+    clearTimeout(this._toastTimer)
+    const el = this.element.querySelector(".ps-preach-toast")
+    if (el) el.hidden = true
+  }
+
+  // turbo:before-cache — strip every preach-mode trace before Turbo snapshots
+  // the page, so a Back/restore never shows a "preaching" screen that has no
+  // key bindings, timers or projector link behind it.
+  _teardownForCache() {
+    this._unbindKeys()
+    this._unbindSwipe()
+    this._unbindEsc()
+    this._unbindRegionClicks()
+    this._unbindEmphasisClicks()
+    this._unwrapAll()
+    this._clearAutoFit()
+    this.element.classList.remove(...PREACH_CLASSES)
+    this.element.querySelectorAll(".ps-pane.is-presented, .ps-pane.is-paired")
+      .forEach(p => p.classList.remove("is-presented", "is-paired"))
+    this.element.querySelectorAll(".ps-verse.is-preach-current")
+      .forEach(v => v.classList.remove("is-preach-current"))
+    const slide = this.element.querySelector("[data-preach-slide]")
+    if (slide) slide.innerHTML = ""
+    this._closeJump()
+    this._closeFinds()
+    this.element.querySelector(".ps-preach-toast")?.remove()
   }
 }
