@@ -12,5 +12,5 @@ test:
   <<: *default
 
 production:
-  database: cache
+  # No `database:` — Solid Cache uses the primary DB (see production.rb).
   <<: *default
