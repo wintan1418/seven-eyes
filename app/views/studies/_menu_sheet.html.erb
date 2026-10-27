@@ -1,0 +1,90 @@
+<%# The ☰ menu: your studies, new study, plans, help, account.
+    locals: studies (relation/array), active_id (optional), study (optional) %>
+<% active_id = local_assigns[:active_id] %>
+<% studies = local_assigns[:studies] || (authenticated? ? current_user.studies.recent.limit(30) : []) %>
+<div class="ui-sheet ui-sheet--left" data-controller="sheet" data-sheet-id-value="menu" data-chrome hidden>
+  <div class="ui-sheet-backdrop" data-action="click->sheet#close"></div>
+  <section class="ui-sheet-panel" role="dialog" aria-modal="true" aria-label="Menu" tabindex="-1">
+    <header class="ui-sheet-head">
+      <%= link_to root_path, class: "ui-brand" do %>
+        <span class="ui-brand-mark" aria-hidden="true"><%= icon(:book) %></span>
+        <span class="ui-brand-name">BiblioRata</span>
+      <% end %>
+      <button type="button" class="ui-iconbtn is-sm" data-action="sheet#close" aria-label="Close menu"><%= icon(:x) %></button>
+    </header>
+
+    <div class="ui-sheet-body">
+      <% if local_assigns[:new_study_modal] %>
+        <button type="button" class="ui-btn is-primary is-block ui-menu-new" data-action="new-study#open sheet#close">
+          <%= icon(:plus) %> New study
+        </button>
+      <% else %>
+        <%= button_to studies_path, method: :post, class: "ui-btn is-primary is-block ui-menu-new",
+              form: { class: "ui-menu-new-form" } do %><%= icon(:plus) %> New study<% end %>
+      <% end %>
+
+      <div class="ui-menu-section">
+        <div class="ui-label">Your studies</div>
+        <% if !authenticated? %>
+          <p class="ui-menu-note">
+            Studies you save are kept here.
+            <%= link_to "Sign in", new_session_path %> or <%= link_to "create a free account", new_registration_path %>.
+          </p>
+        <% elsif studies.blank? %>
+          <p class="ui-menu-note">No studies yet &mdash; start one above.</p>
+        <% else %>
+          <ul class="ui-menu-list">
+            <% studies.each do |s| %>
+              <li class="ui-study-row<%= ' is-active' if active_id == s.id %>">
+                <%= link_to study_path(s), class: "ui-study-link" do %>
+                  <span class="nm"><%= s.name %></span>
+                  <span class="meta"><%= time_ago_in_words(s.last_opened_at || s.updated_at) %> ago</span>
+                <% end %>
+                <%= button_to study_path(s), method: :delete, class: "ui-iconbtn is-sm ui-study-del",
+                      title: "Delete study", "aria-label": "Delete #{s.name}", form: { class: "contents" },
+                      data: { turbo_confirm: "Delete “#{s.name}”? This cannot be undone." } do %><%= icon(:trash) %><% end %>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+      </div>
+
+      <nav class="ui-menu-section ui-menu-links" aria-label="Main">
+        <%= link_to root_path, class: "ui-menu-item" do %><%= icon(:home) %> Home<% end %>
+        <% if authenticated? %>
+          <%= link_to reading_plans_path, class: "ui-menu-item" do %><%= icon(:calendar) %> Reading plans<% end %>
+        <% end %>
+        <%= link_to guide_path, class: "ui-menu-item", data: { tour: "guide" } do %><%= icon(:compass) %> Field guide<% end %>
+        <% if local_assigns[:study] %>
+          <button type="button" class="ui-menu-item" data-action="tour#start sheet#close"><%= icon(:help) %> Replay the tour</button>
+        <% end %>
+        <%= link_to whats_new_path, class: "ui-menu-item",
+              data: { controller: "whats-new", whats_new_mode_value: "badge",
+                      whats_new_version_value: WhatsNewController::VERSION } do %>
+          <%= icon(:gift) %> What&rsquo;s new<span class="new-dot" aria-hidden="true"></span>
+        <% end %>
+      </nav>
+
+      <div class="ui-menu-section ui-menu-links">
+        <% if authenticated? %>
+          <% if current_user.guide_dismissed_at.present? %>
+            <%= button_to restore_guide_path, method: :delete, class: "ui-menu-item", form: { class: "contents" } do %>
+              <%= icon(:compass) %> Show the welcome guide
+            <% end %>
+          <% end %>
+          <%= link_to account_path, class: "ui-menu-item" do %><%= icon(:user) %> Account<% end %>
+          <%= button_to session_path, method: :delete, class: "ui-menu-item", form: { class: "contents" } do %>
+            <%= icon(:log_out) %> Sign out
+          <% end %>
+        <% else %>
+          <%= link_to new_session_path, class: "ui-menu-item" do %><%= icon(:log_in) %> Sign in<% end %>
+          <%= link_to new_registration_path, class: "ui-menu-item" do %><%= icon(:user) %> Create a free account<% end %>
+        <% end %>
+      </div>
+
+      <footer class="ui-menu-foot">
+        <%= link_to "Terms", terms_path %> &middot; <%= link_to "Privacy", privacy_path %> &middot; <%= link_to "Credits", credits_path %>
+      </footer>
+    </div>
+  </section>
+</div>

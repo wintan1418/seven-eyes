@@ -23,6 +23,8 @@
 @import "./ui/base.css";
 @import "./ui/reader.css";
 @import "./ui/panels.css";
+@import "./ui/shell.css";
+@import "./ui/sheet.css";
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 

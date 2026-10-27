@@ -93,3 +93,124 @@
   font: 400 16px/1.6 var(--ui-font); font-style: normal; color: var(--ui-fg); min-height: 96px;
 }
 .ps-root:not(.is-presenting, .is-output) .ps-notes-area::placeholder { color: var(--ui-fg-subtle); }
+
+/* --------------------------------------------------------------------------
+   Single-column reader (pane partial: .ps-verses > .rd-column)
+   -------------------------------------------------------------------------- */
+.rd-pane-form { display: contents; }
+.ps-root:not(.is-presenting, .is-output) .ps-verses {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  padding: 0 20px; scroll-behavior: auto;
+}
+.rd-column { max-width: var(--reader-measure); margin: 0 auto; padding: 40px 0 128px; }
+.ps-root.is-compare .rd-column { padding-top: 24px; }
+@media (min-width: 768px) {
+  .ps-root:not(.is-presenting, .is-output) .ps-verses { padding: 0 32px; }
+  .rd-column { padding-top: 56px; }
+}
+/* Text sizes grow the measure a little so big type still reads in lines. */
+.ps-root[data-font-size="2"] .rd-column, .ps-root[data-font-size="3"] .rd-column,
+.ps-root[data-font-size="4"] .rd-column { max-width: min(48rem, 100%); }
+
+.ps-root:not(.is-presenting, .is-output) .rd-chapter-head {
+  display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 0 20px; text-align: center;
+}
+.ps-root:not(.is-presenting, .is-output) .rd-chapter-head .rd-book {
+  font: 600 13px/1.2 var(--ui-font); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ui-fg-muted);
+}
+.ps-root:not(.is-presenting, .is-output) .rd-chapter-head .rd-chapter-num {
+  font: 600 44px/1.15 var(--reader-font); letter-spacing: -0.01em; color: var(--ui-fg); margin-top: 4px;
+  text-transform: none; font-variant-numeric: lining-nums;
+}
+@media (min-width: 768px) {
+  .ps-root:not(.is-presenting, .is-output) .rd-chapter-head .rd-chapter-num { font-size: 52px; }
+}
+.ps-root:not(.is-presenting, .is-output) .rd-chapter-head .rd-trans { margin-top: 6px; font-size: 13px; }
+.ps-root:not(.is-presenting, .is-output) .ps-verses .rule { display: none; }
+
+.rd-chapter-tools { display: flex; justify-content: center; gap: 4px; margin: 0 0 24px; }
+.ps-root:not(.is-presenting, .is-output) .rd-chapter-tools .ps-pane-tool {
+  width: 36px; height: 36px; border: 0; border-radius: 999px; background: transparent; color: var(--ui-fg-subtle);
+}
+.ps-root:not(.is-presenting, .is-output) .rd-chapter-tools .ps-pane-tool:hover { background: var(--ui-surface); color: var(--ui-fg); }
+.ps-root:not(.is-presenting, .is-output) .rd-chapter-tools .ps-pane-tool svg { width: 19px; height: 19px; }
+.ps-root:not(.is-presenting, .is-output) .rd-chapter-tools .ps-pane-tool.has-notes { color: var(--ui-accent); }
+.ps-root:not(.is-presenting, .is-output) .rd-chapter-tools .ps-pane-tool.has-notes::after { background: var(--ui-accent); top: 6px; right: 6px; }
+.ps-root:not(.is-presenting, .is-output) .rd-chapter-tools .ps-pane-tool:is(.is-playing, .is-active, .is-on, [aria-pressed="true"]) {
+  background: var(--ui-accent-soft); color: var(--ui-accent);
+}
+
+/* Verses flow as paragraphs; .is-verse-lines puts each on its own line. */
+.ps-root:not(.is-presenting, .is-output) .ps-verse-body { hyphens: manual; overflow-wrap: break-word; }
+.ps-root:not(.is-presenting, .is-output) .ps-verse { display: inline; margin: 0; background: none; }
+.ps-root:not(.is-presenting, .is-output) .ps-verse + .ps-verse { margin-top: 0; }
+.ps-root.is-verse-lines:not(.is-presenting, .is-output) .ps-verse { display: block; margin: 0 0 0.45em; }
+.ps-root:not(.is-presenting, .is-output) .ps-chapter-break {
+  display: block; margin: 1.6em 0 0.6em; text-align: center; text-transform: uppercase;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-pane-notice { display: block; margin: 0 0 20px; }
+.ps-root:not(.is-presenting, .is-output) .ps-verse-text .ps-word { cursor: inherit; }
+
+/* Chapter end: tools + "Next: John 4" */
+.rd-chapter-end {
+  margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--ui-border);
+  display: flex; flex-direction: column; align-items: stretch; gap: 16px; font-family: var(--ui-font);
+}
+.rd-chapter-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px; }
+.rd-chapter-actions .ui-btn { min-height: 40px; padding: 0 14px; font-size: 14px; color: var(--ui-fg-muted); }
+.rd-chapter-actions .ui-btn:hover { color: var(--ui-fg); }
+.rd-next-form { margin: 0; }
+.rd-next-chapter {
+  display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; align-items: center;
+  width: 100%; padding: 14px 18px; border: 1px solid var(--ui-border); border-radius: 14px;
+  background: var(--ui-surface); color: var(--ui-fg); text-align: left; cursor: pointer;
+}
+.rd-next-chapter:hover { background: var(--ui-surface-2); }
+.rd-next-label { grid-column: 1; font: 500 13px var(--ui-font); color: var(--ui-fg-muted); }
+.rd-next-ref { grid-column: 1; font: 600 17px var(--ui-font); letter-spacing: -0.01em; }
+.rd-next-chapter svg { grid-column: 2; grid-row: 1 / span 2; width: 22px; height: 22px; color: var(--ui-fg-muted); }
+
+/* Floating previous / next chapter buttons */
+.rd-chapter-nav {
+  position: absolute; left: 0; right: 0; bottom: 20px; z-index: 20;
+  display: flex; justify-content: space-between; padding: 0 16px; pointer-events: none;
+}
+.rd-chapter-nav .rd-fab:only-child.next, .rd-chapter-nav form:only-child .rd-fab.next { margin-left: auto; }
+.rd-fab {
+  pointer-events: auto; display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--ui-border);
+  background: var(--ui-elevated); color: var(--ui-fg); box-shadow: var(--ui-shadow-md); cursor: pointer;
+  transition: transform 0.12s ease, background-color 0.15s ease;
+}
+.rd-fab:hover { background: var(--ui-surface); }
+.rd-fab:active { transform: scale(0.94); }
+.rd-fab svg { width: 22px; height: 22px; }
+.rd-chapter-nav:has(> form:only-child .next) { justify-content: flex-end; }
+@media (min-width: 1024px) {
+  .ps-root:not(.is-compare) .rd-chapter-nav { top: 50%; bottom: auto; transform: translateY(-50%); padding: 0 28px; }
+  .ps-root:not(.is-compare) .rd-fab { width: 48px; height: 48px; box-shadow: var(--ui-shadow-sm); }
+}
+
+/* Compare: a slim head with this pane's passage + version */
+.ps-root:not(.is-presenting, .is-output) .rd-pane-head {
+  flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 8px 12px; border-bottom: 1px solid var(--ui-border); background: var(--ui-bg);
+}
+.ps-root:not(.is-presenting, .is-output) .rd-pane-head .ui-chip { font-size: 14px; }
+
+/* Notes: a card over the bottom of the pane (a sheet on the phone) */
+.ps-root:not(.is-presenting, .is-output) .ps-notes-form {
+  left: 50%; right: auto; bottom: 16px; width: min(var(--reader-measure), calc(100% - 32px));
+  transform: translateX(-50%); z-index: 25;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-notes-head { display: flex; align-items: center; justify-content: space-between; }
+.ps-root:not(.is-presenting, .is-output) .ps-notes-close { display: inline-flex; align-items: center; justify-content: center; }
+.ps-root:not(.is-presenting, .is-output) .ps-notes-close svg { width: 16px; height: 16px; }
+
+.ui-icon.is-xl { width: 40px; height: 40px; stroke-width: 1.5; }
+.ps-root:not(.is-presenting, .is-output) .ps-pane-empty .ui-btn { margin-top: 8px; }
+/* Side-by-side panes: the floating arrows would sit on the text — each pane
+   ends with its own "Next" card instead. */
+@media (min-width: 768px) {
+  .ps-root.is-compare .rd-chapter-nav { display: none; }
+}

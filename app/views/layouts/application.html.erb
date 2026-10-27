@@ -33,7 +33,7 @@
 
   <%# Theme comes from the ps_theme cookie (written by the theme controller) so
       dark-mode readers never see a light flash on a Turbo visit. %>
-  <body data-controller="guide theme" data-theme="<%= reader_theme %>">
+  <body data-controller="guide theme sheets" data-theme="<%= reader_theme %>">
     <div data-controller="offline">
       <div class="ps-offline-badge" data-offline-target="badge" hidden>&#9679; Offline</div>
     </div>

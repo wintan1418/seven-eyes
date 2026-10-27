@@ -1,0 +1,61 @@
+<%# The app bar. In a study: ☰ · brand · [Passage ▾] [Version ▾] · search, plus
+    Aa / Compare / Preach / More on wider screens. Elsewhere: ☰ · brand · title.
+    locals: study (optional), title (optional) %>
+<% study = local_assigns[:study] %>
+<% primary = study&.panes&.first %>
+<header class="ui-appbar" data-chrome>
+  <div class="ui-appbar-start">
+    <button type="button" class="ui-iconbtn" data-action="sheets#open" data-sheets-id-param="menu"
+            aria-label="Menu" title="Menu" data-shot="menu"><%= icon(:menu) %></button>
+    <%= link_to root_path, class: "ui-brand", "aria-label": "BiblioRata home" do %>
+      <span class="ui-brand-mark" aria-hidden="true"><%= icon(:book) %></span>
+      <span class="ui-brand-name">BiblioRata</span>
+    <% end %>
+  </div>
+
+  <% if study %>
+    <div class="ui-appbar-center">
+      <% content = primary&.content %>
+      <button type="button" class="ui-chip is-passage" data-action="sheets#open" data-sheets-id-param="passage"
+              data-sheets-pane-param="<%= primary&.id %>" data-shot="passage-chip" data-tour="reference"
+              title="Choose a book and chapter (⌘K)">
+        <span class="ui-chip-label" data-reader-header-target="reference"><%= passage_label(content) || primary&.reference.presence || "Choose a passage" %></span>
+        <%= icon(:chevron_down) %>
+      </button>
+      <button type="button" class="ui-chip is-version" data-action="sheets#open" data-sheets-id-param="translation"
+              data-sheets-pane-param="<%= primary&.id %>" data-shot="translation-chip" data-tour="translation"
+              title="<%= primary&.effective_translation&.display_name %>">
+        <span class="ui-chip-label" data-reader-header-target="translation"><%= primary&.effective_translation&.code || "KJV" %></span>
+        <%= icon(:chevron_down) %>
+      </button>
+    </div>
+
+    <div class="ui-appbar-end">
+      <button type="button" class="ui-iconbtn" data-action="search#open" aria-label="Search the Bible"
+              title="Search the Bible" data-tour="search"><%= icon(:search) %></button>
+      <button type="button" class="ui-iconbtn is-wide-only" data-action="sheets#open" data-sheets-id-param="settings"
+              aria-label="Reading settings" title="Text size, theme and reading options" data-shot="settings"
+              data-tour="view"><%= icon(:type) %></button>
+      <% if study.pane_count > 1 %>
+        <%= button_to study_path(study), method: :patch, params: { study: { pane_count: 1 } },
+              class: "ui-iconbtn is-wide-only is-on", "aria-label": "Close compare", title: "Close compare — back to one passage",
+              form: { class: "contents" }, data: { tour: "panes" } do %><%= icon(:columns) %><% end %>
+      <% else %>
+        <%= button_to study_path(study), method: :patch, params: { study: { pane_count: 2 } },
+              class: "ui-iconbtn is-wide-only", "aria-label": "Compare", title: "Compare — read two translations side by side",
+              form: { class: "contents" }, data: { shot: "compare", tour: "panes" } do %><%= icon(:columns) %><% end %>
+      <% end %>
+      <button type="button" class="ui-btn is-sm is-preach is-wide-only" data-action="presentation#start"
+              title="Preach — verse by verse on the projector, live follow-along, phone remote" data-tour="preach">
+        <%= icon(:presentation) %><span>Preach</span>
+      </button>
+      <button type="button" class="ui-iconbtn is-narrow-more" data-action="sheets#open" data-sheets-id-param="more"
+              aria-label="More" title="More" data-shot="more" data-tour="more"><%= icon(:more) %></button>
+    </div>
+  <% else %>
+    <div class="ui-appbar-center">
+      <span class="ui-appbar-title"><%= local_assigns[:title] %></span>
+    </div>
+    <div class="ui-appbar-end"></div>
+  <% end %>
+</header>

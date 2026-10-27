@@ -62,7 +62,8 @@ class StudySavingTest < ApplicationSystemTestCase
     find(".ps-notes-area").fill_in(with: "Written a heartbeat before switching")
     # Switch inside the 700ms debounce window: the frame request must wait for
     # the notes to land, and the re-rendered pane must show them.
-    find(".ps-trans-select").select("WEB")
+    find(".ui-appbar [data-sheets-id-param='translation']").click
+    find(".ui-translation-sheet .ui-option", text: "WEB").click
     assert_selector ".ps-verse-text", text: /says Yahweh/, wait: 5
     assert_equal "Written a heartbeat before switching", @pane.reload.notes
     assert_equal "Written a heartbeat before switching", find(".ps-notes-area", visible: :all).value

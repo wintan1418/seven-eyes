@@ -53,6 +53,6 @@ class GuideTest < ActionDispatch::IntegrationTest
     study = users(:one).studies.create!(name: "Test", pane_count: 1)
     get study_path(study)
     assert_match(guide_path, response.body)
-    assert_match(/data-action="tour#start"/, response.body)
+    assert_match(/data-action="tour#start\b/, response.body)
   end
 end

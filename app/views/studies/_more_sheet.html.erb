@@ -1,0 +1,75 @@
+<%# More — the pulpit and study tools: preach, queue, sermon, share, compare,
+    AI find, live follow-along and phone remote. locals: study %>
+<div class="ui-sheet ui-sheet--dialog ui-more-sheet" data-controller="sheet" data-sheet-id-value="more" data-chrome hidden>
+  <div class="ui-sheet-backdrop" data-action="click->sheet#close"></div>
+  <section class="ui-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="more-sheet-title" tabindex="-1">
+    <header class="ui-sheet-head">
+      <h2 id="more-sheet-title" class="ui-sheet-title">More</h2>
+      <button type="button" class="ui-iconbtn is-sm" data-action="sheet#close" aria-label="Close"><%= icon(:x) %></button>
+    </header>
+    <div class="ui-sheet-body">
+      <div class="ui-label ui-more-label">Preach</div>
+      <div class="ui-tiles">
+        <button type="button" class="ui-tile is-accent" data-action="presentation#start"
+                title="Preach mode — verse by verse, tap/swipe to advance">
+          <%= icon(:presentation) %><span>Preach</span>
+        </button>
+        <button type="button" class="ui-tile" data-action="presentation#enter sheet#close"
+                title="Focus this pane (presentation mode)">
+          <%= icon(:focus) %><span>Focus</span>
+        </button>
+        <button type="button" class="ui-tile" data-action="setlist#toggle sheet#close"
+                title="Preach queue — line up scriptures, songs and thoughts for the service">
+          <%= icon(:queue) %><span>Queue</span>
+        </button>
+        <button type="button" class="ui-tile" data-action="live#toggle sheet#close"
+                title="Let the congregation follow along on their phones — live, no account needed">
+          <%= icon(:radio) %><span>Go Live</span>
+        </button>
+        <button type="button" class="ui-tile" data-action="remote#toggle sheet#close"
+                title="Pair a phone as a remote clicker — next, previous, chase">
+          <%= icon(:phone) %><span>Remote</span>
+        </button>
+      </div>
+
+      <div class="ui-label ui-more-label">Study</div>
+      <div class="ui-menu-links">
+        <% if study.pane_count > 1 %>
+          <%= button_to study_path(study), method: :patch, params: { study: { pane_count: 1 } },
+                class: "ui-menu-item", form: { class: "contents" } do %><%= icon(:columns) %> Close compare<% end %>
+        <% else %>
+          <%= button_to study_path(study), method: :patch, params: { study: { pane_count: 2 } },
+                class: "ui-menu-item", form: { class: "contents" } do %><%= icon(:columns) %> Compare translations<% end %>
+        <% end %>
+        <button type="button" class="ui-menu-item" data-action="ai-search#open sheet#close" data-tour="find">
+          <%= icon(:sparkles) %> Find a verse by idea (AI)
+        </button>
+        <button type="button" class="ui-menu-item" data-action="sheets#open" data-sheets-id-param="settings">
+          <%= icon(:type) %> Reading settings
+        </button>
+        <%= link_to sermon_study_path(study), class: "ui-menu-item", data: { tour: "sermon" },
+              title: "Compile this study as a printable sermon manuscript" do %>
+          <%= icon(:sermon) %> Sermon manuscript
+        <% end %>
+        <% if authenticated? && study.user_id == current_user.id %>
+          <button type="button" class="ui-menu-item" data-controller="share"
+                  data-share-url-value="<%= share_study_path(study) %>" data-action="share#copy"
+                  title="Copy a read-only share link for this study">
+            <%= icon(:link) %> <span data-share-target="label">Copy share link</span>
+          </button>
+        <% elsif !authenticated? %>
+          <button type="button" class="ui-menu-item" data-action="auth-gate#open sheet#close">
+            <%= icon(:check) %> Save this study
+          </button>
+        <% end %>
+      </div>
+
+      <%= form_with url: study_path(study), method: :patch, scope: :study, class: "ui-rename",
+            data: { controller: "auto-submit" } do |f| %>
+        <label class="ui-label" for="study_name_field">Study name</label>
+        <%= f.text_field :name, value: study.name, id: "study_name_field", class: "ui-input", autocomplete: "off",
+              data: { action: "change->auto-submit#submit" } %>
+      <% end %>
+    </div>
+  </section>
+</div>

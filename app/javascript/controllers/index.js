@@ -4,92 +4,38 @@
 
 import { application } from "./application"
 
-import HelloController from "./hello_controller"
-application.register("hello", HelloController)
-
-import AutoSubmitController from "./auto_submit_controller"
-application.register("auto-submit", AutoSubmitController)
-
-import BookBrowserController from "./book_browser_controller"
-application.register("book-browser", BookBrowserController)
-
 import AiSearchController from "./ai_search_controller"
 application.register("ai-search", AiSearchController)
-
-import XrefController from "./xref_controller"
-application.register("xref", XrefController)
-
-import RabbiController from "./rabbi_controller"
-application.register("rabbi", RabbiController)
-
-import TourController from "./tour_controller"
-application.register("tour", TourController)
-
-import NotesController from "./notes_controller"
-application.register("notes", NotesController)
-
-import HighlighterController from "./highlighter_controller"
-application.register("highlighter", HighlighterController)
-
-import ShortcutsController from "./shortcuts_controller"
-application.register("shortcuts", ShortcutsController)
 
 import AuthGateController from "./auth_gate_controller"
 application.register("auth-gate", AuthGateController)
 
-import NewStudyController from "./new_study_controller"
-application.register("new-study", NewStudyController)
-
-import SyncScrollController from "./sync_scroll_controller"
-application.register("sync-scroll", SyncScrollController)
-
-import PaneController from "./pane_controller"
-application.register("pane", PaneController)
-
-import SearchController from "./search_controller"
-application.register("search", SearchController)
-
-import ReaderController from "./reader_controller"
-application.register("reader", ReaderController)
-
-import MemorizeController from "./memorize_controller"
-application.register("memorize", MemorizeController)
+import AutoSubmitController from "./auto_submit_controller"
+application.register("auto-submit", AutoSubmitController)
 
 import CommentaryController from "./commentary_controller"
 application.register("commentary", CommentaryController)
 
-import LexiconController from "./lexicon_controller"
-application.register("lexicon", LexiconController)
-
-import GuideController from "./guide_controller"
-application.register("guide", GuideController)
+import DiffController from "./diff_controller"
+application.register("diff", DiffController)
 
 import FontSizeController from "./font_size_controller"
 application.register("font-size", FontSizeController)
 
-import PresentationController from "./presentation_controller"
-application.register("presentation", PresentationController)
+import GuideController from "./guide_controller"
+application.register("guide", GuideController)
 
-import ThemeController from "./theme_controller"
-application.register("theme", ThemeController)
+import HelloController from "./hello_controller"
+application.register("hello", HelloController)
 
-import ShareController from "./share_controller"
-application.register("share", ShareController)
-
-import DiffController from "./diff_controller"
-application.register("diff", DiffController)
+import HighlighterController from "./highlighter_controller"
+application.register("highlighter", HighlighterController)
 
 import InterlinearController from "./interlinear_controller"
 application.register("interlinear", InterlinearController)
 
-import ViewMenuController from "./view_menu_controller"
-application.register("view-menu", ViewMenuController)
-
-import OfflineController from "./offline_controller"
-application.register("offline", OfflineController)
-
-import ShareCardController from "./share_card_controller"
-application.register("share-card", ShareCardController)
+import LexiconController from "./lexicon_controller"
+application.register("lexicon", LexiconController)
 
 import LiveController from "./live_controller"
 application.register("live", LiveController)
@@ -97,8 +43,38 @@ application.register("live", LiveController)
 import LiveFollowController from "./live_follow_controller"
 application.register("live-follow", LiveFollowController)
 
-import SetlistController from "./setlist_controller"
-application.register("setlist", SetlistController)
+import MemorizeController from "./memorize_controller"
+application.register("memorize", MemorizeController)
+
+import NewStudyController from "./new_study_controller"
+application.register("new-study", NewStudyController)
+
+import NotesController from "./notes_controller"
+application.register("notes", NotesController)
+
+import OfflineController from "./offline_controller"
+application.register("offline", OfflineController)
+
+import PaneController from "./pane_controller"
+application.register("pane", PaneController)
+
+import PassagePickerController from "./passage_picker_controller"
+application.register("passage-picker", PassagePickerController)
+
+import PresentationController from "./presentation_controller"
+application.register("presentation", PresentationController)
+
+import PrintController from "./print_controller"
+application.register("print", PrintController)
+
+import RabbiController from "./rabbi_controller"
+application.register("rabbi", RabbiController)
+
+import ReaderController from "./reader_controller"
+application.register("reader", ReaderController)
+
+import ReaderHeaderController from "./reader_header_controller"
+application.register("reader-header", ReaderHeaderController)
 
 import RemoteController from "./remote_controller"
 application.register("remote", RemoteController)
@@ -106,7 +82,47 @@ application.register("remote", RemoteController)
 import RemotePadController from "./remote_pad_controller"
 application.register("remote-pad", RemotePadController)
 
+import SearchController from "./search_controller"
+application.register("search", SearchController)
+
+import SetlistController from "./setlist_controller"
+application.register("setlist", SetlistController)
+
+import ShareCardController from "./share_card_controller"
+application.register("share-card", ShareCardController)
+
+import ShareController from "./share_controller"
+application.register("share", ShareController)
+
+import SheetController from "./sheet_controller"
+application.register("sheet", SheetController)
+
+import SheetsController from "./sheets_controller"
+application.register("sheets", SheetsController)
+
+import ShortcutsController from "./shortcuts_controller"
+application.register("shortcuts", ShortcutsController)
+
+import SyncScrollController from "./sync_scroll_controller"
+application.register("sync-scroll", SyncScrollController)
+
+import ThemeController from "./theme_controller"
+application.register("theme", ThemeController)
+
+import TourController from "./tour_controller"
+application.register("tour", TourController)
+
+import TranslationPickerController from "./translation_picker_controller"
+application.register("translation-picker", TranslationPickerController)
+
+import VerseLinesController from "./verse_lines_controller"
+application.register("verse-lines", VerseLinesController)
+
+import ViewMenuController from "./view_menu_controller"
+application.register("view-menu", ViewMenuController)
+
 import WhatsNewController from "./whats_new_controller"
-import PrintController from "./print_controller"
 application.register("whats-new", WhatsNewController)
-application.register("print", PrintController)
+
+import XrefController from "./xref_controller"
+application.register("xref", XrefController)

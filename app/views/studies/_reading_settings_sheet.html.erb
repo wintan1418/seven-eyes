@@ -1,0 +1,48 @@
+<%# Aa — reading settings: text size, theme, layout, word study.
+    Text size = font-size controller, theme = theme controller (on <body>),
+    layout = verse-lines, word study = interlinear (all on .ps-root). %>
+<div class="ui-sheet ui-sheet--dialog ui-settings-sheet" data-controller="sheet" data-sheet-id-value="settings" data-chrome hidden>
+  <div class="ui-sheet-backdrop" data-action="click->sheet#close"></div>
+  <section class="ui-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="settings-sheet-title" tabindex="-1">
+    <header class="ui-sheet-head">
+      <h2 id="settings-sheet-title" class="ui-sheet-title">Reading settings</h2>
+      <button type="button" class="ui-iconbtn is-sm" data-action="sheet#close" aria-label="Close"><%= icon(:x) %></button>
+    </header>
+    <div class="ui-sheet-body ui-settings">
+      <div class="ui-setting">
+        <div class="ui-label">Text size</div>
+        <div class="ui-size-row">
+          <span class="ui-size-a is-small" aria-hidden="true">A</span>
+          <input type="range" min="0" max="4" step="1" value="0" class="ui-range"
+                 data-font-size-target="slider" data-action="input->font-size#change" aria-label="Text size">
+          <span class="ui-size-a is-large" aria-hidden="true">A</span>
+          <span class="ui-size-level" data-font-size-target="level">S</span>
+        </div>
+      </div>
+
+      <div class="ui-setting">
+        <div class="ui-label">Theme</div>
+        <div class="ui-theme-row" role="group" aria-label="Theme">
+          <% [ [ "auto", "Auto" ], [ "light", "Light" ], [ "sepia", "Sepia" ], [ "dark", "Dark" ] ].each do |value, name| %>
+            <button type="button" class="ui-theme-swatch is-<%= value %>" aria-pressed="false"
+                    data-action="theme#choose" data-theme-choice-param="<%= value %>">
+              <span class="sw" aria-hidden="true">Aa</span><span class="nm"><%= name %></span>
+            </button>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="ui-setting">
+        <div class="ui-label">Layout</div>
+        <button type="button" class="ui-toggle" aria-pressed="false"
+                data-verse-lines-target="button" data-action="verse-lines#toggle">
+          <%= icon(:lines) %><span class="nm">One verse per line</span><span class="sw" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="ui-toggle" data-interlinear-target="button" data-action="interlinear#toggle"
+                title="Show transliteration + Strong's number under each tagged word (KJV)">
+          <%= icon(:word) %><span class="nm">Word study (Strong&rsquo;s, KJV)</span><span class="sw" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+  </section>
+</div>

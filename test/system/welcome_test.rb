@@ -13,7 +13,7 @@ class WelcomeTest < ApplicationSystemTestCase
     fill_in "reference", with: "John 3:16"
     click_on "Read"
 
-    assert_selector ".ps-topbar"
-    assert_field with: "John 3:16"
+    assert_selector ".ui-appbar [data-reader-header-target='reference']", text: "John 3:16"
+    assert_selector "input[name='pane[reference]'][value='John 3:16']", visible: :all
   end
 end

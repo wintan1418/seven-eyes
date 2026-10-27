@@ -29,7 +29,7 @@ class StudiesManagementTest < ActionDispatch::IntegrationTest
     study = users(:one).studies.create!(name: "Romans study", pane_count: 1)
     get study_path(study)
     assert_response :success
-    assert_select "input.ps-study-name-input[value=?]", "Romans study"
+    assert_select "input[name='study[name]'][value=?]", "Romans study"
     assert_select "form[action=?]", study_path(study) # delete button form present
   end
 
@@ -38,6 +38,6 @@ class StudiesManagementTest < ActionDispatch::IntegrationTest
   test "the rename form posts the study-scoped field the controller requires" do
     study = users(:one).studies.create!(name: "Romans study", pane_count: 1)
     get study_path(study)
-    assert_select "input.ps-study-name-input[name=?]", "study[name]"
+    assert_select "form[action=?] input[name=?]", study_path(study), "study[name]"
   end
 end

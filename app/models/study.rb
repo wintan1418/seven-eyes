@@ -49,6 +49,29 @@ class Study < ApplicationRecord
     panes.reset
   end
 
+  COMPARE_ORDER = %w[KJV BSB WEB ASV].freeze
+
+  # Compare: blank panes that just came into view show the primary pane's
+  # passage in another translation (KJV → BSB → WEB → ASV, skipping ones
+  # already on screen), so turning Compare on is one tap, not a setup chore.
+  # Panes that already hold a passage (hidden earlier, with notes) are left
+  # exactly as they were.
+  def seed_compare_panes!
+    primary = all_panes.find_by(position: 0)
+    return if primary.nil? || primary.reference.blank?
+
+    in_use = panes.reload.filter_map { |p| p.reference.present? && p.effective_translation&.code }
+    in_use << primary.effective_translation&.code
+    candidates = (COMPARE_ORDER + Translation.available.pluck(:code)).uniq
+    panes.each do |pane|
+      next if pane.position.zero? || pane.reference.present?
+      code = candidates.find { |c| !in_use.include?(c) && Translation.available.exists?(code: c) }
+      translation = code ? Translation.find_by(code:) : primary.effective_translation
+      pane.update!(reference: primary.reference, translation:)
+      in_use << code
+    end
+  end
+
   private
 
   def build_default_panes

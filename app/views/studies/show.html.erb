@@ -1,9 +1,10 @@
 <%# The projector (?output=1) and stage (?stage=1) windows render this same page:
     mark them server-side so no onboarding (tour, prompts, banners) ever flashes
-    on the big screen before presentation_controller boots. %>
+    on the big screen before presentation_controller boots. Everything new in
+    the reading UI is marked [data-chrome] and hidden while presenting. %>
 <% output_window = params[:output] == "1" || params[:stage] == "1" %>
-<div class="ps-root<%= ' is-output' if output_window %>"
-     data-controller="book-browser ai-search search xref commentary lexicon rabbi <%= 'tour ' unless output_window %>shortcuts auth-gate new-study font-size presentation diff interlinear live setlist remote"
+<div class="ps-root rd-app<%= ' is-output' if output_window %><%= ' is-compare' if @study.pane_count > 1 %>"
+     data-controller="ai-search search xref commentary lexicon rabbi <%= 'tour ' unless output_window %>shortcuts auth-gate new-study font-size presentation diff interlinear live setlist remote reader-header verse-lines"
      data-live-url-value="<%= study_live_path(@study) %>"
      data-live-active-code-value="<%= LiveSession.current_for(@study)&.code unless output_window %>"
      data-remote-url-value="<%= study_remote_path(@study) %>"
@@ -15,11 +16,10 @@
      data-tour-authenticated-value="<%= authenticated?.present? %>"
      data-tour-done-value="<%= (authenticated? && current_user.tour_completed_at.present?).present? %>"
      data-tour-url-value="<%= preferences_path %>">
-  <%= render "topbar", study_name: @study.name, panes: @study.pane_count,
-        sync: @study.sync_scroll, saved: true, study: @study %>
   <%= render "studies/preach_chrome" %>
+  <%= render "studies/app_bar", study: @study %>
+
   <div class="ps-shell">
-    <%= render "sidebar", studies: @studies, active_id: @study.id %>
     <main class="ps-workspace <%= workspace_cols_class(@study.pane_count) %>"
           data-controller="sync-scroll" data-sync-scroll-enabled-value="<%= @study.sync_scroll %>">
       <% @study.panes.each do |pane| %>
@@ -27,7 +27,15 @@
       <% end %>
     </main>
   </div>
-  <%= render "studies/book_browser" %>
+  <%= render "studies/compare_bar", study: @study if @study.pane_count > 1 %>
+
+  <% unless output_window %>
+    <%= render "studies/menu_sheet", studies: @studies, active_id: @study.id, study: @study, new_study_modal: true %>
+    <%= render "studies/passage_sheet" %>
+    <%= render "studies/translation_sheet" %>
+    <%= render "studies/reading_settings_sheet" %>
+    <%= render "studies/more_sheet", study: @study %>
+  <% end %>
   <%= render "studies/ai_search", study: @study %>
   <%= render "studies/search", study: @study %>
   <%= render "studies/xref_drawer" %>

@@ -57,9 +57,10 @@ class PaneScriptureTest < ActionDispatch::IntegrationTest
     show("Jn 3:16-4:2", @bsb)
     assert_equal (16..36).map { |v| [ 3, v ] } + [ [ 4, 1 ], [ 4, 2 ] ], shown_verses
     assert_select ".ps-chapter-break", count: 2
-    assert_select ".ref-title span", text: "John III–IV"
-    assert_select "button.ps-ch-nav.next[title*='John 5']"
-    assert_select "button.ps-ch-nav.prev[title*='John 2']"
+    assert_select ".ref-title .rd-book", text: "John"
+    assert_select ".ref-title .rd-chapter-num", text: "3–4"
+    assert_select "button.rd-fab.next[title*='John 5']"
+    assert_select "button.rd-fab.prev[title*='John 2']"
   end
 
   test "Matthew 18:11 in the BSB explains the omission and offers the KJV" do
@@ -103,8 +104,8 @@ class PaneScriptureTest < ActionDispatch::IntegrationTest
   test "Matt 5-7 loads all three chapters" do
     show("Matt 5-7", @kjv)
     assert_equal [ 5, 6, 7 ], shown_verses.map(&:first).uniq
-    assert_select ".ref-title span", text: "Matthew V–VII"
-    assert_select "button.ps-ch-nav.next[title*='Matthew 8']"
+    assert_select ".ref-title .rd-chapter-num", text: "5–7"
+    assert_select "button.rd-fab.next[title*='Matthew 8']"
   end
 
   test "Jude 1-3 loads verses 1 to 3, not the whole chapter" do

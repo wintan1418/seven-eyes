@@ -1,7 +1,7 @@
 <div class="ps-root" data-controller="new-study">
-  <%= render "topbar", study_name: "The Scriptorium", panes: 4, sync: false, saved: true %>
+  <%= render "studies/app_bar", title: "Home" %>
+  <%= render "studies/menu_sheet", studies: @studies, new_study_modal: true %>
   <div class="ps-shell">
-    <%= render "sidebar", studies: @studies %>
     <main class="ps-workspace is-doc" style="grid-template-columns: 1fr;">
       <div class="ps-welcome ps-welcome--grand">
         <span class="float-orn fo1" aria-hidden="true">&#10038;</span>
@@ -27,7 +27,7 @@
                 spellcheck: "false", autocapitalize: "none", inputmode: "search", enterkeyhint: "go",
                 placeholder: "Open the Word — try “John 3:16”, “Ps 23”, “rom 8”…",
                 "aria-label": "Open a passage" %>
-          <%= hidden_field_tag :pane_count, 2 %>
+          <%= hidden_field_tag :pane_count, 1 %>
           <button type="submit" class="qo-go">Read</button>
         <% end %>
         <div class="qo-hint rise">One line opens a fresh side-by-side study &mdash; no account needed.</div>
