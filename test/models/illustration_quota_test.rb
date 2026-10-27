@@ -40,4 +40,41 @@ class IllustrationQuotaTest < ActiveSupport::TestCase
     IllustrationQuota.for("u1").record!
     assert_equal 0, IllustrationQuota.for("g2").count
   end
+
+  test "reserve! takes slots up to the limit and then refuses" do
+    q = IllustrationQuota.for("u3")
+    IllustrationQuota.limit.times { assert q.reserve! }
+    assert_not q.reserve!, "no slot beyond the daily cap"
+    assert_equal IllustrationQuota.limit, q.reload.count
+  end
+
+  test "reserve! is a conditional UPDATE, so a stale copy can't overshoot the cap" do
+    a = IllustrationQuota.for("u4")
+    b = IllustrationQuota.find(a.id) # a second request holding its own stale copy
+    (IllustrationQuota.limit - 1).times { a.reserve! }
+
+    assert b.reserve!, "the last slot can be taken once"
+    assert_not a.reserve!, "...and only once, whoever's copy asks"
+    assert_equal IllustrationQuota.limit, IllustrationQuota.find(a.id).count
+  end
+
+  test "release! hands a slot back but never goes below zero" do
+    q = IllustrationQuota.for("u5")
+    q.reserve!
+    q.release!
+    assert_equal 0, q.count
+    q.release!
+    assert_equal 0, q.reload.count
+  end
+
+  test "for tolerates the row already existing (create_or_find_by)" do
+    first = IllustrationQuota.for("u6")
+    assert_no_difference -> { IllustrationQuota.count } do
+      assert_equal first.id, IllustrationQuota.for("u6").id
+    end
+  end
+
+  test "key_for keys quotas by user id" do
+    assert_equal "u42", IllustrationQuota.key_for(42)
+  end
 end

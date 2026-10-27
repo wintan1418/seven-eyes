@@ -1,0 +1,21 @@
+<%# locals: frame_id, reason (:auth | :rate | :daily)
+    Rendered (with a 401/429 status) in place of an AI result when the request
+    is refused. Turbo still swaps a matching frame in from a 4xx response. %>
+<%= turbo_frame_tag frame_id do %>
+  <div class="ps-ai-hint ps-ai-gate">
+    <% case reason %>
+    <% when :auth %>
+      &#10022; The AI study tools (the Rabbi, Find a Verse, illustrations) need a free
+      account &mdash; it keeps them available for everyone.
+      <div class="ps-ai-gate-actions">
+        <%= link_to "Sign in", new_session_path, data: { turbo_frame: "_top" } %>
+        &middot;
+        <%= link_to "Create a free account", new_registration_path, data: { turbo_frame: "_top" } %>
+      </div>
+    <% when :rate %>
+      &#9203; That&rsquo;s a lot of questions in a minute &mdash; please wait a moment and try again.
+    <% else %>
+      &#9203; You&rsquo;ve reached today&rsquo;s AI allowance. It resets tomorrow.
+    <% end %>
+  </div>
+<% end %>

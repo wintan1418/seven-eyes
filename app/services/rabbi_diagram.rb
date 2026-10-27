@@ -45,7 +45,7 @@ class RabbiDiagram
 
   def initialize(verse:, selection:, study:, translation: nil)
     @verse = verse
-    @selection = selection.to_s.strip
+    @selection = selection.to_s.strip[0, RabbiExposition::SELECTION_LIMIT]
     @study = study
     @translation = translation || verse&.translation
   end
@@ -75,7 +75,7 @@ class RabbiDiagram
   # proven json:true path as every other AI feature (the json:false path was
   # returning empty on the live Gemini setup).
   def chat_completion
-    AiChat.call(system: SYSTEM_PROMPT, user: user_prompt, json: true)
+    AiChat.call(system: SYSTEM_PROMPT, user: user_prompt, json: true, max_tokens: 4000)
   end
 
   def book    = @verse.book
