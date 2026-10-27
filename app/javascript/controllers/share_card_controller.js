@@ -127,6 +127,7 @@ export default class extends Controller {
   }
 
   prayerError(data) {
+    if (data && data.error === "auth_required") return "Sign in to compose a prayer — create a free account to continue."
     if (data && data.error === "no_key") return "The prayer needs an AI key configured on the server."
     return "A prayer couldn't be composed right now. Please try again."
   }
@@ -159,6 +160,11 @@ export default class extends Controller {
     if (ctx.translation) q.set("translation", ctx.translation)
     try {
       const res = await fetch(`${this.prayerUrlValue}?${q}`, { headers: { Accept: "application/json" } })
+      // Composing a prayer is an AI call — members only. Open the account gate.
+      if (res.status === 401) {
+        window.dispatchEvent(new CustomEvent("auth:required"))
+        return { ok: false, error: "auth_required" }
+      }
       if (!res.ok) return null
       return await res.json()
     } catch { return null }
