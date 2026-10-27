@@ -125,7 +125,7 @@
   border: 0; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--ui-fg-muted); padding: 9px 4px;
 }
 .ps-root:not(.is-presenting, .is-output) .ps-modal .seg button.is-on {
-  background: var(--ui-bg); color: var(--ui-fg); box-shadow: var(--ui-shadow-sm);
+  background: var(--ui-seg-on); color: var(--ui-fg); box-shadow: var(--ui-shadow-sm);
 }
 .ps-root:not(.is-presenting, .is-output) .ps-link-btn {
   font-size: 14px; font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--ui-fg-muted);

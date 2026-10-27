@@ -222,3 +222,7 @@
   .ps-root.is-compare:not(.is-presenting, .is-output) .rd-chapter-head .rd-book { display: none; }
   .ps-root.is-compare .rd-chapter-tools { display: none; }
 }
+
+/* Presenting / preaching / projector / stage: the reading column steps out of
+   the way so the preach layout sizes the verses exactly as before. */
+.ps-root:is(.is-presenting, .is-output) .rd-column { display: contents; }

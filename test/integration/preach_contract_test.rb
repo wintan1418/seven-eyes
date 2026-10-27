@@ -144,6 +144,9 @@ class PreachContractTest < ActionDispatch::IntegrationTest
     css = Rails.root.join("app/assets/stylesheets").glob("**/*.css").map(&:read).join("\n")
     assert css.match?(/\.ps-root\.is-presenting \[data-chrome\]/), "presenting must hide [data-chrome]"
     assert css.match?(/\.ps-root\.is-output \[data-chrome\]/), "output must hide [data-chrome]"
+    # The reading column must not narrow the projected verse.
+    assert css.match?(/\.ps-root:is\(\.is-presenting, \.is-output\) \.rd-column \{ display: contents; \}/),
+           "the reading column steps aside while presenting"
   end
 
   test "the JS side of the contract: channel name, window events, root state classes" do

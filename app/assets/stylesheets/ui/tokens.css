@@ -25,6 +25,7 @@
   --ui-focus: #2F6FEB;
   --ui-vnum: #9A9AA0;
   --ui-selected: #1C1C1E;
+  --ui-seg-on: #FFFFFF;
   --ui-scrim: rgba(17, 17, 19, 0.38);
   --ui-shadow-sm: 0 1px 2px rgba(17, 17, 19, 0.06), 0 1px 1px rgba(17, 17, 19, 0.04);
   --ui-shadow-md: 0 4px 16px rgba(17, 17, 19, 0.08), 0 1px 3px rgba(17, 17, 19, 0.06);
@@ -74,6 +75,7 @@
   --ui-focus: #6EA0FF;
   --ui-vnum: #71717A;
   --ui-selected: #ECECEC;
+  --ui-seg-on: #3A3A42;
   --ui-scrim: rgba(0, 0, 0, 0.55);
   --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --ui-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -103,6 +105,7 @@
     --ui-focus: #6EA0FF;
     --ui-vnum: #71717A;
     --ui-selected: #ECECEC;
+  --ui-seg-on: #3A3A42;
     --ui-scrim: rgba(0, 0, 0, 0.55);
     --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
     --ui-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -130,6 +133,7 @@
   --ui-accent-soft: rgba(138, 36, 24, 0.09);
   --ui-vnum: #8A6D4A;
   --ui-selected: #2A2017;
+  --ui-seg-on: #FFFBF2;
   --hl-ochre: rgba(206, 158, 47, 0.32);
   --hl-sage: rgba(108, 132, 78, 0.28);
   --hl-cobalt: rgba(72, 96, 128, 0.26);
