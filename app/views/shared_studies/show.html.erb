@@ -1,23 +1,20 @@
 <% content_for :title, "#{@study.name} — Shared Study" %>
 
 <div class="ps-root is-shared">
-  <div class="ps-topbar">
-    <div class="ps-brand">
-      <%= link_to root_path, style: "text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px;" do %>
-        <span class="cross">&#9769;</span>
-        <span>PARALLEL &middot; SCRIPTURE</span>
+  <header class="ui-appbar">
+    <div class="ui-appbar-start">
+      <%= link_to root_path, class: "ui-brand" do %>
+        <span class="ui-brand-mark" aria-hidden="true"><%= icon(:book) %></span>
+        <span class="ui-brand-name">BiblioRata</span>
       <% end %>
     </div>
-    <div class="ps-study-name">
-      <span class="orn">&#10086;</span>
-      <span><%= @study.name %></span>
-      <span class="pencil" style="letter-spacing: 0.2em; color: var(--gold);">&middot; SHARED</span>
+    <div class="ui-appbar-center">
+      <span class="ui-appbar-title ps-study-name"><%= @study.name %> &middot; shared</span>
     </div>
-    <div class="ps-topbar-actions">
-      <%= link_to "Open your own workspace", root_path,
-            class: "ps-tb-btn", style: "text-decoration:none;" %>
+    <div class="ui-appbar-end">
+      <%= link_to "Open BiblioRata", root_path, class: "ui-btn is-sm is-primary" %>
     </div>
-  </div>
+  </header>
   <div class="ps-shell">
     <main class="ps-workspace <%= workspace_cols_class(@study.pane_count) %>">
       <% @panes.each do |pane| %>

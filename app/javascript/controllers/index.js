@@ -28,9 +28,6 @@ application.register("font-size", FontSizeController)
 import GuideController from "./guide_controller"
 application.register("guide", GuideController)
 
-import HelloController from "./hello_controller"
-application.register("hello", HelloController)
-
 import HighlighterController from "./highlighter_controller"
 application.register("highlighter", HighlighterController)
 
@@ -129,9 +126,6 @@ application.register("verse-lines", VerseLinesController)
 
 import VerseSelectController from "./verse_select_controller"
 application.register("verse-select", VerseSelectController)
-
-import ViewMenuController from "./view_menu_controller"
-application.register("view-menu", ViewMenuController)
 
 import WhatsNewController from "./whats_new_controller"
 application.register("whats-new", WhatsNewController)
