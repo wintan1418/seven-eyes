@@ -1,281 +1,136 @@
-<% content_for :title, "BiblioRata — The Word, Laid Open · Parallel Bible Study & Live Projection" %>
+<% content_for :title, "BiblioRata — The Word, Laid Open · Bible Reader, Study & Live Projection" %>
 <% content_for :head do %>
-  <meta name="description" content="A multi-pane Bible study desk for pastors and serious readers. Compare 14 public-domain translations side by side, follow 343,000+ cross-references, and carry the same desk into the pulpit — live projection your congregation follows on their phones. Free, no account needed.">
+  <meta name="description" content="A calm, free Bible reader for pastors and serious readers. Compare public-domain translations side by side, follow 343,000+ cross-references, and carry the same passage into the pulpit — live projection your congregation follows on their phones. No account needed.">
 <% end %>
+<% vod_text = @verse_of_day&.text || "Open thou mine eyes, that I may behold wondrous things out of thy law." %>
+<% vod_ref = @verse_of_day ? @verse_of_day.reference_label : "Psalm 119:18" %>
+<% vod_trans = @verse_of_day ? @verse_of_day.translation_code : "KJV" %>
 
-<div class="ps-landing" data-controller="new-study">
-
-  <%# ---- slim landing nav ---- %>
-  <header class="ld-nav">
-    <div class="ld-nav-inner">
-      <div class="ld-brand"><span class="cross">&#9769;</span> BIBLIORATA</div>
-      <nav class="ld-links">
-        <a href="#study">Study</a>
-        <a href="#preach">Preach</a>
-        <a href="#margins">Testimonies</a>
-        <%= link_to "Guide", guide_path %>
-      </nav>
-      <div class="ld-nav-cta">
-        <%= link_to "Sign in", new_session_path, class: "ld-ghost" %>
-        <button type="button" class="cta ld-open" data-action="new-study#open">Open the Desk</button>
-      </div>
+<div class="ld-page ps-landing">
+  <header class="ui-appbar ld-appbar ld-nav">
+    <div class="ui-appbar-start">
+      <%= link_to root_path, class: "ui-brand" do %>
+        <span class="ui-brand-mark" aria-hidden="true"><%= icon(:book) %></span>
+        <span class="ui-brand-name">BiblioRata</span>
+      <% end %>
     </div>
+    <div class="ui-appbar-center"></div>
+    <nav class="ui-appbar-end ld-nav-links" aria-label="Site">
+      <%= link_to "Guide", guide_path, class: "ui-btn is-sm is-quiet ld-hide-sm" %>
+      <%= link_to "Sign in", new_session_path, class: "ui-btn is-sm is-quiet" %>
+      <%= link_to "Create account", new_registration_path, class: "ui-btn is-sm is-primary" %>
+    </nav>
   </header>
 
-  <%# ---- hero ---- %>
-  <section class="ld-hero">
-    <span class="float-orn fo1" aria-hidden="true">&#10038;</span>
-    <span class="float-orn fo2" aria-hidden="true">&#10086;</span>
-    <span class="float-orn fo3" aria-hidden="true">&#10070;</span>
-    <div class="ld-badge">Free &middot; Open to all &middot; No account needed</div>
-    <h1><span class="h1dc">T</span>he Word, laid open.</h1>
-    <p class="ld-sub">
-      A quiet, scholarly desk for Scripture — lay up to <strong>four translations side by side</strong>,
-      follow the Treasury's <strong>343,000 cross-references</strong> at one click, and when Sunday comes,
-      carry the very same desk into the pulpit: <strong>live projection</strong> the congregation
-      follows on their own phones.
-    </p>
+  <main>
+    <section class="ld-hero">
+      <p class="ld-eyebrow">Free &middot; no account needed</p>
+      <h1>The Word, laid open.</h1>
+      <p class="ld-lede">
+        A calm Bible reader for study and for the pulpit. Read any passage, compare translations
+        side by side, trace cross-references &mdash; and on Sunday, put it on the screen while your
+        congregation follows on their phones.
+      </p>
 
-    <%= form_with url: studies_path, method: :post, class: "ps-quick-open ld-qo" do %>
-      <span class="qo-orn">&#10038;</span>
-      <%= text_field_tag :reference, nil, class: "qo-input", autocomplete: "off",
-            spellcheck: "false", autocapitalize: "none", inputmode: "search", enterkeyhint: "go",
-            placeholder: "Try it now — “John 3:16”, “Ps 23”, “rom 8”…",
-            "aria-label": "Open a passage" %>
-      <%= hidden_field_tag :pane_count, 1 %>
-      <button type="submit" class="qo-go">Read</button>
-    <% end %>
-    <div class="ld-qo-hint">One line opens the full study desk &mdash; nothing to install, no sign-up.</div>
+      <%= form_with url: studies_path, method: :post, class: "ps-quick-open ld-search" do %>
+        <%= icon(:search) %>
+        <%= text_field_tag :reference, nil, class: "ld-search-input", autocomplete: "off",
+              spellcheck: "false", autocapitalize: "none", inputmode: "search", enterkeyhint: "go",
+              placeholder: "John 3:16, Psalm 23, rom 8…", "aria-label": "Open a passage" %>
+        <%= hidden_field_tag :pane_count, 1 %>
+        <button type="submit" class="ui-btn is-accent ld-search-go">Read</button>
+      <% end %>
+      <div class="ld-quick">
+        <span>Try</span>
+        <% [ "John 1", "Psalm 23", "Romans 8", "Isaiah 40" ].each do |ref| %>
+          <%= button_to ref, studies_path, params: { reference: ref, pane_count: 1 }, class: "ui-pill", form: { class: "contents" } %>
+        <% end %>
+      </div>
+    </section>
 
-    <%# hero mock: two panes of the actual workspace %>
-    <div class="ld-mock ld-mock-desk" aria-hidden="true">
-      <div class="mk-topbar"><span class="mk-dot"></span><span class="mk-title">&#10086; JUSTIFICATION &mdash; SEPT 14</span><span class="mk-tools">I &middot; II &middot; III &middot; IV</span></div>
-      <div class="mk-panes">
-        <div class="mk-pane">
-          <div class="mk-head"><span class="mk-numeral">I</span> John 3:16 <span class="mk-trans">KJV</span></div>
-          <p class="mk-verse"><sup>16</sup> For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have <mark>everlasting life</mark>.</p>
+    <section class="ld-vod" aria-labelledby="vod-title">
+      <div class="ld-vod-card">
+        <div class="ui-label" id="vod-title">Verse of the day</div>
+        <blockquote class="ld-vod-text"><%= vod_text %></blockquote>
+        <div class="ld-vod-foot">
+          <span class="ld-vod-ref"><%= vod_ref %> &middot; <%= vod_trans %></span>
+          <%= button_to studies_path, params: { reference: vod_ref, pane_count: 1 }, class: "ui-btn is-sm", form: { class: "contents" } do %>
+            Read the chapter <%= icon(:chevron_right) %>
+          <% end %>
         </div>
-        <div class="mk-pane">
-          <div class="mk-head"><span class="mk-numeral">II</span> John 3:16 <span class="mk-trans">BSB</span></div>
-          <p class="mk-verse"><sup>16</sup> For God so loved the world that He gave His one and only Son, that everyone who believes in Him shall not perish but have <mark>eternal life</mark>.</p>
+      </div>
+    </section>
+
+    <section class="ld-features" aria-label="What you can do">
+      <article class="ld-feature">
+        <div class="ld-feature-icon"><%= icon(:book) %></div>
+        <div>
+          <h2>Read comfortably</h2>
+          <p>One clean column of Scripture with the book and chapter a tap away. Light, sepia or dark, the text size you like, and it&rsquo;s just as good on your phone.</p>
         </div>
-      </div>
-    </div>
-  </section>
+      </article>
+      <article class="ld-feature">
+        <div class="ld-feature-icon"><%= icon(:columns) %></div>
+        <div>
+          <h2>Study deeply</h2>
+          <p>Compare up to four translations side by side, follow <%= number_with_delimiter(@canon_stats[:cross_references]) %> cross-references, look up the Hebrew and Greek, and keep notes and highlights.</p>
+        </div>
+      </article>
+      <article class="ld-feature">
+        <div class="ld-feature-icon"><%= icon(:presentation) %></div>
+        <div>
+          <h2>Preach with it</h2>
+          <p>Project verse by verse, chase any reference the preacher calls, let the congregation follow live on their phones, and drive it all from a phone remote.</p>
+        </div>
+      </article>
+    </section>
 
-  <%# ---- stats band ---- %>
-  <section class="ld-stats ps-canon-stats">
-    <span><b><%= @canon_stats[:translations] %></b> translations</span>
-    <span class="sep">&middot;</span>
-    <span><b><%= number_with_delimiter(@canon_stats[:verses]) %></b> verses</span>
-    <span class="sep">&middot;</span>
-    <span><b><%= number_with_delimiter(@canon_stats[:cross_references]) %></b> cross-references</span>
-    <span class="sep">&middot;</span>
-    <span><b>66</b> books &mdash; all on our own shelves, no external APIs</span>
-  </section>
-
-  <%# ---- verse band ---- %>
-  <% vod_text = @verse_of_day&.text || "Open thou mine eyes, that I may behold wondrous things out of thy law." %>
-  <% vod_ref = @verse_of_day ? "#{@verse_of_day.reference_label} · #{@verse_of_day.translation_code}" : "Psalm 119:18 · KJV" %>
-  <section class="ld-quote">
-    <figure class="ps-illumined ps-illumined--folio">
-      <span class="corner tl">&#10086;</span><span class="corner tr">&#10086;</span>
-      <span class="corner bl">&#10086;</span><span class="corner br">&#10086;</span>
-      <div class="plate-eyebrow">&#10022; &nbsp; Verse For The Day &nbsp; &#10022;</div>
-      <blockquote><span class="dc"><%= vod_text.first %></span><%= vod_text[1..] %></blockquote>
-      <figcaption><%= vod_ref %></figcaption>
-      <span class="seal" aria-hidden="true">&#9769;</span>
-    </figure>
-  </section>
-
-  <%# ---- feature: parallel study ---- %>
-  <section class="ld-feature" id="study">
-    <div class="ld-feature-copy">
-      <div class="ld-kicker">The Study</div>
-      <h2>Four panes. One quiet desk.</h2>
-      <p>Set the same verse in four translations, or four passages in one — each pane keeps its own
-         reference, translation and notes. Word-by-word differences can be lit up across panes,
-         and every King James word opens its Greek or Hebrew root.</p>
-      <ul class="ld-ticks">
-        <li>14 public-domain translations, honestly licensed</li>
-        <li>Word-diff across panes &middot; Strong&rsquo;s lexicon on tap</li>
-        <li>Matthew Henry&rsquo;s commentary beside the text</li>
-        <li>Chapters load whole &mdash; never verse-by-verse from an API</li>
-      </ul>
-    </div>
-    <div class="ld-mock ld-mock-xref" aria-hidden="true">
-      <div class="xr-head">&#167; Cross-References &mdash; Psalm 110:1</div>
-      <div class="xr-row"><span class="xr-ref">Matthew 22:44</span><span class="xr-votes">&#9733; 58</span></div>
-      <div class="xr-prev">The LORD said unto my Lord, Sit thou on my right hand&hellip;</div>
-      <div class="xr-row"><span class="xr-ref">Acts 2:34&ndash;35</span><span class="xr-votes">&#9733; 45</span></div>
-      <div class="xr-prev">For David is not ascended into the heavens: but he saith&hellip;</div>
-      <div class="xr-row"><span class="xr-ref">Hebrews 1:13</span><span class="xr-votes">&#9733; 41</span></div>
-      <div class="xr-prev">But to which of the angels said he at any time, Sit on my right hand&hellip;</div>
-      <div class="xr-cta">Load in pane II &rsaquo;</div>
-    </div>
-  </section>
-
-  <%# ---- feature: AI, guardrailed ---- %>
-  <section class="ld-feature ld-feature--flip">
-    <div class="ld-feature-copy">
-      <div class="ld-kicker">The Assistant</div>
-      <h2>AI that stays inside Scripture.</h2>
-      <p>Describe a half-remembered thought and the desk finds the reference. Ask the Rabbi about a
-         phrase and it answers from the chapter and its cross-references &mdash; carefully, and never
-         beyond the text.</p>
-      <ul class="ld-ticks">
-        <li>The assistant may only <em>point</em> &mdash; references, never verse text</li>
-        <li>Every word on screen comes from our own vetted database</li>
-        <li>Expositions cite the passages they lean on</li>
-      </ul>
-    </div>
-    <div class="ld-mock ld-mock-find" aria-hidden="true">
-      <div class="fd-input">&#10038; <em>&ldquo;where Paul says nothing can separate us&rdquo;</em></div>
-      <div class="fd-chips">
-        <span class="fd-chip">Romans 8:38&ndash;39</span>
-        <span class="fd-chip">Romans 8:35</span>
-        <span class="fd-chip dim">John 10:28&ndash;29</span>
-      </div>
-      <div class="fd-note">references only &mdash; the text itself is read from your desk</div>
-    </div>
-  </section>
-
-  <%# ---- feature: preach ---- %>
-  <section class="ld-feature" id="preach">
-    <div class="ld-feature-copy">
-      <div class="ld-kicker">The Pulpit</div>
-      <h2>From the desk to the pulpit.</h2>
-      <p>Preach mode turns any pane into a projection screen. Queue the whole service &mdash;
-         scriptures, songs, thoughts &mdash; then drive it from a phone in your pocket while the
-         congregation follows along, verse by verse, on theirs.</p>
-      <ul class="ld-ticks">
-        <li>Go Live: a QR code puts the service on every phone</li>
-        <li>Stage display &mdash; current verse small, <strong>next verse big</strong></li>
-        <li>Phone remote pairs by secret QR &mdash; walk the room freely</li>
-        <li>Songs split into slides on blank lines &mdash; no retyping</li>
-      </ul>
-    </div>
-    <div class="ld-mock ld-mock-preach" aria-hidden="true">
-      <div class="pj-screen">
-        <div class="pj-ref">JOHN 3:16</div>
-        <div class="pj-text">For God so loved the world, that he gave his only begotten Son&hellip;</div>
-      </div>
-      <div class="pj-phone">
-        <span class="pj-live">&#9679; LIVE</span>
-        <div class="pj-line">v16 &mdash; following the pulpit</div>
-        <div class="pj-pill">Jump to live</div>
-      </div>
-    </div>
-  </section>
-
-  <%# ---- feature: rhythm ---- %>
-  <section class="ld-feature ld-feature--flip">
-    <div class="ld-feature-copy">
-      <div class="ld-kicker">The Rhythm</div>
-      <h2>A steady walk through the Word.</h2>
-      <p>Build a reading plan &mdash; one book, the whole New Testament, the year-long Bible, or your
-         own path &mdash; and watch the manuscript calendar fill. Highlight in four soft vellum tints,
-         jot margin notes that auto-save, and drill memory verses until they stay.</p>
-      <ul class="ld-ticks">
-        <li>Reading plans with streaks &middot; daily verse at the door</li>
-        <li>Highlights &amp; notes, kept to your account</li>
-        <li>Memorize mode &mdash; the text blanks, you recall</li>
-        <li>Installs as an app &middot; the desk works offline</li>
-      </ul>
-    </div>
-    <div class="ld-mock ld-mock-plan" aria-hidden="true">
-      <div class="pl-title">&#10070; ROMANS IN 30 DAYS &mdash; day 14</div>
-      <div class="pl-grid">
-        <% 30.times do |i| %><span class="pl-day <%= "done" if i < 14 %>"></span><% end %>
-      </div>
-      <div class="pl-hl">He is <mark class="hl-a">faithful</mark> and <mark class="hl-b">just</mark> to forgive&hellip;</div>
-      <div class="pl-streak">streak &middot; 14 days</div>
-    </div>
-  </section>
-
-  <%# ---- testimonials ---- %>
-  <section class="ld-band" id="margins">
     <% if @testimonials.present? %>
-      <section class="ps-marginalia">
-        <div class="shelf-head">
-          <span class="line"></span><span class="fl">&#10086;</span>
-          <span class="t">Marginalia From Fellow Readers</span>
-          <span class="fl">&#10086;</span><span class="line"></span>
+      <section class="ld-voices" aria-labelledby="voices-title">
+        <h2 id="voices-title">From fellow readers</h2>
+        <div class="ld-voices-grid">
+          <% @testimonials.each do |t| %>
+            <figure class="ld-voice">
+              <blockquote>&ldquo;<%= t.best_line.presence || truncate(t.body, length: 160) %>&rdquo;</blockquote>
+              <figcaption>
+                <span class="ld-voice-avatar" aria-hidden="true"><%= (t.name.presence || "A").strip[0].upcase %></span>
+                <span>
+                  <span class="who"><%= t.name.presence || "A reader" %></span>
+                  <% if t.title_company.present? %><span class="role"><%= t.title_company %></span><% end %>
+                </span>
+              </figcaption>
+            </figure>
+          <% end %>
         </div>
-        <div class="scroll-marquee <%= "is-drifting" if @testimonials.size > 1 %>">
-          <div class="scroll-track">
-            <% (@testimonials.size > 1 ? 2 : 1).times do |set| %>
-              <div class="scroll-set" <%= 'aria-hidden="true"'.html_safe if set == 1 %>>
-                <% @testimonials.each_with_index do |t, i| %>
-                  <figure class="ps-scroll" style="--unroll-delay: <%= 0.2 * i %>s">
-                    <span class="rod rod-top" aria-hidden="true"></span>
-                    <span class="scroll-avatar" aria-hidden="true"><%= (t.name.presence || "A").strip[0].upcase %></span>
-                    <div class="scroll-body">
-                      <% if t.rating.present? %>
-                        <div class="stars" aria-label="<%= t.rating %> of 5"><%= ("&#10022; " * t.rating).html_safe %></div>
-                      <% end %>
-                      <blockquote>&ldquo;<%= t.best_line.presence || truncate(t.body, length: 160) %>&rdquo;</blockquote>
-                      <figcaption>
-                        <span class="who"><%= t.name.presence || "A reader" %></span>
-                        <% if t.title_company.present? %><span class="role"><%= t.title_company %></span><% end %>
-                      </figcaption>
-                    </div>
-                    <span class="rod rod-bottom" aria-hidden="true"></span>
-                  </figure>
-                <% end %>
-              </div>
-            <% end %>
-          </div>
-        </div>
-        <div class="marginalia-cta">
-          <%= link_to "Add your line to the margins &rsaquo;".html_safe, "/testimonials/new", class: "ml-link" %>
-        </div>
+        <p class="ld-voices-cta"><%= link_to "Share how BiblioRata helps you", "/testimonials/new" %></p>
       </section>
     <% else %>
-      <div class="ps-marginalia-invite">
-        <span class="orn">&#9998;</span> Has this desk served you?
-        <%= link_to "Add your line to the margins &rsaquo;".html_safe, "/testimonials/new", class: "ml-link" %>
-      </div>
+      <p class="ld-voices-cta ld-voices-invite">
+        Has BiblioRata helped your study or your Sunday? <%= link_to "Tell us in a line", "/testimonials/new" %>
+      </p>
     <% end %>
-  </section>
 
-  <%# ---- the difference ---- %>
-  <section class="ld-difference">
-    <div class="ld-kicker center">The Making Of This Desk</div>
-    <div class="ld-diff-grid">
-      <div class="ld-diff"><span class="orn">&#9769;</span><h3>Scripture, self-hosted</h3><p>Every verse lives in our own database. Nothing depends on a third-party Bible API on a Sunday morning.</p></div>
-      <div class="ld-diff"><span class="orn">&#9878;</span><h3>Honestly licensed</h3><p>Public-domain and permissive translations only &mdash; KJV, BSB, WEB, ASV and ten more. No copyright shortcuts.</p></div>
-      <div class="ld-diff"><span class="orn">&#10022;</span><h3>Two clicks or fewer</h3><p>Every core action &mdash; open, compare, cross-reference, project &mdash; is reachable in two clicks. Built for one pastor&rsquo;s real Saturday nights.</p></div>
-      <div class="ld-diff"><span class="orn">&#10086;</span><h3>Free, and open to guests</h3><p>The whole desk works without an account. Sign up only when you want your studies, notes and highlights kept.</p></div>
-    </div>
-  </section>
+    <section class="ld-stats ps-canon-stats" aria-label="On our own shelves">
+      <span><b><%= @canon_stats[:translations] %></b> translations</span>
+      <span><b><%= number_with_delimiter(@canon_stats[:verses]) %></b> verses</span>
+      <span><b><%= number_with_delimiter(@canon_stats[:cross_references]) %></b> cross-references</span>
+      <span>all public domain, served from our own shelves</span>
+    </section>
+  </main>
 
-  <%# ---- final call ---- %>
-  <section class="ld-final">
-    <h2><span class="h1dc">B</span>egin at the desk.</h2>
-    <p class="ld-sub">Type a reference, or open a fresh study of your own.</p>
-    <div class="cta-row">
-      <button type="button" class="cta" data-action="new-study#open">&#10010; &nbsp; Begin a New Study</button>
-      <%= link_to "&#10070; Read the field guide".html_safe, guide_path, class: "cta secondary", style: "text-decoration:none;" %>
+  <footer class="ld-footer ld-foot">
+    <div class="ld-footer-brand">
+      <span class="ui-brand-mark" aria-hidden="true"><%= icon(:book) %></span> BiblioRata
     </div>
-  </section>
-
-  <%# ---- footer ---- %>
-  <footer class="ld-foot">
-    <div class="ld-foot-inner">
-      <div class="ld-brand"><span class="cross">&#9769;</span> BIBLIORATA</div>
-      <nav class="ld-foot-links">
-        <%= link_to "Guide", guide_path %>
-        <%= link_to "What's new", whats_new_path %>
-        <%= link_to "Sign in", new_session_path %>
-        <%= link_to "Create account", new_registration_path %>
-        <a href="/testimonials/new">Leave a testimonial</a>
-        <%= link_to "Terms", terms_path %>
-        <%= link_to "Privacy", privacy_path %>
-      </nav>
-      <div class="ld-foot-verse">&ldquo;Thy word is a lamp unto my feet, and a light unto my path.&rdquo; &mdash; Psalm 119:105</div>
-    </div>
+    <nav class="ld-foot-links" aria-label="Footer">
+      <%= link_to "Guide", guide_path %>
+      <%= link_to "What's new", whats_new_path %>
+      <%= link_to "Sign in", new_session_path %>
+      <%= link_to "Create account", new_registration_path %>
+      <a href="/testimonials/new">Leave a testimonial</a>
+      <%= link_to "Terms", terms_path %>
+      <%= link_to "Privacy", privacy_path %>
+      <%= link_to "Credits", credits_path %>
+    </nav>
   </footer>
-
-  <%= render "studies/new_study_modal" %>
 </div>

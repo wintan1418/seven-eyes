@@ -5,7 +5,7 @@ class PwaTest < ActionDispatch::IntegrationTest
     get pwa_manifest_path(format: :json)
     assert_response :success
     data = JSON.parse(@response.body)
-    assert_equal "Parallel Scripture", data["name"]
+    assert_equal "BiblioRata", data["name"]
     assert_equal "standalone", data["display"]
     assert_equal "/", data["start_url"]
   end

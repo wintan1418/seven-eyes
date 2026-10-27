@@ -12,8 +12,6 @@
 @import "./whats_new.css";
 @import "./preach_screen.css";
 @import "./whats_new_mocks.css";
-@import "./welcome.css";
-@import "./landing.css";
 @import "./legacy/audio.css";
 
 /* The modern reader (YouVersion-style). Imported after the legacy layer so
@@ -27,6 +25,7 @@
 @import "./ui/sheet.css";
 @import "./ui/actions.css";
 @import "./ui/mobile.css";
+@import "./ui/pages.css";
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 

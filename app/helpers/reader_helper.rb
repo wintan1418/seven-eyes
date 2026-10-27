@@ -96,4 +96,14 @@ module ReaderHelper
   def book_search_keys(book)
     ([ book.name, book.osis ] + Array(book.aliases)).map { |k| k.to_s.downcase.delete(" ") }.uniq.join(" ")
   end
+
+  # The /p/ slug of the chapter before or after +chapter+ of +book+ (wrapping
+  # across books), for the public passage page's prev / next links.
+  def neighbor_passage_slug(book, chapter, direction)
+    ref = neighbor_reference(book, chapter, direction)
+    return nil unless ref
+    name, number = ref.rpartition(" ").values_at(0, 2)
+    target = name == book.name ? book : Book.find_by(name:)
+    target && PassageSlug.slug_for(osis: target.osis_code, chapter: number.to_i)
+  end
 end

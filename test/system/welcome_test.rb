@@ -7,7 +7,7 @@ class WelcomeTest < ApplicationSystemTestCase
     visit root_path
 
     assert_selector "h1", text: "The Word, laid open."
-    assert_selector ".ps-illumined blockquote"
+    assert_selector ".ld-vod blockquote"
     assert_selector ".ps-canon-stats"
 
     fill_in "reference", with: "John 3:16"

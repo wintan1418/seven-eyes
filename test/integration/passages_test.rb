@@ -18,7 +18,7 @@ class PassagesTest < ActionDispatch::IntegrationTest
     assert_select "meta[property='og:title']"
     assert_select "meta[property='og:url'][content=?]", passage_url("john-3-16")
     assert_select "meta[name='twitter:card']"
-    assert_select "a.cta", text: /Open in Parallel Scripture/
+    assert_select "a.pub-open", text: /Open in BiblioRata/
   end
 
   test "a whole-chapter page shows multiple verses" do

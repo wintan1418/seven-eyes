@@ -59,9 +59,9 @@
 
 [data-theme="dark"] {
   --ui-bg: #111113;
-  --ui-surface: #1B1B1F;
-  --ui-surface-2: #26262B;
-  --ui-elevated: #1E1E22;
+  --ui-surface: #202024;
+  --ui-surface-2: #2A2A30;
+  --ui-elevated: #19191C;
   --ui-border: #2E2E34;
   --ui-border-strong: #3C3C44;
   --ui-fg: #ECECEC;
@@ -88,9 +88,9 @@
 @media (prefers-color-scheme: dark) {
   [data-theme="auto"] {
     --ui-bg: #111113;
-    --ui-surface: #1B1B1F;
-    --ui-surface-2: #26262B;
-    --ui-elevated: #1E1E22;
+    --ui-surface: #202024;
+    --ui-surface-2: #2A2A30;
+    --ui-elevated: #19191C;
     --ui-border: #2E2E34;
     --ui-border-strong: #3C3C44;
     --ui-fg: #ECECEC;
