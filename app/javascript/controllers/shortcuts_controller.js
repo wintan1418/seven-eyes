@@ -32,9 +32,12 @@ export default class extends Controller {
       !!document.querySelector(".ps-root.is-preaching")
   }
 
-  // Signed-in state is published on .ps-root for the tour controller.
+  // Signed-in state is published on .ps-root for the tour controller. The view
+  // prints `authenticated?` raw — a Session object's inspect when signed in,
+  // "" for guests — so treat any non-empty, non-false value as signed in.
   authenticated() {
-    return this.element.dataset.tourAuthenticatedValue === "true"
+    const v = this.element.dataset.tourAuthenticatedValue
+    return !!v && v !== "false" && v !== "0"
   }
 
   panes() {

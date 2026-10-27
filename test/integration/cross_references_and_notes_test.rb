@@ -26,6 +26,19 @@ class CrossReferencesAndNotesTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "a mirror request renders the requested passage without saving anything" do
+    pane = @study.panes.first
+    pane.update!(reference: "John 3:16", notes: "Original notes")
+    patch study_pane_path(@study, pane),
+          params: { mirror: "1", pane: { reference: "Romans 5:8", translation_id: @kjv.id, notes: "overwritten?" } }
+    assert_response :success
+    assert_includes response.body, "But God commendeth his love toward us"
+    pane.reload
+    assert_equal "John 3:16", pane.reference
+    assert_equal "Original notes", pane.notes
+    assert_nil pane.translation_id
+  end
+
   test "signed-in users can save notes through the full pane form" do
     pane = @study.panes.first
     patch study_pane_path(@study, pane), params: { pane: { notes: "Kept without autosave" } }

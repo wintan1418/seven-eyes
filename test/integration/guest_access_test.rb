@@ -44,6 +44,17 @@ class GuestAccessTest < ActionDispatch::IntegrationTest
     assert_nil pane.reference
   end
 
+  test "a guest's mirror request renders without persisting (and ignores notes)" do
+    post studies_path
+    study = Study.last
+    patch study_pane_path(study, study.panes.first), params: { mirror: "1", pane: { reference: "John 3:16", notes: "x" } }
+    assert_response :success
+    assert_includes response.body, "For God so loved the world"
+    pane = study.panes.first.reload
+    assert_nil pane.reference
+    assert_nil pane.notes
+  end
+
   test "a guest cannot write notes into a hidden pane" do
     post studies_path
     study = Study.last
