@@ -1,0 +1,53 @@
+<%# Book → chapter picker (passage_picker controller). Opened by the passage
+    chip, ⌘K / "/" and each compare pane's chip (which passes its pane id). %>
+<div class="ui-sheet ui-sheet--dialog ui-passage-sheet" data-controller="sheet passage-picker"
+     data-sheet-id-value="passage" data-action="sheet:opened->passage-picker#reset" data-chrome hidden>
+  <div class="ui-sheet-backdrop" data-action="click->sheet#close"></div>
+  <section class="ui-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="passage-sheet-title">
+    <header class="ui-sheet-head">
+      <h2 id="passage-sheet-title" class="ui-sheet-title">Books</h2>
+      <button type="button" class="ui-iconbtn is-sm" data-action="sheet#close" aria-label="Close"><%= icon(:x) %></button>
+    </header>
+    <form class="ui-sheet-search" data-action="submit->passage-picker#submit" role="search">
+      <%= icon(:search) %>
+      <input type="search" class="ui-input" autofocus autocomplete="off" spellcheck="false" autocapitalize="none"
+             enterkeyhint="go" placeholder="Search books, or type John 3:16"
+             aria-label="Search books or type a reference"
+             data-passage-picker-target="query" data-action="input->passage-picker#filter">
+    </form>
+
+    <div class="ui-sheet-body" data-passage-picker-target="books">
+      <div class="ui-seg ui-testament-tabs" role="tablist">
+        <button type="button" role="tab" aria-selected="true" data-testament="old"
+                data-passage-picker-target="tab" data-action="passage-picker#tab">Old Testament</button>
+        <button type="button" role="tab" aria-selected="false" data-testament="new"
+                data-passage-picker-target="tab" data-action="passage-picker#tab">New Testament</button>
+      </div>
+      <% testament_books.each do |testament, books| %>
+        <div class="ui-booklist" data-passage-picker-target="testament" data-testament="<%= testament %>"
+             <%= "hidden" if testament == :new %>>
+          <div class="ui-booklist-head"><%= testament == :old ? "Old Testament" : "New Testament" %></div>
+          <% books.each do |b| %>
+            <button type="button" class="ui-book" data-passage-picker-target="book" data-action="passage-picker#pickBook"
+                    data-name="<%= b.name %>" data-osis="<%= b.osis %>" data-chapters="<%= b.chapter_count %>"
+                    data-testament="<%= testament %>" data-keys="<%= book_search_keys(b) %>">
+              <span class="nm"><%= b.name %></span>
+              <span class="ct"><%= b.chapter_count %></span>
+            </button>
+          <% end %>
+        </div>
+      <% end %>
+      <p class="ui-empty-note" data-passage-picker-target="empty" hidden>
+        No book by that name &mdash; press Enter to open it as a reference.
+      </p>
+    </div>
+
+    <div class="ui-sheet-body ui-chapters" data-passage-picker-target="chapters" hidden>
+      <button type="button" class="ui-backlink" data-action="passage-picker#back">
+        <%= icon(:chevron_left) %> <span data-passage-picker-target="bookTitle"></span>
+      </button>
+      <div class="ui-label ui-chapters-label">Chapter</div>
+      <div class="ui-chapter-grid" data-passage-picker-target="chapterGrid"></div>
+    </div>
+  </section>
+</div>

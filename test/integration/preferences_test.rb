@@ -14,16 +14,20 @@ class PreferencesTest < ActionDispatch::IntegrationTest
     assert_response :no_content
   end
 
-  test "the page renders in the reader's theme from the ps_theme cookie (no vellum flash)" do
+  test "the page renders in the reader's theme from the ps_theme cookie (no flash)" do
     get root_path
-    assert_select "body[data-theme=vellum]"
+    assert_select "body[data-theme=auto]"
 
-    cookies[:ps_theme] = "candlelight"
+    cookies[:ps_theme] = "dark"
     get root_path
-    assert_select "body[data-theme=candlelight]"
+    assert_select "body[data-theme=dark]"
+
+    cookies[:ps_theme] = "candlelight" # the old dark theme
+    get root_path
+    assert_select "body[data-theme=dark]"
 
     cookies[:ps_theme] = "<script>"
     get root_path
-    assert_select "body[data-theme=vellum]"
+    assert_select "body[data-theme=auto]"
   end
 end

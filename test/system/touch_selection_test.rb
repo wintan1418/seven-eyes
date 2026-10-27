@@ -87,7 +87,9 @@ class TouchSelectionTest < ApplicationSystemTestCase
   end
 
   def long_press_select(selector, from, to)
-    x, y = page.evaluate_script("(() => { const r = document.querySelector(#{selector.to_json}).getBoundingClientRect(); return [r.left + 40, r.top + 12] })()")
+    # Verses flow as a paragraph, so press on the first line box of the
+    # verse's own text (its bounding box also covers the verse before it).
+    x, y = page.evaluate_script("(() => { const r = document.querySelector(#{selector.to_json}).getClientRects()[0]; return [r.left + Math.min(12, r.width / 2), r.top + r.height / 2] })()")
     cdp("Input.dispatchTouchEvent", type: "touchStart", touchPoints: [ { x: x, y: y } ])
     sleep 0.5
     page.execute_script(<<~JS)

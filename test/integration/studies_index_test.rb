@@ -14,14 +14,14 @@ class StudiesIndexTest < ActionDispatch::IntegrationTest
     sign_in_as users(:one)
     get root_path
     assert_response :success
-    assert_select ".ps-welcome"
+    assert_select ".hm-page"
     assert_select "h1", text: "Welcome back."
   end
 
   test "the welcome shows the quick-open bar, illumined verse and canon stats" do
     get root_path
     assert_select "form.ps-quick-open input[name=?]", "reference"
-    assert_select ".ps-illumined blockquote"
+    assert_select ".ld-vod blockquote"
     assert_select ".ps-canon-stats"
   end
 
@@ -29,7 +29,8 @@ class StudiesIndexTest < ActionDispatch::IntegrationTest
     sign_in_as users(:one)
     users(:one).studies.create!(name: "Romans deep dive", pane_count: 2)
     get root_path
-    assert_select ".ps-recent-shelf .ps-study-card .nm", text: "Romans deep dive"
+    assert_select ".hm-studies .hm-study .nm", text: "Romans deep dive"
+    assert_select ".hm-continue", text: /Continue reading/
   end
 
   test "quick-open creates a guest study named after the passage with pane I preloaded" do

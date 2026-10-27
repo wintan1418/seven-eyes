@@ -1,0 +1,25 @@
+<%# Compare mode toolbar (two or more panes). locals: study %>
+<div class="ui-comparebar" data-chrome role="toolbar" aria-label="Compare">
+  <span class="ui-comparebar-title"><%= icon(:columns) %> Compare</span>
+  <%= button_to study_path(study), method: :patch, params: { study: { sync_scroll: !study.sync_scroll } },
+        class: "ui-pill#{' is-on' if study.sync_scroll}", "aria-pressed": study.sync_scroll.to_s,
+        title: "Scroll the panes together", form: { class: "contents" } do %>
+    <%= icon(:sync) %><span>Sync scroll</span>
+  <% end %>
+  <button type="button" class="ui-pill" data-action="diff#toggle" data-diff-target="button"
+          title="Highlight words that differ across the panes">
+    <%= icon(:diff) %><span>Word diff</span>
+  </button>
+  <% if study.pane_count < 4 %>
+    <%= button_to study_path(study), method: :patch, params: { study: { pane_count: study.pane_count + 1 } },
+          class: "ui-pill is-add#{' is-wide-only' if study.pane_count >= 2}", title: "Add another pane",
+          form: { class: "contents" } do %>
+      <%= icon(:plus) %><span>Add pane</span>
+    <% end %>
+  <% end %>
+  <%= button_to study_path(study), method: :patch, params: { study: { pane_count: 1 } },
+        class: "ui-pill is-close", title: "Close compare — back to one passage", "aria-label": "Close compare",
+        form: { class: "contents" } do %>
+    <%= icon(:x) %><span>Done</span>
+  <% end %>
+</div>

@@ -1,170 +1,103 @@
-<div class="ps-root" data-controller="new-study">
-  <%= render "topbar", study_name: "The Scriptorium", panes: 4, sync: false, saved: true %>
-  <div class="ps-shell">
-    <%= render "sidebar", studies: @studies %>
-    <main class="ps-workspace is-doc" style="grid-template-columns: 1fr;">
-      <div class="ps-welcome ps-welcome--grand">
-        <span class="float-orn fo1" aria-hidden="true">&#10038;</span>
-        <span class="float-orn fo2" aria-hidden="true">&#10086;</span>
-        <span class="float-orn fo3" aria-hidden="true">&#10070;</span>
-        <span class="float-orn fo4" aria-hidden="true">&#9769;</span>
-        <span class="float-orn fo5" aria-hidden="true">&#10087;</span>
-        <div class="eyebrow rise">&#9769; &nbsp; A Quiet Desk For The Word &nbsp; &#9769;</div>
-        <% if authenticated? %>
-          <h1 class="rise"><span class="h1dc">W</span>elcome back.</h1>
-        <% else %>
-          <h1 class="rise"><span class="h1dc">P</span>arallel Scripture</h1>
-        <% end %>
-        <svg class="ps-flourish rise" viewBox="0 0 260 34" width="260" height="34" aria-hidden="true">
-          <path d="M6 22 C 40 2, 74 30, 104 20 S 150 4, 130 14 S 166 30, 196 16 C 220 6, 240 20, 254 12" />
-          <path d="M118 26 c 6 -8, 18 -8, 24 0" />
-        </svg>
+<%# Signed-in home: continue reading, verse of the day, today's plan, studies. %>
+<% vod_text = @verse_of_day&.text || "Open thou mine eyes, that I may behold wondrous things out of thy law." %>
+<% vod_ref = @verse_of_day ? @verse_of_day.reference_label : "Psalm 119:18" %>
+<% vod_trans = @verse_of_day ? @verse_of_day.translation_code : "KJV" %>
+<% resume = @studies.first %>
+<div class="ps-root hm-root" data-controller="new-study">
+  <%= render "studies/app_bar", title: "Home" %>
+  <%= render "studies/menu_sheet", studies: @studies, new_study_modal: true %>
 
-        <%# Quick-open: type a reference, land in a fresh two-pane study. %>
-        <%= form_with url: studies_path, method: :post, class: "ps-quick-open rise" do %>
-          <span class="qo-orn">&#10038;</span>
-          <%= text_field_tag :reference, nil, class: "qo-input", autocomplete: "off",
+  <main class="hm-main">
+    <div class="hm-page">
+      <header class="hm-head">
+        <h1>Welcome back.</h1>
+        <%= form_with url: studies_path, method: :post, class: "ps-quick-open ld-search hm-search" do %>
+          <%= icon(:search) %>
+          <%= text_field_tag :reference, nil, class: "ld-search-input", autocomplete: "off",
                 spellcheck: "false", autocapitalize: "none", inputmode: "search", enterkeyhint: "go",
-                placeholder: "Open the Word — try “John 3:16”, “Ps 23”, “rom 8”…",
-                "aria-label": "Open a passage" %>
-          <%= hidden_field_tag :pane_count, 2 %>
-          <button type="submit" class="qo-go">Read</button>
+                placeholder: "Open a passage — John 3:16, Ps 23…", "aria-label": "Open a passage" %>
+          <%= hidden_field_tag :pane_count, 1 %>
+          <button type="submit" class="ui-btn is-accent ld-search-go">Read</button>
         <% end %>
-        <div class="qo-hint rise">One line opens a fresh side-by-side study &mdash; no account needed.</div>
+      </header>
 
-        <%# The verse of the day as an illuminated plate. %>
-        <% vod_text = @verse_of_day&.text || "Open thou mine eyes, that I may behold wondrous things out of thy law." %>
-        <% vod_ref = @verse_of_day ? "#{@verse_of_day.reference_label} · #{@verse_of_day.translation_code}" : "Psalm 119:18 · KJV" %>
-        <figure class="ps-illumined ps-illumined--folio rise">
-          <span class="corner tl">&#10086;</span>
-          <span class="corner tr">&#10086;</span>
-          <span class="corner bl">&#10086;</span>
-          <span class="corner br">&#10086;</span>
-          <div class="plate-eyebrow">&#10022; &nbsp; Verse For The Day &nbsp; &#10022;</div>
-          <blockquote><span class="dc"><%= vod_text.first %></span><%= vod_text[1..] %></blockquote>
-          <figcaption><%= vod_ref %></figcaption>
-          <span class="seal" aria-hidden="true">&#9769;</span>
-        </figure>
+      <div class="hm-grid">
+        <% if resume %>
+          <%= link_to study_path(resume), class: "hm-card hm-continue" do %>
+            <span class="ui-label">Continue reading</span>
+            <% ref = resume.panes.first&.reference.presence %>
+            <span class="hm-continue-ref"><%= ref || resume.name %></span>
+            <span class="hm-continue-meta"><%= resume.name %> &middot; <%= time_ago_in_words(resume.last_opened_at || resume.updated_at) %> ago</span>
+            <span class="hm-continue-go"><%= icon(:chevron_right) %></span>
+          <% end %>
+        <% end %>
 
-        <div class="cta-row rise">
-          <button type="button" class="cta" data-action="new-study#open">&#10010; &nbsp; Begin a New Study</button>
-          <% if (resume = @studies.first) %>
-            <%= link_to "↻  Resume #{truncate(resume.name, length: 28)}", study_path(resume),
-                  class: "cta secondary", style: "text-decoration:none;" %>
-          <% end %>
-          <% if authenticated? %>
-            <%= link_to "&#10070; Reading Plans".html_safe, reading_plans_path,
-                  class: "cta secondary", style: "text-decoration:none;" %>
-          <% end %>
-        </div>
+        <section class="hm-card hm-vod">
+          <span class="ui-label">Verse of the day</span>
+          <blockquote><%= vod_text %></blockquote>
+          <div class="hm-vod-foot">
+            <span><%= vod_ref %> &middot; <%= vod_trans %></span>
+            <%= button_to studies_path, params: { reference: vod_ref, pane_count: 1 }, class: "ui-btn is-sm", form: { class: "contents" } do %>
+              Read <%= icon(:chevron_right) %>
+            <% end %>
+          </div>
+        </section>
 
         <% if @active_plan && @plan_today %>
-          <div class="ps-today-panel rise">
-            <div class="ps-today-label">Today &middot; <%= @active_plan.name %> &middot; day <%= @plan_today.day_number %></div>
-            <div class="ps-today-refs"><%= @plan_today.refs.presence || "No passages set for today." %></div>
-            <div class="ps-today-cta">
+          <section class="hm-card hm-plan">
+            <span class="ui-label">Today &middot; <%= @active_plan.name %> &middot; day <%= @plan_today.day_number %></span>
+            <p class="hm-plan-refs"><%= @plan_today.refs.presence || "No passages set for today." %></p>
+            <div class="hm-plan-foot">
               <% if @plan_today.refs.present? %>
-                <%= link_to "Begin today's reading", open_today_reading_plan_path(@active_plan), class: "cta" %>
+                <%= link_to "Begin today's reading", open_today_reading_plan_path(@active_plan), class: "ui-btn is-sm is-primary" %>
               <% end %>
-              <%= link_to "Open plan", reading_plan_path(@active_plan), class: "cta secondary", style: "text-decoration:none;" %>
-              <span class="ps-today-streak">streak <%= @active_plan.current_streak %></span>
-            </div>
-          </div>
-        <% elsif authenticated? && @studies.empty? %>
-          <%# gentle nudge for new users %>
-          <div class="ps-today-panel ps-today-panel--soft rise">
-            <div class="ps-today-label">A Daily Rhythm</div>
-            <div class="ps-today-refs">Build a reading plan to keep your time in the Word steady — pace a single book, the whole New Testament, the year-long Bible, or your own custom path.</div>
-            <div class="ps-today-cta">
-              <%= link_to "Create a Reading Plan", new_reading_plan_path, class: "cta" %>
-            </div>
-          </div>
-        <% end %>
-
-        <% if authenticated? && @studies.present? %>
-          <section class="ps-recent-shelf rise">
-            <div class="shelf-head">
-              <span class="line"></span>
-              <span class="fl">&#10087;</span>
-              <span class="t">Return To The Desk</span>
-              <span class="fl">&#10087;</span>
-              <span class="line"></span>
-            </div>
-            <div class="shelf-grid">
-              <% @studies.first(6).each do |study| %>
-                <%= link_to study_path(study), class: "ps-study-card" do %>
-                  <span class="nm"><%= study.name %></span>
-                  <% refs = study.panes.filter_map { |p| p.reference.presence } %>
-                  <span class="refs"><%= refs.any? ? refs.first(3).join(" · ") : "An empty codex, awaiting ink" %></span>
-                  <span class="meta"><%= %w[I II III IV][study.pane_count - 1] %> &middot; <%= pluralize(study.pane_count, "pane") %> &middot; <%= time_ago_in_words(study.last_opened_at || study.updated_at) %> ago</span>
-                <% end %>
-              <% end %>
-            </div>
-          </section>
-        <% end %>
-
-        <% if @testimonials.present? %>
-          <section class="ps-marginalia rise">
-            <div class="shelf-head">
-              <span class="line"></span>
-              <span class="fl">&#10086;</span>
-              <span class="t">Marginalia From Fellow Readers</span>
-              <span class="fl">&#10086;</span>
-              <span class="line"></span>
-            </div>
-            <div class="scroll-marquee <%= "is-drifting" if @testimonials.size > 1 %>">
-              <div class="scroll-track">
-                <%# Two identical sets make the drift loop seamless; one set when static. %>
-                <% (@testimonials.size > 1 ? 2 : 1).times do |set| %>
-                  <div class="scroll-set" <%= 'aria-hidden="true"'.html_safe if set == 1 %>>
-                    <% @testimonials.each_with_index do |t, i| %>
-                      <figure class="ps-scroll" style="--unroll-delay: <%= 0.2 * i %>s">
-                        <span class="rod rod-top" aria-hidden="true"></span>
-                        <span class="scroll-avatar" aria-hidden="true"><%= (t.name.presence || "A").strip[0].upcase %></span>
-                        <div class="scroll-body">
-                          <% if t.rating.present? %>
-                            <div class="stars" aria-label="<%= t.rating %> of 5"><%= ("&#10022; " * t.rating).html_safe %></div>
-                          <% end %>
-                          <blockquote>&ldquo;<%= t.best_line.presence || truncate(t.body, length: 160) %>&rdquo;</blockquote>
-                          <figcaption>
-                            <span class="who"><%= t.name.presence || "A reader" %></span>
-                            <% if t.title_company.present? %><span class="role"><%= t.title_company %></span><% end %>
-                          </figcaption>
-                        </div>
-                        <span class="rod rod-bottom" aria-hidden="true"></span>
-                      </figure>
-                    <% end %>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-            <div class="marginalia-cta">
-              <%= link_to "Add your line to the margins &rsaquo;".html_safe, "/testimonials/new", class: "ml-link" %>
+              <%= link_to "Open plan", reading_plan_path(@active_plan), class: "ui-btn is-sm" %>
+              <span class="hm-streak"><%= icon(:sparkles) %> <%= @active_plan.current_streak %>-day streak</span>
             </div>
           </section>
         <% else %>
-          <%# No approved testimonials yet — still offer the quill. %>
-          <div class="ps-marginalia-invite rise">
-            <span class="orn">&#9998;</span> Has this desk served you?
-            <%= link_to "Add your line to the margins &rsaquo;".html_safe, "/testimonials/new", class: "ml-link" %>
-          </div>
+          <section class="hm-card hm-plan">
+            <span class="ui-label">A daily rhythm</span>
+            <p class="hm-plan-refs">Build a reading plan &mdash; a single book, the New Testament, the whole Bible in a year, or your own path.</p>
+            <div class="hm-plan-foot">
+              <%= link_to "Create a reading plan", new_reading_plan_path, class: "ui-btn is-sm is-primary" %>
+            </div>
+          </section>
         <% end %>
-
-        <% if @show_guide %>
-          <%= render "studies/guide" %>
-        <% end %>
-
-        <div class="ps-canon-stats rise">
-          <span><b><%= @canon_stats[:translations] %></b> translations</span>
-          <span class="sep">&middot;</span>
-          <span><b><%= number_with_delimiter(@canon_stats[:verses]) %></b> verses</span>
-          <span class="sep">&middot;</span>
-          <span><b><%= number_with_delimiter(@canon_stats[:cross_references]) %></b> cross-references</span>
-          <span class="sep">&middot;</span>
-          <span>all seeded on this desk &mdash; no external APIs</span>
-        </div>
       </div>
-    </main>
-  </div>
+
+      <section class="hm-studies" aria-labelledby="hm-studies-title">
+        <div class="hm-section-head">
+          <h2 id="hm-studies-title">Your studies</h2>
+          <button type="button" class="ui-btn is-sm" data-action="new-study#open"><%= icon(:plus) %> New study</button>
+        </div>
+        <% if @studies.present? %>
+          <div class="hm-study-grid">
+            <% @studies.first(9).each do |study| %>
+              <%= link_to study_path(study), class: "hm-study" do %>
+                <span class="nm"><%= study.name %></span>
+                <% refs = study.panes.filter_map { |p| p.reference.presence } %>
+                <span class="refs"><%= refs.any? ? refs.first(3).join(" · ") : "No passage yet" %></span>
+                <span class="meta"><%= time_ago_in_words(study.last_opened_at || study.updated_at) %> ago</span>
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="hm-empty">Your studies will appear here. Open a passage above, or start a new study.</p>
+        <% end %>
+      </section>
+
+      <% if @show_guide %>
+        <%= render "studies/guide" %>
+      <% end %>
+
+      <footer class="hm-foot ps-canon-stats">
+        <span><%= @canon_stats[:translations] %> translations</span> &middot;
+        <span><%= number_with_delimiter(@canon_stats[:verses]) %> verses</span> &middot;
+        <span><%= number_with_delimiter(@canon_stats[:cross_references]) %> cross-references</span> &middot;
+        <%= link_to "Terms", terms_path %> &middot; <%= link_to "Privacy", privacy_path %> &middot; <%= link_to "Credits", credits_path %>
+      </footer>
+    </div>
+  </main>
   <%= render "studies/new_study_modal" %>
 </div>

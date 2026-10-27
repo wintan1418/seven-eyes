@@ -1,134 +1,178 @@
-<%= turbo_frame_tag pane.frame_id, class: "ps-pane", data: { controller: "pane reader memorize" } do %>
-  <% content = pane.content %>
+<%# One reading pane = one Turbo Frame. Preach mode, the projector window and
+    live followers rely on the hooks here (see preach_contract_test):
+    the pane form's pane[reference] / pane[translation_id] fields, the
+    .ps-verses scroll box and the .ps-verse markup. %>
+<% content = pane.content %>
+<% study = pane.study %>
+<% compare = study.pane_count > 1 %>
+<% label = passage_label(content) %>
+<% translation = content.translation || pane.effective_translation %>
+<%= turbo_frame_tag pane.frame_id, class: "ps-pane#{' is-primary' if pane.position.zero?}",
+      data: { controller: "pane reader memorize", pane_position: pane.position } do %>
+  <%# What this pane shows, for the app bar chips and the pickers. Inside the
+      frame (not on it) because a frame navigation only replaces its content. %>
+  <%= tag.span class: "rd-pane-meta", hidden: true,
+        data: { reference_label: label || pane.reference.presence || "Choose a passage",
+                translation_code: translation&.code, translation_name: translation&.display_name } %>
 
-  <%= form_with model: [ pane.study, pane ], method: :patch, data: { controller: "auto-submit" } do |f| %>
-    <div class="ps-pane-head">
-      <div class="ps-pane-index"><%= pane_numeral(pane.position) %></div>
-      <%= f.text_field :reference, value: pane.reference,
-            placeholder: "Type a reference…", autocomplete: "off", spellcheck: "false",
-            autocapitalize: "none", autocorrect: "off", inputmode: "search", enterkeyhint: "go",
-            data: { action: "keydown.enter->auto-submit#submit", tour: "reference" },
-            class: "ps-search#{' empty' if pane.empty?}" %>
-      <%= f.select :translation_id, translation_options(pane.effective_translation&.id),
-            {}, class: "ps-trans-select", id: "pane_#{pane.id}_translation",
-            "aria-label": "Translation", data: { action: "change->auto-submit#submit", tour: "translation" } %>
-      <% if content.ok? %>
-        <%= link_to "\u{1F4DC}", commentary_study_path(pane.study, osis: content.book.osis_code, chapter: content.parsed.chapter),
-              class: "ps-pane-tool", title: "Commentary",
-              data: { turbo_frame: "commentary_drawer", action: "commentary#open", tour: "commentary" } %>
-        <button type="button" class="ps-pane-tool" title="Listen to this chapter"
-                data-action="reader#toggle" data-reader-target="button"
-                data-osis="<%= content.book.osis_code %>" data-chapter="<%= content.parsed.chapter %>"
-                data-translation="<%= content.translation.code %>">&#9658;</button>
-        <button type="button" class="ps-pane-tool" title="Memorize mode"
-                data-action="memorize#toggle" data-memorize-target="button">&#9680;</button>
-        <button type="button" class="ps-pane-tool <%= "has-notes" if pane.notes.present? %>"
-                title="Notes" data-action="pane#toggleNotes">&#9998;</button>
-        <button type="button" class="ps-pane-tool" title="Focus this pane (presentation mode)"
-                data-action="presentation#enter">&#9974;</button>
-        <button type="button" class="ps-pane-tool" title="Share this passage as a picture"
-                data-action="pane#share"
-                data-osis="<%= content.book.osis_code %>" data-chapter="<%= content.parsed.chapter %>"
-                data-verse-start="<%= content.parsed.verse_start %>" data-verse-end="<%= content.parsed.verse_end unless content.parsed.multi_chapter? %>">&#10150;</button>
-        <button type="button" class="ps-pane-tool" title="A prayer from this chapter, to share"
-                data-action="pane#prayer"
-                data-osis="<%= content.book.osis_code %>" data-chapter="<%= content.parsed.chapter %>">&#10018;</button>
-        <span class="ps-hint" tabindex="0"
-              data-tip="Click a verse number for cross-references · select words to highlight them or ask ✢ Rabbi">?</span>
-      <% end %>
-      <button type="button" class="ps-pane-tool" title="Browse books"
-              data-action="book-browser#open" data-pane-id="<%= pane.id %>">&#128214;</button>
-      <%# Implicit-submit fallback: ensures the touch keyboard's Go button
-          submits the form (mobile browsers ignore Enter when a form has no
-          submit control). %>
-      <button type="submit" tabindex="-1" aria-hidden="true"
-              style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">Go</button>
+  <%# The pane's own form. The reference field is hidden (the passage picker
+      fills it and submits) and the translation select is visually hidden (the
+      translation sheet drives it); both stay the fields preach mode reads. %>
+  <%= form_with model: [ study, pane ], method: :patch, class: "rd-pane-form", data: { controller: "auto-submit" } do |f| %>
+    <%= f.hidden_field :reference, value: pane.reference, autocomplete: "off" %>
+    <%= f.select :translation_id, translation_options(pane.effective_translation&.id),
+          {}, class: "ps-trans-select ui-sr-only", id: "pane_#{pane.id}_translation", tabindex: -1,
+          "aria-label": "Translation", data: { action: "change->auto-submit#submit" } %>
+    <button type="submit" class="ui-sr-only" tabindex="-1" aria-hidden="true">Go</button>
+  <% end %>
+
+  <% if compare %>
+    <div class="ps-pane-head rd-pane-head" data-chrome>
+      <button type="button" class="ui-chip is-sm" data-action="sheets#open"
+              data-sheets-id-param="passage" data-sheets-pane-param="<%= pane.id %>"
+              title="Choose a passage for this pane">
+        <span class="ui-chip-label"><%= label || "Choose a passage" %></span><%= icon(:chevron_down) %>
+      </button>
+      <button type="button" class="ui-chip is-sm is-quiet" data-action="sheets#open"
+              data-sheets-id-param="translation" data-sheets-pane-param="<%= pane.id %>"
+              title="Change this pane's translation">
+        <span class="ui-chip-label"><%= translation&.code %></span><%= icon(:chevron_down) %>
+      </button>
     </div>
   <% end %>
 
   <% if content.ok? %>
+    <% prev_ref = neighbor_reference(content.book, content.first_chapter, :prev) %>
+    <% next_ref = neighbor_reference(content.book, content.last_chapter, :next) %>
+    <% book_name, chapter_number = chapter_heading(content) %>
     <div class="ps-verses">
-      <% prev_ref = neighbor_reference(content.book, content.first_chapter, :prev) %>
-      <% next_ref = neighbor_reference(content.book, content.last_chapter, :next) %>
-      <div class="ref-title">
-        <% if prev_ref %>
-          <%= button_to "‹", study_pane_path(pane.study, pane), method: :patch,
-                params: { pane: { reference: prev_ref } },
-                class: "ps-ch-nav prev", title: "Previous chapter (#{prev_ref})",
-                form: { data: { turbo_frame: pane.frame_id }, style: "display:contents;" } %>
+      <div class="rd-column">
+        <header class="ref-title rd-chapter-head">
+          <span class="rd-book"><%= book_name %></span>
+          <span class="rd-chapter-num"><%= chapter_number %></span>
+          <span class="tag rd-trans"><%= content.translation.display_name %></span>
+        </header>
+        <div class="rule" aria-hidden="true"></div>
+        <div class="rd-chapter-tools" data-chrome>
+          <button type="button" class="ps-pane-tool ui-iconbtn is-sm" title="Listen to this chapter"
+                  data-action="reader#toggle" data-reader-target="button"
+                  data-osis="<%= content.book.osis_code %>" data-chapter="<%= content.parsed.chapter %>"
+                  data-translation="<%= content.translation.code %>"><%= icon(:listen) %></button>
+          <button type="button" class="ps-pane-tool ui-iconbtn is-sm" title="Memorize mode"
+                  data-action="memorize#toggle" data-memorize-target="button"><%= icon(:memorize) %></button>
+          <button type="button" class="ps-pane-tool ui-iconbtn is-sm <%= "has-notes" if pane.notes.present? %>"
+                  title="Notes" data-action="pane#toggleNotes"><%= icon(:notes) %></button>
+        </div>
+
+        <% if content.translation.vulgate_numbering? %>
+          <p class="ps-pane-notice">
+            The <%= content.translation.name %> numbers chapters and verses after the Latin Vulgate &mdash;
+            most Psalms run one behind other Bibles (its Psalm 22 is Psalm 23 elsewhere).
+          </p>
         <% end %>
-        <span><%= reference_title(content.book, content.first_chapter, content.last_chapter) %></span>
-        <span class="tag">&middot; <%= content.translation.display_name %></span>
-        <% if next_ref %>
-          <%= button_to "›", study_pane_path(pane.study, pane), method: :patch,
-                params: { pane: { reference: next_ref } },
-                class: "ps-ch-nav next", title: "Next chapter (#{next_ref})",
-                form: { data: { turbo_frame: pane.frame_id }, style: "display:contents;" } %>
+        <% if content.missing.present? %>
+          <div class="ps-pane-notice">
+            <%= missing_verses_label(content.book, content.missing) %>
+            <%= content.missing.size == 1 ? "isn’t" : "aren’t" %> in the <%= content.translation.code %>
+            <% if content.alternative %>
+              &mdash; <%= content.alternative.code == Translation::DEFAULT_CODE ? "many modern translations omit or move #{content.missing.size == 1 ? 'it' : 'them'}" : "translations number this passage differently" %>
+              (<%= content.missing.size == 1 ? "it’s" : "they’re" %> in the <%= content.alternative.code %>).
+              <%= pane_switch_button(pane, "Show in #{content.alternative.code}", translation: content.alternative) %>
+            <% end %>
+          </div>
         <% end %>
-      </div>
-      <div class="rule"></div>
-      <% if content.translation.vulgate_numbering? %>
-        <p class="ps-pane-notice mx-auto mb-3 max-w-prose text-center text-sm italic text-sepia-mute">
-          The <%= content.translation.name %> numbers chapters and verses after the Latin Vulgate &mdash;
-          most Psalms run one behind other Bibles (its Psalm 22 is Psalm 23 elsewhere).
-        </p>
-      <% end %>
-      <% if content.missing.present? %>
-        <div class="ps-pane-notice mx-auto mb-3 max-w-prose text-center text-sm text-sepia">
-          <%= missing_verses_label(content.book, content.missing) %>
-          <%= content.missing.size == 1 ? "isn’t" : "aren’t" %> in the <%= content.translation.code %>
-          <% if content.alternative %>
-            &mdash; <%= content.alternative.code == Translation::DEFAULT_CODE ? "many modern translations omit or move #{content.missing.size == 1 ? 'it' : 'them'}" : "translations number this passage differently" %>
-            (<%= content.missing.size == 1 ? "it’s" : "they’re" %> in the <%= content.alternative.code %>).
-            <%= pane_switch_button(pane, "Show in #{content.alternative.code}", translation: content.alternative) %>
+
+        <% highlights_by_verse = authenticated? ? current_user.highlights.where(verse_id: content.verses.map(&:id)).group_by(&:verse_id) : {} %>
+        <% lexicon = lexicon_lookup_for(content.verses) %>
+        <div class="ps-verse-body" data-controller="highlighter" data-action="click->memorize#reveal" data-tour="verses">
+          <% content.verses.each_with_index do |verse, i| %>
+            <% if content.multi_chapter? && (i.zero? || content.verses[i - 1].chapter != verse.chapter) %>
+              <div class="ps-chapter-break" role="heading" aria-level="3">
+                <%= content.book.name %> <%= verse.chapter %>
+              </div>
+            <% end %>
+            <%= scripture_verse(verse, study: study, book: content.book,
+                  highlights: highlights_by_verse[verse.id] || [],
+                  dropcap: false, lexicon: lexicon, translation: content.translation) %>
           <% end %>
         </div>
-      <% end %>
-      <% highlights_by_verse = authenticated? ? current_user.highlights.where(verse_id: content.verses.map(&:id)).group_by(&:verse_id) : {} %>
-      <% lexicon = lexicon_lookup_for(content.verses) %>
-      <div class="ps-verse-body" data-controller="highlighter" data-action="click->memorize#reveal" data-tour="verses">
-        <% content.verses.each_with_index do |verse, i| %>
-          <% if content.multi_chapter? && (i.zero? || content.verses[i - 1].chapter != verse.chapter) %>
-            <div class="ps-chapter-break mb-2 mt-5 text-center font-display text-xs uppercase tracking-[0.22em] text-rubric first:mt-0"
-                 role="heading" aria-level="3">
-              <%= content.book.name %> <%= to_roman(verse.chapter) %>
-            </div>
+
+        <footer class="rd-chapter-end" data-chrome>
+          <div class="rd-chapter-actions">
+            <%= link_to commentary_study_path(study, osis: content.book.osis_code, chapter: content.parsed.chapter),
+                  class: "ui-btn is-quiet", title: "Matthew Henry's commentary on this chapter",
+                  data: { turbo_frame: "commentary_drawer", action: "commentary#open", tour: "commentary" } do %>
+              <%= icon(:commentary) %> Commentary
+            <% end %>
+            <button type="button" class="ui-btn is-quiet" title="Share this passage as a picture"
+                    data-action="pane#share"
+                    data-osis="<%= content.book.osis_code %>" data-chapter="<%= content.parsed.chapter %>"
+                    data-verse-start="<%= content.parsed.verse_start %>" data-verse-end="<%= content.parsed.verse_end unless content.parsed.multi_chapter? %>">
+              <%= icon(:image) %> Share
+            </button>
+            <button type="button" class="ui-btn is-quiet" title="A prayer from this chapter, to share"
+                    data-action="pane#prayer"
+                    data-osis="<%= content.book.osis_code %>" data-chapter="<%= content.parsed.chapter %>">
+              <%= icon(:prayer) %> Prayer
+            </button>
+          </div>
+          <% if next_ref %>
+            <%= button_to study_pane_path(study, pane), method: :patch,
+                  params: { pane: { reference: next_ref } },
+                  class: "rd-next-chapter", title: "Next chapter",
+                  form: { data: { turbo_frame: pane.frame_id }, class: "rd-next-form" } do %>
+              <span class="rd-next-label">Next</span>
+              <span class="rd-next-ref"><%= next_ref %></span>
+              <%= icon(:chevron_right) %>
+            <% end %>
           <% end %>
-          <%= scripture_verse(verse, study: pane.study, book: content.book,
-                highlights: highlights_by_verse[verse.id] || [],
-                dropcap: i.zero? && verse.verse_number == 1,
-                lexicon: lexicon, translation: content.translation) %>
-        <% end %>
+        </footer>
       </div>
     </div>
-    <%= form_with url: study_pane_path(pane.study, pane), method: :patch, class: "ps-notes-form",
+
+    <nav class="rd-chapter-nav" data-chrome aria-label="Chapters">
+      <% if prev_ref %>
+        <%= button_to study_pane_path(study, pane), method: :patch,
+              params: { pane: { reference: prev_ref } },
+              class: "rd-fab prev", title: "Previous chapter (#{prev_ref})", "aria-label": "Previous chapter",
+              data: { chapter_nav: "prev" },
+              form: { data: { turbo_frame: pane.frame_id }, class: "contents" } do %><%= icon(:chevron_left) %><% end %>
+      <% end %>
+      <% if next_ref %>
+        <%= button_to study_pane_path(study, pane), method: :patch,
+              params: { pane: { reference: next_ref } },
+              class: "rd-fab next", title: "Next chapter (#{next_ref})", "aria-label": "Next chapter",
+              data: { chapter_nav: "next" },
+              form: { data: { turbo_frame: pane.frame_id }, class: "contents" } do %><%= icon(:chevron_right) %><% end %>
+      <% end %>
+    </nav>
+
+    <%= form_with url: study_pane_path(study, pane), method: :patch, class: "ps-notes-form",
           data: { controller: "notes", turbo: false, pane_target: "notes" } do %>
       <div class="ps-notes">
         <div class="ps-notes-head">
           <span>Notes <span class="saving" data-notes-target="status">&mdash; <%= pane.notes.present? ? "Saved" : "auto-saves as you write" %></span></span>
-          <button type="button" class="ps-notes-close" title="Close notes" data-action="pane#toggleNotes">&#10005;</button>
+          <button type="button" class="ps-notes-close" title="Close notes" data-action="pane#toggleNotes"><%= icon(:x) %></button>
         </div>
         <textarea name="pane[notes]" class="ps-notes-area" rows="4"
-                  placeholder="Write a thought, an outline, a cross-reference to remember… Use [[John 3:16]] to wiki-link a verse."
+                  placeholder="Write a thought, an outline, a cross-reference to remember… Use [[John 3:16]] to link a verse."
                   data-action="input->notes#schedule"><%= pane.notes %></textarea>
         <input type="hidden" name="autosave" value="1">
       </div>
     <% end %>
   <% elsif content.error == :empty %>
     <div class="ps-pane-empty">
-      <div class="orn">&#10086;</div>
-      <div class="lead">Pane <%= pane_numeral(pane.position) %> stands ready</div>
-      <div class="hint">Type a reference &mdash; <em>Jn 3:16, Rom 5, 1 Cor 13</em> &mdash; to summon the text.</div>
-      <div style="display:flex; gap:6px; margin-top:6px;">
-        <span class="kbd">&#8984; K</span>
-        <span class="kbd"><%= pane.position + 1 %></span>
-      </div>
+      <div class="orn"><%= icon(:book, css: "ui-icon is-xl") %></div>
+      <div class="lead">Choose a passage</div>
+      <div class="hint">Pick a book and chapter &mdash; or type <em>Jn 3:16</em>, <em>Rom 5</em>, <em>1 Cor 13</em>.</div>
+      <button type="button" class="ui-btn is-primary" data-action="sheets#open"
+              data-sheets-id-param="passage" data-sheets-pane-param="<%= pane.id %>">Open the Bible</button>
     </div>
   <% else %>
     <%# Every failure renders a visible explanation and, where one exists, a one-click way out. %>
     <% parsed = content.parsed %>
     <div class="ps-pane-empty" role="status">
-      <div class="orn">&#9888;</div>
+      <div class="orn"><%= icon(:help, css: "ui-icon is-xl") %></div>
       <div class="lead">
         <% case content.error %>
         <% when :verse_omitted %>
@@ -186,6 +230,8 @@
           Try a form like <em>John 3:16</em>, <em>Rom 5</em>, or <em>1 Cor 13:1-13</em>.
         <% end %>
       </div>
+      <button type="button" class="ui-btn" data-action="sheets#open"
+              data-sheets-id-param="passage" data-sheets-pane-param="<%= pane.id %>">Choose another passage</button>
     </div>
   <% end %>
 <% end %>

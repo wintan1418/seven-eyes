@@ -1,5 +1,46 @@
 @import "tailwindcss";
-@import "./scripture.css";
+/* Legacy component layer, split from the old scripture.css in its original
+   order (the cascade depends on it). Preach / projector / live CSS stays
+   verbatim — pastors use it every Sunday. */
+@import "./legacy/parchment.css";
+@import "./preach.css";
+@import "./live.css";
+@import "./sermon.css";
+@import "./legacy/reader_tools.css";
+@import "./preach_queue.css";
+@import "./admin.css";
+@import "./whats_new.css";
+@import "./preach_screen.css";
+@import "./whats_new_mocks.css";
+@import "./legacy/audio.css";
+
+/* The modern reader (YouVersion-style). Imported after the legacy layer so
+   it wins ties; reading-mode rules are scoped to
+   .ps-root:not(.is-presenting, .is-output) so preach keeps its look. */
+@import "./ui/tokens.css";
+@import "./ui/base.css";
+@import "./ui/reader.css";
+@import "./ui/panels.css";
+@import "./ui/shell.css";
+@import "./ui/sheet.css";
+@import "./ui/actions.css";
+@import "./ui/mobile.css";
+@import "./ui/pages.css";
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@theme inline {
+  --color-bg: var(--ui-bg);
+  --color-surface: var(--ui-surface);
+  --color-surface-2: var(--ui-surface-2);
+  --color-border: var(--ui-border);
+  --color-fg: var(--ui-fg);
+  --color-muted: var(--ui-fg-muted);
+  --color-subtle: var(--ui-fg-subtle);
+  --color-accent: var(--ui-accent);
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-reader: var(--reader-font);
+}
 
 /* Ancient Epistle palette + fonts exposed as Tailwind v4 tokens.
    The .ps-* component layer in scripture.css uses the raw CSS vars in :root
@@ -29,8 +70,8 @@
 html, body {
   margin: 0;
   height: 100%;
-  background: #f0eee9;
-  font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", "Apple Symbols", "Segoe UI Emoji", "Noto Color Emoji", serif;
+  background: var(--ui-bg);
+  font-family: var(--ui-font);
 }
 body > .ps-root { height: 100vh; }
 
@@ -105,61 +146,8 @@ turbo-frame.ps-pane[busy], turbo-frame.ps-pane[aria-busy="true"] {
 }
 turbo-frame.ps-pane[busy] .ps-verses { filter: blur(0.3px); }
 
-/* ---- book browser (slide-over) ---- */
-.ps-book-drawer { position: fixed; inset: 0; z-index: 40; visibility: hidden; pointer-events: none; }
-.ps-book-drawer.is-open { visibility: visible; pointer-events: auto; }
+/* ---- shared backdrop behind the slide-over panels ---- */
 .ps-book-backdrop { position: absolute; inset: 0; background: rgba(35, 20, 8, 0.45); opacity: 0; transition: opacity 0.2s; }
-.ps-book-drawer.is-open .ps-book-backdrop { opacity: 1; }
-.ps-book-panel {
-  position: absolute; top: 0; right: 0; height: 100%; width: 384px;
-  background: linear-gradient(180deg, #ebdfc1 0%, #dec99a 100%);
-  border-left: 1px solid var(--vellum-edge);
-  box-shadow: -12px 0 30px -10px rgba(50, 30, 10, 0.45);
-  transform: translateX(100%); transition: transform 0.22s ease;
-  display: flex; flex-direction: column; overflow: hidden;
-}
-.ps-book-drawer.is-open .ps-book-panel { transform: translateX(0); }
-.ps-book-list {
-  flex: 1 1 0; min-height: 0;
-  overflow-y: auto; padding-bottom: 20px;
-}
-.ps-book-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 4px 16px 12px; }
-
-/* The chapter / verse views need to grow into the remaining panel height so
-   their inner .ps-chapter-grid actually scrolls (Psalms 150 chapters etc.).
-   When hidden, fall back to display:none via the [hidden] attribute. */
-.ps-book-panel > [data-book-browser-target="chapters"]:not([hidden]),
-.ps-book-panel > [data-book-browser-target="verses"]:not([hidden]) {
-  flex: 1 1 0; min-height: 0;
-  display: flex; flex-direction: column;
-  overflow: hidden;
-}
-.ps-book-panel > [data-book-browser-target="chapters"] .ps-chapter-grid,
-.ps-book-panel > [data-book-browser-target="verses"] .ps-chapter-grid {
-  flex: 1 1 0; min-height: 0;
-  overflow-y: auto;
-}
-.ps-book {
-  text-align: left; padding: 8px 10px; background: var(--vellum-0);
-  border: 1px solid var(--vellum-edge); border-radius: 2px;
-  font: 14px "EB Garamond", serif; color: var(--ink-soft); cursor: pointer;
-}
-.ps-book:hover { background: #fff7e0; color: var(--rubric); }
-.ps-book-back {
-  margin: 12px 16px 4px; background: transparent; border: 0; color: var(--sepia);
-  font: 600 10px "Cinzel", serif; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
-}
-.ps-book-back:hover { color: var(--rubric); }
-.ps-chapter-grid {
-  display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
-  padding: 0 16px 20px; overflow-y: auto;
-}
-.ps-chapter {
-  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-  background: var(--vellum-0); border: 1px solid var(--vellum-edge); border-radius: 2px;
-  font: 600 13px "EB Garamond", serif; color: var(--ink-soft); cursor: pointer;
-}
-.ps-chapter:hover { background: var(--rubric); color: var(--vellum-0); border-color: var(--rubric); }
 
 /* ---- AI "Find a Verse" slide-over ---- */
 .ps-ai-drawer { position: fixed; inset: 0; z-index: 41; visibility: hidden; pointer-events: none; }

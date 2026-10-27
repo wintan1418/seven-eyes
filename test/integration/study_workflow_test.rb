@@ -19,8 +19,9 @@ class StudyWorkflowTest < ActionDispatch::IntegrationTest
     study = Study.last
     follow_redirect!
     assert_response :success
-    assert_select ".ps-workspace.cols-4"
-    assert_select "turbo-frame.ps-pane", count: 4
+    # One passage to start, like a Bible app; Compare adds panes on demand.
+    assert_select ".ps-workspace.cols-1"
+    assert_select "turbo-frame.ps-pane", count: 1
   end
 
   test "updating a pane reference loads the verse into its frame" do
@@ -66,7 +67,7 @@ class StudyWorkflowTest < ActionDispatch::IntegrationTest
     patch study_pane_path(study, pane), params: { pane: { reference: "jhon 3:16", translation_id: @kjv.id } }
     assert_response :success
     assert_select ".ps-verse", count: 1
-    assert_select ".ref-title", /John III/
+    assert_select ".ref-title", /John\s+3/
   end
 
   test "a bare book name loads chapter 1" do
@@ -75,7 +76,7 @@ class StudyWorkflowTest < ActionDispatch::IntegrationTest
     pane = study.panes.first
     patch study_pane_path(study, pane), params: { pane: { reference: "John", translation_id: @kjv.id } }
     assert_response :success
-    assert_select ".ref-title", /John I\b/
+    assert_select ".ref-title", /John\s+1\b/
   end
 
   test "a chapter past the end of the book says how many chapters it has" do

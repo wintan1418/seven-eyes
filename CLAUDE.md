@@ -2,7 +2,7 @@
 
 Don't co-author wwith me when you giot commit.
 
-A desktop-first, multi-pane Bible study workspace. The pastor lays out up to 4 Scripture
+A Bible reader and study workspace in the style of YouVersion. Opt-in Compare lays out up to 4 Scripture
 panes side by side to compare **the same verse across translations** or **different verses in
 one translation**, with one-click cross-references. Single-user, calm/scholarly aesthetic,
 keyboard-driven. Full spec in `PROJECT_BRIEF.md` — read it before non-trivial work.
@@ -47,7 +47,7 @@ When adding a gem, also update `Gemfile.lock` (`bundle install`). When adding JS
 
 1. **Hotwire-first.** Anything that feels "live" is a **Turbo Frame + Stimulus**, never a JS
    framework. Concretely:
-   - Each pane is a Turbo Frame (`pane_0`…`pane_3`). Submitting a pane's search form re-renders
+   - Each pane is a Turbo Frame (`pane_<pane.id>`). Submitting a pane's form re-renders
      **only that frame**.
    - Translation switch = a `<select>` whose `data-action` triggers a small Stimulus controller
      that submits the pane form.
@@ -137,32 +137,36 @@ Pause for the user's go-ahead at the gate marked **STOP**.
   `Verse.where(translation:, book:, chapter:).order(:verse_number)`. With proper indexing a
   50-verse chapter is <10ms.
 
-## UI feel — "Ancient Epistle" design system (supersedes brief §7)
+## UI feel — modern reader, YouVersion-style (owner's choice, Oct 2026; supersedes the "Ancient Epistle" parchment look)
 
-The approved design is a **vellum / illuminated-manuscript aesthetic**, not the brief's plain
-off-white. The canonical design lives in `design/` (HTML + JSX artboards + `scripture-styles.css`).
-The CSS system is ported verbatim into `app/assets/stylesheets/scripture.css` and is the **styling
-layer** — markup uses the `.ps-*` component classes (`.ps-root`, `.ps-topbar`, `.ps-pane`,
-`.ps-verses`, `.ps-drawer`, etc.). Tailwind utilities are available for incidental layout and the
-palette/fonts are also exposed as `@theme` tokens in `application.tailwind.css`.
+The owner found the parchment UI cluttered, hard to navigate and bad on phones, and chose a
+**YouVersion-like reader**. Phones matter now (pastors and congregants read on them).
 
-- **Fonts** (loaded via Google Fonts in the layout): verse + body **EB Garamond** (serif, 18px,
-  line-height 1.72); UI chrome / labels **Cinzel** (uppercase, wide tracking); illuminated drop caps
-  **UnifrakturMaguntia**.
-- **Palette** (CSS vars in `scripture.css :root`): vellum backgrounds `--vellum-0..2`, ink `--ink`,
-  sepia text, **rubric red** `--rubric (#8a2418)` for verse numbers/accents, **gold** `--gold`
-  hairlines. Highlights are 4 soft over-vellum tints: ochre, sage, cobalt, rose (`.hl-*`).
-- **Signature touches**: vellum fiber texture (layered gradients on `.ps-root`), gold hairline frame
-  inside each pane, Roman-numeral pane indices (I–IV), rubric drop cap on the first verse, dashed
-  sepia rules. Keep it calm and scholarly — "an ancient epistle," generous spacing, never cram.
-- Six artboards in `design/scripture-artboards.jsx` show every state: Scriptorium welcome, New Codex
-  modal, 4-translation compare, cross-ref drawer, the Justification florilegium, sync-scroll +
-  shortcut hint. **Match these when building each phase's UI.**
+- **Layout**: one passage in a centred column (`.rd-column`, ~36rem), app bar on top
+  (`studies/_app_bar`: ☰ · brand · [Passage ▾] [Version ▾] · search; Aa / Compare / Preach / More
+  from 1024px), floating prev/next chapter, a phone tab bar (Bible · Notes · Plans · More).
+  Compare (2–4 panes) is opt-in; studies default to `pane_count` 1.
+- **Sheets** (`sheet` controller per sheet, `sheets` on `<body>` turns clicks into a window
+  `sheet:open {id, paneId}`): menu, passage picker, versions, reading settings, More. Bottom sheets
+  on a phone, centred cards from 768px.
+- **Verse tap → action bar** (`verse_select` on `.ps-workspace`, `verse_actions`): highlight,
+  note, compare, copy, share, cross-refs, word study, commentary, Rabbi. Word-selection still goes
+  through the highlighter's `.ps-hl-popover`.
+- **Design tokens** in `app/assets/stylesheets/ui/tokens.css` (`--ui-*`), themes light / dark /
+  sepia / auto on `<body data-theme>` (cookie `ps_theme`, rendered server-side). Fonts: Inter (UI),
+  Source Serif 4 (Scripture), EB Garamond (sepia theme), Cinzel only for preach/projector.
+- **CSS layout**: `ui/*.css` is the modern layer. Reading-mode rules are scoped to
+  `.ps-root:not(.is-presenting, .is-output)`, so **preach / projector / stage keep their legacy
+  look** (`preach*.css`, `live.css`, `legacy/*`). New chrome is marked `[data-chrome]` and hidden
+  while presenting. The contract preach mode relies on is pinned by
+  `test/integration/preach_contract_test.rb` — keep it green.
+- Icons: inline SVG via `icon(:name)` (`ReaderHelper::ICONS`, drawn after Lucide, ISC).
+- Leaving preach mode never ends a live session (no `preach:exit` relay); "End live" does.
 
 ## Beyond-MVP features added (by user request)
 
-- **Bible browser** — slide-over book/chapter navigator (`book_browser` Stimulus controller on
-  `.ps-root`, `studies/_book_browser`). Opened from each pane's 📖 button; browsing is client-side
+- **Passage picker** — the passage sheet (`passage_picker` controller, `studies/_passage_sheet`):
+  OT/NT tabs, filter, chapter grid, or type a reference; ⌘K / "/" open it. Browsing is client-side
   (chapter counts from `Bible::Canon`), loading reuses the pane's own Turbo Frame form.
 - **AI "Find a Verse"** — describe a thought → the LLM returns *references only*, which we validate
   via `ReferenceParser` and load from our DB (`ScriptureSuggester`, now routed through `AiChat`:
@@ -224,5 +228,5 @@ The workspace is **open to guests**; only *saving* requires an account.
 
 ## Out of scope (don't build)
 
-Real-time collaboration · mobile-first (desktop-first; tablet-landscape responsive is enough) ·
+Real-time collaboration · native apps (the web reader is responsive down to phones) ·
 audio/video · social/sharing · copyrighted translations.

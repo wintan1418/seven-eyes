@@ -1,37 +1,59 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Flips the vellum / candlelight theme by setting data-theme on <body>.
-// Persists to localStorage and to a `ps_theme` cookie: the layout renders
+// Reading theme on <body data-theme>: light, dark, sepia — or auto, which
+// follows the device's colour scheme (the CSS handles auto with a media query).
+// Persisted to localStorage and to the `ps_theme` cookie: the layout renders
 // <body data-theme> from the cookie, so the server's HTML already carries the
-// reader's theme and Turbo visits don't flash vellum before this connects.
-// Lives on <body>; the toggle button is rendered inside the workspace topbar
-// but the controller works even on pages where the button isn't present.
+// reader's theme and Turbo visits never flash the wrong colours.
+// Lives on <body>; theme buttons anywhere on the page carry
+// data-action="theme#choose" data-theme-choice-param="dark".
 const KEY = "ps:theme"
 const COOKIE = "ps_theme"
-const VELLUM = "vellum"
-const CANDLE = "candlelight"
+const THEMES = ["auto", "light", "dark", "sepia"]
+const LEGACY = { candlelight: "dark", vellum: "auto" } // the old two-theme UI
+const COLORS = { light: "#FFFFFF", dark: "#111113", sepia: "#F7F1E3" }
 
 export default class extends Controller {
-  static targets = ["label", "icon"]
-
   connect() {
     const theme = this.read()
     this.apply(theme)
-    this.remember(theme) // migrate localStorage-only choices to the cookie
+    this.remember(theme)
   }
 
+  choose(event) {
+    event?.preventDefault?.()
+    const theme = event?.params?.choice
+    if (!THEMES.includes(theme)) return
+    this.apply(theme)
+    this.remember(theme)
+  }
+
+  // Quick light ⇄ dark flip (keyboard / single button).
   toggle(event) {
     event?.preventDefault?.()
-    const next = this.element.dataset.theme === CANDLE ? VELLUM : CANDLE
+    const next = this.effective() === "dark" ? "light" : "dark"
     this.apply(next)
     this.remember(next)
   }
 
   apply(theme) {
     this.element.dataset.theme = theme
-    const isCandle = theme === CANDLE
-    if (this.hasLabelTarget) this.labelTarget.textContent = isCandle ? "Vellum" : "Candle"
-    if (this.hasIconTarget) this.iconTarget.innerHTML = isCandle ? "&#9728;" : "&#128367;"
+    document.querySelectorAll("[data-theme-choice-param]").forEach((btn) => {
+      btn.setAttribute("aria-pressed", String(btn.dataset.themeChoiceParam === theme))
+    })
+    const color = COLORS[this.effective()]
+    document.querySelectorAll("meta[name='theme-color']").forEach((meta) => {
+      if (theme === "auto") return // the server rendered one per colour scheme
+      meta.removeAttribute("media")
+      meta.content = color
+    })
+  }
+
+  // The theme actually on screen ("auto" resolved against the device).
+  effective() {
+    const theme = this.element.dataset.theme
+    if (theme !== "auto") return theme
+    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light"
   }
 
   remember(theme) {
@@ -41,10 +63,11 @@ export default class extends Controller {
   }
 
   read() {
-    try {
-      const v = localStorage.getItem(KEY)
-      if (v === VELLUM || v === CANDLE) return v
-    } catch (_) {}
-    return this.element.dataset.theme || VELLUM
+    let stored = null
+    try { stored = localStorage.getItem(KEY) } catch (_) {}
+    stored = LEGACY[stored] || stored
+    if (THEMES.includes(stored)) return stored
+    const rendered = LEGACY[this.element.dataset.theme] || this.element.dataset.theme
+    return THEMES.includes(rendered) ? rendered : "auto"
   }
 }

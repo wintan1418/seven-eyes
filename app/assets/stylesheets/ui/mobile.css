@@ -1,0 +1,54 @@
+/* ==========================================================================
+   Phone (< 768px): tab bar, bars above it, no sideways scroll.
+   ========================================================================== */
+
+.ui-tabbar { display: none; }
+
+@media (max-width: 767px) {
+  /* Fixed bars (action bar, selection bar, toasts) sit above the tab bar. */
+  html:has(.rd-app:not(.is-presenting, .is-output)) { --chrome-bottom: var(--tabbar-h); }
+  html:has(.rd-app:not(.is-presenting, .is-output)) .ps-toast { bottom: calc(var(--tabbar-h) + 16px); }
+
+  .ps-root.rd-app:not(.is-presenting, .is-output) .ui-tabbar {
+    position: relative; z-index: 30; flex: 0 0 auto;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    height: var(--tabbar-h);
+    padding: 0 max(4px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(4px, env(safe-area-inset-left));
+    background: color-mix(in srgb, var(--ui-bg) 94%, transparent);
+    -webkit-backdrop-filter: saturate(1.4) blur(14px);
+    backdrop-filter: saturate(1.4) blur(14px);
+    border-top: 1px solid var(--ui-border);
+  }
+  .ui-tab {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    min-height: 48px; padding: 6px 0 0; border: 0; background: transparent; color: var(--ui-fg-subtle);
+    font: 500 11px var(--ui-font); text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .ui-tab svg { width: 24px; height: 24px; }
+  .ui-tab.is-current, .ui-tab:active { color: var(--ui-fg); }
+
+  /* The tab bar has More; the app bar keeps search. */
+  .ps-root.rd-app .ui-appbar [data-sheets-id-param="more"] { display: none; }
+
+  /* On-screen keyboard up: give the room back to what's being typed. */
+  .ps-root.rd-app:has(textarea:focus, input:not([type="hidden"]):focus) .ui-tabbar { display: none; }
+  html:has(.rd-app textarea:focus) { --chrome-bottom: env(safe-area-inset-bottom, 0px); }
+
+  /* Notes become a sheet across the bottom of the pane. */
+  .ps-root:not(.is-presenting, .is-output) .ps-notes-form { left: 0; right: 0; bottom: 0; width: auto; transform: none; }
+  .ps-root:not(.is-presenting, .is-output) .ps-notes-form .ps-notes {
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; border-bottom: 0;
+  }
+
+  /* Chapter arrows: smaller and quieter over the text. */
+  .rd-chapter-nav { bottom: 14px; padding: 0 12px; }
+  .rd-fab {
+    width: 40px; height: 40px;
+    background: color-mix(in srgb, var(--ui-elevated) 88%, transparent);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+
+  .ps-root.rd-app:not(.is-presenting, .is-output) { overflow-x: hidden; }
+  .rd-column { padding-top: 28px; }
+}

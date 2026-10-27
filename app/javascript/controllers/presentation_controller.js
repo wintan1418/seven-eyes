@@ -101,8 +101,10 @@ export default class extends Controller {
 
   // ----- focus mode (whole pane) -----
 
+  // Focus a pane: the one the click came from, else the active pane, else the
+  // first pane that has verses (the app bar / menu buttons live outside panes).
   enter(event) {
-    const pane = event.target.closest(".ps-pane")
+    const pane = event?.target?.closest?.(".ps-pane") || this._defaultPane()
     if (!pane) return
     event.preventDefault?.()
     this.element.querySelectorAll(".ps-pane.is-presented, .ps-pane.is-paired")
@@ -110,6 +112,20 @@ export default class extends Controller {
     pane.classList.add("is-presented")
     this.element.classList.add("is-presenting")
     this._bindEsc()
+  }
+
+  // One tap from the app bar, menu or tab bar straight into preach mode.
+  start(event) {
+    event?.preventDefault?.()
+    window.dispatchEvent(new CustomEvent("sheet:close"))
+    this.enter(event)
+    if (this.element.classList.contains("is-presenting")) this.enterPreach()
+  }
+
+  _defaultPane() {
+    const panes = this._workspacePanes()
+    return panes.find(p => p.classList.contains("is-active-pane") && p.querySelector(".ps-verse")) ||
+      panes.find(p => p.querySelector(".ps-verse")) || panes[0] || null
   }
 
   exit(event) {

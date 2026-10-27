@@ -5,7 +5,7 @@ class WhatsNewTest < ActionDispatch::IntegrationTest
     get whats_new_path
     assert_response :success
     assert_includes response.body, "What&rsquo;s new in BiblioRata"
-    [ "The Preach Queue", "Songs &amp; thoughts, projected", "Ask anything, mid-sermon",
+    [ "A calmer, modern reader", "The Preach Queue", "Songs &amp; thoughts, projected", "Ask anything, mid-sermon",
       "Your phone is the clicker", "The stage display", "Dress the projection",
       "One press back", "Pictures on the screen",
       "Blank the screen in a tap", "Songs you don&rsquo;t retype",
