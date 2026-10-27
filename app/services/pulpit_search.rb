@@ -94,7 +94,7 @@ class PulpitSearch
   end
 
   def build_suggestions(refs)
-    translation = @translation || Translation.find_by(code: "KJV") || Translation.first
+    translation = @translation || Translation.default
     seen = Set.new
 
     refs.filter_map do |raw|

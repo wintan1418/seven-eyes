@@ -6,7 +6,7 @@
 class AudioChaptersController < ApplicationController
   allow_unauthenticated_access
 
-  DAILY_CAP = 250          # new chapter generations per day, across everyone
+  DAILY_CAP = 250          # new chapter generations per day, across everyone (AUDIO_DAILY_CAP)
   STALE_PENDING = 5.minutes  # a pending job older than this likely died — requeue
   RETRY_FAILED = 10.minutes  # let failures rest before trying again
 
@@ -35,8 +35,10 @@ class AudioChaptersController < ApplicationController
 
   private
 
+  def daily_cap = (ENV["AUDIO_DAILY_CAP"].presence || DAILY_CAP).to_i
+
   def request_generation(translation, book, chapter)
-    if ChapterAudio.requested_today.count >= DAILY_CAP
+    if ChapterAudio.requested_today.count >= daily_cap
       return render json: { ok: false, status: "quota" }
     end
     record = ChapterAudio.create!(translation:, book:, chapter:, voice: OpenaiSpeech.voice)

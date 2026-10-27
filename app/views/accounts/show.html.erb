@@ -1,0 +1,51 @@
+<% content_for :title, "Your Account · BiblioRata" %>
+<div class="ps-root">
+  <div class="ps-gate">
+    <div class="ps-modal">
+      <span class="corner tl">&#10086;</span>
+      <span class="corner tr">&#10086;</span>
+      <span class="corner bl">&#10086;</span>
+      <span class="corner br">&#10086;</span>
+
+      <h2>&middot; Your Account &middot;</h2>
+      <div class="title"><%= @user.email_address %></div>
+      <div class="sub">Member since <%= @user.created_at.to_date.to_fs(:long) %></div>
+
+      <% if flash[:alert] %><div class="ps-auth-flash alert"><%= flash[:alert] %></div><% end %>
+      <% if flash[:notice] %><div class="ps-auth-flash notice"><%= flash[:notice] %></div><% end %>
+
+      <div class="field-label">What you&rsquo;ve kept</div>
+      <ul class="mb-4">
+        <% @counts.each do |label, count| %>
+          <li><%= label %>: <strong><%= count %></strong></li>
+        <% end %>
+      </ul>
+
+      <div class="field-label">Download your data</div>
+      <p class="mb-2">Every study, note, highlight and reading plan, as a JSON file.</p>
+      <div class="actions">
+        <%= link_to "Download my data", export_account_path, class: "btn secondary", data: { turbo: false } %>
+      </div>
+
+      <div class="field-label mt-6">Delete my account</div>
+      <p class="mb-2">
+        This permanently deletes your account and everything in it &mdash; studies, notes,
+        highlights, reading plans and testimonials. It cannot be undone.
+      </p>
+      <%= form_with url: account_path, method: :delete,
+            data: { turbo_confirm: "Permanently delete your account and all your studies? This cannot be undone." } do |form| %>
+        <%= form.password_field :password, required: true, autocomplete: "current-password",
+              placeholder: "Confirm with your password", maxlength: 72, class: "field" %>
+        <div class="actions">
+          <%= form.submit "Delete my account", class: "btn primary" %>
+        </div>
+      <% end %>
+
+      <div class="foot">
+        <%= link_to "Back to your desk", root_path %> &middot;
+        <%= link_to "Terms", terms_path %> &middot;
+        <%= link_to "Privacy", privacy_path %>
+      </div>
+    </div>
+  </div>
+</div>

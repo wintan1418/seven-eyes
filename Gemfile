@@ -54,6 +54,13 @@ gem "cloudinary", "~> 2.2"
 # Self-hosted testimonials + NPS (collection widget, moderation dashboard)
 gem "testimonials", "~> 0.6"
 
+# IP throttling for login, sign-up, password reset, study creation and the AI routes.
+gem "rack-attack", "~> 6.7"
+
+# Error monitoring — only active when SENTRY_DSN is set (config/initializers/sentry.rb).
+gem "sentry-ruby", "~> 5.22"
+gem "sentry-rails", "~> 5.22"
+
 # Load environment variables from .env in development/test (e.g. OPENAI_API_KEY)
 gem "dotenv-rails", groups: %i[ development test ]
 

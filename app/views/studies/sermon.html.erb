@@ -5,7 +5,7 @@
     <%= link_to "← Back to study", study_path(@study), class: "ps-tb-btn ms-back" %>
     <h1 class="ms-title-bar"><%= @manuscript.title %></h1>
     <div class="ms-actions">
-      <button type="button" class="ps-tb-btn" onclick="window.print()">&#9998; Print / Save PDF</button>
+      <button type="button" class="ps-tb-btn" data-controller="print" data-action="print#print">&#9998; Print / Save PDF</button>
       <%= link_to "⤓ Markdown", sermon_study_path(@study, format: :md), class: "ps-tb-btn" %>
     </div>
   </header>

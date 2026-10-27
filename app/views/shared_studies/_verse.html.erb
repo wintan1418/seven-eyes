@@ -1,0 +1,9 @@
+<%# locals: verse, book, dropcap — a read-only verse for the public shared-study
+    page. Unlike scripture_verse, the number is plain text (the owner's
+    cross-reference drawer isn't reachable for viewers) and Strong's words are
+    not links into the owner's lexicon. %>
+<% text = verse.text.to_s %>
+<% use_cap = dropcap && text.match?(/\A\p{Alpha}/) %>
+<span class="ps-verse" data-osis="<%= book.osis_code %>" data-chapter="<%= verse.chapter %>" data-verse-num="<%= verse.verse_number %>">
+  <span class="ps-vnum is-static"><%= verse.verse_number %></span><% if use_cap %><span class="ps-dropcap" aria-hidden="true"><%= text[0] %></span><% end %><span class="ps-verse-text"><%= use_cap ? text[1..] : text %></span>
+</span>

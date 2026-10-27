@@ -4,6 +4,27 @@ class StudiesController < ApplicationController
 
   before_action :set_study, only: %i[ show update destroy suggest quick_find search cross_references commentary lexicon rabbi rabbi_diagram rabbi_illustration sermon share share_card prayer ]
 
+  # Every action below calls a paid AI provider. They need a (free) account, a
+  # per-user burst limit, and a per-user daily allowance (AiBudget); AiChat and
+  # OpenaiImage add a global daily backstop on top. Guests get a 401 that the
+  # Turbo Frame (or JSON caller) renders as a "create an account" prompt.
+  AI_ACTIONS = %i[ suggest quick_find rabbi rabbi_diagram rabbi_illustration prayer ].freeze
+  AI_FRAMES = {
+    suggest: "ai_results", rabbi: "rabbi_drawer",
+    rabbi_diagram: "rabbi_diagram_frame", rabbi_illustration: "rabbi_illustration_frame"
+  }.freeze
+  AI_QUERY_LIMIT = 500 # chars of user-typed text we'll forward to a model
+
+  before_action :require_account_for_ai, only: AI_ACTIONS
+  rate_limit to: 20, within: 1.minute, only: AI_ACTIONS, name: "ai-burst",
+             by: -> { Current.user&.id || request.remote_ip }, with: -> { ai_refused(:rate, :too_many_requests) }
+  before_action :charge_daily_ai_allowance, only: AI_ACTIONS
+
+  # Guests can create studies without an account — keep that from being a
+  # free way to fill the database.
+  rate_limit to: 30, within: 10.minutes, only: :create, name: "study-create",
+             with: -> { redirect_to root_path, alert: "You're creating studies very quickly — please wait a moment." }
+
   def index
     @studies = authenticated? ? current_user.studies.recent.includes(:panes) : []
     @verse_of_day = DailyVerse.for
@@ -59,7 +80,7 @@ class StudiesController < ApplicationController
   end
 
   def suggest
-    @query = params[:q].to_s
+    @query = ai_query
     @result = ScriptureSuggester.call(@query)
     render partial: "studies/ai_results", locals: { study: @study, query: @query, result: @result }
   end
@@ -69,13 +90,14 @@ class StudiesController < ApplicationController
   # crusaders" — and gets a short projectable explanation card plus validated
   # Scripture references. Verse text still comes only from our own DB.
   def quick_find
-    result = PulpitSearch.call(params[:q].to_s)
+    result = PulpitSearch.call(ai_query)
     return render json: { ok: false, error: result.error } unless result.ok?
 
     render json: {
       ok: true,
-      topic: result.topic,
-      summary: result.summary,
+      # Model-written prose is reduced to plain text (no injected markup/links).
+      topic: PlainText.call(result.topic, limit: 120),
+      summary: PlainText.call(result.summary),
       suggestions: result.suggestions.map do |s|
         book = Bible::Canon.find(s.osis)
         {
@@ -146,7 +168,7 @@ class StudiesController < ApplicationController
   def rabbi
     verses = rabbi_verses
     verse = verses.first
-    @selection = params[:q].to_s
+    @selection = ai_query
     @result = RabbiExposition.call(verse:, verses:, selection: @selection, study: @study)
     render partial: "studies/rabbi_results",
            locals: { study: @study, result: @result,
@@ -156,27 +178,29 @@ class StudiesController < ApplicationController
   # On-demand "Draw this": render just the diagram frame for the Rabbi drawer.
   def rabbi_diagram
     verse = Verse.includes(:book, :translation).find_by(id: params[:verse_id])
-    diagram = RabbiDiagram.call(verse:, selection: params[:q], study: @study)
+    diagram = RabbiDiagram.call(verse:, selection: ai_query, study: @study)
     render partial: "studies/rabbi_diagram", locals: {
-      study: @study, verse_id: params[:verse_id], selection: params[:q],
+      study: @study, verse_id: params[:verse_id], selection: ai_query,
       svg: (diagram.ok? ? diagram.svg : nil), state: (diagram.ok? ? :ready : diagram.error)
     }
   end
 
   # On-demand "Illustrate this passage": render just the illustration frame with
   # a real, painted picture of the scene (illuminated-manuscript style). Capped at
-  # a few generations per user per day so it can't run up an OpenAI bill.
+  # a few generations per user per day so it can't run up an OpenAI bill. The
+  # slot is reserved atomically BEFORE the paid call and handed back on failure,
+  # so parallel clicks can't overshoot the cap.
   def rabbi_illustration
     verses = rabbi_verses
-    quota = IllustrationQuota.for(illustration_owner_key)
+    quota = IllustrationQuota.for(IllustrationQuota.key_for(current_user))
 
-    if quota.exceeded?
+    unless quota.reserve!
       return render_rabbi_illustration(verses, state: :quota, remaining: 0)
     end
 
-    illustration = RabbiIllustration.call(verse: verses.first, verses:, selection: params[:q],
+    illustration = RabbiIllustration.call(verse: verses.first, verses:, selection: ai_query,
                                           study: @study, style: params[:style])
-    quota.record! if illustration.ok?
+    quota.release! unless illustration.ok?
 
     render_rabbi_illustration(verses,
       image:       (illustration.ok? ? illustration.image : nil),
@@ -206,7 +230,7 @@ class StudiesController < ApplicationController
     translation = Translation.find_by(code: params[:translation].presence)
     result = ChapterPrayer.call(book:, chapter:, translation:)
     render json: {
-      ok: result.ok?, reference: result.reference, prayer: result.prayer, error: result.error,
+      ok: result.ok?, reference: result.reference, prayer: PlainText.call(result.prayer), error: result.error,
       url: passage_url(PassageSlug.slug_for(osis: book.osis_code, chapter:), prayer: 1)
     }
   end
@@ -240,16 +264,33 @@ class StudiesController < ApplicationController
          .sort_by { |v| [ v.chapter, v.verse_number ] }
   end
 
-  # Who a daily illustration allowance belongs to: the member, or the guest's
-  # session-scoped study.
-  def illustration_owner_key
-    authenticated? ? "u#{current_user&.id}" : "g#{@study&.id}"
+  def ai_query = params[:q].to_s.strip[0, AI_QUERY_LIMIT]
+
+  def require_account_for_ai
+    ai_refused(:auth, :unauthorized) unless authenticated?
+  end
+
+  def charge_daily_ai_allowance
+    ai_refused(:daily, :too_many_requests) unless AiBudget.charge_user(current_user.id)
+  end
+
+  # Refuse an AI request in the shape its caller understands: the matching Turbo
+  # Frame for the drawer/search UIs (Turbo renders a frame from a 4xx response),
+  # JSON for the fetch()-based quick find and prayer.
+  def ai_refused(reason, status)
+    frame = AI_FRAMES[action_name.to_sym]
+    if frame && !request.format.json?
+      render partial: "studies/ai_gate", locals: { frame_id: frame, reason: reason }, status: status
+    else
+      error = { auth: "auth_required", rate: "rate_limited", daily: "daily_limit" }.fetch(reason)
+      render json: { ok: false, error: error }, status: status
+    end
   end
 
   def render_rabbi_illustration(verses, image: nil, caption: nil, annotations: nil, state: nil, remaining: nil, style: nil)
     render partial: "studies/rabbi_illustration", locals: {
       study: @study, verse_id: verses.first&.id, verse_ids: verses.map(&:id).join(","),
-      selection: params[:q], image:, caption:, annotations:, state:, remaining:,
+      selection: ai_query, image:, caption:, annotations:, state:, remaining:,
       style: (style || params[:style])
     }
   end

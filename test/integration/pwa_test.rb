@@ -17,6 +17,20 @@ class PwaTest < ActionDispatch::IntegrationTest
     assert_match(/networkFirst/, @response.body)
   end
 
+  test "service worker cache version follows the deployed asset digests" do
+    get pwa_service_worker_path, headers: { "Accept" => "text/javascript" }
+    assert_match(/const CACHE_VERSION = "ps-[0-9a-f]{12}"/, @response.body)
+    assert_no_match(/<%/, @response.body)
+  end
+
+  test "service worker only caches public passage pages, skips redirects, clears on sign-out" do
+    get pwa_service_worker_path, headers: { "Accept" => "text/javascript" }
+    body = @response.body
+    assert_includes body, %q(const PUBLIC_PAGE = /^\/p\/[^/]+\/?$/)
+    assert_includes body, "!response.redirected"
+    assert_includes body, %q("clear-caches")
+  end
+
   test "layout links the manifest and sets the theme color" do
     get root_path
     assert_response :success

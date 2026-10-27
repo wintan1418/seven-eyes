@@ -39,19 +39,21 @@
                 <span class="tag">&middot; <%= content.translation.name %></span>
               </div>
               <div class="rule"></div>
-              <% lexicon = lexicon_lookup_for(content.verses) %>
+              <%# Our own read-only verse partial: scripture_verse links verse
+                  numbers / Strong's words into the owner's xref + lexicon
+                  drawers, which 404 for a viewer. %>
               <div class="ps-verse-body">
                 <% content.verses.each_with_index do |v, i| %>
-                  <%= scripture_verse(v, study: @study, book: content.book,
-                        highlights: [], dropcap: i.zero? && v.verse_number == 1,
-                        lexicon: lexicon) %>
+                  <%= render "shared_studies/verse", verse: v, book: content.book,
+                        dropcap: i.zero? && v.verse_number == 1 %>
                 <% end %>
               </div>
             </div>
             <% if pane.notes.present? %>
               <div class="ps-notes">
                 <div class="ps-notes-head"><span>Notes</span></div>
-                <div class="ps-notes-body"><%= render_notes(pane.notes, study: @study) %></div>
+                <%# Plain text: [[John 3:16]] wiki-links point at the owner's drawer. %>
+                <div class="ps-notes-body"><%= simple_format(pane.notes) %></div>
               </div>
             <% end %>
           <% else %>

@@ -29,7 +29,9 @@
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
 
-  <body data-controller="guide theme" data-theme="vellum">
+  <%# Theme comes from the ps_theme cookie (written by the theme controller) so
+      candlelight readers don't see a vellum flash on every Turbo visit. %>
+  <body data-controller="guide theme" data-theme="<%= cookies[:ps_theme] == "candlelight" ? "candlelight" : "vellum" %>">
     <div data-controller="offline">
       <div class="ps-offline-badge" data-offline-target="badge" hidden>&#9679; Offline</div>
     </div>

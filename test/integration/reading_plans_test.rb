@@ -45,6 +45,17 @@ class ReadingPlansTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "open_today loads every reading, combining consecutive chapters into ranges" do
+    plan = users(:one).reading_plans.create!(name: "Big day", start_date: Date.current)
+    plan.plan_days.create!(day_number: 1, refs: "John 1, John 2, John 3, John 4, John 5, John 6")
+
+    get open_today_reading_plan_path(plan)
+    study = plan.reload.study
+    assert_redirected_to study_path(study)
+    assert_equal 1, study.pane_count
+    assert_equal "John 1-6", study.panes.find_by(position: 0).reference
+  end
+
   test "guests cannot reach reading plans" do
     delete session_path # log out
     get reading_plans_path

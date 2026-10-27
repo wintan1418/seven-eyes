@@ -31,6 +31,21 @@ class PassageSlugTest < ActiveSupport::TestCase
     end
   end
 
+  test "multi-chapter, cross-chapter and ff passages round-trip" do
+    {
+      "Matt 5-7"      => "matthew-5-to-7",
+      "John 3:16-4:2" => "john-3-16-to-4-2",
+      "John 3:16ff"   => "john-3-16-ff",
+      "Jude 1-3"      => "jude-1-1-3"
+    }.each do |input, slug|
+      parsed = ReferenceParser.call(input)
+      assert_equal slug, PassageSlug.slug_from_result(parsed), input
+      back = ReferenceParser.call(PassageSlug.reference_for(slug))
+      assert_equal parsed.label, back.label, slug
+    end
+    assert_nil PassageSlug.reference_for("john-3-to-x")
+  end
+
   test "returns nil for slugs with no numeric location" do
     assert_nil PassageSlug.reference_for("john")
     assert_nil PassageSlug.reference_for("")

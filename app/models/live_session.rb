@@ -5,25 +5,85 @@
 # State columns mirror what the operator last projected: book (OSIS) + chapter,
 # the emphasised verse range, and the translation code. `followers_count` is
 # adjusted by LiveSessionChannel as phones subscribe/unsubscribe.
+#
+# Lifetime: a session ends when the operator presses "End live", or lazily once
+# nothing has been pushed for STALE_AFTER (a console closed mid-service never
+# leaves a session "live" forever). The recap of an ended service stays public
+# for RECAP_TTL, then the farewell page stops listing it.
 class LiveSession < ApplicationRecord
   belongs_to :study
 
   # No 0/O, 1/I/L — the code gets read aloud and typed from the back pew.
   CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789".chars.freeze
-  CODE_LENGTH = 4
+  # Six characters from a 31-letter alphabet ≈ 887M codes — not guessable by
+  # walking the space. Older 4-character codes still resolve (lookup is by
+  # exact code, whatever its length).
+  CODE_LENGTH = 6
+  FALLBACK_CODE_LENGTH = 10
+
+  STALE_AFTER = 6.hours
+  RECAP_TTL = 7.days
+  PASSAGE_LOG_LIMIT = 100
 
   before_validation :assign_code, on: :create
   validates :code, presence: true, uniqueness: true
 
   scope :active, -> { where(ended_at: nil) }
 
+  # The active session for a join code, or nil. A session that has gone quiet
+  # for STALE_AFTER is ended on the spot (lazy expiry — no cron needed).
   def self.find_active(code)
-    active.find_by(code: code.to_s.upcase)
+    live = active.find_by(code: normalize_code(code))
+    expire_if_stale(live)
   end
 
-  PASSAGE_LOG_LIMIT = 100
+  # The study's current session (newest active one), expiring it if stale.
+  def self.current_for(study)
+    live = study.live_sessions.active.order(created_at: :desc).first
+    expire_if_stale(live)
+  end
+
+  # Go live idempotently: concurrent "Go Live" clicks (double-click, two tabs)
+  # serialise on the study row, so only one session is ever created.
+  def self.start_for!(study)
+    study.with_lock { current_for(study) || study.live_sessions.create! }
+  end
+
+  def self.normalize_code(code)
+    code.to_s.strip.upcase
+  end
+
+  def self.expire_if_stale(live)
+    return nil unless live
+    return live unless live.stale?
+    live.expire!
+    nil
+  end
+
+  def self.random_code(length)
+    Array.new(length) { CODE_ALPHABET[SecureRandom.random_number(CODE_ALPHABET.size)] }.join
+  end
+
+  def self.find_by_operator_token(token)
+    find_signed(token.to_s, purpose: :live_operator)
+  end
 
   def ended? = ended_at.present?
+
+  def stale?
+    !ended? && updated_at.present? && updated_at < STALE_AFTER.ago
+  end
+
+  # Ended sessions keep their "tonight's scriptures" list for a week.
+  def recap_available?
+    !ended? || ended_at > RECAP_TTL.ago
+  end
+
+  # Proves the bearer is the console that started this session — the operator
+  # cable subscription (follower count) requires it.
+  def operator_token
+    signed_id(purpose: :live_operator, expires_in: 1.day)
+  end
 
   # A non-scripture moment: a song stanza or a projected thought/announcement.
   def slide? = kind == "slide"
@@ -42,7 +102,13 @@ class LiveSession < ApplicationRecord
   end
 
   def end!
-    update!(ended_at: Time.current) unless ended?
+    update!(ended_at: Time.current, followers_count: 0) unless ended?
+  end
+
+  # Lazy expiry: end the session and tell anyone still subscribed.
+  def expire!
+    end!
+    LiveSessionChannel.broadcast_to(self, { type: "ended" })
   end
 
   def book
@@ -82,11 +148,17 @@ class LiveSession < ApplicationRecord
     end
   end
 
+  # One atomic UPDATE … RETURNING (clamped at zero) — a follower joining costs a
+  # single query, not update + reload + fix-up.
   def adjust_followers(delta)
-    self.class.update_counters(id, followers_count: delta)
-    reload
-    update_column(:followers_count, 0) if followers_count.negative?
-    followers_count
+    sql = self.class.sanitize_sql_array([
+      "UPDATE live_sessions SET followers_count = GREATEST(followers_count + ?, 0) " \
+      "WHERE id = ? RETURNING followers_count", delta.to_i, id
+    ])
+    count = self.class.connection.select_value(sql).to_i
+    self.followers_count = count
+    clear_attribute_change(:followers_count)
+    count
   end
 
   private
@@ -94,12 +166,12 @@ class LiveSession < ApplicationRecord
   def assign_code
     return if code.present?
     5.times do
-      candidate = Array.new(CODE_LENGTH) { CODE_ALPHABET.sample }.join
+      candidate = self.class.random_code(CODE_LENGTH)
       unless self.class.exists?(code: candidate)
         self.code = candidate
         return
       end
     end
-    self.code = SecureRandom.alphanumeric(8).upcase
+    self.code = self.class.random_code(FALLBACK_CODE_LENGTH)
   end
 end

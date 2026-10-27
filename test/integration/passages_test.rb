@@ -67,4 +67,38 @@ class PassagesTest < ActionDispatch::IntegrationTest
     end
     assert_equal users(:one).id, Study.last.user_id
   end
+
+  test "a cross-chapter slug loads both chapters with headings" do
+    Verse.create!(translation: @kjv, book: @john, chapter: 4, verse_number: 1, text: "When therefore the Lord knew")
+    get passage_path("john-3-17-to-4-1")
+    assert_response :success
+    assert_includes response.body, "condemn the world"
+    assert_includes response.body, "When therefore the Lord knew"
+    refute_includes response.body, "only begotten Son"
+    assert_select "h3", text: /John 4/
+  end
+
+  test "a link naming a hidden translation falls back to an offered one" do
+    net = Translation.create!(code: "NET", name: "NET Bible")
+    Verse.create!(translation: net, book: @john, chapter: 3, verse_number: 16, text: "NET wording")
+    get passage_path("john-3-16", params: { t: "NET" })
+    assert_response :success
+    refute_includes response.body, "NET wording"
+    assert_includes response.body, "only begotten Son"
+  end
+
+  test "the passage page links to the credits page, which lists licences" do
+    get passage_path("john-3-16")
+    assert_select "a[href=?]", credits_path
+
+    Translation.create!(code: "LSV", name: "Literal Standard Version", license: "cc_by_sa")
+    Translation.create!(code: "NET", name: "NET Bible", license: "restricted")
+    get credits_path
+    assert_response :success
+    assert_includes response.body, "King James Version"
+    assert_includes response.body, "Covenant Press"
+    assert_includes response.body, "OpenBible.info"
+    assert_includes response.body, "Open Scriptures"
+    refute_includes response.body, "NET Bible"
+  end
 end

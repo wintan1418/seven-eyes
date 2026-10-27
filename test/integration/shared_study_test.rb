@@ -52,6 +52,31 @@ class SharedStudyTest < ActionDispatch::IntegrationTest
     assert_select "textarea.ps-notes-area", count: 0
   end
 
+  test "viewers get no links into the owner's xref or lexicon drawers" do
+    Verse.find_by(verse_number: 16).update!(tokens: [ { "w" => "For " }, { "w" => "God", "s" => "G2316" },
+                                                      { "w" => " so loved the world, that he gave his only begotten Son." } ])
+    @study.panes.first.update!(notes: "See [[John 3:16]] again")
+    @study.ensure_share_token!
+    get shared_study_path(@study.share_token)
+    assert_response :success
+    assert_select ".ps-vnum", text: "16"
+    assert_select "a.ps-vnum", count: 0
+    assert_select "[data-turbo-frame='xref_drawer']", count: 0
+    assert_select "[data-href*='lexicon']", count: 0
+    assert_no_match %r{/studies/#{@study.id}/}, response.body
+    assert_select ".ps-notes-body", text: /See \[\[John 3:16\]\] again/
+  end
+
+  test "hidden panes stay private on the shared page" do
+    @study.update!(pane_count: 2)
+    @study.sync_panes!
+    @study.panes.last.update!(notes: "Private thought")
+    @study.update!(pane_count: 1)
+    @study.ensure_share_token!
+    get shared_study_path(@study.share_token)
+    assert_no_match(/Private thought/, response.body)
+  end
+
   test "invalid token renders 404" do
     get shared_study_path("notarealtoken")
     assert_response :not_found

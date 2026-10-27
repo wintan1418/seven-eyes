@@ -64,6 +64,15 @@ class SetlistItemTest < ActiveSupport::TestCase
     assert_includes titles, "Amazing Grace" # the hymnal is still offered
   end
 
+  test "a study holds at most PICTURE_LIMIT pictures" do
+    SetlistItem::PICTURE_LIMIT.times do |i|
+      @study.setlist_items.create!(kind: :picture, media_url: "https://res.cloudinary.com/demo/#{i}.jpg")
+    end
+    extra = @study.setlist_items.create(kind: :picture, media_url: "https://res.cloudinary.com/demo/x.jpg")
+    refute extra.persisted?
+    assert_match(/at most #{SetlistItem::PICTURE_LIMIT} pictures/, extra.errors.full_messages.to_sentence)
+  end
+
   test "move! swaps neighbours and clamps at the edges" do
     a = @study.setlist_items.create!(kind: :song, title: "A")
     b = @study.setlist_items.create!(kind: :song, title: "B")

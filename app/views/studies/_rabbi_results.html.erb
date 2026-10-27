@@ -17,7 +17,7 @@
       <% if text.present? %>
         <div class="ps-rabbi-section">
           <div class="ps-rabbi-label"><%= label %></div>
-          <div class="ps-rabbi-text"><%= simple_format(text) %></div>
+          <div class="ps-rabbi-text"><%= simple_format(h(text)) %></div>
         </div>
       <% end %>
     <% end %>
@@ -60,14 +60,14 @@
     <% if ex.caution.present? %>
       <div class="ps-rabbi-caution">
         <div class="ps-rabbi-label">&#9888; A caution</div>
-        <div class="ps-rabbi-text"><%= simple_format(ex.caution) %></div>
+        <div class="ps-rabbi-text"><%= simple_format(h(ex.caution)) %></div>
       </div>
     <% end %>
 
     <% if ex.application.present? %>
       <div class="ps-rabbi-section">
         <div class="ps-rabbi-label">For the pulpit</div>
-        <div class="ps-rabbi-text"><%= simple_format(ex.application) %></div>
+        <div class="ps-rabbi-text"><%= simple_format(h(ex.application)) %></div>
       </div>
     <% end %>
 

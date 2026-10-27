@@ -40,8 +40,19 @@ class SvgSanitizerTest < ActiveSupport::TestCase
                "<stop offset='0' stop-color='#a3812e'/></linearGradient></defs>" \
                "<rect width='5' height='5' fill='url(#g)'/></svg>"
     out = SvgSanitizer.call(internal)
-    assert_includes out, "url(#g)" # gradient fill survives
+    id = out[/id="(ai-svg-[0-9a-f]{8}-g)"/, 1]
+    assert id, "the gradient id is namespaced"
+    assert_includes out, "url(##{id})" # gradient fill survives, pointing at the namespaced id
     assert_includes out.downcase, "lineargradient"
+  end
+
+  test "drops class attributes and namespaces ids so the SVG can't hijack page elements" do
+    raw = "<svg viewBox='0 0 10 10'><rect id='auth_prompt' class='ps-modal btn primary' width='5' height='5'/></svg>"
+    out = SvgSanitizer.call(raw)
+    assert_not_includes out, "class="
+    assert_not_includes out, "ps-modal"
+    assert_no_match(/id="auth_prompt"/, out)
+    assert_match(/id="ai-svg-[0-9a-f]{8}-auth_prompt"/, out)
   end
 
   test "returns nil for blank, oversize, or svg-less input" do

@@ -9,6 +9,7 @@ require "set"
 # LLM calls go through AiChat (Gemini first, Abacus RouteLLM fail-over).
 class ScriptureSuggester
   MAX = 8
+  MAX_QUERY = 500 # chars of user input sent to the model
 
   SYSTEM_PROMPT = <<~PROMPT.freeze
     You are a Bible reference finder. Given a description, theme, half-remembered
@@ -28,7 +29,7 @@ class ScriptureSuggester
   def self.call(query, translation: nil) = new(query, translation:).call
 
   def initialize(query, translation: nil)
-    @query = query.to_s.strip
+    @query = query.to_s.strip[0, MAX_QUERY]
     @translation = translation
   end
 
@@ -48,7 +49,7 @@ class ScriptureSuggester
 
   # Network seam — overridden in tests to avoid a live API call.
   def chat_completion
-    AiChat.call(system: SYSTEM_PROMPT, user: @query, json: true)
+    AiChat.call(system: SYSTEM_PROMPT, user: @query, json: true, max_tokens: 400)
   end
 
   def extract_references(content)

@@ -20,7 +20,8 @@ export default class extends Controller {
     event?.preventDefault()
     const d = event.currentTarget.dataset
     window.dispatchEvent(new CustomEvent("share:open", { detail: {
-      osis: d.osis, chapter: d.chapter, verseStart: d.verseStart, verseEnd: d.verseEnd
+      osis: d.osis, chapter: d.chapter, verseStart: d.verseStart, verseEnd: d.verseEnd,
+      translation: this.translation()
     } }))
   }
 
@@ -28,6 +29,18 @@ export default class extends Controller {
   prayer(event) {
     event?.preventDefault()
     const d = event.currentTarget.dataset
-    window.dispatchEvent(new CustomEvent("prayer:open", { detail: { osis: d.osis, chapter: d.chapter } }))
+    window.dispatchEvent(new CustomEvent("prayer:open", { detail: {
+      osis: d.osis, chapter: d.chapter, translation: this.translation()
+    } }))
+  }
+
+  // The translation this pane is showing — the card and prayer must quote the
+  // version on screen, not a KJV default. The audio button carries the code;
+  // the translation select's chosen option is the fallback.
+  translation() {
+    const audio = this.element.querySelector("[data-reader-target='button'][data-translation]")
+    if (audio) return audio.dataset.translation
+    const select = this.element.querySelector(".ps-trans-select")
+    return select?.selectedOptions?.[0]?.textContent?.trim() || null
   }
 }

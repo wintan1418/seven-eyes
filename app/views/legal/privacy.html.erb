@@ -1,0 +1,81 @@
+<% content_for :title, "Privacy Policy · BiblioRata" %>
+<div class="ps-root ps-tut-root">
+  <div class="ps-tut">
+    <header class="ps-tut-hero">
+      <div class="eyebrow">&#9769; &nbsp; BiblioRata &nbsp; &#9769;</div>
+      <h1>Privacy Policy</h1>
+      <p class="lede">Last updated: [DATE — set before publishing]</p>
+      <div class="ps-tut-hero-cta">
+        <%= link_to "Back to your desk", root_path, class: "cta secondary" %>
+        <%= link_to "Terms of Service", terms_path, class: "cta secondary" %>
+      </div>
+    </header>
+
+    <article class="mx-auto max-w-3xl px-6 pb-16 text-[17px] leading-relaxed">
+      <p class="my-4 rounded border border-dashed p-4 italic">
+        DRAFT TEMPLATE — to be reviewed and completed by the owner and a qualified lawyer (GDPR /
+        UK GDPR / CCPA or local equivalents as applicable) before BiblioRata is sold or offered
+        commercially. Bracketed items must be filled in.
+      </p>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">1. Who is responsible</h2>
+      <p>[LEGAL ENTITY NAME], [REGISTERED ADDRESS], is the controller of the personal data described
+         here. Contact: <%= mail_to LegalController.contact_email %>.</p>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">2. What we store</h2>
+      <ul class="ml-6 list-disc">
+        <li><strong>Account:</strong> your email address and a securely hashed password (we never
+            see your password itself), plus display preferences.</li>
+        <li><strong>Your study content:</strong> studies, pane references, notes, highlights and
+            highlight notes, preach queues (songs, thoughts, pictures you upload), reading plans
+            and reflections.</li>
+        <li><strong>Sign-in sessions:</strong> the IP address and browser user-agent of each
+            sign-in, kept so you stay signed in (sessions expire after 30 days).</li>
+        <li><strong>Guests:</strong> a study tied to a browser cookie, without an account.</li>
+        <li><strong>Feedback:</strong> testimonials and ratings you choose to submit.</li>
+        <li><strong>Operational data:</strong> server logs (IP address, pages requested) and, if
+            enabled, error reports, kept for up to [N] days for security and debugging. Note text
+            and AI prompts are filtered out of logs.</li>
+      </ul>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">3. AI features and third parties</h2>
+      <p>When you use an AI feature, the passage you selected, the surrounding chapter and the text
+         you typed are sent to our AI providers ([e.g. Google Gemini, OpenAI, Abacus.AI]) to
+         generate the answer. Don&rsquo;t put personal or confidential information into AI
+         questions. Some AI answers are cached so a repeat question doesn&rsquo;t cost another call.
+         Other processors: hosting ([HOSTING PROVIDER]), image storage (Cloudinary, for pictures you
+         upload), email delivery ([EMAIL PROVIDER]) and error monitoring ([e.g. Sentry], if enabled).
+         We do not sell your personal data or use it for advertising.</p>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">4. Why we use it (legal bases)</h2>
+      <p>To provide the Service you asked for (contract), to keep it secure and prevent abuse
+         (legitimate interests), and to send you password-reset emails you request.
+         [LAWYER: confirm bases for your jurisdiction.]</p>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">5. Cookies</h2>
+      <p>We use strictly necessary cookies only: a session cookie, a sign-in cookie, and a
+         security token. Some preferences (such as projection settings) are kept in your
+         browser&rsquo;s local storage.</p>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">6. Your rights and choices</h2>
+      <p>From the Account page you can <strong>download all your data</strong> as a JSON file and
+         <strong>permanently delete your account</strong> and everything in it. You may also contact
+         us to access, correct or erase your data, or to object to processing. You can complain to
+         your local data-protection authority.</p>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">7. Retention</h2>
+      <p>Your content is kept until you delete it or your account. Guest studies not claimed by an
+         account may be removed after [N] days. Backups are overwritten within [N] days.</p>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">8. Security</h2>
+      <p>Traffic is encrypted (HTTPS), passwords are hashed, and access is rate-limited. No system is
+         perfectly secure; we will notify you of a breach affecting your data as the law requires.</p>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">9. Children</h2>
+      <p>The Service is not directed at children under [13/16], and they should not create accounts.</p>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">10. Changes</h2>
+      <p>We will post changes to this policy here and update the date above.</p>
+    </article>
+  </div>
+</div>

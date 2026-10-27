@@ -7,7 +7,10 @@ require "application_system_test_case"
 # the browser selects the word under the finger, contextmenu, finger up —
 # since headless Chrome doesn't turn a raw touch hold into a gesture itself.
 class TouchSelectionTest < ApplicationSystemTestCase
-  driven_by :selenium, using: :headless_chrome, screen_size: [ 412, 915 ] do |opts|
+  # A driver name of its own: under the shared :selenium name, whichever test
+  # class registered last won and the phone emulation leaked or went missing
+  # depending on test order.
+  driven_by :selenium, using: :headless_chrome, screen_size: [ 412, 915 ], options: { name: :selenium_pixel } do |opts|
     opts.add_emulation(device_name: "Pixel 7")
     # With mobile emulation set, chromedriver isn't handed the Selenium-managed
     # Chrome automatically (it is for the default driver); ask Selenium Manager
@@ -69,6 +72,8 @@ class TouchSelectionTest < ApplicationSystemTestCase
 
   def open_passage
     visit root_path
+    # A fresh guest gets the guided tour; it would sit over the verses.
+    page.execute_script("localStorage.setItem('scriptorium.tourDone', '1')")
     fill_in "reference", with: "Jeremiah 51:25-26"
     click_on "Read"
     assert_selector ".ps-verse", minimum: 2

@@ -61,4 +61,46 @@ class AiChatTest < ActiveSupport::TestCase
     assert res.ok?
     assert_equal :openai, res.provider
   end
+
+  # Captures the request body instead of touching the network.
+  class BodyCapture < AiChat
+    attr_reader :bodies
+
+    def initialize(provider, **opts)
+      super(system: "s", user: "u" * 50_000, **opts)
+      @provider = provider
+      @bodies = []
+    end
+
+    private
+
+    def key_for(provider) = provider == @provider ? "k" : nil
+
+    def post_json(_uri, body)
+      @bodies << body
+      { choices: [ { message: { content: "ok" } } ],
+        candidates: [ { content: { parts: [ { text: "ok" } ] } } ] }.to_json
+    end
+  end
+
+  test "every provider request carries an output-token ceiling" do
+    openai = BodyCapture.new(:openai, max_tokens: 321)
+    assert openai.call.ok?
+    assert_equal 321, openai.bodies.first[:max_tokens]
+
+    gemini = BodyCapture.new(:gemini)
+    assert gemini.call.ok?
+    assert_equal AiChat::DEFAULT_MAX_TOKENS, gemini.bodies.first.dig(:generationConfig, :maxOutputTokens)
+
+    routellm = BodyCapture.new(:routellm)
+    assert routellm.call.ok?
+    assert_equal AiChat::DEFAULT_MAX_TOKENS, routellm.bodies.first[:max_tokens]
+  end
+
+  test "the prompt sent to a provider is capped" do
+    chat = BodyCapture.new(:openai)
+    chat.call
+    user_msg = chat.bodies.first[:messages].last[:content]
+    assert_equal AiChat::MAX_PROMPT_CHARS, user_msg.length
+  end
 end

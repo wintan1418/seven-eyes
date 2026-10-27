@@ -38,6 +38,18 @@ class CrossReferenceSeederTest < ActiveSupport::TestCase
     assert_equal 0, CrossReference.count
   end
 
+  test "a range running into the next book keeps just its start verse" do
+    seeder = Class.new(CrossReferenceSeeder) do
+      private
+
+      def each_data_line(&) = [ "Gen.1.1\tPs.150.6-John.1.1\t5" ].each(&)
+    end
+    seeder.seed!
+    ref = CrossReference.last
+    assert_equal [ 150, 6, nil, nil ], [ ref.to_chapter_start, ref.to_verse_start, ref.to_chapter_end, ref.to_verse_end ]
+    assert_equal "Psalms 150:6", ref.to_label
+  end
+
   test "is idempotent — a second run without force leaves the table alone" do
     FakeSeeder.seed!
     before_ids = CrossReference.order(:id).pluck(:id)

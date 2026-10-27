@@ -83,4 +83,14 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+
+  # ---- Account & legal (security/commercial basics) --------------------------
+  resource :account, only: %i[ show destroy ] do
+    get :export, on: :member
+  end
+  get "/terms",   to: "legal#terms",   as: :terms
+  get "/privacy", to: "legal#privacy", as: :privacy
+
+  # Sources & licences for every translation and dataset (required attributions).
+  get "credits" => "credits#show", as: :credits
 end

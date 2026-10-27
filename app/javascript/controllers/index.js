@@ -107,4 +107,6 @@ import RemotePadController from "./remote_pad_controller"
 application.register("remote-pad", RemotePadController)
 
 import WhatsNewController from "./whats_new_controller"
+import PrintController from "./print_controller"
 application.register("whats-new", WhatsNewController)
+application.register("print", PrintController)

@@ -118,4 +118,52 @@ class SetlistItemsTest < ActionDispatch::IntegrationTest
     post study_setlist_items_path(study), params: { setlist_item: { kind: "thought", body: "x" } }
     assert_response :not_found
   end
+
+  test "an unknown kind is a 422 with the form re-rendered, not a 500" do
+    study = owner_study
+    assert_no_difference -> { SetlistItem.count } do
+      post study_setlist_items_path(study), params: { setlist_item: { kind: "sermon", body: "x" } }
+    end
+    assert_response :unprocessable_entity
+    assert_select ".ps-setlist-form .err", text: /kind/
+
+    item = study.setlist_items.create!(kind: :song, title: "A")
+    patch study_setlist_item_path(study, item), params: { setlist_item: { kind: "bogus" } }
+    assert_response :unprocessable_entity
+    assert item.reload.song?
+  end
+
+  test "guests can't upload pictures" do
+    post studies_path
+    study = Study.last
+    file = Rack::Test::UploadedFile.new(StringIO.new("fake"), "image/png", original_filename: "slide.png")
+    assert_no_difference -> { SetlistItem.count } do
+      post study_setlist_items_path(study), params: { setlist_item: { kind: "picture", image: file } }
+    end
+    assert_select ".ps-setlist-form .err", text: /Sign in/
+  end
+
+  test "pictures are capped per study before any upload" do
+    study = owner_study
+    SetlistItem::PICTURE_LIMIT.times do |i|
+      study.setlist_items.create!(kind: :picture, media_url: "https://res.cloudinary.com/demo/#{i}.jpg")
+    end
+    file = Rack::Test::UploadedFile.new(StringIO.new("fake"), "image/png", original_filename: "slide.png")
+    assert_no_difference -> { SetlistItem.count } do
+      post study_setlist_items_path(study), params: { setlist_item: { kind: "picture", image: file } }
+    end
+    assert_select ".ps-setlist-form .err", text: /already holds #{SetlistItem::PICTURE_LIMIT} pictures/
+  end
+
+  test "changing a picture into another kind drops its hosted media" do
+    study = owner_study
+    item = study.setlist_items.create!(kind: :picture, title: "Harvest",
+                                       media_url: "https://res.cloudinary.com/demo/x.jpg", media_public_id: "demo/x")
+    patch study_setlist_item_path(study, item), params: { setlist_item: { kind: "thought" } }
+    assert_response :success
+    item.reload
+    assert item.thought?
+    assert_nil item.media_url
+    assert_nil item.media_public_id
+  end
 end

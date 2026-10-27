@@ -48,19 +48,21 @@ export default class extends Controller {
     this._loadLibrary()
   }
 
-  // Fetch once, then re-render from cache — the Turbo Frame re-render after every
-  // add wipes the list DOM but the controller (and its cache) survive.
+  // Refetch on every open (songs queued since — in this or another study —
+  // should show up), painting the last list meanwhile so it never flickers
+  // empty. A failed fetch keeps the cached list.
   async _loadLibrary() {
-    if (this._songs) { this._renderLibrary(this._songs); return }
     if (!this.hasLibraryUrlValue) return
-    this.libraryListTarget.innerHTML = `<div class="lib-empty">Gathering songs&hellip;</div>`
-    let data
+    if (this._songs) this._renderLibrary(this._songs)
+    else this.libraryListTarget.innerHTML = `<div class="lib-empty">Gathering songs&hellip;</div>`
+    let data = null
     try {
       const res = await fetch(this.libraryUrlValue, { headers: { Accept: "application/json" } })
-      data = await res.json()
+      if (res.ok) data = await res.json()
     } catch { data = null }
-    this._songs = data?.songs || []
-    this._renderLibrary(this._songs)
+    if (data?.songs) this._songs = data.songs
+    if (!this.hasLibraryListTarget || this.libraryListTarget.hidden) return
+    this._renderLibrary(this._songs || [])
   }
 
   _renderLibrary(songs) {
@@ -94,7 +96,7 @@ export default class extends Controller {
     if (this.hasTitleTarget) this.titleTarget.value = d.title || ""
     if (this.hasBodyTarget) this.bodyTarget.value = d.body || ""
     if (this.hasLibraryListTarget) this.libraryListTarget.hidden = true
-    this.bodyTarget?.focus?.()
+    if (this.hasBodyTarget) this.bodyTarget.focus()
   }
 
   present(event) {
@@ -108,10 +110,16 @@ export default class extends Controller {
       body: item.dataset.body || null,
       image: item.dataset.image || null
     }
-    this.element.querySelectorAll(".ps-setlist-item.is-live").forEach(i => i.classList.remove("is-live"))
-    item.classList.add("is-live")
+    const preaching = this.element.classList.contains("is-preaching")
+    // Only mark what actually reached the screen: a song/slide clicked before
+    // preach mode isn't projected (the console explains why), so it must not
+    // look live. A scripture is staged in the pane either way.
+    if (preaching || detail.kind === "scripture") {
+      this.element.querySelectorAll(".ps-setlist-item.is-live").forEach(i => i.classList.remove("is-live"))
+      item.classList.add("is-live")
+    }
     window.dispatchEvent(new CustomEvent("setlist:present", { detail }))
     // Mid-service the drawer covers the console — get out of the way.
-    if (this.element.classList.contains("is-preaching")) this.close()
+    if (preaching) this.close()
   }
 }

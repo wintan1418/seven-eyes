@@ -24,7 +24,7 @@ class DailyVerse
   end
 
   def call
-    translation = Translation.find_by(code: "KJV") || Translation.first
+    translation = Translation.default
     return nil unless translation
 
     REFERENCES.rotate(@date.yday).each do |ref|

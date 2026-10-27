@@ -26,6 +26,7 @@ class OpenaiSpeech
   def synthesize
     return Result.new(ok: false, error: :blank) if @text.strip.empty?
     return Result.new(ok: false, error: :no_key) if api_key.blank?
+    return Result.new(ok: false, error: :budget) unless AiBudget.charge(:speech)
 
     uri = URI(ENV["OPENAI_TTS_ENDPOINT"].presence || DEFAULT_URL)
     res = post(uri, {
@@ -57,7 +58,7 @@ class OpenaiSpeech
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     http.read_timeout = 120
-    http.open_timeout = 10
+    http.open_timeout = 5
 
     req = Net::HTTP::Post.new(uri)
     req["Content-Type"] = "application/json"

@@ -9,7 +9,12 @@ class SetlistItem < ApplicationRecord
 
   enum :kind, { scripture: 0, song: 1, thought: 2, picture: 3 }
 
+  # Cloudinary-hosted pictures are capped per study so one queue can't be used
+  # to park unlimited images on our hosting account.
+  PICTURE_LIMIT = 30
+
   validates :position, presence: true
+  validate :picture_limit, on: :create, if: :picture?
   validates :reference, presence: true, if: :scripture?
   validates :media_url, presence: true, if: :picture?
   validate :reference_must_parse, if: :scripture?
@@ -84,6 +89,11 @@ class SetlistItem < ApplicationRecord
     unless parsed_ref.valid? && Book.find_by_osis(parsed_ref.osis)
       errors.add(:reference, "couldn't be read — try something like John 3:16")
     end
+  end
+
+  def picture_limit
+    return unless study && study.setlist_items.picture.where.not(id: id).count >= PICTURE_LIMIT
+    errors.add(:base, "A queue can hold at most #{PICTURE_LIMIT} pictures")
   end
 
   def slide_must_have_content

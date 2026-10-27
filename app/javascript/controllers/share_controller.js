@@ -30,8 +30,16 @@ export default class extends Controller {
 
   _flash(text) {
     if (!this.hasLabelTarget) return
-    const original = this.labelTarget.innerHTML
+    // Capture the real label once — a second click mid-flash must not save
+    // "✓ Link copied" as the label to restore.
+    this._original ??= this.labelTarget.innerHTML
     this.labelTarget.textContent = text
-    setTimeout(() => { this.labelTarget.innerHTML = original }, 1600)
+    clearTimeout(this._flashTimer)
+    this._flashTimer = setTimeout(() => { this.labelTarget.innerHTML = this._original }, 1600)
+  }
+
+  disconnect() {
+    clearTimeout(this._flashTimer)
+    if (this._original != null && this.hasLabelTarget) this.labelTarget.innerHTML = this._original
   }
 }

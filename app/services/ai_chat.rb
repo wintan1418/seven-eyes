@@ -33,24 +33,35 @@ class AiChat
   # request before the next is tried.
   PROVIDERS = %i[ gemini openai routellm ].freeze
 
+  # Cost/latency guards: every request carries an output-token ceiling, the
+  # prompt is capped, and a hung provider is abandoned quickly (a Puma thread
+  # waiting 40s on an LLM is a thread nobody else can use).
+  DEFAULT_MAX_TOKENS = 1500
+  MAX_PROMPT_CHARS   = 24_000
+  OPEN_TIMEOUT       = 5
+  READ_TIMEOUT       = 20
+
   Result = Struct.new(:ok, :content, :provider, :error, keyword_init: true) do
     def ok? = ok
   end
 
-  def self.call(system:, user:, json: true, temperature: 0.2)
-    new(system:, user:, json:, temperature:).call
+  def self.call(system:, user:, json: true, temperature: 0.2, max_tokens: DEFAULT_MAX_TOKENS)
+    new(system:, user:, json:, temperature:, max_tokens:).call
   end
 
-  def initialize(system:, user:, json: true, temperature: 0.2)
+  def initialize(system:, user:, json: true, temperature: 0.2, max_tokens: DEFAULT_MAX_TOKENS)
     @system = system.to_s
-    @user = user.to_s
+    @user = user.to_s[0, MAX_PROMPT_CHARS]
     @json = json
     @temperature = temperature
+    @max_tokens = max_tokens.to_i.clamp(1, 8000)
   end
 
   def call
     configured = PROVIDERS.select { |p| key_for(p).present? }
     return Result.new(ok: false, error: :no_key) if configured.empty?
+    # Global daily backstop across every AI feature — fails soft, never raises.
+    return Result.new(ok: false, error: :budget) unless AiBudget.charge(:chat)
 
     last_error = :api
     configured.each do |provider|
@@ -101,6 +112,7 @@ class AiChat
     body = {
       model: model,
       temperature: @temperature,
+      max_tokens: @max_tokens,
       messages: [
         { role: "system", content: @system },
         { role: "user", content: @user }
@@ -125,7 +137,7 @@ class AiChat
     body = {
       system_instruction: { parts: [ { text: @system } ] },
       contents: [ { role: "user", parts: [ { text: @user } ] } ],
-      generationConfig: { temperature: @temperature }
+      generationConfig: { temperature: @temperature, maxOutputTokens: @max_tokens }
     }
     body[:generationConfig][:responseMimeType] = "application/json" if @json
 
@@ -154,6 +166,7 @@ class AiChat
     body = {
       model: model,
       temperature: @temperature,
+      max_tokens: @max_tokens,
       messages: [
         { role: "system", content: @system },
         { role: "user", content: @user }
@@ -172,8 +185,8 @@ class AiChat
   def post_json(uri, body)
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
-    http.read_timeout = 40
-    http.open_timeout = 10
+    http.read_timeout = (ENV["AI_READ_TIMEOUT"].presence || READ_TIMEOUT).to_i
+    http.open_timeout = OPEN_TIMEOUT
 
     req = Net::HTTP::Post.new(uri)
     req["Content-Type"] = "application/json"

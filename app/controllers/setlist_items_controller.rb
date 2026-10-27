@@ -1,7 +1,9 @@
 # The preach queue ("setlist"): scripture references, songs, and thoughts the
 # operator lines up before the service and walks through from the preach bar.
 # Every action re-renders the queue's Turbo Frame; guests can build a queue on
-# their session study (current_study resolves owner-or-guest).
+# their session study (current_study resolves owner-or-guest). Pictures are
+# hosted on Cloudinary, so uploading one needs an account and is capped per
+# study (SetlistItem::PICTURE_LIMIT).
 class SetlistItemsController < ApplicationController
   allow_unauthenticated_access
 
@@ -9,16 +11,17 @@ class SetlistItemsController < ApplicationController
 
   def create
     attrs = item_params
+    return reject_kind(attrs) unless valid_kind?(attrs[:kind])
     return create_scriptures(attrs[:reference]) if attrs[:kind] == "scripture"
 
     if attrs[:kind] == "picture"
-      upload = PictureUpload.call(params.dig(:setlist_item, :image))
-      unless upload.ok?
-        @errored = @study.setlist_items.new(attrs)
-        @errored.errors.add(:base, PictureUpload.message_for(upload.error))
-        return render_setlist
+      error = picture_refusal
+      error ||= begin
+        upload = PictureUpload.call(params.dig(:setlist_item, :image))
+        attrs = attrs.merge(media_url: upload.url, media_public_id: upload.public_id) if upload.ok?
+        PictureUpload.message_for(upload.error) unless upload.ok?
       end
-      attrs = attrs.merge(media_url: upload.url, media_public_id: upload.public_id)
+      return render_error(attrs, error) if error
     end
     item = @study.setlist_items.create(attrs)
     @errored = item unless item.persisted?
@@ -26,7 +29,17 @@ class SetlistItemsController < ApplicationController
   end
 
   def update
-    item.update(item_params)
+    attrs = item_params
+    return reject_kind(attrs) if attrs.key?(:kind) && !valid_kind?(attrs[:kind])
+
+    was_picture = item.picture?
+    old_public_id = item.media_public_id
+    if was_picture && attrs[:kind].present? && attrs[:kind] != "picture"
+      attrs = attrs.merge(media_url: nil, media_public_id: nil)
+    end
+    if item.update(attrs) && was_picture && !item.picture?
+      PictureUpload.purge(old_public_id) # the picture left the queue
+    end
     render_setlist
   end
 
@@ -72,6 +85,30 @@ class SetlistItemsController < ApplicationController
     render_setlist
   end
 
+  # Why a picture can't be added (before any upload is attempted), or nil.
+  def picture_refusal
+    return "Sign in to add pictures to the queue" unless authenticated?
+    if @study.setlist_items.picture.count >= SetlistItem::PICTURE_LIMIT
+      "This queue already holds #{SetlistItem::PICTURE_LIMIT} pictures — remove one first"
+    end
+  end
+
+  def valid_kind?(kind)
+    SetlistItem.kinds.key?(kind.to_s)
+  end
+
+  # An unknown kind (tampered form) is a 422 with the form re-rendered — never
+  # an ArgumentError 500 from the enum.
+  def reject_kind(attrs)
+    render_error(attrs.except(:kind), "Pick what kind of item this is", status: :unprocessable_entity)
+  end
+
+  def render_error(attrs, message, status: :ok)
+    @errored = @study.setlist_items.new(attrs.slice(:kind, :reference, :title, :body))
+    @errored.errors.add(:base, message)
+    render_setlist(status: status)
+  end
+
   def set_study
     @study = current_study(params[:study_id])
   end
@@ -84,7 +121,8 @@ class SetlistItemsController < ApplicationController
     params.require(:setlist_item).permit(:kind, :reference, :title, :body)
   end
 
-  def render_setlist
-    render partial: "studies/setlist", locals: { study: @study, errored: @errored }, layout: false
+  def render_setlist(status: :ok)
+    render partial: "studies/setlist", locals: { study: @study, errored: @errored },
+           layout: false, status: status
   end
 end

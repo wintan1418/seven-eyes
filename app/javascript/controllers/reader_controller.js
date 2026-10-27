@@ -8,6 +8,18 @@ import { Controller } from "@hotwired/stimulus"
 // speech synthesis, which reads the visible verses in the foreground only.
 let active = null // one narration at a time across panes
 
+// One <audio> element for the whole page, reused for every chapter. iOS only
+// lets an element that was started by a tap keep playing (and auto-advance)
+// in the background; a fresh `new Audio()` per chapter is refused there.
+let sharedAudio = null
+function audioElement() {
+  if (!sharedAudio) {
+    sharedAudio = new Audio()
+    sharedAudio.preload = "auto"
+  }
+  return sharedAudio
+}
+
 const POLL_MS = 4000
 const MAX_POLLS = 45 // ~3 minutes — long chapters take a while to narrate
 
@@ -20,13 +32,20 @@ export default class extends Controller {
     this._poll = null
     this._armed = null // info ready to play but blocked by autoplay policy
     this._onEnd = () => this.reset()
+    // This controller sits on the pane's turbo-frame, which survives frame
+    // navigations: a new chapter/translation must not keep narrating the old
+    // one behind a reset button.
+    this._onFrameRender = (e) => { if (e.target === this.element) this.stop() }
+    this.element.addEventListener("turbo:frame-render", this._onFrameRender)
   }
 
   disconnect() {
+    this.element.removeEventListener("turbo:frame-render", this._onFrameRender)
     this.stop()
   }
 
   toggle() {
+    if (this.state === "paused") { this._audio?.play().catch(() => this.reset()); return }
     if (this.state !== "idle") return this.stop()
     if (this._armed) {
       const info = this._armed
@@ -84,11 +103,15 @@ export default class extends Controller {
   }
 
   async play(info) {
-    this.releaseAudio()
-    const audio = new Audio(info.url)
-    audio.preload = "auto"
-    audio.addEventListener("ended", () => this.advance(info))
-    audio.addEventListener("error", () => { if (this._audio === audio) this.reset() })
+    const audio = audioElement()
+    audio.pause()
+    // Re-point the shared element; handlers are assignments so a previous
+    // pane's narration can't keep listening.
+    audio.onended = () => { if (this._audio === audio) this.advance(info) }
+    audio.onerror = () => { if (this._audio === audio && audio.getAttribute("src")) this.reset() }
+    audio.onpause = () => { if (this._audio === audio && !audio.ended && this.state === "playing") this.setPaused(true) }
+    audio.onplay = () => { if (this._audio === audio && this.state === "paused") this.setPaused(false) }
+    audio.src = info.url
     this._audio = audio
 
     try {
@@ -129,7 +152,7 @@ export default class extends Controller {
     })
     navigator.mediaSession.playbackState = "playing"
     const audio = () => this._audio
-    navigator.mediaSession.setActionHandler("play", () => audio()?.play())
+    navigator.mediaSession.setActionHandler("play", () => audio()?.play().catch(() => {}))
     navigator.mediaSession.setActionHandler("pause", () => audio()?.pause())
     navigator.mediaSession.setActionHandler("stop", () => this.stop())
     navigator.mediaSession.setActionHandler("seekbackward", () => { const a = audio(); if (a) a.currentTime = Math.max(0, a.currentTime - 15) })
@@ -171,33 +194,44 @@ export default class extends Controller {
   // ---- Teardown ----
 
   stop() {
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel()
+    // Only silence what this pane started — another pane may be narrating.
+    if (active === this && "speechSynthesis" in window) window.speechSynthesis.cancel()
     this.reset()
   }
 
   reset() {
     if (this._poll) { clearTimeout(this._poll); this._poll = null }
     this.releaseAudio()
-    this.clearMediaSession()
+    if (active === this) this.clearMediaSession()
     this._armed = null
     this.setState("idle")
     if (active === this) active = null
   }
 
+  // Paused from the lock screen / headphones: reflect it on the button and in
+  // the Media Session, so the OS shows a Play control rather than Pause.
+  setPaused(paused) {
+    this.setState(paused ? "paused" : "playing")
+    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = paused ? "paused" : "playing"
+  }
+
   releaseAudio() {
     if (!this._audio) return
-    this._audio.pause()
-    this._audio.removeAttribute("src")
+    const audio = this._audio
     this._audio = null
+    audio.onended = audio.onerror = audio.onpause = audio.onplay = null
+    audio.pause()
+    audio.removeAttribute("src")
+    audio.load()
   }
 
   setState(state) {
     this.state = state
     if (!this.hasButtonTarget) return
     const btn = this.buttonTarget
-    btn.classList.toggle("is-on", state === "playing")
+    btn.classList.toggle("is-on", state === "playing" || state === "paused")
     btn.classList.toggle("is-loading", state === "loading")
-    btn.innerHTML = { idle: "&#9658;", loading: "&#8987;", playing: "&#9632;" }[state] // ▶ ⌛ ■
-    btn.title = { idle: "Listen to this chapter", loading: "Preparing audio…", playing: "Stop listening" }[state]
+    btn.innerHTML = { idle: "&#9658;", loading: "&#8987;", playing: "&#9632;", paused: "&#9658;" }[state] // ▶ ⌛ ■ ▶
+    btn.title = { idle: "Listen to this chapter", loading: "Preparing audio…", playing: "Stop listening", paused: "Resume listening" }[state]
   }
 }

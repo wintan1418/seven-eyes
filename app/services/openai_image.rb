@@ -31,6 +31,9 @@ class OpenaiImage
   def generate
     return Result.new(ok: false, error: :blank) if @prompt.strip.empty?
     return Result.new(ok: false, error: :no_key) if api_key.blank?
+    # Global daily image backstop (AI_DAILY_IMAGE_LIMIT) — images are the
+    # priciest call we make.
+    return Result.new(ok: false, error: :budget) unless AiBudget.charge(:image)
 
     b64 = request
     return Result.new(ok: false, error: :api) if b64.blank?
@@ -81,8 +84,8 @@ class OpenaiImage
   def post(uri, json, auth:)
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
-    http.read_timeout = 120
-    http.open_timeout = 10
+    http.read_timeout = 90
+    http.open_timeout = 5
 
     req = Net::HTTP::Post.new(uri)
     req["Content-Type"] = "application/json"

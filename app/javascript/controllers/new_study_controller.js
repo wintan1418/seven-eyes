@@ -4,15 +4,25 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["modal", "name", "count", "seg"]
 
+  connect() {
+    this._onKey = (e) => { if (e.key === "Escape") this.close() }
+  }
+
+  disconnect() {
+    document.removeEventListener("keydown", this._onKey)
+    clearTimeout(this._focusTimer)
+  }
+
   open(event) {
     event?.preventDefault()
     this.modalTarget.classList.add("is-open")
-    document.addEventListener("keydown", this._onKey ||= (e) => { if (e.key === "Escape") this.close() })
-    setTimeout(() => this.nameTarget?.focus(), 50)
+    document.addEventListener("keydown", this._onKey)
+    this._focusTimer = setTimeout(() => { if (this.hasNameTarget) this.nameTarget.focus() }, 50)
   }
 
   close() {
     this.modalTarget.classList.remove("is-open")
+    document.removeEventListener("keydown", this._onKey)
   }
 
   choosePanes(event) {

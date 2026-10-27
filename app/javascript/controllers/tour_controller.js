@@ -43,17 +43,19 @@ export default class extends Controller {
     const forced = new URLSearchParams(window.location.search).get("tour") === "1"
     if (forced || !this.alreadyDone()) {
       // let the workspace paint first
-      setTimeout(() => this.start(), forced ? 0 : 600)
+      this._autoStart = setTimeout(() => this.start(), forced ? 0 : 600)
     }
   }
 
   disconnect() {
+    clearTimeout(this._autoStart) // navigated away before the tour began
     window.removeEventListener("tour:start", this._onStart)
     this.teardown()
   }
 
   alreadyDone() {
-    return this.authenticatedValue ? this.doneValue : localStorage.getItem(KEY) === "1"
+    if (this.authenticatedValue) return this.doneValue
+    try { return localStorage.getItem(KEY) === "1" } catch { return false }
   }
 
   start() {
@@ -157,7 +159,7 @@ export default class extends Controller {
 
   finish() {
     this.teardown()
-    localStorage.setItem(KEY, "1")
+    try { localStorage.setItem(KEY, "1") } catch { /* storage unavailable */ }
     if (this.authenticatedValue && this.urlValue) {
       const token = document.querySelector('meta[name="csrf-token"]')?.content
       fetch(this.urlValue, {

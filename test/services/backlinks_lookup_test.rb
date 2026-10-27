@@ -54,6 +54,16 @@ class BacklinksLookupTest < ActiveSupport::TestCase
     assert_equal 1, matches.size
   end
 
+  test "a cross-chapter range in a note covers verses in its later chapter" do
+    study = @user.studies.create!(name: "Span", pane_count: 1)
+    study.panes.first.update!(notes: "Read [[John 3:16-4:2]]")
+
+    assert_equal 1, BacklinksLookup.for(user: @user, book: @john, chapter: 4, verse: 1).size
+    assert_equal 1, BacklinksLookup.for(user: @user, book: @john, chapter: 3, verse: 20).size
+    assert_empty BacklinksLookup.for(user: @user, book: @john, chapter: 4, verse: 3)
+    assert_empty BacklinksLookup.for(user: @user, book: @john, chapter: 3, verse: 15)
+  end
+
   test "returns nothing when user is nil (guest)" do
     assert_empty BacklinksLookup.for(user: nil, book: @john, chapter: 3, verse: 16)
   end

@@ -18,7 +18,8 @@
 # so it is fully unit-testable without seeded data. Callers turn the OSIS code into a
 # Book record when querying verses.
 class ReferenceParser
-  # After normalisation the input is "<book words> [chapter [sep verse [- verse]]]".
+  # After normalisation the input is
+  #   "<book words> [chapter [sep verse [- [chapter sep] verse]] | [- chapter]]".
   # The book is a lazy run of letters (with an optional 1–3 prefix) so that
   # "1cor1:1", "song of songs 2" and "philippians" all split correctly.
   RANGE_RE = /\A
@@ -26,9 +27,10 @@ class ReferenceParser
     (?:\s*
       (?<chapter>\d+)
       (?:
-        \s*[:.,]?\s*(?<v1>\d+)(?:\s*-\s*(?<v2>\d+))?   # chapter:verse[-verse]
+        \s*[:.,]?\s*(?<v1>\d+)                                     # chapter:verse
+          (?:\s*-\s*(?:(?<c2v>\d+)\s*[:.]\s*)?(?<v2>\d+))?        #   [-verse | -chapter:verse]
         |
-        \s*-\s*(?<c2>\d+)                              # chapter-chapter (or verses in a one-chapter book)
+        \s*-\s*(?<c2>\d+)                                          # chapter-chapter (or verses in a one-chapter book)
       )?
     )?
   \s*\z/x
@@ -38,18 +40,41 @@ class ReferenceParser
   FUZZY_MIN_LENGTH = 4
   PREFIX_MIN_LENGTH = 3
 
+  # chapter_end equals chapter for a single-chapter reference; verse_end is the
+  # last verse *in chapter_end* ("John 3:16-4:2" => chapter 3, verse_start 16,
+  # chapter_end 4, verse_end 2). "Matt 5-7" has chapters 5..7 and no verses.
+  # open_ended ("John 3:16ff") runs from verse_start to the end of the chapter,
+  # so verse_end is nil.
   Result = Struct.new(:osis, :book_name, :chapter, :verse_start, :verse_end, :valid, :error, :chapter_count,
-                      keyword_init: true) do
+                      :chapter_end, :open_ended, keyword_init: true) do
     def valid? = valid
     def whole_chapter? = valid && verse_start.nil?
+    def multi_chapter? = valid && chapter_end.to_i > chapter.to_i
+    def open_ended? = valid && open_ended == true
+    def last_chapter = chapter_end || chapter
 
     def label
       return nil unless valid
       base = "#{book_name} #{chapter}"
-      return base if verse_start.nil?
+      if verse_start.nil?
+        return multi_chapter? ? "#{base}-#{chapter_end}" : base
+      end
       base += ":#{verse_start}"
-      base += "-#{verse_end}" if verse_end && verse_end != verse_start
+      return "#{base}ff" if open_ended?
+      if multi_chapter?
+        base += "-#{chapter_end}:#{verse_end}"
+      elsif verse_end && verse_end != verse_start
+        base += "-#{verse_end}"
+      end
       base
+    end
+
+    # Keyword arguments for Verse.passage that load exactly this reference.
+    def passage_args
+      {
+        chapter: chapter, chapter_end: chapter_end, verse_start: verse_start,
+        verse_end: open_ended? ? Float::INFINITY : verse_end
+      }
     end
   end
 
@@ -70,18 +95,20 @@ class ReferenceParser
     return invalid(:unknown_book) unless osis
 
     entry = Bible::Canon.find(osis)
-    chapter, v1, v2 = resolve_location(entry, m[:chapter], m[:v1], m[:v2], m[:c2])
-    return invalid(:bad_chapter, entry) unless chapter
-    return invalid(:bad_verse, entry) if v1 && v1 < 1
+    location = resolve_location(entry, m)
+    return invalid(location, entry) if location.is_a?(Symbol)
 
-    v1, v2 = v2, v1 if v1 && v2 && v2 < v1 # "3:18-16" is a typo for 3:16-18
+    chapter, v1, chapter_end, v2 = location
+    open_ended = @open_ended && v1 && v2.nil? ? true : false
 
     Result.new(
       osis: osis,
       book_name: entry.name,
       chapter: chapter,
+      chapter_end: chapter_end,
       verse_start: v1,
-      verse_end: v2 || v1,
+      verse_end: open_ended ? nil : (v2 || v1),
+      open_ended: open_ended,
       chapter_count: entry.chapter_count,
       valid: true
     )
@@ -103,6 +130,7 @@ class ReferenceParser
     s = s.tr("–—‐‒", "----")      # – — ‐ ‒ → -
     s = s.gsub(/[;!?'"()\[\]]+/, " ")
     s = s.gsub(/\s+/, " ")
+    s = s.sub(/\A(?:saint|st)\b\.?\s*(?=[a-z])/, "")                    # "St John 3:16"
     s = s.sub(/\A(?:1st|first)\b\.?\s*/, "1 ")
     s = s.sub(/\A(?:2nd|second)\b\.?\s*/, "2 ")
     s = s.sub(/\A(?:3rd|third)\b\.?\s*/, "3 ")
@@ -112,6 +140,9 @@ class ReferenceParser
     s = s.sub(/(\D):(\d)/, '\1 \2')                                       # "jeremiah:3" -> "jeremiah 3"
     s = s.gsub(/([a-z])\./, '\1 ')                                        # "gen. 1:1" -> "gen 1:1"
     s = s.gsub(/[.,:\-\s]+\z/, "")                                        # trailing punctuation
+    @open_ended = false
+    s = s.sub(/(\d)\s*ff?\z/) { @open_ended = true; $1 }                 # "3:16ff" -> through chapter end
+    s = s.gsub(/(?<=\d)[abc](?=\s*-|\s*\z)/, "")                          # "3:16a", "3:16b-18" (verse parts)
     s.gsub(/\s+/, " ").strip
   end
 
@@ -171,23 +202,40 @@ class ReferenceParser
 
   # ---- chapter / verse resolution ----
 
-  # Returns [chapter, verse_start, verse_end], or [nil, ...] when the chapter is
-  # outside the book. A bare book name opens chapter 1. In a one-chapter book
-  # (Jude, Philemon, Obadiah, 2–3 John) a bare number is a verse: "Jude 3" is
-  # Jude 1:3 and "Jude 3-5" is Jude 1:3-5.
-  def resolve_location(entry, chapter_raw, v1_raw, v2_raw, c2_raw)
-    return [ 1, nil, nil ] if chapter_raw.nil?
+  # Returns [chapter, verse_start, chapter_end, verse_end], or an error symbol
+  # (:bad_chapter / :bad_verse). A bare book name opens chapter 1. In a
+  # one-chapter book (Jude, Philemon, Obadiah, 2–3 John) bare numbers are
+  # verses: "Jude 3" is Jude 1:3 and "Jude 1-3" is Jude 1:1-3.
+  def resolve_location(entry, m)
+    return [ 1, nil, 1, nil ] if m[:chapter].nil?
 
-    n = chapter_raw.to_i
-    v1 = v1_raw&.to_i
-    v2 = v2_raw&.to_i
+    n = m[:chapter].to_i
+    v1 = m[:v1]&.to_i
+    v2 = m[:v2]&.to_i
+    c2 = m[:c2]&.to_i
+    c2v = m[:c2v]&.to_i
 
-    if entry.chapter_count == 1 && n > 1 && v1.nil?
-      return [ 1, n, c2_raw&.to_i ]
+    if entry.chapter_count == 1 && v1.nil? && (n > 1 || c2)
+      v1, v2 = n, c2
+      return :bad_verse if v1 < 1 || (v2 && v2 < 1)
+      v1, v2 = v2, v1 if v2 && v2 < v1
+      return [ 1, v1, 1, v2 ]
     end
-    return [ nil, nil, nil ] if n < 1 || n > entry.chapter_count
+    return :bad_chapter if n < 1 || n > entry.chapter_count
+    return :bad_verse if (v1 && v1 < 1) || (v2 && v2 < 1)
 
-    # "Psalm 23-24" names two chapters; we show the first. (c2 ignored.)
-    [ n, v1, v2 ]
+    if c2 # "Matt 5-7": a run of whole chapters
+      first, last = [ n, c2 ].minmax
+      return :bad_chapter if first < 1 || last > entry.chapter_count
+      return [ first, nil, last, nil ]
+    end
+
+    if c2v && c2v != n # "John 3:16-4:2": crosses a chapter boundary
+      return :bad_chapter if c2v < n || c2v > entry.chapter_count
+      return [ n, v1, c2v, v2 ]
+    end
+
+    v1, v2 = v2, v1 if v1 && v2 && v2 < v1 # "3:18-16" is a typo for 3:16-18
+    [ n, v1, n, v2 ]
   end
 end

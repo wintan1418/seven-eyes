@@ -1,8 +1,10 @@
 <% content_for :title, "Remote · Parallel Scripture" %>
 
+<% if @paired %>
 <div class="ps-remote-pad"
      data-controller="remote-pad"
-     data-remote-pad-code-value="<%= @code %>">
+     data-remote-pad-code-value="<%= @code %>"
+     data-remote-pad-token-value="<%= @token %>">
 
   <header class="head">
     <span class="dot" data-remote-pad-target="dot" aria-hidden="true"></span>
@@ -33,3 +35,16 @@
 
   <p class="hint">Keep this page open &mdash; taps land on the projection instantly.</p>
 </div>
+<% else %>
+<div class="ps-remote-pad is-unpaired">
+  <header class="head">
+    <span class="dot" aria-hidden="true"></span>
+    <span class="status">Pairing expired</span>
+    <span class="code"><%= @code %></span>
+  </header>
+  <p class="hint">
+    This remote link is no longer valid. On the preaching console, open
+    &#9742; Remote and scan the pairing QR again.
+  </p>
+</div>
+<% end %>
