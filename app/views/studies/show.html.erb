@@ -21,7 +21,8 @@
 
   <div class="ps-shell">
     <main class="ps-workspace <%= workspace_cols_class(@study.pane_count) %>"
-          data-controller="sync-scroll verse-select" data-action="click->verse-select#click"
+          data-controller="sync-scroll verse-select chapter-swipe"
+          data-action="click->verse-select#click touchstart->chapter-swipe#start:passive touchend->chapter-swipe#end"
           data-sync-scroll-enabled-value="<%= @study.sync_scroll %>">
       <% @study.panes.each do |pane| %>
         <%= render "panes/pane", pane: pane %>
@@ -29,7 +30,10 @@
     </main>
   </div>
   <%= render "studies/compare_bar", study: @study if @study.pane_count > 1 %>
-  <%= render "studies/verse_action_bar", study: @study unless output_window %>
+  <% unless output_window %>
+    <%= render "studies/verse_action_bar", study: @study %>
+    <%= render "studies/tab_bar" %>
+  <% end %>
 
   <% unless output_window %>
     <%= render "studies/menu_sheet", studies: @studies, active_id: @study.id, study: @study, new_study_modal: true %>

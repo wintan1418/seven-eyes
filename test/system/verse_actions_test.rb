@@ -105,6 +105,7 @@ class VerseActionsTest < ApplicationSystemTestCase
   end
 
   def tap_verse(n)
+    wait_for_reader_js
     find(".ps-pane .ps-verse[data-verse-num='#{n}'] .ps-verse-text").click
   end
 

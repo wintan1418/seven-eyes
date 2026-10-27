@@ -18,7 +18,7 @@
 .ui-actionbar {
   position: fixed; z-index: 40;
   left: 50%; transform: translateX(-50%);
-  bottom: calc(var(--chrome-bottom, 0px) + 12px + env(safe-area-inset-bottom));
+  bottom: calc(var(--chrome-bottom, env(safe-area-inset-bottom, 0px)) + 12px);
   width: min(560px, calc(100vw - 16px));
   padding: 8px 10px 10px; border-radius: 18px;
   background: var(--ui-elevated); color: var(--ui-fg); border: 1px solid var(--ui-border);
@@ -68,7 +68,7 @@ html.ui-has-actionbar .rd-column { padding-bottom: 240px; }
 html.ui-has-actionbar .rd-chapter-nav { opacity: 0; pointer-events: none; }
 
 /* The selection popover (selected words) sits above the tab bar too. */
-body .ps-hl-popover.is-touch-bar { bottom: calc(var(--chrome-bottom, 0px) + 12px + env(safe-area-inset-bottom)); }
+body .ps-hl-popover.is-touch-bar { bottom: calc(var(--chrome-bottom, env(safe-area-inset-bottom, 0px)) + 12px); }
 
 /* Study panels: right panel, docked beside the text on wide screens -------- */
 .ps-root:not(.is-presenting, .is-output) :is(.ps-xref-host, .ps-rabbi-host) .ps-drawer {

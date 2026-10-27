@@ -1,0 +1,13 @@
+<%# Phone tab bar (under 768px): Bible · Notes · Plans · More. %>
+<nav class="ui-tabbar" data-controller="tab-bar" data-chrome aria-label="Sections">
+  <button type="button" class="ui-tab is-current" aria-current="page"
+          data-action="sheets#open" data-sheets-id-param="passage"><%= icon(:book) %><span>Bible</span></button>
+  <button type="button" class="ui-tab" data-action="tab-bar#notes"><%= icon(:notes) %><span>Notes</span></button>
+  <% if authenticated? %>
+    <%= link_to reading_plans_path, class: "ui-tab" do %><%= icon(:calendar) %><span>Plans</span><% end %>
+  <% else %>
+    <button type="button" class="ui-tab" data-action="auth-gate#open"><%= icon(:calendar) %><span>Plans</span></button>
+  <% end %>
+  <button type="button" class="ui-tab" data-action="sheets#open" data-sheets-id-param="more"
+          data-tour="more-tab"><%= icon(:more) %><span>More</span></button>
+</nav>

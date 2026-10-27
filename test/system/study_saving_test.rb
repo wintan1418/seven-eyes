@@ -58,6 +58,7 @@ class StudySavingTest < ApplicationSystemTestCase
   test "notes typed just before a translation switch are kept" do
     sign_in
     visit study_path(@study)
+    wait_for_reader_js
     find(".ps-pane-tool[title='Notes']").click
     find(".ps-notes-area").fill_in(with: "Written a heartbeat before switching")
     # Switch inside the 700ms debounce window: the frame request must wait for
@@ -72,6 +73,7 @@ class StudySavingTest < ApplicationSystemTestCase
   test "Cmd/Ctrl+S saves notes immediately and says so" do
     sign_in
     visit study_path(@study)
+    wait_for_reader_js
     find(".ps-pane-tool[title='Notes']").click
     area = find(".ps-notes-area")
     area.fill_in(with: "Saved by the shortcut")

@@ -167,7 +167,7 @@ body .ps-hl-popover .x-ref {
 }
 body .ps-hl-popover .x-ref:hover { background: var(--ui-surface-2); color: var(--ui-fg); }
 body .ps-hl-popover.is-touch-bar {
-  bottom: calc(var(--tabbar-h, 0px) + 12px);
+  bottom: calc(var(--chrome-bottom, env(safe-area-inset-bottom, 0px)) + 12px);
   border-radius: 16px; padding: 8px 10px; gap: 6px;
 }
 body .ps-hl-popover.is-touch-bar .ps-hl-swatch { width: 32px; height: 32px; border-radius: 999px; }

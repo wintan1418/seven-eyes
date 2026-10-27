@@ -13,6 +13,9 @@ application.register("auth-gate", AuthGateController)
 import AutoSubmitController from "./auto_submit_controller"
 application.register("auto-submit", AutoSubmitController)
 
+import ChapterSwipeController from "./chapter_swipe_controller"
+application.register("chapter-swipe", ChapterSwipeController)
+
 import CommentaryController from "./commentary_controller"
 application.register("commentary", CommentaryController)
 
@@ -105,6 +108,9 @@ application.register("shortcuts", ShortcutsController)
 
 import SyncScrollController from "./sync_scroll_controller"
 application.register("sync-scroll", SyncScrollController)
+
+import TabBarController from "./tab_bar_controller"
+application.register("tab-bar", TabBarController)
 
 import ThemeController from "./theme_controller"
 application.register("theme", ThemeController)

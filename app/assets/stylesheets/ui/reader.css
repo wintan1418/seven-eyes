@@ -211,6 +211,14 @@
 .ps-root:not(.is-presenting, .is-output) .ps-pane-empty .ui-btn { margin-top: 8px; }
 /* Side-by-side panes: the floating arrows would sit on the text — each pane
    ends with its own "Next" card instead. */
-@media (min-width: 768px) {
-  .ps-root.is-compare .rd-chapter-nav { display: none; }
+.ps-root.is-compare .rd-chapter-nav { display: none; }
+/* …and a compact heading, since each pane's chips already name it. */
+.ps-root.is-compare:not(.is-presenting, .is-output) .rd-chapter-head { margin-bottom: 8px; }
+.ps-root.is-compare:not(.is-presenting, .is-output) .rd-chapter-head .rd-chapter-num { font-size: 30px; }
+.ps-root.is-compare:not(.is-presenting, .is-output) .rd-chapter-head .rd-trans { display: none; }
+.ps-root.is-compare .rd-chapter-tools { margin-bottom: 14px; }
+@media (max-width: 767px) {
+  .ps-root.is-compare .rd-column { padding-top: 16px; }
+  .ps-root.is-compare:not(.is-presenting, .is-output) .rd-chapter-head .rd-book { display: none; }
+  .ps-root.is-compare .rd-chapter-tools { display: none; }
 }
