@@ -7,6 +7,7 @@ require "application_system_test_case"
 class StudySavingTest < ApplicationSystemTestCase
   setup do
     @user = users(:one)
+    @user.update!(tour_completed_at: Time.current) # the first-run tour would sit over the verses
     @kjv = Translation.create!(code: "KJV", name: "King James Version")
     @web = Translation.create!(code: "WEB", name: "World English Bible")
     @jer = Book.create!(osis_code: "Jer", name: "Jeremiah", testament: :old, position: 24, chapter_count: 52)

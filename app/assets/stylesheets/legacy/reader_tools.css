@@ -1,0 +1,357 @@
+/* ====== View dropdown: collapses font/theme/diff/lemma into one menu ====== */
+.ps-view-menu { position: relative; display: inline-flex; }
+.ps-view-menu .ps-view-trigger.is-open,
+.ps-view-menu.is-open .ps-view-trigger {
+  background: rgba(163, 129, 46, 0.18);
+  color: var(--vellum-0);
+  border-color: rgba(163, 129, 46, 0.55);
+}
+.ps-view-panel {
+  /* `fixed` escapes .ps-root's overflow:hidden AND any positioned ancestor's
+     stacking context. `!important` shields against any cascade pollution from
+     Tailwind utilities; the z-index is well above modals (30) and the offline
+     badge (200). JS sets top/right from the trigger rect; the CSS fallbacks
+     keep the panel visible even if JS fails to run. */
+  position: fixed !important;
+  top: 64px;
+  right: 16px;
+  min-width: 240px;
+  max-width: 320px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  background: var(--vellum-0, #f4ead2);
+  border: 1px solid var(--vellum-edge, #c9b88e);
+  box-shadow:
+    0 10px 30px rgba(50, 30, 10, 0.35),
+    inset 0 0 0 6px rgba(255, 247, 224, 0.4),
+    inset 0 0 0 7px rgba(163, 129, 46, 0.35);
+  padding: 14px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  color: var(--ink, #231408);
+}
+.ps-view-panel[hidden] { display: none; }
+.ps-view-section { display: flex; flex-direction: column; gap: 6px; }
+.ps-view-label {
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  font-size: 9.5px;
+  color: var(--sepia-mute);
+  text-transform: uppercase;
+}
+.ps-view-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  padding: 8px 10px;
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1px solid rgba(138, 116, 68, 0.3);
+  border-radius: 2px;
+  font: 600 11px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  letter-spacing: 0.16em;
+  cursor: pointer;
+  text-transform: uppercase;
+  width: 100%;
+}
+.ps-view-btn .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); display: inline-block; }
+.ps-view-btn:hover { background: rgba(163, 129, 46, 0.12); color: var(--ink); }
+.ps-view-btn.is-active {
+  background: rgba(163, 129, 46, 0.2);
+  color: var(--ink);
+  border-color: rgba(163, 129, 46, 0.55);
+}
+.ps-view-btn.is-active .dot { background: #e8c878; box-shadow: 0 0 6px #e8c878; }
+
+/* Font-size slider inside the View menu: full width of the panel */
+.ps-font-size.in-menu {
+  width: 100%;
+  height: 32px;
+  border-color: rgba(138, 116, 68, 0.4);
+  background: rgba(255, 247, 224, 0.4);
+}
+.ps-font-size.in-menu .lbl { color: var(--sepia); }
+.ps-font-size.in-menu .level { color: var(--rubric); }
+.ps-font-size.in-menu input[type="range"] { width: 100%; flex: 1; }
+
+/* Candlelight overrides for the menu */
+body[data-theme="candlelight"] .ps-view-panel {
+  background: var(--vellum-0);
+  color: var(--ink);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 6px rgba(40, 28, 14, 0.4),
+    inset 0 0 0 7px rgba(163, 129, 46, 0.4);
+}
+body[data-theme="candlelight"] .ps-font-size.in-menu { background: rgba(60, 40, 20, 0.4); }
+
+/* ====== Responsive topbar (tablet / narrow viewports) ====== */
+@media (max-width: 1180px) {
+  .ps-topbar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 56px;
+    padding: 8px 16px;
+    gap: 10px;
+  }
+  .ps-study-name { order: 1; flex: 1 1 100%; text-align: center; padding: 4px 0; }
+  .ps-brand { order: 0; }
+  .ps-topbar-actions {
+    order: 2;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+    row-gap: 8px;
+  }
+}
+@media (max-width: 720px) {
+  .ps-topbar { padding: 8px 10px; gap: 8px; }
+  .ps-tb-btn { padding: 6px 8px; font-size: 10px; letter-spacing: 0.14em; }
+  .ps-brand span:last-child { display: none; } /* keep just the cross glyph */
+  .ps-saved-badge,
+  .ps-tb-btn-secondary { display: none; } /* trim "Saved" badge + Hide-guide on phone */
+}
+
+/* ====== Offline indicator (PWA) ====== */
+.ps-offline-badge {
+  position: fixed;
+  top: 14px;
+  left: 16px;
+  background: rgba(35, 20, 8, 0.92);
+  color: var(--vellum-0);
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  border: 1px solid var(--rubric);
+  border-radius: 2px;
+  z-index: 200;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ps-offline-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--rubric); box-shadow: 0 0 6px var(--rubric); }
+
+/* ====== Wiki-style note links and backlinks panel ====== */
+.ps-note-link {
+  color: var(--rubric);
+  text-decoration: none;
+  font-style: normal;
+  border-bottom: 1px dotted var(--rubric);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ps-note-link:hover {
+  color: var(--rubric-deep);
+  border-bottom-style: solid;
+}
+
+.ps-backlinks {
+  padding: 12px 20px 14px;
+  border-bottom: 1px dashed rgba(138, 116, 68, 0.4);
+  background: rgba(255, 247, 224, 0.35);
+}
+.ps-backlinks-head {
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  font-size: 9.5px;
+  color: var(--rubric);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.ps-backlink {
+  display: block;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-left: 2px solid var(--gold);
+  background: rgba(255, 247, 224, 0.55);
+  border-radius: 0 2px 2px 0;
+  text-decoration: none;
+}
+.ps-backlink:hover { background: rgba(255, 247, 224, 0.9); }
+.ps-backlink-meta {
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  font-size: 9.5px;
+  color: var(--sepia);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.ps-backlink-meta .ref { color: var(--sepia-mute); }
+.ps-backlink-snippet {
+  font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+body[data-theme="candlelight"] .ps-backlinks { background: rgba(60, 40, 20, 0.4); }
+body[data-theme="candlelight"] .ps-backlink { background: rgba(60, 40, 20, 0.5); }
+body[data-theme="candlelight"] .ps-backlink:hover { background: rgba(80, 55, 25, 0.6); }
+
+/* ====== Interlinear mode: stack the gloss beneath each Strong's-tagged word ====== */
+.ps-root.is-interlinear .ps-verses { line-height: 1.45; }
+.ps-root.is-interlinear .ps-verse-text .ps-word {
+  display: inline-block;
+  text-align: center;
+  margin: 0 3px 16px;
+  vertical-align: top;
+  text-decoration: none;
+  line-height: 1.1;
+  position: relative;
+}
+.ps-root.is-interlinear .ps-word[data-gloss]::after {
+  content: attr(data-gloss);
+  display: block;
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-size: 0.52em;
+  letter-spacing: 0.04em;
+  color: var(--rubric);
+  margin-top: 3px;
+  line-height: 1;
+  opacity: 0.85;
+  white-space: nowrap;
+  text-transform: none;
+  font-weight: 600;
+}
+
+/* ====== Translation diff (word-level highlight when comparing same verse) ====== */
+/* Strong's words are plain spans, not <a> links — Android Chrome's long-press
+   link menu can't be suppressed and would block selecting Scripture text for
+   highlights / the Rabbi. Keep them selectable, with a pointer cursor for the
+   desktop tap-to-open-lexicon affordance. */
+.ps-word {
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.ps-verse-text, .ps-verse-body { -webkit-user-select: text; user-select: text; }
+.ps-diff-only {
+  background: rgba(216, 100, 50, 0.15);
+  border-bottom: 1px dotted rgba(216, 100, 50, 0.55);
+  border-radius: 1px;
+  padding: 0 1px;
+}
+body[data-theme="candlelight"] .ps-diff-only {
+  background: rgba(232, 130, 80, 0.18);
+  border-bottom-color: rgba(232, 130, 80, 0.6);
+}
+
+/* ====== Shared (read-only) study view ====== */
+.ps-shared-ref {
+  flex: 1;
+  padding: 6px 10px;
+  background: rgba(255, 247, 224, 0.5);
+  border: 1px solid rgba(138, 116, 68, 0.25);
+  border-radius: 2px;
+  font: 14px "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+body[data-theme="candlelight"] .ps-shared-ref {
+  background: rgba(60, 40, 20, 0.5);
+  color: var(--ink-soft);
+}
+
+/* ====== Candlelight (dark vellum) theme ====== */
+body[data-theme="candlelight"] {
+  --vellum-0: #261a0e;
+  --vellum-1: #1c130a;
+  --vellum-2: #14100b;
+  --vellum-edge: #4a3a1f;
+  --vellum-shadow: #0a0703;
+
+  --ink: #f0dfa8;
+  --ink-soft: #d8c389;
+  --sepia: #c4a76c;
+  --sepia-mute: #927651;
+
+  --rubric: #d96b58;
+  --rubric-deep: #a64535;
+  --gold: #d8b550;
+  --gold-deep: #9b7c2e;
+
+  --hl-ochre: rgba(232, 178, 70, 0.32);
+  --hl-sage:  rgba(150, 180, 110, 0.30);
+  --hl-cobalt: rgba(130, 165, 215, 0.30);
+  --hl-rose:  rgba(220, 120, 140, 0.30);
+}
+
+/* Hardcoded vellum-light backgrounds need explicit candlelight overrides. */
+body[data-theme="candlelight"] .ps-pane {
+  background: linear-gradient(180deg, var(--vellum-0) 0%, #1a1108 100%);
+}
+body[data-theme="candlelight"] .ps-sidebar {
+  background: linear-gradient(180deg, #2a1d10 0%, #1a1108 100%);
+  box-shadow: inset -8px 0 16px -8px rgba(0, 0, 0, 0.55);
+}
+body[data-theme="candlelight"] .ps-drawer {
+  background: linear-gradient(180deg, #2a1d10 0%, #1a1108 100%);
+  box-shadow: inset 8px 0 16px -8px rgba(0, 0, 0, 0.55);
+}
+body[data-theme="candlelight"] .ps-search,
+body[data-theme="candlelight"] .ps-trans,
+body[data-theme="candlelight"] .ps-modal input.field {
+  background: rgba(60, 40, 20, 0.55);
+  color: var(--ink);
+}
+body[data-theme="candlelight"] .ps-search.is-focused { background: rgba(80, 55, 25, 0.7); }
+body[data-theme="candlelight"] .ps-pane-tool { color: var(--ink-soft); }
+body[data-theme="candlelight"] .ps-pane-tool:hover {
+  background: rgba(216, 181, 80, 0.14);
+  color: var(--gold);
+}
+body[data-theme="candlelight"] .ps-study-item:hover { background: rgba(216, 181, 80, 0.08); }
+body[data-theme="candlelight"] .ps-study-item.is-active { background: var(--vellum-0); }
+body[data-theme="candlelight"] .ps-notes { background: rgba(60, 40, 20, 0.5); }
+body[data-theme="candlelight"] .ps-modal { background: var(--vellum-0); color: var(--ink); }
+body[data-theme="candlelight"] .ps-dropdown { background: var(--vellum-0); }
+body[data-theme="candlelight"] .ps-dropdown .item:hover { background: rgba(216, 181, 80, 0.10); }
+body[data-theme="candlelight"] .ps-xref:hover { background: rgba(216, 181, 80, 0.08); }
+body[data-theme="candlelight"] .ms-page { background: var(--vellum-0); }
+body[data-theme="candlelight"] .ms-notes { background: rgba(60, 40, 20, 0.5); }
+body[data-theme="candlelight"] .ps-root::before {
+  background:
+    radial-gradient(ellipse at 18% 22%, rgba(216, 181, 80, 0.08), transparent 55%),
+    radial-gradient(ellipse at 82% 78%, rgba(216, 181, 80, 0.10), transparent 60%),
+    radial-gradient(ellipse at 55% 50%, rgba(255, 220, 140, 0.05), transparent 70%);
+}
+body[data-theme="candlelight"] .ps-root::after { opacity: 0.6; }
+body[data-theme="candlelight"] .ps-workspace {
+  background:
+    radial-gradient(ellipse at 50% -5%, rgba(216, 181, 80, 0.08), transparent 60%),
+    var(--vellum-1);
+}
+body[data-theme="candlelight"] .ps-welcome h1 { color: var(--ink); }
+body[data-theme="candlelight"] .ps-manuscript { background: var(--vellum-1); }
+
+/* The topbar already uses a dark gradient — keep it across themes for visual anchor. */
+
+/* Print: drop chrome, expand to page, avoid section splits */
+@media print {
+  body { background: white !important; }
+  .ps-manuscript-bar { display: none !important; }
+  .ps-manuscript { background: white !important; padding: 0; }
+  .ms-page {
+    margin: 0;
+    max-width: none;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    background: white;
+  }
+  .ms-page::before { display: none; }
+  .ms-section, .ms-notes { break-inside: avoid; page-break-inside: avoid; }
+  @page { size: letter; margin: 0.6in 0.65in; }
+}

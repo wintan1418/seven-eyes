@@ -1,5 +1,20 @@
 @import "tailwindcss";
-@import "./scripture.css";
+/* Legacy component layer, split from the old scripture.css in its original
+   order (the cascade depends on it). Preach / projector / live CSS stays
+   verbatim — pastors use it every Sunday. */
+@import "./legacy/parchment.css";
+@import "./preach.css";
+@import "./live.css";
+@import "./sermon.css";
+@import "./legacy/reader_tools.css";
+@import "./preach_queue.css";
+@import "./admin.css";
+@import "./whats_new.css";
+@import "./preach_screen.css";
+@import "./whats_new_mocks.css";
+@import "./welcome.css";
+@import "./landing.css";
+@import "./legacy/audio.css";
 
 /* Ancient Epistle palette + fonts exposed as Tailwind v4 tokens.
    The .ps-* component layer in scripture.css uses the raw CSS vars in :root

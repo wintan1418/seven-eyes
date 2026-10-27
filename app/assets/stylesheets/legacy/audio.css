@@ -1,0 +1,10 @@
+/* ====== Audio Bible: the pane's listen button while narration is prepared ====== */
+.ps-pane-tool.is-loading {
+  animation: psReaderPulse 1.2s ease-in-out infinite;
+}
+@keyframes psReaderPulse {
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-pane-tool.is-loading { animation: none; opacity: 0.6; }
+}
