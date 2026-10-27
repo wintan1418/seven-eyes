@@ -599,6 +599,13 @@ export default class extends Controller {
     try {
       const res = await fetch(`${this.quickFindUrlValue}?q=${encodeURIComponent(q)}`,
                               { headers: { Accept: "application/json" } })
+      if (res.status === 401) {
+        // AI search needs an account — open the sign-in gate instead of "Nothing found".
+        box.hidden = true
+        this._findsOpen = false
+        window.dispatchEvent(new CustomEvent("auth:required"))
+        return
+      }
       data = await res.json()
     } catch { data = null }
     if (!this._findsOpen) return // the operator moved on while we searched

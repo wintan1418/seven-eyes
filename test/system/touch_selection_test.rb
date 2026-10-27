@@ -72,6 +72,8 @@ class TouchSelectionTest < ApplicationSystemTestCase
 
   def open_passage
     visit root_path
+    # A fresh guest gets the guided tour; it would sit over the verses.
+    page.execute_script("localStorage.setItem('scriptorium.tourDone', '1')")
     fill_in "reference", with: "Jeremiah 51:25-26"
     click_on "Read"
     assert_selector ".ps-verse", minimum: 2

@@ -11,9 +11,9 @@
      data-presentation-quick-find-url-value="<%= quick_find_study_path(@study) %>"
      data-font-size="<%= authenticated? ? current_user.font_size : 0 %>"
      data-font-size-url-value="<%= preferences_path %>"
-     data-font-size-authenticated-value="<%= authenticated? %>"
-     data-tour-authenticated-value="<%= authenticated? %>"
-     data-tour-done-value="<%= authenticated? && current_user.tour_completed_at.present? %>"
+     data-font-size-authenticated-value="<%= authenticated?.present? %>"
+     data-tour-authenticated-value="<%= authenticated?.present? %>"
+     data-tour-done-value="<%= (authenticated? && current_user.tour_completed_at.present?).present? %>"
      data-tour-url-value="<%= preferences_path %>">
   <%= render "topbar", study_name: @study.name, panes: @study.pane_count,
         sync: @study.sync_scroll, saved: true, study: @study %>
