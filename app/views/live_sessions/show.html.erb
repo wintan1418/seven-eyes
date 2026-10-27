@@ -29,7 +29,7 @@
       <h2>The service has ended</h2>
       <p>Grace and peace go with you.</p>
       <div data-live-follow-target="recap">
-        <%= render "live_sessions/recap", live: @live if @live.ended? %>
+        <%= render "live_sessions/recap", live: @live if @live.ended? && @live.recap_available? %>
       </div>
       <% if @live.book && @live.chapter %>
         <%= link_to "Keep reading #{@live.reference_label}",

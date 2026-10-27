@@ -1,22 +1,35 @@
-# One stream per live session code. Followers (and the operator console)
-# subscribe here; the LiveSessionsController broadcasts state changes.
+# One stream per live session code. Followers subscribe here; the
+# LiveSessionsController broadcasts state changes to them.
 #
-# Roles: the operator subscribes with role: "operator" purely to read the
-# follower count — only anonymous/pew subscriptions move the counter.
+# Roles:
+#   follower (default) — anonymous phones in the pews. Streams the session's
+#                        state and moves the follower counter.
+#   operator           — the preaching console, proven by the signed
+#                        `operator_token` it got when it went live. Streams
+#                        ONLY the operator side-channel (the "N following"
+#                        count) so followers never receive count chatter.
 class LiveSessionChannel < ApplicationCable::Channel
+  def self.operator_broadcasting_for(live)
+    broadcasting_for([ live, :operator ])
+  end
+
+  def self.broadcast_count(live, count)
+    ActionCable.server.broadcast(operator_broadcasting_for(live), { type: "count", followers: count })
+  end
+
   def subscribed
+    return subscribe_operator if params[:role] == "operator"
+
     @live = LiveSession.find_active(params[:code])
     return reject unless @live
     stream_for @live
-    return if operator?
-
     @counted = true
-    broadcast_count(@live.adjust_followers(+1))
+    self.class.broadcast_count(@live, @live.adjust_followers(+1))
   end
 
   def unsubscribed
     return unless @live && @counted
-    broadcast_count(@live.adjust_followers(-1))
+    self.class.broadcast_count(@live, @live.adjust_followers(-1))
   end
 
   # A (re)connecting follower asks for the current state. Action Cable's client
@@ -24,16 +37,17 @@ class LiveSessionChannel < ApplicationCable::Channel
   # dropped mid-service would keep showing a stale verse. We reply to just this
   # subscriber (transmit), not the whole stream.
   def resync
-    transmit(@live.live_state) if @live
+    transmit(@live.reload.live_state) if @live && @counted
   end
 
   private
 
-  def operator?
-    params[:role] == "operator"
-  end
-
-  def broadcast_count(count)
-    self.class.broadcast_to(@live, { type: "count", followers: count })
+  def subscribe_operator
+    live = LiveSession.find_by_operator_token(params[:token])
+    return reject unless live && !live.ended? &&
+                         live.code == LiveSession.normalize_code(params[:code])
+    @live = live
+    stream_from self.class.operator_broadcasting_for(live)
+    transmit({ type: "count", followers: live.followers_count })
   end
 end

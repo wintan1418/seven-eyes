@@ -23,7 +23,8 @@ class LiveSessionsTest < ActionDispatch::IntegrationTest
                                            verse_start: 16, verse_end: 16 }, as: :json
     assert_response :success
     data = JSON.parse(response.body)
-    assert_match(/\A[A-Z2-9]{4}\z/, data["code"])
+    assert_match(/\A[A-Z2-9]{6}\z/, data["code"])
+    assert LiveSession.find_by_operator_token(data["operator_token"])
     assert_includes data["url"], "/live/#{data["code"]}"
     assert_includes data["qr_svg"], "<svg"
 
@@ -196,5 +197,85 @@ class LiveSessionsTest < ActionDispatch::IntegrationTest
     get live_session_path(live.code)
     assert_response :success
     assert_select ".ps-live-ended .ps-live-recap li", text: "John 3"
+  end
+
+  test "resume re-attaches the console to the active session without creating one" do
+    study = owner_study
+    post study_live_path(study), params: { resume: 1 }, as: :json
+    assert_response :not_found
+    assert_nil study.live_session
+
+    post study_live_path(study), as: :json
+    code = JSON.parse(response.body)["code"]
+    assert_no_difference -> { LiveSession.count } do
+      post study_live_path(study), params: { resume: 1 }, as: :json
+    end
+    assert_response :success
+    assert_equal code, JSON.parse(response.body)["code"]
+  end
+
+  test "resume and bare Go Live clicks never rewrite what the pews are seeing" do
+    study = owner_study
+    post study_live_path(study), as: :json
+    patch study_live_path(study), params: { kind: "slide", slide_title: "Amazing Grace", slide_body: "v1" }, as: :json
+    post study_live_path(study), params: { resume: 1 }, as: :json
+    post study_live_path(study), as: :json
+    assert study.live_session.reload.slide?
+  end
+
+  test "an out-of-order (older) push is ignored" do
+    study = owner_study
+    post study_live_path(study), params: { reference: "John 3", translation_id: @kjv.id }, as: :json
+    patch study_live_path(study), params: { reference: "John 3", verse_start: 17, seq: 20 }, as: :json
+    assert_response :ok
+    assert_no_broadcasts(LiveSessionChannel.broadcasting_for(study.live_session)) do
+      patch study_live_path(study), params: { reference: "John 3", verse_start: 16, seq: 19 }, as: :json
+    end
+    assert_response :no_content
+    assert_equal 17, study.live_session.reload.verse_start
+    assert_equal 20, study.live_session.state_seq
+  end
+
+  test "moving to a new chapter without a verse clears the old range" do
+    study = owner_study
+    post study_live_path(study), params: { reference: "John 3", translation_id: @kjv.id,
+                                           verse_start: 16, verse_end: 17 }, as: :json
+    patch study_live_path(study), params: { reference: "John 4" }, as: :json
+    live = study.live_session.reload
+    assert_equal 4, live.chapter
+    assert_nil live.verse_start
+    assert_nil live.verse_end
+  end
+
+  test "a push to a stale session expires it instead" do
+    study = owner_study
+    post study_live_path(study), as: :json
+    live = study.live_session
+    live.update_column(:updated_at, (LiveSession::STALE_AFTER + 1.minute).ago)
+    patch study_live_path(study), params: { reference: "John 3" }, as: :json
+    assert_response :not_found
+    assert live.reload.ended?
+  end
+
+  test "a stale session's follower page shows the farewell" do
+    study = users(:one).studies.create!(name: "Sunday", pane_count: 1)
+    live = study.live_sessions.create!(osis: "John", chapter: 3, translation_code: "KJV")
+    live.update_column(:updated_at, (LiveSession::STALE_AFTER + 1.minute).ago)
+    get live_session_path(live.code)
+    assert_response :success
+    assert_select ".ps-live-ended[hidden]", count: 0
+  end
+
+  test "the recap expires a week after the service" do
+    study = users(:one).studies.create!(name: "Sunday", pane_count: 1)
+    live = study.live_sessions.create!(osis: "John", chapter: 3, translation_code: "KJV")
+    live.log_passage!
+    live.end!
+    travel LiveSession::RECAP_TTL + 1.day do
+      get live_session_recap_path(live.code)
+      assert_response :not_found
+      get live_session_path(live.code)
+      assert_select ".ps-live-recap", count: 0
+    end
   end
 end

@@ -21,6 +21,10 @@ export default class extends Controller {
         // Fires on first connect AND on every silent reconnect (Wi-Fi blips):
         // ask the pulpit for the current state so we never linger on a stale verse.
         connected: () => this._sub?.perform("resync"),
+        // The server rejects a (re)subscribe once the session has ended or
+        // expired — e.g. a phone that slept through the end of the service.
+        // Without this the page would sit on a stale verse forever.
+        rejected: () => this._showEnded(),
         received: (data) => this._received(data)
       }
     )
@@ -121,6 +125,7 @@ export default class extends Controller {
     try {
       res = await fetch(this.passageUrlValue, { headers: { Accept: "text/html" } })
     } catch { return }
+    if (res.status === 404) { this._showEnded(); return } // ended/expired meanwhile
     if (!res.ok) return
     this.bodyTarget.innerHTML = await res.text()
     this._applyRange(data.verse_start, data.verse_end)
@@ -193,8 +198,13 @@ export default class extends Controller {
   }
 
   async _showEnded() {
+    if (this._ended) return
+    this._ended = true
     if (this.hasEndedTarget) this.endedTarget.hidden = false
     this._sub?.unsubscribe()
+    this._sub = null
+    this._consumer?.disconnect() // nothing more to hear — stop reconnecting
+    this._consumer = null
     // "Tonight's scriptures": pull the recap so the farewell lists everything
     // that was preached, not just what this phone happened to see.
     if (!this.hasRecapTarget || !this.recapUrlValue) return

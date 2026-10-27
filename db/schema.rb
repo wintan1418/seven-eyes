@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_17_183250) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_27_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -148,6 +148,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_183250) do
     t.string "slide_image_url"
     t.integer "slide_index"
     t.string "slide_title"
+    t.bigint "state_seq", default: 0, null: false
     t.bigint "study_id", null: false
     t.string "translation_code"
     t.datetime "updated_at", null: false
