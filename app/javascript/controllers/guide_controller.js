@@ -5,29 +5,41 @@ import { Controller } from "@hotwired/stimulus"
 // dismissal is persisted server-side; this controller still keeps the topbar
 // button label in sync. Mounted on <body> so it's reachable from the topbar
 // button regardless of which view is in the workspace.
+//
+// localStorage can throw (Safari private mode, blocked site data), so every
+// access is guarded — the panel just won't remember being hidden.
 const KEY = "bibliorata.guideHidden"
+
+function stored() {
+  try { return localStorage.getItem(KEY) === "1" } catch { return false }
+}
+
+function store(hidden) {
+  try {
+    if (hidden) localStorage.setItem(KEY, "1")
+    else localStorage.removeItem(KEY)
+  } catch { /* storage unavailable */ }
+}
 
 export default class extends Controller {
   static targets = ["label"]
 
   connect() {
-    if (localStorage.getItem(KEY) === "1") {
-      this.applyHidden(true)
-    }
+    if (stored()) this.applyHidden(true)
   }
 
   toggle() {
     const willHide = !this.panel() || this.panel().style.display !== "none"
-    if (willHide && localStorage.getItem(KEY) === "1") {
+    if (willHide && stored()) {
       // already hidden — clicking should show
       this.applyHidden(false)
-      localStorage.removeItem(KEY)
+      store(false)
     } else if (willHide) {
       this.applyHidden(true)
-      localStorage.setItem(KEY, "1")
+      store(true)
     } else {
       this.applyHidden(false)
-      localStorage.removeItem(KEY)
+      store(false)
     }
   }
 

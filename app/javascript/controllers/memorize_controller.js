@@ -9,6 +9,19 @@ export default class extends Controller {
   connect() {
     this.active = false
     this.originals = new Map()
+    // Lives on the pane's turbo-frame, which survives frame navigations: a new
+    // chapter arrives un-blanked, so forget the old spans and reset the state.
+    this._onFrameRender = (e) => {
+      if (e.target !== this.element) return
+      this.originals.clear()
+      this.active = false
+      this.mark(false)
+    }
+    this.element.addEventListener("turbo:frame-render", this._onFrameRender)
+  }
+
+  disconnect() {
+    this.element.removeEventListener("turbo:frame-render", this._onFrameRender)
   }
 
   toggle() {

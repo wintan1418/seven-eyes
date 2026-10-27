@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Global keyboard shortcuts for the workspace (scoped on .ps-root):
 //   Cmd/Ctrl+K  focus the active pane's reference input
 //   1–4         make that pane active and focus its reference (when not typing)
-//   Cmd/Ctrl+S  "save" (studies auto-persist) — flash a confirmation, no nav
+//   Cmd/Ctrl+S  save now: flushes every pane's notes and reports the real result
 //   Cmd/Ctrl+D  duplicate the active pane's reference into the next empty pane
 //   X           open cross-references for the active pane's first verse
 //   Esc         close any open drawer / blur inputs
@@ -20,6 +20,24 @@ export default class extends Controller {
 
   disconnect() {
     document.removeEventListener("keydown", this._onKey)
+    this.element.removeEventListener("pointerdown", this._onFocus, true)
+    this.element.removeEventListener("focusin", this._onFocus, true)
+    clearTimeout(this._flash)
+  }
+
+  // Preach mode owns the keyboard (its own arrows, X, digits…). Workspace
+  // shortcuts must not open drawers or duplicate panes mid-service.
+  preaching() {
+    return this.element.classList.contains("is-preaching") ||
+      !!document.querySelector(".ps-root.is-preaching")
+  }
+
+  // Signed-in state is published on .ps-root for the tour controller. The view
+  // prints `authenticated?` raw — a Session object's inspect when signed in,
+  // "" for guests — so treat any non-empty, non-false value as signed in.
+  authenticated() {
+    const v = this.element.dataset.tourAuthenticatedValue
+    return !!v && v !== "false" && v !== "0"
   }
 
   panes() {
@@ -45,6 +63,7 @@ export default class extends Controller {
   }
 
   onKey(event) {
+    if (this.preaching()) return
     const mod = event.metaKey || event.ctrlKey
 
     if (mod && event.key.toLowerCase() === "k") {
@@ -54,7 +73,7 @@ export default class extends Controller {
     }
     if (mod && event.key.toLowerCase() === "s") {
       event.preventDefault()
-      this.flash("✓ Saved")
+      this.saveNow()
       return
     }
     if (mod && event.key.toLowerCase() === "d") {
@@ -79,6 +98,22 @@ export default class extends Controller {
     }
   }
 
+  // Cmd/Ctrl+S: ask every notes controller to save immediately and report what
+  // actually happened — never claim "Saved" for text that wasn't stored.
+  async saveNow() {
+    if (!this.authenticated()) {
+      window.dispatchEvent(new CustomEvent("auth:required"))
+      return this.flash("Sign in to save")
+    }
+    const results = []
+    window.dispatchEvent(new CustomEvent("notes:flush", { detail: { results } }))
+    if (results.length) this.flash("Saving…", { sticky: true })
+    const outcomes = await Promise.all(results.map((p) => Promise.resolve(p).catch(() => "failed")))
+    if (outcomes.includes("unauthorized")) return this.flash("Sign in to save")
+    if (outcomes.includes("failed")) return this.flash("Save failed — check your connection")
+    this.flash("✓ Saved")
+  }
+
   duplicateToNextEmpty() {
     const source = this.refInput(this.activePane)
     if (!source || !source.value.trim()) return
@@ -94,7 +129,7 @@ export default class extends Controller {
       .forEach((d) => d.classList.remove("is-open"))
   }
 
-  flash(text) {
+  flash(text, { sticky = false } = {}) {
     let toast = document.querySelector(".ps-toast.js-flash")
     if (!toast) {
       toast = document.createElement("div")
@@ -104,6 +139,6 @@ export default class extends Controller {
     toast.innerHTML = `<span class="check">✦</span> ${text}`
     clearTimeout(this._flash)
     toast.style.opacity = "1"
-    this._flash = setTimeout(() => { toast.style.opacity = "0" }, 1400)
+    if (!sticky) this._flash = setTimeout(() => { toast.style.opacity = "0" }, 1400)
   }
 }

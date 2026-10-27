@@ -6,8 +6,8 @@ import { Controller } from "@hotwired/stimulus"
 // to the /p/:slug page. Pure DOM + canvas, no library.
 //
 // Opened via window events:
-//   share:open  { verseId?, osis?, chapter?, verseStart?, verseEnd?, q? }
-//   prayer:open { osis, chapter }
+//   share:open  { verseId?, osis?, chapter?, verseStart?, verseEnd?, translation?, q? }
+//   prayer:open { osis, chapter, translation? }
 
 const W = 1080
 const H = 1080
@@ -31,6 +31,7 @@ export default class extends Controller {
   connect() {
     this.bg = "vellum"
     this.mode = "passage"
+    this.ticket = 0
     this.card = null       // { reference, translation, text, slug, url, osis, chapter }
     this.prayer = null     // { reference, prayer, url }
     this._onShare = (e) => this.openPassage(e.detail || {})
@@ -62,19 +63,31 @@ export default class extends Controller {
     this.open()
     this.mode = "passage"
     this.syncModeButtons()
+    // Never show (or share) the previous passage while the new one loads.
+    this.clearCard()
     this.setStatus("Preparing…")
+    const ticket = ++this.ticket
     const data = await this.fetchCard(detail)
+    if (ticket !== this.ticket) return // a newer open superseded this one
     if (!data) return this.setStatus("Could not load that passage.")
     this.card = data
-    this.prayerCtx = { osis: data.osis, chapter: data.chapter }
-    this.prayer = null
+    this.prayerCtx = { osis: data.osis, chapter: data.chapter, translation: data.translation_code || detail.translation }
     await this.render()
   }
 
   async openPrayer(detail) {
     this.open()
-    this.prayerCtx = { osis: detail.osis, chapter: detail.chapter }
+    this.clearCard()
+    ++this.ticket
+    this.prayerCtx = { osis: detail.osis, chapter: detail.chapter, translation: detail.translation }
     await this.showPrayer()
+  }
+
+  clearCard() {
+    this.card = null
+    this.prayer = null
+    if (this.hasLinkTarget) this.linkTarget.value = ""
+    if (this.hasCanvasTarget) this.canvasTarget.getContext("2d")?.clearRect(0, 0, W, H)
   }
 
   open() {
@@ -102,7 +115,9 @@ export default class extends Controller {
     if (!this.prayerCtx?.osis) return this.setStatus("Open a chapter to compose a prayer.")
     if (!this.prayer) {
       this.setStatus("Composing a prayer from the chapter…")
+      const ticket = this.ticket
       const data = await this.fetchPrayer(this.prayerCtx)
+      if (ticket !== this.ticket) return
       if (!data || !data.ok) {
         return this.setStatus(this.prayerError(data))
       }
@@ -112,6 +127,7 @@ export default class extends Controller {
   }
 
   prayerError(data) {
+    if (data && data.error === "auth_required") return "Sign in to compose a prayer — create a free account to continue."
     if (data && data.error === "no_key") return "The prayer needs an AI key configured on the server."
     return "A prayer couldn't be composed right now. Please try again."
   }
@@ -130,6 +146,7 @@ export default class extends Controller {
     if (detail.chapter) q.set("chapter", detail.chapter)
     if (detail.verseStart) q.set("verse_start", detail.verseStart)
     if (detail.verseEnd) q.set("verse_end", detail.verseEnd)
+    if (detail.translation) q.set("translation", detail.translation)
     if (detail.q) q.set("q", detail.q)
     try {
       const res = await fetch(`${this.cardUrlValue}?${q}`, { headers: { Accept: "application/json" } })
@@ -140,8 +157,14 @@ export default class extends Controller {
 
   async fetchPrayer(ctx) {
     const q = new URLSearchParams({ osis: ctx.osis, chapter: ctx.chapter })
+    if (ctx.translation) q.set("translation", ctx.translation)
     try {
       const res = await fetch(`${this.prayerUrlValue}?${q}`, { headers: { Accept: "application/json" } })
+      // Composing a prayer is an AI call — members only. Open the account gate.
+      if (res.status === 401) {
+        window.dispatchEvent(new CustomEvent("auth:required"))
+        return { ok: false, error: "auth_required" }
+      }
       if (!res.ok) return null
       return await res.json()
     } catch { return null }
@@ -320,6 +343,7 @@ export default class extends Controller {
   }
 
   async download() {
+    if (!this.current()) return
     const blob = await this.toBlob()
     if (!blob) return
     const a = document.createElement("a")
@@ -329,25 +353,53 @@ export default class extends Controller {
     setTimeout(() => URL.revokeObjectURL(a.href), 4000)
   }
 
+  current() {
+    return this.mode === "prayer" ? this.prayer : this.card
+  }
+
   async share() {
+    const data = this.current()
+    if (!data) return
     const blob = await this.toBlob()
-    const data = this.mode === "prayer" ? this.prayer : this.card
-    if (blob && navigator.canShare) {
+    if (blob && navigator.canShare && navigator.share) {
       const file = new File([blob], this.filename(), { type: "image/png" })
-      if (navigator.canShare({ files: [file] })) {
+      let canShareFile = false
+      try { canShareFile = navigator.canShare({ files: [file] }) } catch { canShareFile = false }
+      if (canShareFile) {
         try {
-          await navigator.share({ files: [file], title: data?.reference || "Parallel Scripture", text: data?.url })
+          await navigator.share({ files: [file], title: data.reference || "Parallel Scripture", text: data.url })
           return
-        } catch { /* cancelled — fall through */ return }
+        } catch (e) {
+          if (e?.name === "AbortError") return // the user closed the share sheet
+          // NotAllowedError (gesture expired while drawing), DataError, … —
+          // fall back to saving the picture and copying the link.
+        }
       }
     }
-    this.download() // graceful fallback on desktop
+    await this.download()
+    if (data.url) {
+      try {
+        await navigator.clipboard.writeText(data.url)
+        this.flash(this.shareBtnTarget, "Saved · link copied")
+        return
+      } catch { /* clipboard blocked — the download alone will do */ }
+    }
+    this.flash(this.shareBtnTarget, "Picture saved")
   }
 
   async copyImage() {
+    if (!this.current()) return
     try {
-      const blob = await this.toBlob()
-      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })])
+      // Safari only allows clipboard.write inside the click, so hand it a
+      // Promise of the blob rather than awaiting the canvas first.
+      const blobPromise = this.toBlob()
+      let item
+      try {
+        item = new ClipboardItem({ "image/png": blobPromise })
+      } catch {
+        item = new ClipboardItem({ "image/png": await blobPromise })
+      }
+      await navigator.clipboard.write([item])
       this.flash(this.copyImageTarget, "Copied!")
     } catch {
       this.flash(this.copyImageTarget, "Use Download")
@@ -372,9 +424,13 @@ export default class extends Controller {
   }
 
   flash(btn, msg) {
-    const prev = btn.textContent
+    if (!btn) return
+    // Remember the real label once, so a second click mid-flash doesn't
+    // capture "Copied!" as the label to restore.
+    btn.dataset.label ??= btn.innerHTML
     btn.textContent = msg
-    setTimeout(() => { btn.textContent = prev }, 1400)
+    clearTimeout(btn._flashTimer)
+    btn._flashTimer = setTimeout(() => { btn.innerHTML = btn.dataset.label }, 1400)
   }
 
   setStatus(msg) {

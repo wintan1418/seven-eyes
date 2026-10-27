@@ -648,6 +648,28 @@
 .ps-hl-popover.is-touch-bar .ps-hl-swatch { width: 30px; height: 30px; border-radius: 5px; }
 .ps-hl-popover.is-touch-bar .x-ref { font-size: 13px; padding: 8px; letter-spacing: 0.1em; }
 .ps-hl-popover.is-touch-bar .divider { margin: 0 4px; }
+/* Selection popover + highlight editor controls are real <button>s (keyboard
+   reachable, labelled) — strip the UA button chrome so they look as before. */
+.ps-hl-popover button,
+.ps-hl-edit button.ps-hl-swatch {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  line-height: 1;
+}
+.ps-hl-popover button.ps-hl-swatch,
+.ps-hl-edit button.ps-hl-swatch { padding: 0; }
+.ps-hl-popover button.x-ref { background: transparent; border: 0; }
+.ps-hl-popover button:focus-visible,
+.ps-hl-edit button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.ps-hl-edit-status {
+  flex: 1;
+  margin: 0 8px;
+  font: italic 12px "EB Garamond", serif;
+  color: #e7a48f;
+  text-align: right;
+}
+.ps-hl-edit-status:empty { display: none; }
 
 /* ----- AI Rabbi slide-over ----- */
 .ps-rabbi-host { position: fixed; inset: 0; z-index: 43; visibility: hidden; pointer-events: none; }
@@ -690,6 +712,9 @@
 .ps-rabbi-loading .orn { font-size: 26px; color: var(--gold-deep); animation: ps-rabbi-pulse 1.6s ease-in-out infinite; }
 .ps-rabbi-loading .lead { margin-top: 10px; font: italic 16px "EB Garamond", serif; color: var(--ink); }
 .ps-rabbi-loading .hint { margin-top: 4px; font: italic 12.5px "EB Garamond", serif; color: var(--sepia-mute); }
+.ps-rabbi-loading.is-error .orn { animation: none; color: var(--rubric); }
+.ps-rabbi-loading.is-error .ps-tb-btn { margin-top: 14px; }
+.ps-ai-hint.is-error { color: var(--rubric); }
 @keyframes ps-rabbi-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 
 /* AI-drawn schematic (the ark, tabernacle, temple…) — vellum plate, gold frame */

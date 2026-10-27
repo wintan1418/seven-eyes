@@ -7,6 +7,11 @@ class Highlight < ApplicationRecord
 
   validates :char_start, :char_end, presence: true
   validate :sane_range
+  # The same words highlighted twice (a double tap on a swatch, a retried
+  # request) would stack identical spans. Overlapping-but-different ranges
+  # are allowed; exact duplicates are not.
+  validates :char_start, uniqueness: { scope: %i[user_id verse_id char_end],
+                                       message: "already highlighted" }
 
   scope :ordered, -> { order(:char_start) }
 

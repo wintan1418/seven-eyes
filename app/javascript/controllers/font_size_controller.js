@@ -29,10 +29,10 @@ export default class extends Controller {
   initialLevel() {
     const fromAttr = parseInt(this.element.dataset.fontSize || "", 10)
     if (this.validLevel(fromAttr) && this.authenticatedValue) return fromAttr
-    if (typeof localStorage !== "undefined") {
+    try {
       const stored = parseInt(localStorage.getItem(STORAGE_KEY) || "", 10)
       if (this.validLevel(stored)) return stored
-    }
+    } catch (_) { /* storage blocked (private mode) */ }
     return this.validLevel(fromAttr) ? fromAttr : 0
   }
 
