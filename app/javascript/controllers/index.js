@@ -115,8 +115,14 @@ application.register("tour", TourController)
 import TranslationPickerController from "./translation_picker_controller"
 application.register("translation-picker", TranslationPickerController)
 
+import VerseActionsController from "./verse_actions_controller"
+application.register("verse-actions", VerseActionsController)
+
 import VerseLinesController from "./verse_lines_controller"
 application.register("verse-lines", VerseLinesController)
+
+import VerseSelectController from "./verse_select_controller"
+application.register("verse-select", VerseSelectController)
 
 import ViewMenuController from "./view_menu_controller"
 application.register("view-menu", ViewMenuController)

@@ -1,0 +1,40 @@
+<%# Rises when verses are tapped (verse_select → verse_actions). locals: study %>
+<div class="ui-actionbar" data-controller="verse-actions" data-chrome hidden
+     role="toolbar" aria-label="Selected verses">
+  <div class="ui-actionbar-head">
+    <span class="ui-actionbar-label" data-verse-actions-target="label"></span>
+    <button type="button" class="ui-iconbtn is-sm" data-action="verse-actions#dismiss" aria-label="Clear selection"><%= icon(:x) %></button>
+  </div>
+  <div class="ui-actionbar-row">
+    <div class="ui-actionbar-swatches" role="group" aria-label="Highlight">
+      <% %w[ochre sage cobalt rose].each do |color| %>
+        <button type="button" class="ui-swatch is-<%= color %>" data-color="<%= color %>"
+                data-action="verse-actions#highlight" aria-label="Highlight <%= color %>" title="Highlight"></button>
+      <% end %>
+      <button type="button" class="ui-swatch is-clear" data-verse-actions-target="clear" hidden
+              data-action="verse-actions#unhighlight" aria-label="Remove highlight" title="Remove highlight"><%= icon(:x) %></button>
+    </div>
+    <div class="ui-actionbar-actions">
+      <button type="button" class="ui-action" data-action="verse-actions#note"><%= icon(:notes) %><span>Note</span></button>
+      <% if study.pane_count == 1 %>
+        <%= button_to study_path(study), method: :patch, params: { study: { pane_count: 2 } },
+              class: "ui-action", form: { class: "contents" }, data: { verse_actions_target: "compare" } do %>
+          <%= icon(:columns) %><span>Compare</span>
+        <% end %>
+      <% end %>
+      <button type="button" class="ui-action" data-action="verse-actions#copy"><%= icon(:copy) %><span>Copy</span></button>
+      <button type="button" class="ui-action" data-action="verse-actions#share"><%= icon(:share) %><span>Share</span></button>
+      <div class="ui-action-more">
+        <button type="button" class="ui-action" data-action="verse-actions#toggleOverflow" aria-label="More actions">
+          <%= icon(:more) %><span>More</span>
+        </button>
+        <div class="ui-popmenu" data-verse-actions-target="overflow" hidden>
+          <button type="button" class="ui-menu-item" data-action="verse-actions#crossRefs"><%= icon(:xref) %> Cross-references</button>
+          <button type="button" class="ui-menu-item" data-action="verse-actions#wordStudy"><%= icon(:word) %> Word study (Strong&rsquo;s)</button>
+          <button type="button" class="ui-menu-item" data-action="verse-actions#commentary"><%= icon(:commentary) %> Commentary</button>
+          <button type="button" class="ui-menu-item" data-action="verse-actions#rabbi"><%= icon(:rabbi) %> Ask the Rabbi</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -25,6 +25,7 @@
 @import "./ui/panels.css";
 @import "./ui/shell.css";
 @import "./ui/sheet.css";
+@import "./ui/actions.css";
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
