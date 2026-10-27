@@ -22,6 +22,27 @@ class HighlightsTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
+  test "an exact duplicate highlight is rejected with a message" do
+    users(:one).highlights.create!(verse: @verse, color: :ochre, char_start: 8, char_end: 27)
+    assert_no_difference -> { Highlight.count } do
+      post highlights_path, params: { highlight: { verse_id: @verse.id, color: "sage", char_start: 8, char_end: 27 } }, as: :json
+    end
+    assert_response :unprocessable_entity
+    assert_match(/already highlighted/, JSON.parse(response.body)["error"])
+  end
+
+  test "an overlapping but different range is still allowed" do
+    users(:one).highlights.create!(verse: @verse, color: :ochre, char_start: 8, char_end: 27)
+    post highlights_path, params: { highlight: { verse_id: @verse.id, color: "sage", char_start: 8, char_end: 15 } }, as: :json
+    assert_response :created
+  end
+
+  test "another user's identical highlight does not block mine" do
+    users(:two).highlights.create!(verse: @verse, color: :ochre, char_start: 8, char_end: 27)
+    post highlights_path, params: { highlight: { verse_id: @verse.id, color: "ochre", char_start: 8, char_end: 27 } }, as: :json
+    assert_response :created
+  end
+
   test "destroy removes only the owner's highlight" do
     h = users(:one).highlights.create!(verse: @verse, color: :rose, char_start: 0, char_end: 3)
     assert_difference -> { Highlight.count }, -1 do

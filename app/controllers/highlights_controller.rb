@@ -12,7 +12,9 @@ class HighlightsController < ApplicationController
       note: params.dig(:highlight, :note)
     )
     render json: highlight_payload(highlight), status: :created
-  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
+  rescue ActiveRecord::RecordNotFound
     head :unprocessable_entity
   end
 

@@ -1,6 +1,12 @@
 class Study < ApplicationRecord
   belongs_to :user, optional: true # nil = a guest's session-scoped study
-  has_many :panes, -> { order(:position) }, dependent: :destroy, inverse_of: :study
+  # Every pane ever made for this study, including ones hidden when the pane
+  # count was lowered. Hidden panes keep their reference and notes so raising
+  # the count brings them back intact — lowering the count must never destroy
+  # a pastor's notes.
+  has_many :all_panes, -> { order(:position) }, class_name: "Pane", dependent: :destroy, inverse_of: :study
+  # The panes on screen: only the first pane_count positions.
+  has_many :panes, ->(study) { where(position: ...study.pane_count).order(:position) }, inverse_of: :study
   has_many :live_sessions, dependent: :destroy
   has_many :setlist_items, dependent: :destroy
 
@@ -32,19 +38,20 @@ class Study < ApplicationRecord
     end
   end
 
-  # Ensure exactly pane_count panes exist (used when the count changes in Phase 3).
+  # Ensure a pane exists at every visible position (0...pane_count). Never
+  # destroys anything: panes beyond the count stay in the database, hidden, with
+  # their notes, and reappear when the count is raised again.
   def sync_panes!
-    current = panes.to_a
-    if current.size < pane_count
-      (current.size...pane_count).each { |pos| panes.create!(position: pos) }
-    elsif current.size > pane_count
-      current[pane_count..].each(&:destroy)
+    existing = all_panes.reload.map(&:position)
+    (0...pane_count).each do |pos|
+      all_panes.create!(position: pos) unless existing.include?(pos)
     end
+    panes.reset
   end
 
   private
 
   def build_default_panes
-    pane_count.times { |pos| panes.create!(position: pos) }
+    pane_count.times { |pos| all_panes.create!(position: pos) }
   end
 end

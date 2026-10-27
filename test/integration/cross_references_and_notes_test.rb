@@ -26,6 +26,13 @@ class CrossReferencesAndNotesTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "signed-in users can save notes through the full pane form" do
+    pane = @study.panes.first
+    patch study_pane_path(@study, pane), params: { pane: { notes: "Kept without autosave" } }
+    assert_response :success
+    assert_equal "Kept without autosave", pane.reload.notes
+  end
+
   test "notes autosave persists and returns no content" do
     pane = @study.panes.first
     patch study_pane_path(@study, pane), params: { autosave: "1", pane: { notes: "Hammer the perfect tense." } }

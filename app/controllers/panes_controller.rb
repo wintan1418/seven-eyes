@@ -6,8 +6,9 @@ class PanesController < ApplicationController
     study = current_study(params[:study_id])
     @pane = study.panes.find(params[:id])
 
-    # Saving notes is a "save" — require an account.
-    return head(:unauthorized) if params[:autosave] && !authenticated?
+    # Writing notes is a "save" — it requires an account however it arrives
+    # (the debounced autosave, a keepalive flush, or a full pane form).
+    return head(:unauthorized) if writes_notes? && !authenticated?
 
     @pane.update(pane_params)
 
@@ -22,5 +23,9 @@ class PanesController < ApplicationController
 
   def pane_params
     params.require(:pane).permit(:reference, :translation_id, :notes)
+  end
+
+  def writes_notes?
+    params[:pane].respond_to?(:key?) && params[:pane].key?(:notes)
   end
 end

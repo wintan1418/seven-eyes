@@ -34,6 +34,25 @@ class GuestAccessTest < ActionDispatch::IntegrationTest
     assert_nil study.panes.first.reload.notes
   end
 
+  test "a guest cannot write notes through the full pane form either" do
+    post studies_path
+    study = Study.last
+    patch study_pane_path(study, study.panes.first), params: { pane: { reference: "John 3:16", notes: "sneaky" } }
+    assert_response :unauthorized
+    pane = study.panes.first.reload
+    assert_nil pane.notes
+    assert_nil pane.reference
+  end
+
+  test "a guest cannot write notes into a hidden pane" do
+    post studies_path
+    study = Study.last
+    hidden = study.all_panes.last
+    study.update!(pane_count: 1)
+    patch study_pane_path(study, hidden), params: { pane: { reference: "John 3:16" } }
+    assert_response :not_found
+  end
+
   test "a guest highlighting is blocked with 401" do
     verse = Verse.first
     post highlights_path, params: { highlight: { verse_id: verse.id, color: "ochre", char_start: 0, char_end: 3 } }, as: :json
