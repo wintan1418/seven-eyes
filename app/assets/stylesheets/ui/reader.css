@@ -1,0 +1,95 @@
+/* ==========================================================================
+   Reader — panes, chapter heading, verses, notes and empty states in
+   reading mode. Presenting / preaching / output keep the legacy look.
+   ========================================================================== */
+
+.ps-root:not(.is-presenting, .is-output) .ps-workspace {
+  background: var(--ui-bg);
+  padding: 0;
+  gap: 0;
+}
+
+.ps-root:not(.is-presenting, .is-output) .ps-pane {
+  background: var(--ui-bg);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-pane::before { display: none; }
+.ps-root:not(.is-presenting, .is-output) .ps-pane + .ps-pane { border-left: 1px solid var(--ui-border); }
+
+/* Scripture */
+.ps-root:not(.is-presenting, .is-output) .ps-verses {
+  font-family: var(--reader-font);
+  font-size: var(--reader-size);
+  line-height: var(--reader-line);
+  color: var(--ui-fg);
+  font-optical-sizing: auto;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-verses .ps-vnum {
+  font: 600 0.58em/1 var(--ui-font);
+  color: var(--ui-vnum);
+  vertical-align: 0.5em;
+  margin: 0 0.3em 0 0.1em;
+  letter-spacing: 0;
+  text-decoration: none;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-verses a.ps-vnum:hover { color: var(--ui-accent); text-decoration: none; }
+.ps-root:not(.is-presenting, .is-output) .ps-verses .ps-dropcap {
+  float: none; font: inherit; color: inherit; padding: 0; margin: 0; text-shadow: none; line-height: inherit;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-verses .ref-title {
+  font: 600 13px/1.3 var(--ui-font);
+  letter-spacing: 0.08em;
+  color: var(--ui-fg-muted);
+}
+.ps-root:not(.is-presenting, .is-output) .ps-verses .ref-title .tag {
+  font: 400 13px var(--ui-font); letter-spacing: 0; text-transform: none; font-style: normal; color: var(--ui-fg-subtle);
+}
+.ps-root:not(.is-presenting, .is-output) .ps-verses .rule { background: var(--ui-border); opacity: 1; }
+.ps-root:not(.is-presenting, .is-output) :is(.hl-ochre, .hl-sage, .hl-cobalt, .hl-rose) { border-radius: 3px; padding: 0.06em 0; }
+.ps-root:not(.is-presenting, .is-output) :is(.hl-ochre, .hl-sage, .hl-cobalt, .hl-rose).has-note::after { color: var(--ui-fg-muted); }
+
+/* Notices inside a pane (omitted verses, Vulgate numbering) */
+.ps-root:not(.is-presenting, .is-output) .ps-pane-notice {
+  font: 400 14px/1.5 var(--ui-font); font-style: normal; color: var(--ui-fg-muted);
+  background: var(--ui-surface); border-radius: 12px; padding: 10px 14px;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-chapter-break {
+  font: 600 13px var(--ui-font); letter-spacing: 0.08em; color: var(--ui-fg-muted);
+}
+.ps-root:not(.is-presenting, .is-output) .ps-pane-fix {
+  display: inline-flex; align-items: center; min-height: 36px; margin-top: 10px; padding: 0 16px;
+  border: 1px solid var(--ui-border); border-radius: 999px; background: var(--ui-bg);
+  font: 600 14px var(--ui-font); letter-spacing: 0; text-transform: none; color: var(--ui-fg);
+}
+.ps-root:not(.is-presenting, .is-output) .ps-pane-fix:hover { background: var(--ui-surface); }
+
+/* Empty and error states */
+.ps-root:not(.is-presenting, .is-output) .ps-pane-empty {
+  font-family: var(--ui-font); font-style: normal; color: var(--ui-fg-muted); gap: 8px;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-pane-empty .orn { font-size: 28px; color: var(--ui-fg-subtle); opacity: 1; }
+.ps-root:not(.is-presenting, .is-output) .ps-pane-empty .lead { font-size: 18px; font-weight: 600; color: var(--ui-fg); letter-spacing: -0.01em; }
+.ps-root:not(.is-presenting, .is-output) .ps-pane-empty .hint { font-size: 14px; line-height: 1.5; opacity: 1; max-width: 300px; }
+.ps-root:not(.is-presenting, .is-output) .ps-pane-empty .kbd {
+  font: 600 12px var(--ui-font); letter-spacing: 0; border-color: var(--ui-border); color: var(--ui-fg-muted);
+  background: var(--ui-surface); border-radius: 6px;
+}
+
+/* Notes */
+.ps-root:not(.is-presenting, .is-output) .ps-notes-form .ps-notes {
+  background: var(--ui-elevated); border: 1px solid var(--ui-border); border-radius: var(--radius-sheet);
+  box-shadow: var(--ui-shadow-lg); padding: 14px 16px;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-notes-head {
+  font: 600 15px var(--ui-font); letter-spacing: 0; text-transform: none; color: var(--ui-fg);
+}
+.ps-root:not(.is-presenting, .is-output) .ps-notes-head .saving { font: 400 13px var(--ui-font); color: var(--ui-fg-subtle); }
+.ps-root:not(.is-presenting, .is-output) .ps-notes-close {
+  width: 32px; height: 32px; border-radius: 999px; background: var(--ui-surface); color: var(--ui-fg-muted);
+}
+.ps-root:not(.is-presenting, .is-output) .ps-notes-area {
+  font: 400 16px/1.6 var(--ui-font); font-style: normal; color: var(--ui-fg); min-height: 96px;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-notes-area::placeholder { color: var(--ui-fg-subtle); }

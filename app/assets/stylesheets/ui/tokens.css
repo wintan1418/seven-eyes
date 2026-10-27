@@ -1,0 +1,150 @@
+/* ==========================================================================
+   Design tokens — the modern reader (light / dark / sepia, auto = device).
+   Components use the --ui-* variables; Tailwind utilities get the same
+   colours through the @theme inline block in application.tailwind.css.
+   The legacy --vellum-* / --ink / --rubric / --gold variables stay defined
+   (legacy/parchment.css :root) for the projector and preach CSS.
+   ========================================================================== */
+
+:root,
+[data-theme="light"],
+[data-theme="auto"] {
+  --ui-bg: #FFFFFF;
+  --ui-surface: #F6F6F4;
+  --ui-surface-2: #EDEDEA;
+  --ui-elevated: #FFFFFF;
+  --ui-border: #E3E2DE;
+  --ui-border-strong: #CFCDC7;
+  --ui-fg: #1C1C1E;
+  --ui-fg-muted: #6E6E73;
+  --ui-fg-subtle: #9A9AA0;
+  --ui-accent: #A63D2A;
+  --ui-accent-hover: #8C3020;
+  --ui-accent-soft: rgba(166, 61, 42, 0.10);
+  --ui-accent-fg: #FFFFFF;
+  --ui-focus: #2F6FEB;
+  --ui-vnum: #9A9AA0;
+  --ui-selected: #1C1C1E;
+  --ui-scrim: rgba(17, 17, 19, 0.38);
+  --ui-shadow-sm: 0 1px 2px rgba(17, 17, 19, 0.06), 0 1px 1px rgba(17, 17, 19, 0.04);
+  --ui-shadow-md: 0 4px 16px rgba(17, 17, 19, 0.08), 0 1px 3px rgba(17, 17, 19, 0.06);
+  --ui-shadow-lg: 0 16px 48px rgba(17, 17, 19, 0.16), 0 2px 8px rgba(17, 17, 19, 0.08);
+
+  --hl-ochre: rgba(255, 204, 0, 0.38);
+  --hl-sage: rgba(52, 199, 89, 0.26);
+  --hl-cobalt: rgba(10, 132, 255, 0.20);
+  --hl-rose: rgba(255, 55, 95, 0.20);
+  --hl-ochre-dot: #F5C400;
+  --hl-sage-dot: #34C759;
+  --hl-cobalt-dot: #0A84FF;
+  --hl-rose-dot: #FF375F;
+
+  --reader-font: "Source Serif 4", "Source Serif Pro", Georgia, "Noto Sans Symbols 2", serif;
+  color-scheme: light;
+}
+
+/* Theme-independent metrics live on :root only, so the media query below
+   and the text-size steps on .ps-root can adjust them. */
+:root {
+  --ui-font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Symbols 2", sans-serif;
+  --reader-size: 19px;
+  --reader-line: 1.8;
+  --reader-measure: 36rem;
+  --appbar-h: 56px;
+  --tabbar-h: calc(60px + env(safe-area-inset-bottom));
+  --radius-control: 8px;
+  --radius-sheet: 16px;
+  --panel-w: 400px;
+}
+
+[data-theme="dark"] {
+  --ui-bg: #111113;
+  --ui-surface: #1B1B1F;
+  --ui-surface-2: #26262B;
+  --ui-elevated: #1E1E22;
+  --ui-border: #2E2E34;
+  --ui-border-strong: #3C3C44;
+  --ui-fg: #ECECEC;
+  --ui-fg-muted: #A1A1AA;
+  --ui-fg-subtle: #71717A;
+  --ui-accent: #E07A5F;
+  --ui-accent-hover: #EA8F77;
+  --ui-accent-soft: rgba(224, 122, 95, 0.14);
+  --ui-accent-fg: #111113;
+  --ui-focus: #6EA0FF;
+  --ui-vnum: #71717A;
+  --ui-selected: #ECECEC;
+  --ui-scrim: rgba(0, 0, 0, 0.55);
+  --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --ui-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --ui-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.55);
+  --hl-ochre: rgba(255, 214, 10, 0.28);
+  --hl-sage: rgba(48, 209, 88, 0.24);
+  --hl-cobalt: rgba(64, 156, 255, 0.26);
+  --hl-rose: rgba(255, 69, 58, 0.24);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+    --ui-bg: #111113;
+    --ui-surface: #1B1B1F;
+    --ui-surface-2: #26262B;
+    --ui-elevated: #1E1E22;
+    --ui-border: #2E2E34;
+    --ui-border-strong: #3C3C44;
+    --ui-fg: #ECECEC;
+    --ui-fg-muted: #A1A1AA;
+    --ui-fg-subtle: #71717A;
+    --ui-accent: #E07A5F;
+    --ui-accent-hover: #EA8F77;
+    --ui-accent-soft: rgba(224, 122, 95, 0.14);
+    --ui-accent-fg: #111113;
+    --ui-focus: #6EA0FF;
+    --ui-vnum: #71717A;
+    --ui-selected: #ECECEC;
+    --ui-scrim: rgba(0, 0, 0, 0.55);
+    --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --ui-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --ui-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.55);
+    --hl-ochre: rgba(255, 214, 10, 0.28);
+    --hl-sage: rgba(48, 209, 88, 0.24);
+    --hl-cobalt: rgba(64, 156, 255, 0.26);
+    --hl-rose: rgba(255, 69, 58, 0.24);
+    color-scheme: dark;
+  }
+}
+
+[data-theme="sepia"] {
+  --ui-bg: #F7F1E3;
+  --ui-surface: #FBF7EE;
+  --ui-surface-2: #EFE6D2;
+  --ui-elevated: #FFFBF2;
+  --ui-border: #E2D6BC;
+  --ui-border-strong: #CDBD9A;
+  --ui-fg: #2A2017;
+  --ui-fg-muted: #6F5E4A;
+  --ui-fg-subtle: #9C8A70;
+  --ui-accent: #8A2418;
+  --ui-accent-hover: #6E1C12;
+  --ui-accent-soft: rgba(138, 36, 24, 0.09);
+  --ui-vnum: #8A6D4A;
+  --ui-selected: #2A2017;
+  --hl-ochre: rgba(206, 158, 47, 0.32);
+  --hl-sage: rgba(108, 132, 78, 0.28);
+  --hl-cobalt: rgba(72, 96, 128, 0.26);
+  --hl-rose: rgba(168, 78, 88, 0.28);
+  --reader-font: "EB Garamond", Georgia, "Noto Sans Symbols 2", serif;
+  color-scheme: light;
+}
+
+/* Text size steps (font-size controller: 0–4 on .ps-root[data-font-size]). */
+.ps-root[data-font-size="0"] { --reader-size: 19px; }
+.ps-root[data-font-size="1"] { --reader-size: 22px; }
+.ps-root[data-font-size="2"] { --reader-size: 26px; }
+.ps-root[data-font-size="3"] { --reader-size: 32px; }
+.ps-root[data-font-size="4"] { --reader-size: 40px; }
+@media (min-width: 768px) {
+  :root { --reader-size: 20px; }
+  .ps-root[data-font-size="0"] { --reader-size: 20px; }
+}

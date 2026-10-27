@@ -1,0 +1,139 @@
+/* ==========================================================================
+   Base — page background, type, and the reading-mode reset of the old
+   parchment look. "Reading mode" = .ps-root that is neither presenting nor an
+   output window: the projector and preach look (legacy CSS) stay untouched.
+   ========================================================================== */
+
+html, body {
+  background: var(--ui-bg);
+  color: var(--ui-fg);
+  font-family: var(--ui-font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: color-mix(in srgb, var(--ui-focus) 24%, transparent); color: inherit; }
+
+:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+
+/* Reading mode: retire the vellum fibre texture and remap the legacy palette
+   onto the theme tokens, so every older component inside the workspace
+   (drawers, modals, results lists) follows light / dark / sepia. */
+.ps-root:not(.is-presenting, .is-output) {
+  --vellum-0: var(--ui-bg);
+  --vellum-1: var(--ui-surface);
+  --vellum-2: var(--ui-surface-2);
+  --vellum-edge: var(--ui-border);
+  --vellum-shadow: var(--ui-border-strong);
+  --ink: var(--ui-fg);
+  --ink-soft: var(--ui-fg);
+  --sepia: var(--ui-fg-muted);
+  --sepia-mute: var(--ui-fg-subtle);
+  --rubric: var(--ui-accent);
+  --rubric-deep: var(--ui-accent-hover);
+  --gold: var(--ui-border-strong);
+  --gold-deep: var(--ui-border-strong);
+  background: var(--ui-bg);
+  color: var(--ui-fg);
+  font-family: var(--ui-font);
+  font-size: 15px;
+}
+.ps-root:not(.is-presenting, .is-output)::before,
+.ps-root:not(.is-presenting, .is-output)::after { display: none; }
+
+/* Shared atoms ----------------------------------------------------------- */
+
+.ui-iconbtn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; padding: 0;
+  border: 0; border-radius: 999px; background: transparent;
+  color: var(--ui-fg); cursor: pointer; flex: 0 0 auto;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.ui-iconbtn:hover { background: var(--ui-surface-2); }
+.ui-iconbtn:active { background: var(--ui-border); }
+.ui-iconbtn svg { width: 22px; height: 22px; }
+.ui-iconbtn.is-sm { width: 32px; height: 32px; }
+.ui-iconbtn.is-sm svg { width: 18px; height: 18px; }
+.ui-iconbtn[aria-pressed="true"], .ui-iconbtn.is-on { color: var(--ui-accent); }
+
+.ui-icon { width: 20px; height: 20px; flex: 0 0 auto; }
+
+.ui-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 36px; padding: 0 12px 0 14px;
+  border: 1px solid var(--ui-border); border-radius: 999px;
+  background: var(--ui-surface); color: var(--ui-fg);
+  font: 600 15px/1 var(--ui-font); letter-spacing: -0.01em;
+  cursor: pointer; white-space: nowrap; max-width: 100%;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.ui-chip:hover { background: var(--ui-surface-2); }
+.ui-chip .ui-icon { width: 16px; height: 16px; color: var(--ui-fg-muted); }
+.ui-chip-label { overflow: hidden; text-overflow: ellipsis; }
+
+.ui-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 0 18px;
+  border: 1px solid var(--ui-border); border-radius: 999px;
+  background: var(--ui-bg); color: var(--ui-fg);
+  font: 600 15px/1 var(--ui-font); text-decoration: none; cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.ui-btn:hover { background: var(--ui-surface); }
+.ui-btn.is-primary { background: var(--ui-fg); border-color: var(--ui-fg); color: var(--ui-bg); }
+.ui-btn.is-primary:hover { background: color-mix(in srgb, var(--ui-fg) 86%, var(--ui-bg)); }
+.ui-btn.is-accent { background: var(--ui-accent); border-color: var(--ui-accent); color: var(--ui-accent-fg); }
+.ui-btn.is-accent:hover { background: var(--ui-accent-hover); }
+.ui-btn.is-quiet { border-color: transparent; background: transparent; }
+.ui-btn.is-quiet:hover { background: var(--ui-surface-2); }
+.ui-btn.is-block { width: 100%; }
+.ui-btn .ui-icon { width: 18px; height: 18px; }
+
+.ui-input {
+  width: 100%; height: 44px; padding: 0 14px;
+  border: 1px solid var(--ui-border); border-radius: 10px;
+  background: var(--ui-surface); color: var(--ui-fg);
+  font: 400 16px var(--ui-font); outline: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.ui-input::placeholder { color: var(--ui-fg-subtle); }
+.ui-input:focus { border-color: var(--ui-focus); background: var(--ui-bg); }
+
+.ui-label {
+  font: 600 12px/1.2 var(--ui-font); letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ui-fg-muted);
+}
+
+.ui-seg {
+  display: inline-flex; gap: 2px; padding: 3px;
+  border-radius: 10px; background: var(--ui-surface-2);
+}
+.ui-seg > button, .ui-seg > a {
+  flex: 1; min-height: 34px; padding: 0 12px;
+  border: 0; border-radius: 8px; background: transparent;
+  color: var(--ui-fg-muted); font: 600 13px var(--ui-font); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  text-decoration: none; white-space: nowrap;
+}
+.ui-seg > [aria-pressed="true"], .ui-seg > [aria-selected="true"], .ui-seg > .is-on {
+  background: var(--ui-bg); color: var(--ui-fg); box-shadow: var(--ui-shadow-sm);
+}
+
+.ui-sr-only {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Toast (appended to <body> by several controllers) */
+.ps-toast {
+  background: var(--ui-fg); color: var(--ui-bg);
+  border: 0; border-radius: 999px;
+  font: 500 14px/1.2 var(--ui-font); letter-spacing: 0; text-transform: none;
+  padding: 11px 18px; box-shadow: var(--ui-shadow-lg);
+  bottom: calc(24px + env(safe-area-inset-bottom));
+}
+.ps-toast .check { color: inherit; opacity: 0.7; }
