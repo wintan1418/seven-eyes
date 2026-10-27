@@ -1,6 +1,10 @@
 module Authentication
   extend ActiveSupport::Concern
 
+  # Keys carried across the session reset at sign-in: the guest's study (so
+  # claim_guest_study can adopt it) and where to send the user afterwards.
+  PRESERVED_SESSION_KEYS = %i[ guest_study_id return_to_after_authenticating ].freeze
+
   included do
     before_action :require_authentication
     helper_method :authenticated?
@@ -25,8 +29,15 @@ module Authentication
       Current.session ||= find_session_by_cookie
     end
 
+    # Sessions expire (Session::TTL); an expired row is removed on sight.
     def find_session_by_cookie
-      Session.find_by(id: cookies.signed[:session_id]) if cookies.signed[:session_id]
+      id = cookies.signed[:session_id]
+      return unless id
+      session_record = Session.find_by(id: id)
+      return session_record if session_record.nil? || !session_record.expired?
+      session_record.destroy
+      cookies.delete(:session_id)
+      nil
     end
 
     def request_authentication
@@ -39,9 +50,15 @@ module Authentication
     end
 
     def start_new_session_for(user)
+      # New Rails session id on sign-in: defeats session fixation.
+      carried = PRESERVED_SESSION_KEYS.index_with { |k| session[k] }.compact
+      reset_session
+      carried.each { |k, v| session[k] = v }
+
       user.sessions.create!(user_agent: request.user_agent, ip_address: request.remote_ip).tap do |session|
         Current.session = session
-        cookies.signed.permanent[:session_id] = { value: session.id, httponly: true, same_site: :lax }
+        cookies.signed[:session_id] = { value: session.id, httponly: true, same_site: :lax,
+                                        expires: Session::TTL.from_now }
       end
     end
 
