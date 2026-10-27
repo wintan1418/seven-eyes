@@ -298,7 +298,10 @@ export default class extends Controller {
 
   // The translation code shown in the pane holding these verses ("KJV").
   translationFor(el) {
-    const select = el?.closest(".ps-pane")?.querySelector(".ps-trans-select")
+    const pane = el?.closest(".ps-pane")
+    const audio = pane?.querySelector("[data-reader-target='button'][data-translation]")
+    if (audio) return audio.dataset.translation
+    const select = pane?.querySelector(".ps-trans-select")
     return select?.selectedOptions?.[0]?.textContent?.trim() || null
   }
 
