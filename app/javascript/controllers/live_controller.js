@@ -28,12 +28,15 @@ export default class extends Controller {
     this._lastState = null
     this._seq = 0
     this._onState = (e) => this.statePush(e.detail)
+    this._onJoinCleared = () => { this._onScreen = false; this._syncJoinButton() }
     window.addEventListener("preach:state", this._onState)
+    window.addEventListener("preach:join-cleared", this._onJoinCleared)
     if (this.activeCodeValue) this._resume()
   }
 
   disconnect() {
     window.removeEventListener("preach:state", this._onState)
+    window.removeEventListener("preach:join-cleared", this._onJoinCleared)
     clearTimeout(this._pushTimer)
     clearTimeout(this._retryTimer)
     this._sub?.unsubscribe()

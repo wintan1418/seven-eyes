@@ -177,7 +177,11 @@ export default class extends Controller {
     this._emphArmed = false
     this._escArmedAt = 0
     this._queuedTransition = null
-    if (this._join) this._showJoin(null)
+    if (this._join) {
+      this._showJoin(null)
+      // Keep the live panel's "Show/Hide on screen" button truthful.
+      window.dispatchEvent(new CustomEvent("preach:join-cleared"))
+    }
     this._applyBlank()
     this._syncBackButton()
     this._syncAnchorButtons()
