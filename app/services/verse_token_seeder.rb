@@ -40,7 +40,7 @@ class VerseTokenSeeder
           {
             id: verse.id, translation_id: verse.translation_id, book_id: verse.book_id,
             chapter: verse.chapter, verse_number: verse.verse_number, text: verse.text,
-            tokens: tokenize(row["text"].to_s, prefix),
+            tokens: tokens_for(verse, row["text"].to_s, prefix), # nil unless they spell the verse
             created_at: verse.created_at, updated_at: Time.current
           }
         end
@@ -54,11 +54,31 @@ class VerseTokenSeeder
     say "KJV: tagged #{total} verses with Strong's numbers."
   end
 
+  # Tokens for +verse+ from bolls' raw text — or nil when they would not read
+  # as the stored verse (whitespace and typography aside): a mismatch would make the
+  # tagged rendering differ from the text highlights are measured against.
+  # Bolls prefixes Psalm 119's stanzas with their Hebrew letter ("ALEPH. ");
+  # that heading is dropped when it is the only difference.
+  def tokens_for(verse, raw, prefix)
+    tokens = tokenize(raw, prefix)
+    return tokens if self.class.same_text?(tokens, verse.text)
+
+    tokens = tokenize(raw.sub(/\A\s*[A-Z]+\.\s+/, ""), prefix)
+    self.class.same_text?(tokens, verse.text) ? tokens : nil
+  end
+
+  # Same words and punctuation, ignoring whitespace and typographic variants
+  # (Verse.comparable_text) — exactly what the pane's token renderer can align.
+  def self.same_text?(tokens, text)
+    Verse.comparable_text(tokens.map { |t| t["w"] }.join) == Verse.comparable_text(text)
+  end
+
   # Turn bolls inline-Strong's text into ordered tokens.
   #   "In the beginning<S>7225</S> God<S>430</S>, <S>853</S> the heaven<S>8064</S>"
   #   => [{w:"In the beginning",s:"H7225"},{w:" God",s:"H430"},{w:", "},{w:" the heaven",s:"H8064"}]
   def tokenize(raw, prefix)
-    cleaned = raw.gsub(%r{<(?!/?S>)[^>]*>}, "") # drop non-Strong's tags (italics, footnotes)
+    cleaned = raw.gsub(%r{<sup>.*?</sup>}mi, "")     # translators' marginal notes, text and all
+                 .gsub(%r{<(?!/?S>)[^>]*>}, "")      # other non-Strong's tags (italics)
     tokens = []
     last = 0
     cleaned.scan(%r{<S>(\d+)</S>}) do

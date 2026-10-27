@@ -35,8 +35,9 @@ class StudyWorkflowTest < ActionDispatch::IntegrationTest
   end
 
   test "a Strong's-tagged KJV verse renders clickable word-study links" do
-    Verse.find_by(translation: @kjv, book: @john, chapter: 3, verse_number: 16)
-         .update!(tokens: [ { "w" => "For", "s" => "G1063" }, { "w" => " God", "s" => "G2316" } ])
+    verse = Verse.find_by(translation: @kjv, book: @john, chapter: 3, verse_number: 16)
+    rest = verse.text.delete_prefix("For God") # tokens must spell the whole verse to be shown
+    verse.update!(tokens: [ { "w" => "For", "s" => "G1063" }, { "w" => " God", "s" => "G2316" }, { "w" => rest } ])
     study = users(:one).studies.create!(name: "S", pane_count: 1)
     pane = study.panes.first
 
