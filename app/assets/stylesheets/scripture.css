@@ -1113,8 +1113,10 @@
 }
 
 /* ----- toast / save indicator ----- */
+/* fixed + z 140: above the modal shroud (30), drawers (40–44, setlist 120)
+   so an error/notice is never hidden behind an open panel. */
 .ps-toast {
-  position: absolute;
+  position: fixed;
   bottom: 22px;
   left: 50%;
   transform: translateX(-50%);
@@ -1130,7 +1132,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  z-index: 25;
+  z-index: 140;
 }
 .ps-toast .check { color: var(--gold); }
 
