@@ -99,8 +99,10 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # Enable DNS rebinding protection and other `Host` header attacks.
-  config.hosts = app_hosts
+  # Enable DNS rebinding protection and other `Host` header attacks — only once
+  # APP_HOSTS is set on the host, so a deploy can never lock out a hostname
+  # (e.g. a Hatchbox/Caddy domain) we didn't know about.
+  config.hosts = app_hosts if ENV["APP_HOSTS"].present?
 
   # Skip DNS rebinding protection for the default health check endpoint.
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
