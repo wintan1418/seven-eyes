@@ -27,5 +27,14 @@ class CrossReferenceTest < ActiveSupport::TestCase
     cross = CrossReference.new(to_book: @rom, to_chapter_start: 8, to_verse_start: 38,
                                to_chapter_end: 9, to_verse_end: 1)
     assert_equal "Romans 8:38-9:1", cross.to_label
+    assert ReferenceParser.call(cross.to_label).multi_chapter?, "the label loads as a cross-chapter span"
+  end
+
+  test "to_label of a legacy cross-book range (end chapter belongs to the next book) labels the start verse" do
+    # Seeded from "Rom.16.27-1Cor.1.1": end chapter 1 was stored against Romans.
+    legacy = CrossReference.new(to_book: @rom, to_chapter_start: 16, to_verse_start: 27,
+                                to_chapter_end: 1, to_verse_end: 1)
+    assert_equal "Romans 16:27", legacy.to_label
+    assert ReferenceParser.call(legacy.to_label).valid?
   end
 end

@@ -13,10 +13,7 @@ class PassagesController < ApplicationController
     return render_not_found unless @book
 
     @translation = resolve_translation
-    @verses = Verse.passage(
-      translation: @translation, book: @book, chapter: @parsed.chapter,
-      verse_start: @parsed.verse_start, verse_end: range_end
-    ).to_a
+    @verses = Verse.for_reference(@parsed, translation: @translation, book: @book).to_a
     return render_not_found if @verses.empty?
 
     @reference = @parsed.label
@@ -46,18 +43,13 @@ class PassagesController < ApplicationController
     ref && ReferenceParser.call(ref)
   end
 
-  # ReferenceParser sets verse_end == verse_start for a single verse; keep the
-  # range open (nil) in that case so we load just the one verse, not a 1..1 band.
-  def range_end
-    return nil if @parsed.verse_start.nil? || @parsed.verse_end == @parsed.verse_start
-    @parsed.verse_end
-  end
-
+  # Only translations readers may use: a link naming a hidden (licence-
+  # restricted) or incomplete translation falls back to BSB, then the default.
   def resolve_translation
-    Translation.find_by(code: params[:t].to_s.upcase.presence) ||
-      Translation.find_by(code: "BSB") ||
-      Translation.find_by(code: "KJV") ||
-      Translation.first
+    offered = Translation.available
+    offered.find_by(code: params[:t].to_s.upcase.presence) ||
+      offered.find_by(code: "BSB") ||
+      Translation.default
   end
 
   def target_study(label)

@@ -23,7 +23,7 @@ class VersesController < ApplicationController
     book = Book.find_by_osis(params[:osis])
     return render(json: { count: 0 }) unless book
 
-    translation = Translation.find_by(code: params[:translation].presence) || Translation.first
+    translation = Translation.available.find_by(code: params[:translation].presence) || Translation.default
     max = Verse.where(translation: translation, book: book, chapter: params[:chapter].to_i)
                .maximum(:verse_number) || 0
     render json: { count: max }

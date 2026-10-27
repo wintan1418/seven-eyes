@@ -55,9 +55,13 @@ class CrossReferenceSeeder
 
       tc_end = tv_end = nil
       if to_end
-        _eb, ec, ev = to_end.split(".")
-        tc_end = ec.to_i
-        tv_end = ev.to_i
+        eb, ec, ev = to_end.split(".")
+        # A range running into the next book (Lev.27.34-Num.1.1) can't be
+        # stored against one book: keep just its start verse.
+        if eb == tb
+          tc_end = ec.to_i
+          tv_end = ev.to_i
+        end
       end
 
       buffer << {

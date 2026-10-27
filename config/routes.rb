@@ -83,4 +83,7 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+
+  # Sources & licences for every translation and dataset (required attributions).
+  get "credits" => "credits#show", as: :credits
 end
