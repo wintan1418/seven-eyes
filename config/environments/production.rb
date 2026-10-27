@@ -3,6 +3,11 @@ require "active_support/core_ext/integer/time"
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
+  # The public hostnames this app answers to. Override with APP_HOSTS
+  # (comma-separated, first one is canonical) for staging or a new domain.
+  app_hosts = ENV["APP_HOSTS"].to_s.split(",").map(&:strip).reject(&:empty?).presence ||
+              %w[ bibliorata.com www.bibliorata.com ]
+
   # Code is not reloaded between requests.
   config.enable_reloading = false
 
@@ -25,13 +30,13 @@ Rails.application.configure do
   config.active_storage.service = :local
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  # config.assume_ssl = true
+  config.assume_ssl = true
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
+  config.force_ssl = true
 
   # Skip http-to-https redirect for the default health check endpoint.
-  # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
+  config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
 
   # Log to STDOUT with the current request id as a default log tag.
   config.log_tags = [ :request_id ]
@@ -46,38 +51,43 @@ Rails.application.configure do
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
-  # In-process memory cache (single Puma host, no need for a shared DB-backed
-  # cache). Avoids depending on the solid_cache_entries table — Hatchbox-style
-  # deploys only run `db:migrate` for the primary schema, not the cache schema.
-  config.cache_store = :memory_store, { size: 32.megabytes }
+  # DB-backed cache shared by every Puma worker, so rate limits, the AI spend
+  # guards (AiBudget) and cached AI answers hold across processes and restarts.
+  # Hatchbox-style deploys only run `db:migrate` for the primary schema, so the
+  # solid_cache_entries table lives in the PRIMARY database (see migration
+  # CreateSolidCacheEntries) and config/cache.yml names no separate `cache` db.
+  config.cache_store = :solid_cache_store
 
-  # In-process Active Job queue (this app doesn't run background jobs).
-  # Avoids depending on the solid_queue tables for the same reason as above.
-  config.active_job.queue_adapter = :async
+  # Active Job: Solid Queue only when a worker actually runs it — config/puma.rb
+  # starts the supervisor in-process when SOLID_QUEUE_IN_PUMA is set, and its
+  # tables live in the primary DB (migration CreateSolidQueueTables). Without
+  # that env var we stay on the in-process :async adapter rather than enqueue
+  # jobs nobody will ever run.
+  config.active_job.queue_adapter = ENV["SOLID_QUEUE_IN_PUMA"].present? ? :solid_queue : :async
 
-  # Action Cable powers Go Live and the phone remote. Accept websocket
-  # connections from the public site regardless of how the SSL proxy presents
-  # the request scheme to the app.
-  config.action_cable.allowed_request_origins = [
-    "https://bibliorata.com", "https://www.bibliorata.com",
-    "http://bibliorata.com",  "http://www.bibliorata.com"
-  ]
-
-  # Ignore bad email addresses and do not raise email delivery errors.
-  # Set this to true and configure the email server for immediate delivery to raise delivery errors.
-  # config.action_mailer.raise_delivery_errors = false
+  # Action Cable powers Go Live and the phone remote. HTTPS origins only.
+  config.action_cable.allowed_request_origins = app_hosts.map { |host| "https://#{host}" }
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "bibliorata.com" }
+  config.action_mailer.default_url_options = { host: app_hosts.first, protocol: "https" }
 
-  # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
-  # config.action_mailer.smtp_settings = {
-  #   user_name: Rails.application.credentials.dig(:smtp, :user_name),
-  #   password: Rails.application.credentials.dig(:smtp, :password),
-  #   address: "smtp.example.com",
-  #   port: 587,
-  #   authentication: :plain
-  # }
+  # Outgoing mail (password resets) over SMTP, configured from the environment:
+  # SMTP_ADDRESS, SMTP_PORT (default 587), SMTP_USERNAME, SMTP_PASSWORD.
+  # Without SMTP_ADDRESS no mail is sent and delivery errors aren't raised.
+  if ENV["SMTP_ADDRESS"].present?
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.raise_delivery_errors = true
+    config.action_mailer.smtp_settings = {
+      address: ENV["SMTP_ADDRESS"],
+      port: ENV.fetch("SMTP_PORT", 587).to_i,
+      user_name: ENV["SMTP_USERNAME"].presence,
+      password: ENV["SMTP_PASSWORD"].presence,
+      authentication: (ENV["SMTP_USERNAME"].present? ? :plain : nil),
+      enable_starttls_auto: true
+    }.compact
+  else
+    config.action_mailer.raise_delivery_errors = false
+  end
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
@@ -90,11 +100,8 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [ :id ]
 
   # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
-  #
+  config.hosts = app_hosts
+
   # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end

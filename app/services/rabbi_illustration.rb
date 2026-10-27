@@ -81,7 +81,7 @@ class RabbiIllustration
     @verse = verse
     @verses = Array(verses).compact.presence || [ verse ].compact
     @verse ||= @verses.first
-    @selection = selection.to_s.strip
+    @selection = selection.to_s.strip[0, RabbiExposition::SELECTION_LIMIT]
     @study = study
     @translation = translation || @verse&.translation
     @style = STYLES.key?(style.to_s) ? style.to_s : DEFAULT_STYLE
@@ -102,7 +102,7 @@ class RabbiIllustration
     img = generate_image(scene + STYLES[@style] + marker_list(annotations))
     return error(img.error || :api) unless img.ok?
 
-    Result.new(ok: true, image: img.data_url, caption: data["caption"].to_s.strip.presence,
+    Result.new(ok: true, image: img.data_url, caption: PlainText.call(data["caption"], limit: 120).presence,
                annotations: annotations, origin: origin_label, provider: art.provider, style: @style)
   rescue => e
     Rails.logger.error("[RabbiIllustration] #{e.class}: #{e.message}")
@@ -114,7 +114,7 @@ class RabbiIllustration
   def error(code) = Result.new(ok: false, error: code, origin: origin_label, style: @style)
 
   # Network seams — overridden in tests to avoid live API calls.
-  def art_direction = AiChat.call(system: SYSTEM_PROMPT, user: user_prompt, json: true)
+  def art_direction = AiChat.call(system: SYSTEM_PROMPT, user: user_prompt, json: true, max_tokens: 800)
   def generate_image(prompt) = OpenaiImage.generate(prompt)
 
   # The vital points a viewer should notice, shown as a numbered key beneath the
@@ -122,9 +122,9 @@ class RabbiIllustration
   def build_annotations(raw)
     Array(raw).filter_map do |a|
       next unless a.is_a?(Hash)
-      label = a["label"].to_s.strip
+      label = PlainText.call(a["label"], limit: 80).to_s
       next if label.empty?
-      Annotation.new(label: label, note: a["note"].to_s.strip.presence)
+      Annotation.new(label: label, note: PlainText.call(a["note"], limit: 240).presence)
     end.first(MAX_ANNOTATIONS)
   end
 

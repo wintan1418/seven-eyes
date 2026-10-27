@@ -3,16 +3,29 @@ require "test_helper"
 class RabbiExpositionTest < ActiveSupport::TestCase
   # Test double: overrides the network seam so no live API call is made.
   class FakeRabbi < RabbiExposition
-    def initialize(verse:, selection:, study:, result: nil, diagram_result: nil, verses: nil)
+    attr_reader :calls
+
+    def initialize(verse:, selection:, study:, result: nil, verses: nil)
       super(verse:, selection:, study:, verses:)
       @result = result
-      @diagram_result = diagram_result
+      @calls = 0
     end
 
     private
 
-    def chat_completion = @result
-    def diagram_completion(_subject) = @diagram_result
+    def chat_completion
+      @calls += 1
+      @result
+    end
+  end
+
+  # The test env uses :null_store; swap in a real store to exercise caching.
+  def with_memory_cache
+    original = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    yield
+  ensure
+    Rails.cache = original
   end
 
   def fake_ok(content) = AiChat::Result.new(ok: true, content: content, provider: :gemini)
@@ -61,7 +74,7 @@ class RabbiExpositionTest < ActiveSupport::TestCase
     assert_equal :gemini, r.provider
   end
 
-  test "parses background and draws a sanitised diagram for a physical subject" do
+  test "parses background, and leaves the diagram to the on-demand Draw button" do
     json = {
       summary: "Instructions for the ark.",
       background: "In the ancient Near East a god's throne sat in the innermost room.",
@@ -72,35 +85,62 @@ class RabbiExpositionTest < ActiveSupport::TestCase
       caution: "Don't allegorise the gold.",
       application: "Teach God's nearness."
     }.to_json
-    svg = "<svg viewBox='0 0 100 60'><script>x()</script>" \
-          "<rect x='2' y='2' width='60' height='30' stroke='#3a2a18' fill='none'/>" \
-          "<text x='6' y='50'>2.5 cubits (~3.75 ft)</text></svg>"
 
-    r = FakeRabbi.new(verse: @v16, selection: "make an ark", study: @study,
-                      result: fake_ok(json), diagram_result: fake_ok(svg)).call
+    rabbi = FakeRabbi.new(verse: @v16, selection: "make an ark", study: @study, result: fake_ok(json))
+    r = rabbi.call
     assert r.ok?
     assert_equal "In the ancient Near East a god's throne sat in the innermost room.", r.exposition.background
-    assert r.exposition.diagram.present?
-    assert r.exposition.diagram.html_safe?
-    assert_includes r.exposition.diagram, "2.5 cubits"
-    assert_not_includes r.exposition.diagram, "script" # scrubbed
+    assert_nil r.exposition.diagram
+    assert_equal 1, rabbi.calls, "an exposition costs exactly one model call"
   end
 
-  test "a non-physical passage draws no diagram (no second call needed)" do
-    json = { summary: "ok", draw_subject: "", cross_references: [] }.to_json
+  test "model output is reduced to plain text — no markup or injected links survive" do
+    json = {
+      summary: "Grace <a href=\"https://evil.example\">click here</a> abounds.",
+      meaning: "<script>alert(1)</script>Love &lt;img src=x onerror=alert(1)&gt; wins.",
+      caution: "Tom &amp; Jerry", cross_references: []
+    }.to_json
     r = FakeRabbi.new(verse: @v16, selection: "loved", study: @study, result: fake_ok(json)).call
     assert r.ok?
-    assert_nil r.exposition.diagram
+    assert_equal "Grace click here abounds.", r.exposition.summary
+    assert_not_includes r.exposition.meaning, "<"
+    assert_not_includes r.exposition.meaning, "onerror=alert(1)>"
+    assert_equal "Tom & Jerry", r.exposition.caution
   end
 
-  test "a failed drawing pass still returns the exposition" do
-    json = { summary: "ok", draw_subject: "the ark", cross_references: [] }.to_json
-    r = FakeRabbi.new(verse: @v16, selection: "ark", study: @study,
-                      result: fake_ok(json),
-                      diagram_result: AiChat::Result.new(ok: false, error: :api)).call
-    assert r.ok?
-    assert_equal "ok", r.exposition.summary
-    assert_nil r.exposition.diagram
+  test "an identical ask is served from cache without a second model call" do
+    json = { summary: "ok", cross_references: [ "Romans 5:8" ] }.to_json
+    with_memory_cache do
+      first = FakeRabbi.new(verse: @v16, selection: "God so loved", study: @study, result: fake_ok(json))
+      assert first.call.ok?
+      assert_equal 1, first.calls
+
+      again = FakeRabbi.new(verse: @v16, selection: "  god so LOVED ", study: @study, result: fake_ok(json))
+      r = again.call
+      assert r.ok?
+      assert_equal "ok", r.exposition.summary
+      assert_equal [ "Romans 5:8" ], r.cross_references.map(&:reference)
+      assert_equal 0, again.calls
+
+      other = FakeRabbi.new(verse: @v16, selection: "the world", study: @study, result: fake_ok(json))
+      other.call
+      assert_equal 1, other.calls, "a different selection is a different question"
+    end
+  end
+
+  test "failures are not cached" do
+    with_memory_cache do
+      FakeRabbi.new(verse: @v16, selection: "loved", study: @study, result: AiChat::Result.new(ok: false, error: :api)).call
+      retry_rabbi = FakeRabbi.new(verse: @v16, selection: "loved", study: @study,
+                                  result: fake_ok({ summary: "ok" }.to_json))
+      assert retry_rabbi.call.ok?
+      assert_equal 1, retry_rabbi.calls
+    end
+  end
+
+  test "the highlighted selection is capped before it reaches the model" do
+    rabbi = FakeRabbi.new(verse: @v16, selection: "a" * 5_000, study: @study, result: fake_ok({ summary: "ok" }.to_json))
+    assert_equal RabbiExposition::SELECTION_LIMIT, rabbi.call.selection.length
   end
 
   test "tolerates a code-fenced JSON response" do

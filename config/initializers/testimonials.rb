@@ -10,7 +10,7 @@ Testimonials.configure do |config|
   # (Authentication concern stores the Session id in a signed cookie).
   resolve_user = lambda do |request|
     session_id = request.cookie_jar.signed[:session_id]
-    Session.find_by(id: session_id)&.user if session_id
+    Session.active.find_by(id: session_id)&.user if session_id
   end
 
   config.current_user = resolve_user
