@@ -28,6 +28,26 @@ class VerseTokenSeederTest < ActiveSupport::TestCase
     assert_equal "created  the heaven", tokens.map { |t| t["w"] }.join
   end
 
+  test "drops translators' marginal notes in <sup> together with their text" do
+    raw = "Blessed<S>835</S> are the undefiled<S>8549</S> in the way<S>1870</S>. <sup>undefiled: or, perfect, or, sincere</sup>"
+    tokens = tok(raw, "H")
+    assert_equal "Blessed are the undefiled in the way.", tokens.map { |t| t["w"] }.join.squish
+    refute tokens.map { |t| t["w"] }.join.include?("sincere")
+  end
+
+  test "tokens_for keeps tokens only when they spell the stored verse" do
+    seeder = VerseTokenSeeder.new
+    verse = Verse.new(text: "Blessed are the undefiled in the way.")
+    ok = seeder.tokens_for(verse, "Blessed<S>835</S> are the undefiled<S>8549</S> in the way<S>1870</S>.", "H")
+    assert_equal "H835", ok.first["s"]
+
+    psalm = seeder.tokens_for(verse, "ALEPH. Blessed<S>835</S> are the undefiled<S>8549</S> in the way<S>1870</S>.", "H")
+    assert psalm, "the Psalm 119 stanza letter is not part of the verse"
+    assert_equal "Blessed", psalm.first["w"]
+
+    assert_nil seeder.tokens_for(verse, "Happy<S>835</S> are the perfect<S>8549</S>.", "H")
+  end
+
   test "strips non-Strong's markup (italics, footnotes)" do
     tokens = tok("the <i>LORD</i> God<S>430</S>", "H")
     assert_equal "the LORD God", tokens.map { |t| t["w"] }.join

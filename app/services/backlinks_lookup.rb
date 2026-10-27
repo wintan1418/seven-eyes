@@ -34,11 +34,14 @@ class BacklinksLookup
   def self.matches_verse?(ref_text, book, chapter, verse)
     parsed = ReferenceParser.call(ref_text)
     return false unless parsed.valid?
-    return false unless parsed.osis == book.osis_code && parsed.chapter == chapter
+    return false unless parsed.osis == book.osis_code && (parsed.chapter..parsed.last_chapter).cover?(chapter)
     return true if verse.nil? || parsed.verse_start.nil?
 
-    last = parsed.verse_end || parsed.verse_start
-    (parsed.verse_start..last).cover?(verse)
+    # Compare (chapter, verse) pairs so "John 3:16-4:2" covers John 4:1.
+    first = [ parsed.chapter, parsed.verse_start ]
+    last = parsed.open_ended? ? [ parsed.chapter, Float::INFINITY ] : [ parsed.last_chapter, parsed.verse_end || parsed.verse_start ]
+    at = [ chapter, verse ]
+    (first <=> at) <= 0 && (at <=> last) <= 0
   end
 
   def self.extract_snippet(notes, ref_text)

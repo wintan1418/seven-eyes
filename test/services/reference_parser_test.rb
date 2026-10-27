@@ -250,4 +250,113 @@ class ReferenceParserTest < ActiveSupport::TestCase
       end
     end
   end
+  # ---- cross-chapter and multi-chapter ranges ----
+
+  test "cross-chapter verse range John 3:16-4:2" do
+    [ "John 3:16-4:2", "Jn 3:16–4:2", "Jn 3:16—4:2", "john 3.16-4.2", "John 3:16 - 4:2" ].each do |input|
+      r = parse(input)
+      assert r.valid?, "#{input.inspect} should parse"
+      assert_equal [ "John", 3, 16, 4, 2 ], [ r.osis, r.chapter, r.verse_start, r.chapter_end, r.verse_end ], input
+      assert r.multi_chapter?
+      refute r.whole_chapter?
+    end
+    assert_equal "John 3:16-4:2", parse("Jn 3:16–4:2").label
+  end
+
+  test "cross-chapter range ending in the same chapter collapses to a plain range" do
+    r = parse("John 3:16-3:18")
+    assert_equal [ 3, 16, 18 ], loc(r)
+    assert_equal 3, r.chapter_end
+    refute r.multi_chapter?
+  end
+
+  test "cross-chapter range past the book or running backwards is refused" do
+    r = parse("John 21:20-22:3")
+    refute r.valid?
+    assert_equal :bad_chapter, r.error
+    refute parse("John 4:2-3:16").valid?
+  end
+
+  test "multi-chapter ranges Matt 5-7 and Ps 23-24" do
+    r = parse("Matt 5-7")
+    assert r.valid?
+    assert_equal [ "Matt", 5, 7 ], [ r.osis, r.chapter, r.chapter_end ]
+    assert_nil r.verse_start
+    assert r.whole_chapter?
+    assert r.multi_chapter?
+    assert_equal "Matthew 5-7", r.label
+
+    r = parse("Ps 23–24")
+    assert_equal [ 23, 24 ], [ r.chapter, r.chapter_end ]
+    assert_equal "Psalms 23-24", r.label
+
+    r = parse("Ps 24-23")
+    assert_equal [ 23, 24 ], [ r.chapter, r.chapter_end ], "reversed chapter range is put in order"
+
+    refute parse("John 20-22").valid?
+  end
+
+  test "a single chapter keeps chapter_end equal to chapter" do
+    r = parse("John 3:16")
+    assert_equal 3, r.chapter_end
+    refute r.multi_chapter?
+    assert_equal 1, parse("Genesis").chapter_end
+  end
+
+  test "single-chapter books read bare numbers as verses" do
+    assert_equal [ "Jude", 1, 1, 3 ], [ parse("Jude 1-3").osis, *loc(parse("Jude 1-3")) ]
+    assert_equal [ 1, 1, 5 ], loc(parse("2 John 1-5"))
+    assert_equal [ 1, 15, 15 ], loc(parse("3 John 15"))
+    assert_equal "3 John 1:15", parse("3 John 15").label
+    assert_equal [ 1, 6, 6 ], loc(parse("Phlm 6"))
+    assert_equal [ 1, 3, 5 ], loc(parse("Jude 1:3-5"))
+    assert parse("Jude 1").whole_chapter?, "Jude 1 is the whole (only) chapter"
+  end
+
+  test "verse-part suffixes a/b/c are ignored" do
+    assert_equal [ 3, 16, 16 ], loc(parse("John 3:16a"))
+    assert_equal [ 3, 16, 18 ], loc(parse("John 3:16b-18"))
+    assert_equal [ 3, 16, 18 ], loc(parse("John 3:16-18a"))
+    r = parse("John 3:16b-4:2a")
+    assert_equal [ 3, 16, 4, 2 ], [ r.chapter, r.verse_start, r.chapter_end, r.verse_end ]
+    assert_equal "1Cor", parse("1cor1:1").osis, "the c of 1cor is not a verse suffix"
+  end
+
+  test "ff / f means through the end of the chapter" do
+    r = parse("John 3:16ff")
+    assert r.valid?
+    assert_equal 16, r.verse_start
+    assert_nil r.verse_end
+    assert r.open_ended?
+    assert_equal "John 3:16ff", r.label
+
+    r = parse("Rom 8:28 ff.")
+    assert r.open_ended?
+    assert_equal 28, r.verse_start
+    refute parse("John 3:16").open_ended?
+  end
+
+  test "St / Saint before a gospel" do
+    assert_equal "John", parse("St John 3:16").osis
+    assert_equal "John", parse("St. John 3:16").osis
+    assert_equal "Matt", parse("Saint Matthew 5").osis
+  end
+
+  test "Philippians abbreviations, Phi included" do
+    %w[Phil Php Phi].each do |abbr|
+      r = parse("#{abbr} 4:13")
+      assert r.valid?, abbr
+      assert_equal "Phil", r.osis, abbr
+    end
+  end
+
+  test "Thess and Tim need their number" do
+    refute parse("Thess 4").valid?
+    refute parse("Tim 1").valid?
+    assert_equal "1Thess", parse("1 Thess 4:16").osis
+    assert_equal "2Thess", parse("II Thess 2").osis
+    assert_equal "1Tim", parse("1 Tim 3:16").osis
+    assert_equal "2Tim", parse("2 Tm 3:16").osis
+    assert_equal "Titus", parse("Ti 1").osis
+  end
 end

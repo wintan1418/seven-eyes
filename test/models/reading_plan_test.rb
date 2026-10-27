@@ -24,6 +24,25 @@ class ReadingPlanTest < ActiveSupport::TestCase
     assert_equal 2, @plan.longest_streak # also 2 from the earlier pair
   end
 
+  test "deleting the plan's study clears study_id instead of leaving a dangling id" do
+    study = @user.studies.create!(name: "Plan study", pane_count: 1)
+    @plan.update!(study:)
+    study.destroy
+    assert_nil @plan.reload.study_id
+  end
+
+  test "pane_references combines consecutive chapters only when they don't fit" do
+    day = @plan.plan_days.create!(day_number: 9, refs: "Gen 1, Gen 2, Gen 3")
+    assert_equal [ "Gen 1", "Gen 2", "Gen 3" ], day.pane_references(4)
+
+    day.update!(refs: "Gen 1, Gen 2, Gen 3, Ps 1, Ps 2, Matt 5, Matt 6")
+    assert_equal [ "Genesis 1-3", "Psalms 1-2", "Matthew 5-6" ], day.pane_references(4)
+
+    day.update!(refs: "Gen 1, Gen 3, Ps 1, Matt 1, Mark 1")
+    assert_equal [ "Gen 1", "Gen 3", "Ps 1", "Matt 1", "Mark 1" ], day.pane_references(4),
+                 "non-consecutive chapters stay separate (the caller reports the overflow)"
+  end
+
   test "destroying a plan removes its days and completions" do
     @plan.plan_days.first.create_completion!
     assert_difference -> { PlanDay.count }, -5 do

@@ -1,0 +1,72 @@
+<% content_for :title, "Sources & credits · Parallel Scripture" %>
+<div class="ps-root ps-pub-root">
+  <main class="ps-pub text-left">
+    <a href="<%= root_path %>" class="ps-pub-brand">
+      <span class="cross">&#9769;</span>
+      <span>PARALLEL &middot; SCRIPTURE</span>
+    </a>
+
+    <article class="ps-pub-card">
+      <div class="ps-pub-ref"><span class="r">Sources &amp; credits</span></div>
+      <div class="ps-pub-rule"><span></span>&#10086;<span></span></div>
+
+      <section class="mb-6">
+        <h2 class="mb-2 font-display text-xs uppercase tracking-[0.22em] text-rubric">Bible translations</h2>
+        <p class="mb-3 text-sm text-sepia">
+          Only public-domain and openly licensed translations are offered. Texts were obtained once from the
+          <a href="https://bible.helloao.org" rel="noopener">Free Use Bible API (bible.helloao.org)</a> and are served from our own database.
+        </p>
+        <ul class="space-y-2">
+          <% @translations.each do |t| %>
+            <% meta = BibleSeeder::TRANSLATIONS[t.code] || {} %>
+            <li>
+              <strong><%= t.display_name %></strong> (<%= t.code %>) &mdash;
+              <%= BibleSeeder::LICENSE_NAMES.fetch(t.license, t.license.to_s.humanize) %>.
+              <% if t.code == "KJV" %>
+                Public domain outside the United Kingdom; in the UK the rights are vested in the Crown.
+              <% end %>
+              <% if meta[:attribution] %>
+                <span class="block text-sm text-sepia"><%= meta[:attribution] %>
+                  <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener">Licence</a>.
+                  Text unchanged except for whitespace and verse-marker normalisation.</span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+
+      <section class="mb-6">
+        <h2 class="mb-2 font-display text-xs uppercase tracking-[0.22em] text-rubric">Cross-references</h2>
+        <p class="text-sm">
+          Treasury of Scripture Knowledge cross-references with relevance votes from
+          <a href="https://www.openbible.info/labs/cross-references/" rel="noopener">OpenBible.info</a>,
+          licensed <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY</a>.
+        </p>
+      </section>
+
+      <section class="mb-6">
+        <h2 class="mb-2 font-display text-xs uppercase tracking-[0.22em] text-rubric">Word studies</h2>
+        <p class="text-sm">
+          Strong&rsquo;s Greek and Hebrew dictionaries from the
+          <a href="https://github.com/openscriptures/strongs" rel="noopener">Open Scriptures</a> project,
+          licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener">CC BY-SA</a>
+          (derived from James Strong&rsquo;s public-domain concordance, 1890&ndash;94).
+          Word-by-word Strong&rsquo;s tagging of the KJV from the public-domain KJV with Strong&rsquo;s numbers
+          (via <a href="https://bolls.life" rel="noopener">bolls.life</a>).
+        </p>
+      </section>
+
+      <section class="mb-2">
+        <h2 class="mb-2 font-display text-xs uppercase tracking-[0.22em] text-rubric">Commentary</h2>
+        <p class="text-sm">
+          <%= CommentarySeeder::SOURCES.values.to_sentence %> &mdash; public-domain commentaries obtained from the
+          <a href="https://bible.helloao.org" rel="noopener">Free Use Bible API</a>.
+        </p>
+      </section>
+    </article>
+
+    <div class="ps-pub-cta">
+      <%= link_to "Open Parallel Scripture &rsaquo;".html_safe, root_path, class: "cta" %>
+    </div>
+  </main>
+</div>

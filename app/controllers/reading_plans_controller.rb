@@ -1,4 +1,6 @@
 class ReadingPlansController < ApplicationController
+  MAX_PANES = 4
+
   before_action :require_account
   before_action :set_plan, only: %i[ show destroy open_today ]
 
@@ -49,29 +51,34 @@ class ReadingPlansController < ApplicationController
   end
 
   # Open today's reading in a study: create the plan's study on first use,
-  # then load each of today's references into a separate pane.
+  # then load today's references into its panes — consecutive chapters of one
+  # book share a pane ("Genesis 1-3") when there are more readings than panes.
+  #
+  # "Today" is Date.current in the app's time zone (UTC — config.time_zone is
+  # unset), not the reader's local date; near midnight it can be a day off.
   def open_today
     day = @plan.todays_day
     return redirect_to(@plan, alert: "No reading scheduled for today.") unless day
 
-    study = @plan.study || current_user.studies.create!(
-      name: "Plan: #{@plan.name}",
-      pane_count: [ day.reference_list.size.clamp(1, 4), 1 ].max
-    )
+    refs = day.pane_references(MAX_PANES)
+    pane_count = refs.size.clamp(1, MAX_PANES)
+
+    study = @plan.study || current_user.studies.create!(name: "Plan: #{@plan.name}", pane_count:)
     @plan.update!(study: study) if @plan.study.blank?
 
-    # Resize panes to match today's reference count (1-4) and load refs into them.
-    pane_count = day.reference_list.size.clamp(1, 4)
-    if pane_count.positive? && study.pane_count != pane_count
+    if study.pane_count != pane_count
       study.update!(pane_count:)
       study.sync_panes!
     end
-    day.reference_list.first(4).each_with_index do |ref, idx|
-      pane = study.panes.find_by(position: idx)
-      pane&.update(reference: ref)
+    refs.first(MAX_PANES).each_with_index do |ref, idx|
+      study.panes.find_by(position: idx)&.update(reference: ref)
     end
 
-    redirect_to study
+    if refs.size > MAX_PANES
+      redirect_to study, notice: "Also today: #{refs.drop(MAX_PANES).join(', ')}"
+    else
+      redirect_to study
+    end
   end
 
   private

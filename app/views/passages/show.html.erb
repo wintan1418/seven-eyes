@@ -27,12 +27,18 @@
     <article class="ps-pub-card">
       <div class="ps-pub-ref">
         <span class="r"><%= @reference %></span>
-        <span class="tr"><%= @translation&.name %></span>
+        <span class="tr"><%= @translation&.display_name %></span>
       </div>
       <div class="ps-pub-rule"><span></span>&#10086;<span></span></div>
 
+      <% multi_chapter = @verses.map(&:chapter).uniq.size > 1 %>
       <div class="ps-pub-verses">
         <% @verses.each_with_index do |v, i| %>
+          <% if multi_chapter && (i.zero? || @verses[i - 1].chapter != v.chapter) %>
+            <h3 class="mb-2 mt-6 text-center font-display text-xs uppercase tracking-[0.22em] text-rubric">
+              <%= @book.name %> <%= v.chapter %>
+            </h3>
+          <% end %>
           <p class="ps-pub-verse<%= " first" if i.zero? %>">
             <% if @verses.size > 1 %><span class="vn"><%= v.verse_number %></span><% end %><%= v.text %>
           </p>
@@ -57,6 +63,10 @@
     <p class="ps-pub-foot">
       A quiet desk for the Word &mdash; lay passages side by side, trace cross-references,
       study the original words, and let a careful AI help you see the text in context.
+    </p>
+    <p class="ps-pub-foot">
+      Scripture from the <%= @translation&.name %>.
+      <%= link_to "Sources & credits", credits_path %>
     </p>
   </main>
 </div>

@@ -90,4 +90,7 @@ Rails.application.routes.draw do
   end
   get "/terms",   to: "legal#terms",   as: :terms
   get "/privacy", to: "legal#privacy", as: :privacy
+
+  # Sources & licences for every translation and dataset (required attributions).
+  get "credits" => "credits#show", as: :credits
 end

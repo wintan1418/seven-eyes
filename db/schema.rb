@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_120200) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_27_120400) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -199,6 +199,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_120200) do
     t.bigint "study_id"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["study_id"], name: "index_reading_plans_on_study_id"
     t.index ["user_id", "start_date"], name: "index_reading_plans_on_user_id_and_start_date"
     t.index ["user_id"], name: "index_reading_plans_on_user_id"
   end
@@ -442,6 +443,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_120200) do
     t.string "license", default: "public_domain", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
+    t.integer "verse_count"
     t.index ["code"], name: "index_translations_on_code", unique: true
   end
 
@@ -488,6 +490,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_120200) do
   add_foreign_key "panes", "translations"
   add_foreign_key "plan_completions", "plan_days"
   add_foreign_key "plan_days", "reading_plans"
+  add_foreign_key "reading_plans", "studies", on_delete: :nullify
   add_foreign_key "reading_plans", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "setlist_items", "studies"

@@ -29,7 +29,7 @@
         <button type="button" class="ps-pane-tool" title="Share this passage as a picture"
                 data-action="pane#share"
                 data-osis="<%= content.book.osis_code %>" data-chapter="<%= content.parsed.chapter %>"
-                data-verse-start="<%= content.parsed.verse_start %>" data-verse-end="<%= content.parsed.verse_end %>">&#10150;</button>
+                data-verse-start="<%= content.parsed.verse_start %>" data-verse-end="<%= content.parsed.verse_end unless content.parsed.multi_chapter? %>">&#10150;</button>
         <button type="button" class="ps-pane-tool" title="A prayer from this chapter, to share"
                 data-action="pane#prayer"
                 data-osis="<%= content.book.osis_code %>" data-chapter="<%= content.parsed.chapter %>">&#10018;</button>
@@ -48,8 +48,8 @@
 
   <% if content.ok? %>
     <div class="ps-verses">
-      <% prev_ref = neighbor_reference(content.book, content.parsed.chapter, :prev) %>
-      <% next_ref = neighbor_reference(content.book, content.parsed.chapter, :next) %>
+      <% prev_ref = neighbor_reference(content.book, content.first_chapter, :prev) %>
+      <% next_ref = neighbor_reference(content.book, content.last_chapter, :next) %>
       <div class="ref-title">
         <% if prev_ref %>
           <%= button_to "‹", study_pane_path(pane.study, pane), method: :patch,
@@ -57,8 +57,8 @@
                 class: "ps-ch-nav prev", title: "Previous chapter (#{prev_ref})",
                 form: { data: { turbo_frame: pane.frame_id }, style: "display:contents;" } %>
         <% end %>
-        <span><%= reference_title(content.book, content.parsed.chapter) %></span>
-        <span class="tag">&middot; <%= content.translation.name %></span>
+        <span><%= reference_title(content.book, content.first_chapter, content.last_chapter) %></span>
+        <span class="tag">&middot; <%= content.translation.display_name %></span>
         <% if next_ref %>
           <%= button_to "›", study_pane_path(pane.study, pane), method: :patch,
                 params: { pane: { reference: next_ref } },
@@ -67,18 +67,40 @@
         <% end %>
       </div>
       <div class="rule"></div>
+      <% if content.translation.vulgate_numbering? %>
+        <p class="ps-pane-notice mx-auto mb-3 max-w-prose text-center text-sm italic text-sepia-mute">
+          The <%= content.translation.name %> numbers chapters and verses after the Latin Vulgate &mdash;
+          most Psalms run one behind other Bibles (its Psalm 22 is Psalm 23 elsewhere).
+        </p>
+      <% end %>
+      <% if content.missing.present? %>
+        <div class="ps-pane-notice mx-auto mb-3 max-w-prose text-center text-sm text-sepia">
+          <%= missing_verses_label(content.book, content.missing) %>
+          <%= content.missing.size == 1 ? "isn’t" : "aren’t" %> in the <%= content.translation.code %>
+          <% if content.alternative %>
+            &mdash; <%= content.alternative.code == Translation::DEFAULT_CODE ? "many modern translations omit or move #{content.missing.size == 1 ? 'it' : 'them'}" : "translations number this passage differently" %>
+            (<%= content.missing.size == 1 ? "it’s" : "they’re" %> in the <%= content.alternative.code %>).
+            <%= pane_switch_button(pane, "Show in #{content.alternative.code}", translation: content.alternative) %>
+          <% end %>
+        </div>
+      <% end %>
       <% highlights_by_verse = authenticated? ? current_user.highlights.where(verse_id: content.verses.map(&:id)).group_by(&:verse_id) : {} %>
       <% lexicon = lexicon_lookup_for(content.verses) %>
       <div class="ps-verse-body" data-controller="highlighter" data-action="click->memorize#reveal" data-tour="verses">
         <% content.verses.each_with_index do |verse, i| %>
+          <% if content.multi_chapter? && (i.zero? || content.verses[i - 1].chapter != verse.chapter) %>
+            <div class="ps-chapter-break mb-2 mt-5 text-center font-display text-xs uppercase tracking-[0.22em] text-rubric first:mt-0"
+                 role="heading" aria-level="3">
+              <%= content.book.name %> <%= to_roman(verse.chapter) %>
+            </div>
+          <% end %>
           <%= scripture_verse(verse, study: pane.study, book: content.book,
                 highlights: highlights_by_verse[verse.id] || [],
                 dropcap: i.zero? && verse.verse_number == 1,
-                lexicon: lexicon) %>
+                lexicon: lexicon, translation: content.translation) %>
         <% end %>
       </div>
     </div>
-
     <%= form_with url: study_pane_path(pane.study, pane), method: :patch, class: "ps-notes-form",
           data: { controller: "notes", turbo: false, pane_target: "notes" } do %>
       <div class="ps-notes">
@@ -103,15 +125,20 @@
       </div>
     </div>
   <% else %>
+    <%# Every failure renders a visible explanation and, where one exists, a one-click way out. %>
     <% parsed = content.parsed %>
-    <div class="ps-pane-empty">
+    <div class="ps-pane-empty" role="status">
       <div class="orn">&#9888;</div>
       <div class="lead">
         <% case content.error %>
+        <% when :verse_omitted %>
+          <%= missing_verses_label(content.book, content.missing) %> isn&rsquo;t in the <%= content.translation.code %>
         <% when :verse_not_found %>
           <%= content.book.name %> <%= parsed.chapter %> has <%= pluralize(content.max_verse, "verse") %>
         <% when :not_found %>
-          Not in <%= content.translation&.code %>
+          This chapter isn&rsquo;t available in the <%= content.translation.display_name %> yet
+        <% when :no_translation %>
+          No Bible translations are loaded yet
         <% when :unknown_book %>
           <%= parsed.book_name %> isn&rsquo;t loaded yet
         <% when :unparseable %>
@@ -129,10 +156,24 @@
       </div>
       <div class="hint">
         <% case content.error %>
+        <% when :verse_omitted %>
+          <% if content.alternative.code == Translation::DEFAULT_CODE %>
+            Many modern translations omit or move it (it&rsquo;s in the <%= content.alternative.code %>).
+          <% else %>
+            Translations number this passage differently (it&rsquo;s in the <%= content.alternative.code %>).
+          <% end %>
+          <div><%= pane_switch_button(pane, "Show in #{content.alternative.code}", translation: content.alternative) %></div>
         <% when :verse_not_found %>
-          &ldquo;<%= pane.reference %>&rdquo; asks for more than this chapter holds. Try a verse up to <%= content.max_verse %>.
+          &ldquo;<%= pane.reference %>&rdquo; asks for more than this chapter holds.
+          <div><%= pane_switch_button(pane, "Show #{content.book.name} #{parsed.chapter}:#{content.max_verse}",
+                                      reference: "#{content.book.name} #{parsed.chapter}:#{content.max_verse}") %></div>
         <% when :not_found %>
-          The <%= content.translation&.name %> has no text for <%= content.book.name %> <%= parsed.chapter %>. Try another version.
+          The <%= content.translation.code %> has no text for <%= content.book.name %> <%= parsed.chapter %> on this server.
+          <% if content.alternative %>
+            <div><%= pane_switch_button(pane, "Show in #{content.alternative.code}", translation: content.alternative) %></div>
+          <% end %>
+        <% when :no_translation %>
+          An administrator needs to run <em>bin/rails bibles:seed</em>.
         <% when :unknown_book %>
           The text for <%= parsed.book_name %> hasn&rsquo;t been seeded on this server.
         <% when :unparseable %>
