@@ -712,6 +712,9 @@
 .ps-rabbi-loading .orn { font-size: 26px; color: var(--gold-deep); animation: ps-rabbi-pulse 1.6s ease-in-out infinite; }
 .ps-rabbi-loading .lead { margin-top: 10px; font: italic 16px "EB Garamond", serif; color: var(--ink); }
 .ps-rabbi-loading .hint { margin-top: 4px; font: italic 12.5px "EB Garamond", serif; color: var(--sepia-mute); }
+.ps-rabbi-loading.is-error .orn { animation: none; color: var(--rubric); }
+.ps-rabbi-loading.is-error .ps-tb-btn { margin-top: 14px; }
+.ps-ai-hint.is-error { color: var(--rubric); }
 @keyframes ps-rabbi-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 
 /* AI-drawn schematic (the ark, tabernacle, temple…) — vellum plate, gold frame */
