@@ -31,6 +31,7 @@
     </div>
     <div class="ui-appbar-center"></div>
     <div class="ui-appbar-end">
+      <%= render "shared/theme_toggle" %>
       <%= link_to open_passage_path(@slug, t: @translation&.code), class: "ui-btn is-sm is-primary pub-open" do %>
         Open in BiblioRata
       <% end %>

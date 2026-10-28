@@ -16,6 +16,7 @@
     </div>
     <div class="ui-appbar-center"></div>
     <nav class="ui-appbar-end ld-nav-links" aria-label="Site">
+      <%= render "shared/theme_toggle" %>
       <%= link_to "Guide", guide_path, class: "ui-btn is-sm is-quiet ld-hide-sm" %>
       <%= link_to "Sign in", new_session_path, class: "ui-btn is-sm is-quiet" %>
       <%= link_to "Create account", new_registration_path, class: "ui-btn is-sm is-primary" %>

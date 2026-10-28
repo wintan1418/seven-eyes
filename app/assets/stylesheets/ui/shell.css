@@ -182,3 +182,12 @@ body > .ps-root.rd-app:not(.is-presenting, .is-output) {
 .ui-tile.is-accent { background: var(--ui-accent); color: var(--ui-accent-fg); }
 .ui-tile.is-accent:hover { background: var(--ui-accent-hover); }
 .ui-rename { margin: 22px 4px 4px; display: flex; flex-direction: column; gap: 8px; }
+
+/* Light / dark toggle: shows the moon by day, the sun at night. */
+.ui-theme-toggle-sun { display: none; }
+[data-theme="candlelight"] .ui-theme-toggle-sun { display: contents; }
+[data-theme="candlelight"] .ui-theme-toggle-moon { display: none; }
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] .ui-theme-toggle-sun { display: contents; }
+  [data-theme="auto"] .ui-theme-toggle-moon { display: none; }
+}
