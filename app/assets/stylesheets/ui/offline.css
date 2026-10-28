@@ -14,7 +14,7 @@
   position: static; display: inline-flex; align-items: center; gap: 6px;
   padding: 5px 12px; border-radius: 999px; border: 1px solid var(--ui-border-strong);
   background: var(--ui-elevated); color: var(--ui-fg-muted); box-shadow: var(--ui-shadow-sm);
-  font: 500 12px/1.2 var(--ui-font); letter-spacing: 0; text-transform: none;
+  font: 500 12px/1.2 var(--ui-font); letter-spacing: 0; text-transform: none; white-space: nowrap;
 }
 .ps-offline-host .ps-offline-badge::before { display: none; }
 .ps-offline-host .ps-offline-badge[hidden], .ps-sync-pill[hidden] { display: none; }

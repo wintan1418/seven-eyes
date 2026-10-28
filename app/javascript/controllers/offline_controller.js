@@ -61,12 +61,15 @@ export default class extends Controller {
   async render() {
     const online = navigator.onLine
     if (this.hasBadgeTarget) this.badgeTarget.hidden = online
+    clearTimeout(this._compactTimer)
     if (!online && this.hasLabelTarget) {
       const have = (await downloadedBibles()).length > 0
       const live = document.querySelector(".ps-root.is-live-session")
       this.labelTarget.textContent = live
         ? "Offline · live follow-along paused"
         : (have ? "Offline · reading from your downloads" : "Offline")
+      // Say it once in full, then keep out of Scripture's way.
+      if (!live) this._compactTimer = setTimeout(() => { this.labelTarget.textContent = "Offline" }, 6000)
     }
     this.renderSync()
   }

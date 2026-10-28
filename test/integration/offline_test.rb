@@ -2,14 +2,12 @@ require "test_helper"
 
 class OfflineTest < ActionDispatch::IntegrationTest
   setup do
-    FileUtils.rm_rf(OfflineBundle::CACHE_DIR)
     @kjv = Translation.create!(code: "KJV", name: "King James Version")
     Translation.create!(code: "NET", name: "NET Bible")
     john = Book.create!(osis_code: "John", name: "John", testament: :new, position: 43, chapter_count: 21)
     @verse = Verse.create!(translation: @kjv, book: john, chapter: 3, verse_number: 16, text: "For God so loved the world")
   end
 
-  teardown { FileUtils.rm_rf(OfflineBundle::CACHE_DIR) }
 
   test "the Offline Bibles page lists downloadable Bibles, never restricted ones" do
     get offline_path

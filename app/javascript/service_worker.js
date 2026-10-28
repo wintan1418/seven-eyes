@@ -80,7 +80,7 @@ self.addEventListener("fetch", (event) => {
 
   if (url.origin !== self.location.origin) {
     if (request.method === "GET" && FONT_HOSTS.includes(url.hostname)) {
-      event.respondWith(staleWhileRevalidate(request, FONTS_CACHE))
+      event.respondWith(staleWhileRevalidate(request, FONTS_CACHE, event))
     }
     return
   }
@@ -96,18 +96,18 @@ self.addEventListener("fetch", (event) => {
     return
   }
   if (url.pathname.startsWith("/assets/")) {
-    event.respondWith(cacheFirst(request, STATIC_CACHE))
+    event.respondWith(cacheFirst(request, STATIC_CACHE, event))
     return
   }
   if (/\.(css|js|png|jpg|jpeg|svg|woff2?|ttf|ico)$/i.test(url.pathname) && url.pathname !== "/service-worker") {
-    event.respondWith(staleWhileRevalidate(request, STATIC_CACHE))
+    event.respondWith(staleWhileRevalidate(request, STATIC_CACHE, event))
     return
   }
 
   if (!isPageRequest(request)) return
   const key = pageKey(url)
   if (key) {
-    event.respondWith(networkFirst(request, key))
+    event.respondWith(networkFirst(event, key))
   } else if (request.mode === "navigate") {
     event.respondWith(networkOnly(request))
   }
@@ -159,10 +159,13 @@ async function savePage(response) {
   if (STUDY_PAGE.test(path) && !new URL(key).search) await setMeta("lastStudyUrl", path).catch(() => {})
 }
 
-async function networkFirst(request, key) {
+async function networkFirst(event, key) {
+  const request = event.request
   try {
     const fresh = await fetch(request)
-    savePage(fresh).catch(() => {})
+    // waitUntil: WebKit may suspend the worker once the response is handed
+    // over, before a background save finishes.
+    event.waitUntil(savePage(fresh.clone()).catch(() => {}))
     return fresh
   } catch (e) {
     const cached = await caches.open(PAGES_CACHE).then((c) => c.match(key))
@@ -248,23 +251,33 @@ async function referenceCheck(request, url) {
 
 // ---- static -----------------------------------------------------------------
 
-async function cacheFirst(request, cacheName) {
+// `event` (when given) keeps the worker alive until the cache write lands.
+const keepAlive = (event, promise) => { if (event) event.waitUntil(promise.catch(() => {})); return promise }
+
+async function cacheFirst(request, cacheName, event) {
   const cache = await caches.open(cacheName)
   const cached = await cache.match(request)
   if (cached) return cached
   const fresh = await fetch(request)
-  if (fresh && fresh.ok && fresh.status === 200 && fresh.type === "basic" && !fresh.redirected) cache.put(request, fresh.clone())
+  if (fresh && fresh.ok && fresh.status === 200 && fresh.type === "basic" && !fresh.redirected) {
+    const put = cache.put(request, fresh.clone())
+    if (event) keepAlive(event, put)
+    else await put
+  }
   return fresh
 }
 
-async function staleWhileRevalidate(request, cacheName) {
+async function staleWhileRevalidate(request, cacheName, event) {
   const cache = await caches.open(cacheName)
   const cached = await cache.match(request)
   const fetchPromise = fetch(request).then((fresh) => {
     // Fonts come cross-origin with CORS ("cors"); never store opaque responses.
-    if (fresh && fresh.ok && (fresh.type === "basic" || fresh.type === "cors") && !fresh.redirected) cache.put(request, fresh.clone())
+    if (fresh && fresh.ok && (fresh.type === "basic" || fresh.type === "cors") && !fresh.redirected) {
+      return cache.put(request, fresh.clone()).then(() => fresh, () => fresh)
+    }
     return fresh
   }).catch(() => cached || Response.error())
+  if (event) keepAlive(event, fetchPromise)
   return cached || fetchPromise
 }
 

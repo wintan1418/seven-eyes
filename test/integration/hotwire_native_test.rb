@@ -64,6 +64,7 @@ class HotwireNativeTest < ActionDispatch::IntegrationTest
     get terms_path, headers: IOS
     assert_select "title", text: "Terms of Service"
 
+    as_browser
     get terms_path, headers: BROWSER
     assert_select "title", text: "Terms of Service · BiblioRata"
   end
@@ -91,6 +92,7 @@ class HotwireNativeTest < ActionDispatch::IntegrationTest
     get study_path(study), headers: ANDROID
     assert_not_includes css_select(".ps-root").sole["data-controller"].split, "tour"
 
+    as_browser
     get study_path(study), headers: BROWSER
     assert_includes css_select(".ps-root").sole["data-controller"].split, "tour"
   end
@@ -179,6 +181,30 @@ class HotwireNativeTest < ActionDispatch::IntegrationTest
          params: { email_address: "app-reader@example.com", password: secret, password_confirmation: secret }
     assert_redirected_to study_path(guest)
     assert_equal "app-reader@example.com", guest.reload.user.email_address
+  end
+
+
+  # The phone's browser has its own cookie jar, without the app's cookie.
+  def as_browser
+    cookies.delete("ps_native_app")
+  end
+
+  # -- Offline (service worker) ---------------------------------------------------
+
+  test "the app is remembered in a cookie, so pages its service worker saves are the app's version" do
+    get more_path, headers: ANDROID
+    assert_select "body.hotwire-native"
+    assert_equal "1", cookies[:ps_native_app]
+
+    # The worker's own fetch carries the plain WebView user agent.
+    get more_path, headers: { "User-Agent" => "Mozilla/5.0 (Linux; Android 16; wv) Chrome/140 Mobile Safari/537.36" }
+    assert_select "body.hotwire-native"
+  end
+
+  test "a browser never gets the app cookie or the app layout" do
+    get more_path, headers: BROWSER
+    assert_nil cookies[:ps_native_app]
+    assert_select "body.hotwire-native", 0
   end
 
   private

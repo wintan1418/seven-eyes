@@ -112,12 +112,15 @@ class OfflineBundle
     body = to_h.to_json
     compressed = ActiveSupport::Gzip.compress(body, Zlib::BEST_COMPRESSION)
     FileUtils.mkdir_p(CACHE_DIR)
-    # Older versions of this translation are dead weight once a new one exists.
-    Dir.glob(CACHE_DIR.join("#{translation.code}-*")).each { |f| File.delete(f) }
     tmp = CACHE_DIR.join("#{translation.code}-#{version}.#{SecureRandom.hex(4)}.tmp")
     File.binwrite(tmp, compressed)
     File.rename(tmp, cache_path) # atomic: a concurrent reader never sees half a file
     File.write(meta_path, body.bytesize.to_s)
+    # Older versions of this translation are dead weight once a new one exists.
+    # (Another process may be doing the same, or still writing: leave .tmp files.)
+    Dir.glob(CACHE_DIR.join("#{translation.code}-*.{gz,bytes}")).each do |f|
+      FileUtils.rm_f(f) unless f.include?("-#{version}.")
+    end
     @json = body
     compressed
   end

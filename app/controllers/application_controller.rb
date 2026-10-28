@@ -6,7 +6,26 @@ class ApplicationController < ActionController::Base
 
   helper_method :current_user, :authenticated?
 
+  # The iOS/Android apps say so in their user agent, but a service worker's own
+  # requests (the pages it saves for offline use) can go out with the plain
+  # WebView user agent — and a saved page must still be the app's version
+  # (no web tab bar). The apps' cookie jars are their own, not the phone
+  # browser's, so the app is remembered in a cookie as well.
+  NATIVE_APP_COOKIE = :ps_native_app
+  before_action :remember_native_app
+
   private
+
+  def hotwire_native_app?
+    super || cookies[NATIVE_APP_COOKIE] == "1"
+  end
+  alias_method :turbo_native_app?, :hotwire_native_app?
+
+  def remember_native_app
+    return unless request.user_agent.to_s.match?(/(Turbo|Hotwire) Native/)
+    return if cookies[NATIVE_APP_COOKIE] == "1"
+    cookies.permanent[NATIVE_APP_COOKIE] = { value: "1", httponly: true, same_site: :lax }
+  end
 
   def current_user
     Current.user

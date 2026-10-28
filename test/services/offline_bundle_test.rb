@@ -2,7 +2,6 @@ require "test_helper"
 
 class OfflineBundleTest < ActiveSupport::TestCase
   setup do
-    FileUtils.rm_rf(OfflineBundle::CACHE_DIR)
     @kjv = Translation.create!(code: "KJV", name: "King James Version")
     @bsb = Translation.create!(code: "BSB", name: "Berean Standard Bible")
     @john = Book.create!(osis_code: "John", name: "John", testament: :new, position: 43, chapter_count: 21)
@@ -13,7 +12,6 @@ class OfflineBundleTest < ActiveSupport::TestCase
     [ 1, 3 ].each { |v| Verse.create!(translation: @bsb, book: @john, chapter: 3, verse_number: v, text: "BSB 3:#{v}") }
   end
 
-  teardown { FileUtils.rm_rf(OfflineBundle::CACHE_DIR) }
 
   test "books come in canonical order with chapters indexed by number" do
     data = OfflineBundle.new(@kjv).to_h
