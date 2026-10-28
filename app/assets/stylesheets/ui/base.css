@@ -19,7 +19,7 @@ html, body {
 
 /* Reading mode: retire the vellum fibre texture and remap the legacy palette
    onto the theme tokens, so every older component inside the workspace
-   (drawers, modals, results lists) follows light / dark / sepia. */
+   (drawers, modals, results lists) follows vellum / candlelight / paper. */
 .ps-root:not(.is-presenting, .is-output) {
   --vellum-0: var(--ui-bg);
   --vellum-1: var(--ui-surface);
@@ -41,6 +41,22 @@ html, body {
 }
 .ps-root:not(.is-presenting, .is-output)::before,
 .ps-root:not(.is-presenting, .is-output)::after { display: none; }
+
+/* Vellum keeps BiblioRata's warm page: the old parchment glow, painted on the
+   page background itself (no overlay layers), lighter than before. */
+:is([data-theme="vellum"], [data-theme="auto"]) .ps-root:not(.is-presenting, .is-output),
+:is([data-theme="vellum"], [data-theme="auto"]) :is(.ld-page, .pub-page) {
+  background:
+    radial-gradient(ellipse at 18% 18%, rgba(138, 116, 68, 0.08), transparent 55%),
+    radial-gradient(ellipse at 82% 82%, rgba(138, 116, 68, 0.10), transparent 60%),
+    radial-gradient(ellipse at 50% 45%, rgba(255, 248, 228, 0.55), transparent 70%),
+    var(--ui-bg);
+  background-attachment: fixed;
+}
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] .ps-root:not(.is-presenting, .is-output),
+  [data-theme="auto"] :is(.ld-page, .pub-page) { background: var(--ui-bg); }
+}
 
 /* Shared atoms ----------------------------------------------------------- */
 

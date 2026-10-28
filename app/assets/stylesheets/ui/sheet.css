@@ -156,10 +156,10 @@
   display: flex; align-items: center; justify-content: center; width: 100%; height: 56px;
   border-radius: 12px; border: 1px solid var(--ui-border); font: 600 20px "Source Serif 4", Georgia, serif;
 }
-.ui-theme-swatch.is-light .sw { background: #FFFFFF; color: #1C1C1E; }
-.ui-theme-swatch.is-dark .sw { background: #111113; color: #ECECEC; border-color: #2E2E34; }
-.ui-theme-swatch.is-sepia .sw { background: #F7F1E3; color: #2A2017; font-family: "EB Garamond", Georgia, serif; }
-.ui-theme-swatch.is-auto .sw { background: linear-gradient(135deg, #FFFFFF 50%, #111113 50%); color: #8A8A90; }
+.ui-theme-swatch.is-vellum .sw { background: #F4EAD2; color: #231408; border-color: #D9C8A0; font-family: "EB Garamond", Georgia, serif; }
+.ui-theme-swatch.is-candlelight .sw { background: #17120C; color: #F1E6CC; border-color: #3A2D1F; font-family: "EB Garamond", Georgia, serif; }
+.ui-theme-swatch.is-paper .sw { background: #FFFFFF; color: #1C1C1E; border-color: #E0DFDA; }
+.ui-theme-swatch.is-auto .sw { background: linear-gradient(135deg, #F4EAD2 50%, #17120C 50%); color: #8A2418; }
 .ui-theme-swatch[aria-pressed="true"] { color: var(--ui-fg); font-weight: 600; }
 .ui-theme-swatch[aria-pressed="true"] .sw { box-shadow: 0 0 0 2px var(--ui-bg), 0 0 0 4px var(--ui-accent); }
 

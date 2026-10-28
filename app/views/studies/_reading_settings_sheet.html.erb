@@ -23,7 +23,7 @@
       <div class="ui-setting">
         <div class="ui-label">Theme</div>
         <div class="ui-theme-row" role="group" aria-label="Theme">
-          <% [ [ "auto", "Auto" ], [ "light", "Light" ], [ "sepia", "Sepia" ], [ "dark", "Dark" ] ].each do |value, name| %>
+          <% [ [ "vellum", "Vellum" ], [ "paper", "Paper" ], [ "candlelight", "Candlelight" ], [ "auto", "Auto" ] ].each do |value, name| %>
             <button type="button" class="ui-theme-swatch is-<%= value %>" aria-pressed="false"
                     data-action="theme#choose" data-theme-choice-param="<%= value %>">
               <span class="sw" aria-hidden="true">Aa</span><span class="nm"><%= name %></span>

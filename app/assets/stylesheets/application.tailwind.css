@@ -27,7 +27,7 @@
 @import "./ui/mobile.css";
 @import "./ui/pages.css";
 
-@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+@custom-variant dark (&:where([data-theme=candlelight], [data-theme=candlelight] *));
 
 @theme inline {
   --color-bg: var(--ui-bg);
