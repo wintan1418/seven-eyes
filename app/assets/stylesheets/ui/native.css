@@ -42,3 +42,43 @@ body.hotwire-native .ps-root:not(.is-presenting, .is-output) .ui-appbar-end { di
 }
 .ui-more-who svg { width: 18px; height: 18px; flex: 0 0 auto; }
 .ui-more-main .ui-theme-row { margin-top: 6px; }
+
+/* "Update available" banner (shared/_app_update_banner) — only rendered inside
+   the apps. It sits in the page flow above the content, never over it: the
+   full-height reader / home roots shrink to make room while it shows. */
+.ui-app-update {
+  display: flex; align-items: center; gap: 10px;
+  margin: 8px max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));
+  padding: 10px 8px 10px 14px; border-radius: 14px;
+  background: var(--ui-elevated); color: var(--ui-fg);
+  border: 1px solid var(--ui-border-strong); box-shadow: var(--ui-shadow-sm);
+  font: 500 14px/1.35 var(--ui-font); letter-spacing: 0;
+}
+.ui-app-update[hidden] { display: none; }
+.ui-app-update-text { flex: 1 1 auto; min-width: 0; }
+.ui-app-update-action {
+  flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px;
+  border-radius: 999px; background: var(--ui-accent); color: var(--ui-accent-fg);
+  font: 600 14px var(--ui-font); text-decoration: none;
+}
+.ui-app-update-action:hover { background: var(--ui-accent-hover); }
+.ui-app-update-close {
+  flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border: 0; border-radius: 999px; background: transparent;
+  color: var(--ui-fg-muted); font: 400 22px/1 var(--ui-font); cursor: pointer;
+}
+.ui-app-update-close:hover { background: var(--ui-surface); color: var(--ui-fg); }
+.ui-app-update-action:focus-visible, .ui-app-update-close:focus-visible {
+  outline: 2px solid var(--ui-focus); outline-offset: 2px;
+}
+/* The reader and home fill the screen (100dvh); with the banner showing, the
+   body becomes the full-height column and they take what is left. */
+body:has(> .ui-app-update:not([hidden])):has(> .ps-root.rd-app:not(.is-presenting, .is-output), > .ps-root.hm-root) {
+  height: 100vh; height: 100dvh; margin: 0; display: flex; flex-direction: column; overflow: hidden;
+}
+body:has(> .ui-app-update:not([hidden])) > .ps-root.rd-app:not(.is-presenting, .is-output),
+body:has(> .ui-app-update:not([hidden])) > .ps-root.hm-root {
+  flex: 1 1 auto; height: auto; min-height: 0;
+}
+/* Not while preaching or on the projector / stage screens. */
+body:has(.ps-root.is-presenting, .ps-root.is-output) .ui-app-update { display: none; }
