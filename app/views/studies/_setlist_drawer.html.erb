@@ -13,5 +13,22 @@
       </div>
     </div>
     <%= render "studies/setlist", study: study %>
+
+    <%# Preach without Wi-Fi: Bibles, passages and screens saved to this device. %>
+    <section class="ui-sunday" data-controller="sunday-ready"
+             data-sunday-ready-study-url-value="<%= study_path(study) %>"
+             data-sunday-ready-signed-in-value="<%= authenticated?.present? %>">
+      <div class="ui-sunday-head">
+        <span class="ui-sunday-title">Preach without Wi&#8209;Fi</span>
+        <button type="button" class="ui-btn is-sm is-accent" data-sunday-ready-target="button"
+                data-action="sunday-ready#prepare">Get ready for Sunday</button>
+      </div>
+      <p class="ui-sunday-sub">
+        Saves this study, the projector and stage screens and every Bible the service needs on this
+        device, so preach mode keeps going if the connection drops.
+        <span data-sunday-ready-target="summary"></span>
+      </p>
+      <ul class="ui-sunday-list" data-sunday-ready-target="list" aria-live="polite" hidden></ul>
+    </section>
   </aside>
 </div>

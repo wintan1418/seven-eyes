@@ -75,3 +75,4 @@ body:has(.ps-root.is-presenting) .ps-offline-host { top: 8px; }
 .ui-sunday-list li.is-warn::before { content: "!"; color: var(--ui-accent); font-weight: 700; }
 .ui-sunday-list li.is-busy::before { content: "…"; }
 a.ui-toggle { text-decoration: none; }
+.ps-setlist-panel .ui-sunday { margin: 8px 14px 14px; flex: 0 0 auto; max-height: 45vh; overflow-y: auto; }
