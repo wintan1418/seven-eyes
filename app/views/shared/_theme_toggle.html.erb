@@ -1,6 +1,6 @@
 <%# One tap: day (Vellum / Paper) ⇄ night (Candlelight). The full choice lives in
     Reading settings → Theme. The theme controller sits on <body>. %>
-<button type="button" class="ui-iconbtn ui-theme-toggle" data-action="theme#toggle"
+<button type="button" class="ui-iconbtn ui-theme-toggle <%= local_assigns[:extra_class] %>" data-action="theme#toggle"
         aria-label="Switch light / dark" title="Switch light / dark">
   <span class="ui-theme-toggle-moon"><%= icon(:moon) %></span>
   <span class="ui-theme-toggle-sun"><%= icon(:sun) %></span>

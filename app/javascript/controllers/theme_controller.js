@@ -8,11 +8,14 @@ import { Controller } from "@hotwired/stimulus"
 // reader's theme and Turbo visits never flash the wrong colours.
 // Lives on <body>; theme buttons anywhere on the page carry
 // data-action="theme#choose" data-theme-choice-param="candlelight".
-const KEY = "ps:theme"
-const COOKIE = "ps_theme"
+// Fresh keys: the first cut of the redesign saved light/auto under
+// "ps:theme" for everyone, which overrode the cream default. Only the original
+// UI's explicit dark choice ("candlelight") is carried over.
+const KEY = "ps:reader-theme"
+const COOKIE = "ps_reader_theme"
+const OLD_KEY = "ps:theme"
 const THEMES = ["vellum", "candlelight", "paper", "auto"]
 const DEFAULT = "vellum"
-const LEGACY = { light: "paper", dark: "candlelight", sepia: "vellum" } // first cut of the redesign
 const COLORS = { vellum: "#F4EAD2", candlelight: "#17120C", paper: "#FFFFFF" }
 
 export default class extends Controller {
@@ -66,10 +69,14 @@ export default class extends Controller {
 
   read() {
     let stored = null
-    try { stored = localStorage.getItem(KEY) } catch (_) {}
-    stored = LEGACY[stored] || stored
+    let old = null
+    try {
+      stored = localStorage.getItem(KEY)
+      old = localStorage.getItem(OLD_KEY)
+    } catch (_) {}
     if (THEMES.includes(stored)) return stored
-    const rendered = LEGACY[this.element.dataset.theme] || this.element.dataset.theme
+    if (old === "candlelight") return "candlelight"
+    const rendered = this.element.dataset.theme // the server's pick (cookie or default)
     return THEMES.includes(rendered) ? rendered : DEFAULT
   }
 }

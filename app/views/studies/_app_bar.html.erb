@@ -57,6 +57,8 @@
     <div class="ui-appbar-center">
       <span class="ui-appbar-title"><%= local_assigns[:title] %></span>
     </div>
-    <div class="ui-appbar-end"></div>
+    <div class="ui-appbar-end">
+      <%= render "shared/theme_toggle" %>
+    </div>
   <% end %>
 </header>

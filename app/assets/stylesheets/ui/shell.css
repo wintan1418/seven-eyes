@@ -191,3 +191,13 @@ body > .ps-root.rd-app:not(.is-presenting, .is-output) {
   [data-theme="auto"] .ui-theme-toggle-sun { display: contents; }
   [data-theme="auto"] .ui-theme-toggle-moon { display: none; }
 }
+
+/* Floating light/dark switch for pages without an app bar. */
+.ui-theme-float {
+  position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 45;
+  background: var(--ui-elevated); color: var(--ui-fg); border: 1px solid var(--ui-border);
+  box-shadow: var(--ui-shadow-md);
+}
+body:has(.ui-appbar .ui-theme-toggle) .ui-theme-float,
+body:has(.ps-root.is-presenting, .ps-root.is-output) .ui-theme-float { display: none; }
+@media print { .ui-theme-float { display: none; } }

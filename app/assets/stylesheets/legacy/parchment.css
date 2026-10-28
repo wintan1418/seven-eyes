@@ -220,7 +220,7 @@
 .ps-search {
   flex: 1;
   padding: 6px 10px;
-  background: rgba(255, 247, 224, 0.7);
+  background: color-mix(in srgb, var(--legacy-card) 70%, transparent);
   border: 1px solid rgba(138, 116, 68, 0.35);
   border-radius: 2px;
   font: 14px "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", "Apple Symbols", "Segoe UI Emoji", "Noto Color Emoji", serif;
@@ -246,7 +246,7 @@
   font: 600 10.5px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", "Apple Symbols", "Segoe UI Emoji", "Noto Color Emoji", serif;
   letter-spacing: 0.18em;
   color: var(--sepia);
-  background: rgba(255, 247, 224, 0.55);
+  background: color-mix(in srgb, var(--legacy-card) 55%, transparent);
   cursor: pointer;
   text-transform: uppercase;
 }
@@ -262,7 +262,7 @@
   display: flex; align-items: center; justify-content: center;
   font: 13px "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", "Apple Symbols", "Segoe UI Emoji", "Noto Color Emoji", serif;
 }
-.ps-pane-tool:hover { background: rgba(255, 247, 224, 0.7); color: var(--rubric); }
+.ps-pane-tool:hover { background: color-mix(in srgb, var(--legacy-card) 70%, transparent); color: var(--rubric); }
 
 /* ----- verse body ----- */
 .ps-verses {
@@ -410,7 +410,7 @@
   border: 1px solid rgba(138, 116, 68, 0.4);
   border-radius: 2px;
   color: var(--sepia);
-  background: rgba(255, 247, 224, 0.6);
+  background: color-mix(in srgb, var(--legacy-card) 60%, transparent);
 }
 
 /* ----- cross reference drawer ----- */
@@ -461,7 +461,7 @@
   border-bottom: 1px solid rgba(138, 116, 68, 0.2);
   cursor: pointer;
 }
-.ps-xref:hover { background: rgba(255, 247, 224, 0.5); }
+.ps-xref:hover { background: color-mix(in srgb, var(--legacy-card) 50%, transparent); }
 .ps-xref-head {
   display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 4px;
 }
@@ -494,7 +494,7 @@
   padding: 4px 8px;
   border: 1px solid rgba(138, 116, 68, 0.4);
   border-radius: 2px;
-  background: rgba(255, 247, 224, 0.6);
+  background: color-mix(in srgb, var(--legacy-card) 60%, transparent);
   color: var(--sepia);
   cursor: pointer;
 }
@@ -764,7 +764,7 @@
 .ps-share-link { display: flex; gap: 6px; }
 .ps-share-link-input {
   flex: 1; min-width: 0; padding: 7px 10px; border-radius: 2px;
-  border: 1px solid rgba(163, 129, 46, 0.4); background: rgba(255, 247, 224, 0.5);
+  border: 1px solid rgba(163, 129, 46, 0.4); background: color-mix(in srgb, var(--legacy-card) 50%, transparent);
   font: 12px "EB Garamond", serif; color: var(--ink-soft);
 }
 .ps-share-btn {
@@ -848,7 +848,7 @@
   width: 420px;
   background: var(--vellum-0);
   border: 1px solid var(--vellum-edge);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 0 0 6px rgba(255, 247, 224, 0.4), inset 0 0 0 7px rgba(163, 129, 46, 0.35);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 0 0 6px color-mix(in srgb, var(--legacy-card) 40%, transparent), inset 0 0 0 7px rgba(163, 129, 46, 0.35);
   padding: 28px 30px 24px;
   position: relative;
 }
@@ -892,7 +892,7 @@
 .ps-modal input.field {
   width: 100%;
   padding: 9px 12px;
-  background: #fff7e0;
+  background: var(--legacy-card);
   border: 1px solid rgba(138, 116, 68, 0.4);
   border-radius: 2px;
   font: 16px "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", "Apple Symbols", "Segoe UI Emoji", "Noto Color Emoji", serif;
@@ -1045,7 +1045,7 @@
   color: var(--rubric);
   font-weight: 600;
 }
-.ps-dropdown .item:hover { background: rgba(255, 247, 224, 0.7); }
+.ps-dropdown .item:hover { background: color-mix(in srgb, var(--legacy-card) 70%, transparent); }
 .ps-dropdown .item.is-on { background: rgba(138, 36, 24, 0.08); }
 .ps-dropdown .group {
   padding: 8px 14px 4px;
