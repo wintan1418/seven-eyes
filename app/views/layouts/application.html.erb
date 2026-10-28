@@ -53,6 +53,10 @@
       </div>
       <div class="ps-sync-pill" data-offline-target="sync" role="status" hidden></div>
     </div>
+    <%# Inside the apps, when the store has a newer version. %>
+    <% if (app_update = native_app_update) %>
+      <%= render "shared/app_update_banner", update: app_update %>
+    <% end %>
     <%= yield %>
     <%= testimonials_tag %>
   </body>

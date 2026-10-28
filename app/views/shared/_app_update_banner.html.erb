@@ -1,0 +1,12 @@
+<%# Inside the iOS/Android apps when the store has a newer version (see
+    NativeAppHelper). Rendered hidden; the controller shows it unless this
+    version was already closed on this device, so it never flashes. %>
+<div class="ui-app-update" role="status" hidden
+     data-controller="app-update"
+     data-app-update-version-value="<%= update.latest_version %>">
+  <span class="ui-app-update-text">BiblioRata <%= update.latest_version %> is out. Update for the newest features.</span>
+  <%= link_to "Update", update.store_url, class: "ui-app-update-action" %>
+  <button type="button" class="ui-app-update-close" data-action="app-update#dismiss" aria-label="Not now">
+    <span aria-hidden="true">×</span>
+  </button>
+</div>

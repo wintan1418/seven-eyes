@@ -7,6 +7,9 @@ import { application } from "./application"
 import AiSearchController from "./ai_search_controller"
 application.register("ai-search", AiSearchController)
 
+import AppUpdateController from "./app_update_controller"
+application.register("app-update", AppUpdateController)
+
 import AuthGateController from "./auth_gate_controller"
 application.register("auth-gate", AuthGateController)
 
