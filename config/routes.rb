@@ -77,6 +77,12 @@ Rails.application.routes.draw do
   get ".well-known/apple-app-site-association", to: "well_known#apple_app_site_association", defaults: { format: :json }
   get "apple-app-site-association", to: "well_known#apple_app_site_association", defaults: { format: :json }
 
+  # Offline reading: downloads page, Bible bundles for IndexedDB, own highlights.
+  get "/offline",              to: "offline#show",       as: :offline
+  get "/offline/bibles",       to: "offline#manifest",   as: :offline_bibles, defaults: { format: :json }
+  get "/offline/bibles/:code", to: "offline#bible",      as: :offline_bible, defaults: { format: :json }
+  get "/offline/highlights",   to: "offline#highlights", as: :offline_highlights, defaults: { format: :json }
+
   get "/verse_count",      to: "verses#count" # JSON: verses in a book+chapter (for the browser)
   get "/reference_check",  to: "verses#check" # JSON: parse a typed reference (preach quick chase)
 

@@ -27,6 +27,7 @@
 @import "./ui/mobile.css";
 @import "./ui/pages.css";
 @import "./ui/native.css";
+@import "./ui/offline.css";
 
 @custom-variant dark (&:where([data-theme=candlelight], [data-theme=candlelight] *));
 

@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { createHighlight, updateHighlight, deleteHighlight } from "../lib/highlight_api"
 
 // Text-selection highlighting + per-highlight study notes.
 // - Select text in a verse -> a 4-color popover appears.
@@ -362,19 +363,12 @@ export default class extends Controller {
     let made = 0, lastSpans = null, failure = null
     try {
       for (const seg of p.segments) {
-        let res
-        try {
-          res = await this.api("POST", "/highlights", {
-            highlight: { verse_id: seg.verseId, color, char_start: seg.start, char_end: seg.end }
-          })
-        } catch { failure = "Highlight failed — check your connection"; continue }
-        if (res.status === 401) { window.dispatchEvent(new CustomEvent("auth:required")); return }
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}))
-          failure = body.error ? `Not saved: ${body.error}` : "Highlight failed"
-          continue
-        }
-        const { id } = await res.json()
+        // Offline (signed in) this still succeeds, with a temporary id the
+        // outbox swaps for the real one on sync.
+        const result = await createHighlight({ verse_id: seg.verseId, color, char_start: seg.start, char_end: seg.end })
+        if (result.unauthorized) return
+        if (!result.ok) { failure = result.error || "Highlight failed"; continue }
+        const id = result.id
         made++
         const spans = this.wrapSegment(seg, p, color, id)
         if (spans.length) lastSpans = spans
@@ -553,19 +547,11 @@ export default class extends Controller {
   }
 
   async patchHighlight(id, fields, { keepalive = false } = {}) {
-    try {
-      const res = await this.api("PATCH", `/highlights/${id}`, { highlight: fields }, { keepalive })
-      if (res.status === 401) { window.dispatchEvent(new CustomEvent("auth:required")); return null }
-      if (!res.ok) return null
-      return await res.json()
-    } catch { return null }
+    return updateHighlight(id, fields, { keepalive })
   }
 
   async destroy(id) {
-    try {
-      const res = await this.api("DELETE", `/highlights/${id}`)
-      if (!res.ok && res.status !== 404) return false
-    } catch { return false }
+    if (!(await deleteHighlight(id))) return false
     this.spansFor(id).forEach((s) => {
       const parent = s.parentNode
       s.replaceWith(...s.childNodes)
@@ -586,15 +572,5 @@ export default class extends Controller {
     pre.selectNodeContents(container)
     pre.setEnd(node, offset)
     return pre.toString().length
-  }
-
-  api(method, url, body, { keepalive = false } = {}) {
-    const token = document.querySelector('meta[name="csrf-token"]')?.content
-    const opts = { method, keepalive, headers: { "X-CSRF-Token": token || "", Accept: "application/json" } }
-    if (body !== undefined) {
-      opts.headers["Content-Type"] = "application/json"
-      opts.body = JSON.stringify(body)
-    }
-    return fetch(url, opts)
   }
 }

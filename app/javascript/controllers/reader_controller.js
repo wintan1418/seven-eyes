@@ -231,7 +231,12 @@ export default class extends Controller {
     const btn = this.buttonTarget
     btn.classList.toggle("is-on", state === "playing" || state === "paused")
     btn.classList.toggle("is-loading", state === "loading")
-    btn.innerHTML = { idle: "&#9658;", loading: "&#8987;", playing: "&#9632;", paused: "&#9658;" }[state] // ▶ ⌛ ■ ▶
+    // Idle shows the button's own (headphones) icon; a re-rendered pane resets
+    // to idle and must not swap that icon for a bare ▶.
+    if (!btn.dataset.idleIcon && btn.querySelector("svg")) btn.dataset.idleIcon = btn.innerHTML
+    btn.innerHTML = state === "idle" && btn.dataset.idleIcon
+      ? btn.dataset.idleIcon
+      : { idle: "&#9658;", loading: "&#8987;", playing: "&#9632;", paused: "&#9658;" }[state] // ▶ ⌛ ■ ▶
     btn.title = { idle: "Listen to this chapter", loading: "Preparing audio…", playing: "Stop listening", paused: "Resume listening" }[state]
   }
 }

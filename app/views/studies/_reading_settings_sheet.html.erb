@@ -43,6 +43,15 @@
           <%= icon(:word) %><span class="nm">Word study (Strong&rsquo;s, KJV)</span><span class="sw" aria-hidden="true"></span>
         </button>
       </div>
+
+      <div class="ui-setting">
+        <div class="ui-label">Offline</div>
+        <% study = local_assigns[:study] %>
+        <%= link_to offline_path(from: (study_path(study) if study), suggest: study&.panes&.first&.effective_translation&.code),
+              class: "ui-toggle", data: { offline_link: true } do %>
+          <%= icon(:download) %><span class="nm">Offline Bibles &mdash; read with no signal</span>
+        <% end %>
+      </div>
     </div>
   </section>
 </div>

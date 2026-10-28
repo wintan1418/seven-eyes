@@ -55,11 +55,17 @@ application.register("notes", NotesController)
 import OfflineController from "./offline_controller"
 application.register("offline", OfflineController)
 
+import OfflineDownloadsController from "./offline_downloads_controller"
+application.register("offline-downloads", OfflineDownloadsController)
+
 import PaneController from "./pane_controller"
 application.register("pane", PaneController)
 
 import PassagePickerController from "./passage_picker_controller"
 application.register("passage-picker", PassagePickerController)
+
+import PlanOfflineController from "./plan_offline_controller"
+application.register("plan-offline", PlanOfflineController)
 
 import PresentationController from "./presentation_controller"
 application.register("presentation", PresentationController)
@@ -102,6 +108,9 @@ application.register("sheets", SheetsController)
 
 import ShortcutsController from "./shortcuts_controller"
 application.register("shortcuts", ShortcutsController)
+
+import SundayReadyController from "./sunday_ready_controller"
+application.register("sunday-ready", SundayReadyController)
 
 import SyncScrollController from "./sync_scroll_controller"
 application.register("sync-scroll", SyncScrollController)

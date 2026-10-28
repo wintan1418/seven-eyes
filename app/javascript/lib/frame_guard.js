@@ -19,6 +19,9 @@ function messageFor(status) {
       reload: true
     }
   }
+  if (status === 0 && !navigator.onLine) {
+    return { text: "You're offline — that needs an internet connection. Downloaded Bibles still open (Offline Bibles).", reload: false }
+  }
   if (status === 0) return { text: "Couldn't reach the server — check your connection and try again.", reload: false }
   if (status >= 500) return { text: "The server hiccuped — kept the text as it was. Try again in a moment.", reload: true }
   return { text: "Couldn't load that — kept the text as it was.", reload: false }

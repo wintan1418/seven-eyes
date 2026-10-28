@@ -54,6 +54,7 @@
         <% if authenticated? %>
           <%= link_to reading_plans_path, class: "ui-menu-item" do %><%= icon(:calendar) %> Reading plans<% end %>
         <% end %>
+        <%= link_to offline_path, class: "ui-menu-item" do %><%= icon(:download) %> Offline Bibles<% end %>
         <%= link_to guide_path, class: "ui-menu-item", data: { tour: "guide" } do %><%= icon(:compass) %> Field guide<% end %>
         <% if local_assigns[:study] %>
           <button type="button" class="ui-menu-item" data-action="tour#start sheet#close"><%= icon(:help) %> Replay the tour</button>

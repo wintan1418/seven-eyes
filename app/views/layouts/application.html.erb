@@ -15,7 +15,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <%# Inter for the interface, Source Serif 4 for Scripture; EB Garamond and
         Cinzel stay for the sepia theme and the projector. %>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=Cinzel:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Noto+Sans+Symbols+2&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+    <%# crossorigin: lets the service worker keep the font CSS for offline use. %>
+    <link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=Cinzel:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Noto+Sans+Symbols+2&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
 
     <%= yield :head %>
 
@@ -40,13 +41,17 @@
       who is signed in (they reload every tab when it flips). %>
   <body data-controller="guide theme sheets" data-theme="<%= reader_theme %>"
         <%= tag.attributes(class: ("hotwire-native" if hotwire_native_app?),
-                           data: { native_signed_in: authenticated?.present? }) %>>
+                           data: { native_signed_in: authenticated?.present?, offline_owner: offline_owner }) %>>
     <%# Pages without the app bar (guide, sign-in, plans, legal…) still get the
         light/dark switch; hidden wherever an app bar already has one, and on
         the projector / stage screens. %>
     <%= render "shared/theme_toggle", extra_class: "ui-theme-float" %>
-    <div data-controller="offline">
-      <div class="ps-offline-badge" data-offline-target="badge" hidden>&#9679; Offline</div>
+    <%# Offline badge, "N changes waiting to sync", "needs internet" messages. %>
+    <div class="ps-offline-host" data-controller="offline">
+      <div class="ps-offline-badge" data-offline-target="badge" role="status" hidden>
+        <%= icon(:offline) %><span data-offline-target="label">Offline</span>
+      </div>
+      <div class="ps-sync-pill" data-offline-target="sync" role="status" hidden></div>
     </div>
     <%= yield %>
     <%= testimonials_tag %>

@@ -635,7 +635,9 @@ export default class extends Controller {
       card.className = "card"
       const sum = document.createElement("div")
       sum.className = "sum"
-      sum.textContent = `No Scripture matched “${q}”. Try a fuller phrase — a name, place, story, or theme.`
+      sum.textContent = navigator.onLine
+        ? `No Scripture matched “${q}”. Try a fuller phrase — a name, place, story, or theme.`
+        : `You're offline — AI search needs internet. References like “Rom 8:28” still work.`
       card.appendChild(sum)
       box.appendChild(card)
       return

@@ -1,5 +1,9 @@
 <%# locals: plan, day %>
-<%= turbo_frame_tag dom_id(day), class: "ps-plan-row #{'is-today' if day.day_number == plan.today_day} #{'is-done' if day.completed?}" do %>
+<%# data-date / data-pane-refs let plan_offline open the coming week's
+    readings with no signal (by the device's own date). %>
+<% soon = (Date.current - 1..Date.current + 8).cover?(day.date) %>
+<%= turbo_frame_tag dom_id(day), class: "ps-plan-row #{'is-today' if day.day_number == plan.today_day} #{'is-done' if day.completed?}",
+      data: { plan_offline_target: "day", date: day.date.iso8601, pane_refs: (day.pane_references(4).join("|") if soon) } do %>
   <div class="ps-plan-row-head">
     <span class="ps-plan-daynum">Day <%= day.day_number %></span>
     <span class="ps-plan-date"><%= day.date.strftime("%a %b %-d") %></span>

@@ -1,0 +1,62 @@
+<% content_for :title, "Offline Bibles · BiblioRata" %>
+<%# Offline Bibles: download whole translations to this device so the reader,
+    the passage/version pickers and preach mode work with no signal. Which
+    Bibles are on this device is only known in the browser (IndexedDB), so the
+    offline_downloads controller fills in each row's state. Saved by the
+    service worker, so the page itself opens offline too. %>
+<% translations = Translation.available.to_a %>
+<% suggested = params[:suggest].presence_in(translations.map(&:code)) || Translation.default&.code %>
+<div class="ps-root ui-more-page ui-offline-page">
+  <%= render "studies/app_bar", title: "Offline Bibles" %>
+  <%= render "studies/menu_sheet" %>
+
+  <main class="ui-more-main" data-controller="offline-downloads"
+        data-offline-downloads-manifest-url-value="<%= offline_bibles_path %>"
+        data-offline-downloads-return-url-value="<%= params[:from].to_s.start_with?("/studies/") ? params[:from] : "" %>"
+        data-offline-downloads-signed-in-value="<%= authenticated?.present? %>">
+    <section class="ui-menu-section">
+      <p class="ui-offline-intro">
+        Download a Bible to read it with no signal &mdash; on a plane, in a village church, or when the
+        Wi&#8209;Fi drops in the middle of a sermon. Every chapter, the passage and version pickers and
+        preach mode keep working.
+      </p>
+      <p class="ui-offline-net" data-offline-downloads-target="network" role="status"></p>
+    </section>
+
+    <section class="ui-menu-section" aria-label="Bibles">
+      <div class="ui-label">Bibles</div>
+      <ul class="ui-offline-list">
+        <% translations.each do |t| %>
+          <li class="ui-offline-row" data-offline-downloads-target="row" data-code="<%= t.code %>"
+              data-suggested="<%= t.code == suggested %>">
+            <div class="ui-offline-what">
+              <span class="code"><%= t.code %></span>
+              <span class="nm"><%= t.display_name %></span>
+              <span class="meta" data-role="meta">
+                <% if t.code == suggested %><span class="ui-offline-tag">Suggested</span><% end %>
+                <span data-role="state">Checking&hellip;</span>
+              </span>
+              <progress class="ui-offline-bar" data-role="bar" max="100" value="0" hidden
+                        aria-label="Downloading <%= t.code %>"></progress>
+            </div>
+            <button type="button" class="ui-btn is-sm" data-role="download" hidden
+                    data-action="offline-downloads#download"><%= icon(:download) %><span>Download</span></button>
+            <button type="button" class="ui-btn is-sm is-quiet" data-role="remove" hidden
+                    data-action="offline-downloads#remove" aria-label="Remove <%= t.code %> from this device">Remove</button>
+          </li>
+        <% end %>
+      </ul>
+      <p class="ui-menu-note" data-offline-downloads-target="storage"></p>
+    </section>
+
+    <section class="ui-menu-section">
+      <div class="ui-label">What works offline</div>
+      <ul class="ui-offline-facts">
+        <li>Reading any chapter, switching versions, the passage picker and typed references.</li>
+        <li>Preach mode, the projector and stage screens (open them once online, or use <em>Get ready for Sunday</em> in the preach queue).</li>
+        <li>Notes, highlights and reading-plan ticks &mdash; saved on this device and sent when you reconnect<%= " (sign in to save them)" unless authenticated? %>.</li>
+        <li>Needs internet: AI Rabbi and AI search, cross-references, commentary, Bible search, audio, live follow-along and the phone remote.</li>
+      </ul>
+    </section>
+  </main>
+</div>

@@ -1,7 +1,12 @@
 require "test_helper"
+require_relative "test_helpers/offline_test_helper"
 
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1000 ]
+
+  # Lets offline tests cut the test server off (see OfflineTestHelper).
+  Capybara.app = NetworkUnplug.new(Capybara.app) unless Capybara.app.is_a?(NetworkUnplug)
+  teardown { NetworkUnplug.unplugged = false }
 
   # On the study page: wait until Stimulus has connected (the theme
   # controller marks the current theme in the settings sheet on connect), so

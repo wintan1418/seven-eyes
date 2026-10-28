@@ -10,6 +10,14 @@ module ApplicationHelper
   THEME_COOKIE = :ps_reader_theme
   LEGACY_COOKIE = :ps_theme
 
+  # Who the data the device keeps for offline use belongs to (saved pages,
+  # cached highlights, queued writes): an opaque per-user tag, or "guest".
+  # When it changes the page wipes the previous reader's saved pages.
+  def offline_owner
+    return "guest" unless authenticated?
+    "u-#{OpenSSL::HMAC.hexdigest("SHA256", Rails.application.secret_key_base, "offline-owner:#{current_user.id}")[0, 16]}"
+  end
+
   # Rendered server-side on <body data-theme> so a Turbo visit never flashes
   # the wrong colours. Vellum (cream) is the default; "auto" is Vellum by day
   # and Candlelight when the device is in dark mode.

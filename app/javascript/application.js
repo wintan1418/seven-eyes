@@ -2,14 +2,16 @@
 import "@hotwired/turbo-rails"
 import "./lib/frame_guard"
 import "./controllers"
-import { isNativeApp } from "./lib/native_app"
+import "./lib/native_app"
+import "./lib/offline/page"
 
-// PWA: register the service worker for offline / installable use. Conservative —
-// only on HTTPS or localhost, and a `?sw=off` query bails out so we have a
-// safety hatch if the SW ever misbehaves in production.
-// Not inside the iOS/Android apps: they load pages from the network themselves
-// and show their own offline screen.
-if ("serviceWorker" in navigator && !isNativeApp) {
+// PWA: register the service worker for offline reading / installable use.
+// Conservative — only on HTTPS or localhost, and a `?sw=off` query bails out
+// so we have a safety hatch if the SW ever misbehaves in production.
+// The iOS/Android apps register it too (iOS needs App-Bound Domains for
+// WKWebView to expose navigator.serviceWorker); their own offline screen only
+// shows when the worker has nothing saved for a page.
+if ("serviceWorker" in navigator) {
   const params = new URLSearchParams(window.location.search)
   const safe = location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1"
   if (safe && params.get("sw") !== "off") {

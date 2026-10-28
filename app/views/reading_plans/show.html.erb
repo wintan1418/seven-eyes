@@ -1,4 +1,5 @@
-<div class="ps-root">
+<div class="ps-root" data-controller="plan-offline"
+     data-plan-offline-study-url-value="<%= study_path(@plan.study) if @plan.study %>">
   <%= render "studies/app_bar", title: @plan.name %>
   <%= render "studies/menu_sheet" %>
   <div class="ps-shell">
@@ -15,7 +16,8 @@
           </div>
           <div class="ps-plan-actions">
             <% if @plan.todays_day %>
-              <%= link_to "Begin today's reading", open_today_reading_plan_path(@plan), class: "cta", data: { turbo_method: :get } %>
+              <%= link_to "Begin today's reading", open_today_reading_plan_path(@plan), class: "cta",
+                    data: { turbo_method: :get, plan_offline_target: "begin", action: "plan-offline#begin" } %>
             <% end %>
             <%= button_to "Delete plan", reading_plan_path(@plan), method: :delete, class: "cta secondary",
                   data: { turbo_confirm: "Delete this plan? Completion ticks will be removed too." } %>

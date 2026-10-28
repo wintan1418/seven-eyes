@@ -22,6 +22,10 @@
                 title="Preach queue — line up scriptures, songs and thoughts for the service">
           <%= icon(:queue) %><span>Queue</span>
         </button>
+        <button type="button" class="ui-tile" data-action="setlist#open sheet#close" data-sunday-prepare
+                title="Get ready for Sunday — save the Bibles, passages and projector screens to preach without Wi-Fi">
+          <%= icon(:download) %><span>Offline</span>
+        </button>
         <button type="button" class="ui-tile" data-action="live#toggle sheet#close"
                 title="Let the congregation follow along on their phones — live, no account needed">
           <%= icon(:radio) %><span>Go Live</span>
@@ -47,6 +51,10 @@
         <button type="button" class="ui-menu-item" data-action="sheets#open" data-sheets-id-param="settings">
           <%= icon(:type) %> Reading settings
         </button>
+        <%= link_to offline_path(from: study_path(study), suggest: study.panes.first&.effective_translation&.code),
+              class: "ui-menu-item" do %>
+          <%= icon(:download) %> Offline Bibles
+        <% end %>
         <%= link_to sermon_study_path(study), class: "ui-menu-item", data: { tour: "sermon" },
               title: "Compile this study as a printable sermon manuscript" do %>
           <%= icon(:sermon) %> Sermon manuscript

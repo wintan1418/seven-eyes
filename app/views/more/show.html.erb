@@ -31,6 +31,10 @@
       </div>
     </section>
 
+    <nav class="ui-menu-section ui-menu-links" aria-label="Offline">
+      <%= link_to offline_path, class: "ui-menu-item" do %><%= icon(:download) %> Offline Bibles &mdash; read with no signal<% end %>
+    </nav>
+
     <nav class="ui-menu-section ui-menu-links" aria-label="Help">
       <%= link_to guide_path, class: "ui-menu-item" do %><%= icon(:compass) %> Field guide<% end %>
       <%= link_to whats_new_path, class: "ui-menu-item" do %><%= icon(:gift) %> What&rsquo;s new<% end %>

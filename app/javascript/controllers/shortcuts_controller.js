@@ -116,6 +116,7 @@ export default class extends Controller {
     const outcomes = await Promise.all(results.map((p) => Promise.resolve(p).catch(() => "failed")))
     if (outcomes.includes("unauthorized")) return this.flash("Sign in to save")
     if (outcomes.includes("failed")) return this.flash("Save failed — check your connection")
+    if (outcomes.includes("queued")) return this.flash("✓ Saved on this device — will sync")
     this.flash("✓ Saved")
   }
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_28_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_28_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -166,6 +166,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_100000) do
     t.bigint "study_id", null: false
     t.bigint "translation_id"
     t.datetime "updated_at", null: false
+    t.integer "notes_revision", default: 0, null: false
     t.index ["study_id", "position"], name: "index_panes_on_study_id_and_position", unique: true
     t.index ["study_id"], name: "index_panes_on_study_id"
     t.index ["translation_id"], name: "index_panes_on_translation_id"
