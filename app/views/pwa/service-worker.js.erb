@@ -1,127 +1,18 @@
-// Parallel Scripture service worker.
+// BiblioRata service worker — see app/javascript/service_worker.js for what it
+// does. The worker's code is bundled by esbuild (yarn build) and inlined
+// below, so the browser installs a new worker whenever that code, or the
+// deployed CSS/JS, changes.
 //
-// Conservative caching — never keep anyone's private study on the device:
-//   • Static assets (CSS, JS, fonts, icons): fingerprinted /assets/ URLs are
-//     cache-first; other static files stale-while-revalidate.
-//   • Public passage pages (/p/:slug, no query): network-first with a cached
-//     fallback for a mid-sermon Wi-Fi drop.
-//   • Everything else — studies, notes, account pages, any query-string URL,
-//     POST/PATCH/DELETE, cross-origin — passes straight through, uncached.
-//     Offline, an uncached page gets a small built-in "you're offline" page.
-//   • Redirected, non-200 or opaque responses are never cached.
-//
-// The cache version is derived from the deployed asset digests, so every
-// deploy that changes CSS/JS installs a new worker whose activate step prunes
-// the previous caches. The page posts {type: "clear-caches"} on sign-out.
-<% version = Digest::SHA256.hexdigest([ asset_path("application.js"), asset_path("application.css") ].join("|"))[0, 12] %>
-const CACHE_PREFIX  = "ps-"
+// Never keeps another reader's data: saved pages and queued writes are
+// cleared on sign-out ({type: "clear-caches"}) and when a different reader
+// signs in on the device. Redirected (!response.redirected), non-200 and
+// opaque responses are never cached as-is; pages are networkFirst.
+<% assets = [ asset_path("application.js"), asset_path("application.css") ] %>
+<% worker = Rails.root.join("app/assets/builds/service_worker.js") %>
+<% worker_source = worker.exist? ? worker.read.gsub(%r{^//# sourceMappingURL=.*$}, "") : "" %>
+<% version = Digest::SHA256.hexdigest((assets + [ Digest::SHA256.hexdigest(worker_source) ]).join("|"))[0, 12] %>
 const CACHE_VERSION = "ps-<%= version %>"
-const STATIC_CACHE  = `${CACHE_VERSION}-static`
-const PAGES_CACHE   = `${CACHE_VERSION}-pages`
-
-const PUBLIC_PAGE = /^\/p\/[^/]+\/?$/
-
-self.addEventListener("install", () => {
-  self.skipWaiting()
-})
-
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((k) => k.startsWith(CACHE_PREFIX) && !k.startsWith(CACHE_VERSION))
-            .map((k) => caches.delete(k))
-      )
-    ).then(() => self.clients.claim())
-  )
-})
-
-// Sign-out (or any page that wants a clean slate) wipes everything we cached.
-self.addEventListener("message", (event) => {
-  if (event.data?.type !== "clear-caches") return
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k.startsWith(CACHE_PREFIX)).map((k) => caches.delete(k)))
-    )
-  )
-})
-
-self.addEventListener("fetch", (event) => {
-  const { request } = event
-  if (request.method !== "GET") return
-
-  const url = new URL(request.url)
-  if (url.origin !== self.location.origin) return
-
-  if (url.pathname.startsWith("/assets/")) {
-    event.respondWith(cacheFirst(request, STATIC_CACHE))
-    return
-  }
-  if (/\.(css|js|png|jpg|jpeg|svg|woff2?|ttf|ico)$/i.test(url.pathname) &&
-      url.pathname !== "/service-worker") {
-    event.respondWith(staleWhileRevalidate(request, STATIC_CACHE))
-    return
-  }
-
-  if (request.mode !== "navigate") return
-  if (PUBLIC_PAGE.test(url.pathname) && !url.search) {
-    event.respondWith(networkFirst(request, PAGES_CACHE))
-  } else {
-    event.respondWith(networkOnly(request))
-  }
-})
-
-function cacheable(response) {
-  return response && response.ok && response.status === 200 &&
-    response.type === "basic" && !response.redirected
-}
-
-async function cacheFirst(request, cacheName) {
-  const cache = await caches.open(cacheName)
-  const cached = await cache.match(request)
-  if (cached) return cached
-  const fresh = await fetch(request)
-  if (cacheable(fresh)) cache.put(request, fresh.clone())
-  return fresh
-}
-
-async function staleWhileRevalidate(request, cacheName) {
-  const cache = await caches.open(cacheName)
-  const cached = await cache.match(request)
-  const fetchPromise = fetch(request).then((fresh) => {
-    if (cacheable(fresh)) cache.put(request, fresh.clone())
-    return fresh
-  }).catch(() => cached || Response.error())
-  return cached || fetchPromise
-}
-
-async function networkFirst(request, cacheName) {
-  const cache = await caches.open(cacheName)
-  try {
-    const fresh = await fetch(request)
-    if (cacheable(fresh)) cache.put(request, fresh.clone())
-    return fresh
-  } catch (e) {
-    const cached = await cache.match(request)
-    return cached || offlinePage()
-  }
-}
-
-async function networkOnly(request) {
-  try {
-    return await fetch(request)
-  } catch (e) {
-    return offlinePage()
-  }
-}
-
-function offlinePage() {
-  return new Response(
-    "<!doctype html><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>" +
-    "<title>Offline</title>" +
-    "<body style='font-family:Georgia,serif; padding:64px 16px; max-width:640px; margin:auto; background:#f4e7c8; color:#2b2017;'>" +
-    "<h1>You appear to be offline</h1>" +
-    "<p>This page isn't available offline. Reconnect and try again.</p></body>",
-    { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } }
-  )
-}
+self.PS_SW = { version: CACHE_VERSION, assets: <%= raw assets.to_json %> }
+;(() => {
+<%= raw worker_source %>
+})()

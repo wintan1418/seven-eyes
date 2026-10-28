@@ -1,0 +1,77 @@
+/* ==========================================================================
+   Offline reading — the offline badge, the "changes waiting to sync" pill,
+   the "needs internet" toast, the Offline Bibles page and the "Get ready for
+   Sunday" checklist. Calm, small, out of the way of Scripture.
+   ========================================================================== */
+
+/* Badge + sync pill: centred under the app bar, never over its buttons. */
+.ps-offline-host {
+  position: fixed; top: calc(var(--appbar-h) + 8px + env(safe-area-inset-top)); left: 50%;
+  transform: translateX(-50%); z-index: 40; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.ps-offline-host .ps-offline-badge {
+  position: static; display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 999px; border: 1px solid var(--ui-border-strong);
+  background: var(--ui-elevated); color: var(--ui-fg-muted); box-shadow: var(--ui-shadow-sm);
+  font: 500 12px/1.2 var(--ui-font); letter-spacing: 0; text-transform: none;
+}
+.ps-offline-host .ps-offline-badge::before { display: none; }
+.ps-offline-host .ps-offline-badge[hidden], .ps-sync-pill[hidden] { display: none; }
+.ps-offline-badge .ui-icon { width: 14px; height: 14px; }
+.ps-sync-pill {
+  padding: 4px 11px; border-radius: 999px; background: var(--ui-surface); color: var(--ui-fg-subtle);
+  border: 1px solid var(--ui-border); font: 500 12px/1.2 var(--ui-font); box-shadow: var(--ui-shadow-sm);
+}
+/* Not on the projector / stage screens; small while preaching. */
+body:has(.ps-root.is-output) .ps-offline-host { display: none; }
+body:has(.ps-root.is-presenting) .ps-offline-host { top: 8px; }
+
+.ui-offline-toast {
+  position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + 16px); transform: translate(-50%, 12px);
+  z-index: 60; max-width: min(92vw, 420px); padding: 10px 16px; border-radius: 12px;
+  background: var(--ui-fg); color: var(--ui-bg); font: 500 14px/1.35 var(--ui-font); text-align: center;
+  box-shadow: var(--ui-shadow-md); opacity: 0; pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.ui-offline-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+
+/* Offline Bibles page */
+.ui-offline-intro { margin: 4px 4px 0; color: var(--ui-fg-muted); font: 400 15px/1.55 var(--ui-font); }
+.ui-offline-net:empty { display: none; }
+.ui-offline-net { margin: 10px 4px 0; color: var(--ui-accent); font: 500 14px/1.4 var(--ui-font); }
+.ui-offline-list { list-style: none; margin: 6px 0 0; padding: 0; }
+.ui-offline-row {
+  display: flex; align-items: center; gap: 10px; padding: 12px 8px; border-bottom: 1px solid var(--ui-border);
+}
+.ui-offline-row:last-child { border-bottom: 0; }
+.ui-offline-what { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
+.ui-offline-what .code { font: 700 13px var(--ui-font); color: var(--ui-accent); letter-spacing: 0.04em; }
+.ui-offline-what .nm { font: 500 15px/1.3 var(--ui-font); color: var(--ui-fg); }
+.ui-offline-what .meta { font: 400 13px/1.35 var(--ui-font); color: var(--ui-fg-subtle); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ui-offline-row.is-downloaded .meta [data-role="state"] { color: var(--ui-fg-muted); }
+.ui-offline-tag {
+  padding: 1px 7px; border-radius: 999px; background: var(--ui-accent-soft); color: var(--ui-accent);
+  font: 600 11px/1.5 var(--ui-font);
+}
+.ui-offline-bar { width: 100%; height: 6px; margin-top: 6px; accent-color: var(--ui-accent); }
+.ui-offline-bar[hidden] { display: none; }
+.ui-offline-row .ui-btn.is-sm, .ui-sunday .ui-btn.is-sm { min-height: 36px; padding: 0 14px; font-size: 14px; flex: 0 0 auto; }
+.ui-offline-facts { margin: 6px 0 0; padding: 0 4px 0 22px; color: var(--ui-fg-muted); font: 400 14px/1.55 var(--ui-font); }
+.ui-offline-facts li { margin: 4px 0; }
+
+/* Get ready for Sunday (preach queue drawer) */
+.ui-sunday {
+  margin: 10px 0 0; padding: 12px; border: 1px solid var(--ui-border); border-radius: 12px;
+  background: var(--ui-surface); font-family: var(--ui-font); color: var(--ui-fg);
+}
+.ui-sunday-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ui-sunday-title { font: 600 14px var(--ui-font); }
+.ui-sunday-sub { margin: 4px 0 0; font: 400 13px/1.45 var(--ui-font); color: var(--ui-fg-subtle); }
+.ui-sunday-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.ui-sunday-list li { display: flex; gap: 8px; font: 400 13px/1.4 var(--ui-font); color: var(--ui-fg-muted); }
+.ui-sunday-list li::before { content: "○"; color: var(--ui-fg-subtle); flex: 0 0 auto; }
+.ui-sunday-list li.is-ok::before { content: "✓"; color: #3f7a3a; font-weight: 700; }
+.ui-sunday-list li.is-warn::before { content: "!"; color: var(--ui-accent); font-weight: 700; }
+.ui-sunday-list li.is-busy::before { content: "…"; }
+a.ui-toggle { text-decoration: none; }

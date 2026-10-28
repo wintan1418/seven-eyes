@@ -23,12 +23,24 @@ class PwaTest < ActionDispatch::IntegrationTest
     assert_no_match(/<%/, @response.body)
   end
 
-  test "service worker only caches public passage pages, skips redirects, clears on sign-out" do
+  test "service worker keeps public passages and the reader's own pages, skips redirects, clears on sign-out" do
     get pwa_service_worker_path, headers: { "Accept" => "text/javascript" }
     body = @response.body
-    assert_includes body, %q(const PUBLIC_PAGE = /^\/p\/[^/]+\/?$/)
+    assert_includes body, %q(PUBLIC_PAGE = /^\/p\/[^/]+\/?$/)
+    assert_includes body, %q(STUDY_PAGE = /^\/studies\/\d+$/)
     assert_includes body, "!response.redirected"
     assert_includes body, %q("clear-caches")
+  end
+
+  test "service worker renders panes offline and answers the preach Go box offline" do
+    get pwa_service_worker_path, headers: { "Accept" => "text/javascript" }
+    body = @response.body
+    assert_includes body, "X-Offline-Pane"
+    assert_includes body, "/reference_check"
+    assert_includes body, "renderOfflinePane"
+    assert_includes body, %q(self.PS_SW = { version: CACHE_VERSION)
+    assert_no_match(/^export /, body, "the inlined bundle must be a classic script")
+    assert_no_match(/sourceMappingURL/, body)
   end
 
   test "layout links the manifest and sets the theme color" do

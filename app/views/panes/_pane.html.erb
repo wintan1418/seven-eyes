@@ -1,7 +1,9 @@
 <%# One reading pane = one Turbo Frame. Preach mode, the projector window and
     live followers rely on the hooks here (see preach_contract_test):
     the pane form's pane[reference] / pane[translation_id] fields, the
-    .ps-verses scroll box and the .ps-verse markup. %>
+    .ps-verses scroll box and the .ps-verse markup.
+    OFFLINE: app/javascript/lib/offline/pane_renderer.js draws this same
+    markup from downloaded Bibles when there is no network — change both. %>
 <% content = pane.content %>
 <% study = pane.study %>
 <% compare = study.pane_count > 1 %>
@@ -12,7 +14,7 @@
   <%# What this pane shows, for the app bar chips and the pickers. Inside the
       frame (not on it) because a frame navigation only replaces its content. %>
   <%= tag.span class: "rd-pane-meta", hidden: true,
-        data: { reference_label: label || pane.reference.presence || "Choose a passage",
+        data: { translation_id: translation&.id, reference_label: label || pane.reference.presence || "Choose a passage",
                 translation_code: translation&.code, translation_name: translation&.display_name } %>
 
   <%# The pane's own form. The reference field is hidden (the passage picker

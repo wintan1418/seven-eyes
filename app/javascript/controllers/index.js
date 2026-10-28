@@ -55,6 +55,9 @@ application.register("notes", NotesController)
 import OfflineController from "./offline_controller"
 application.register("offline", OfflineController)
 
+import OfflineDownloadsController from "./offline_downloads_controller"
+application.register("offline-downloads", OfflineDownloadsController)
+
 import PaneController from "./pane_controller"
 application.register("pane", PaneController)
 
