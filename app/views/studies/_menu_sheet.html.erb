@@ -73,7 +73,8 @@
             <% end %>
           <% end %>
           <%= link_to account_path, class: "ui-menu-item" do %><%= icon(:user) %> Account<% end %>
-          <%= button_to session_path, method: :delete, class: "ui-menu-item", form: { class: "contents" } do %>
+          <%= button_to session_path, method: :delete, class: "ui-menu-item", form: { class: "contents" },
+                data: { native_action: "sign-out" } do %>
             <%= icon(:log_out) %> Sign out
           <% end %>
         <% else %>

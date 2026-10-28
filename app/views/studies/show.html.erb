@@ -1,10 +1,12 @@
 <%# The projector (?output=1) and stage (?stage=1) windows render this same page:
     mark them server-side so no onboarding (tour, prompts, banners) ever flashes
     on the big screen before presentation_controller boots. Everything new in
-    the reading UI is marked [data-chrome] and hidden while presenting. %>
+    the reading UI is marked [data-chrome] and hidden while presenting. The
+    mobile apps skip the web tour too: it points at web buttons the native
+    bars replace. %>
 <% output_window = params[:output] == "1" || params[:stage] == "1" %>
 <div class="ps-root rd-app<%= ' is-output' if output_window %><%= ' is-compare' if @study.pane_count > 1 %>"
-     data-controller="ai-search search xref commentary lexicon rabbi <%= 'tour ' unless output_window %>shortcuts auth-gate new-study font-size presentation diff interlinear live setlist remote reader-header verse-lines"
+     data-controller="ai-search search xref commentary lexicon rabbi <%= 'tour ' unless output_window || hotwire_native_app? %>shortcuts auth-gate new-study font-size presentation diff interlinear live setlist remote reader-header verse-lines"
      data-live-url-value="<%= study_live_path(@study) %>"
      data-live-active-code-value="<%= LiveSession.current_for(@study)&.code unless output_window %>"
      data-remote-url-value="<%= study_remote_path(@study) %>"

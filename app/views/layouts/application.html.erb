@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title><%= content_for(:title) || "BiblioRata" %></title>
+    <%# In the iOS/Android apps the title becomes the native header, so drop the
+        site-name suffix ("Privacy Policy · BiblioRata" → "Privacy Policy"). %>
+    <title><%= hotwire_native_app? ? native_page_title(content_for(:title)) : (content_for(:title) || "BiblioRata") %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="BiblioRata">
@@ -33,7 +35,12 @@
 
   <%# Theme comes from the ps_reader_theme cookie (written by the theme controller) so
       dark-mode readers never see a light flash on a Turbo visit. %>
-  <body data-controller="guide theme sheets" data-theme="<%= reader_theme %>">
+  <%# Inside the apps (Hotwire Native) body.hotwire-native hides the web chrome
+      the native tab bar and top bar replace; data-native-* flags tell the apps
+      who is signed in (they reload every tab when it flips). %>
+  <body data-controller="guide theme sheets" data-theme="<%= reader_theme %>"
+        <%= tag.attributes(class: ("hotwire-native" if hotwire_native_app?),
+                           data: { native_signed_in: authenticated?.present? }) %>>
     <%# Pages without the app bar (guide, sign-in, plans, legal…) still get the
         light/dark switch; hidden wherever an app bar already has one, and on
         the projector / stage screens. %>

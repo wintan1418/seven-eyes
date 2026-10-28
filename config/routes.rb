@@ -67,6 +67,16 @@ Rails.application.routes.draw do
     end
   end
 
+  # Mobile apps (Hotwire Native): the Bible tab, the More tab, path rules, and
+  # the files that let bibliorata.com links open in the apps.
+  get "/read", to: "read#show", as: :read
+  get "/more", to: "more#show", as: :more
+  get "configurations/ios_v1.json",     to: "configurations#ios_v1",     defaults: { format: :json }
+  get "configurations/android_v1.json", to: "configurations#android_v1", defaults: { format: :json }
+  get ".well-known/assetlinks.json", to: "well_known#assetlinks", defaults: { format: :json }
+  get ".well-known/apple-app-site-association", to: "well_known#apple_app_site_association", defaults: { format: :json }
+  get "apple-app-site-association", to: "well_known#apple_app_site_association", defaults: { format: :json }
+
   get "/verse_count",      to: "verses#count" # JSON: verses in a book+chapter (for the browser)
   get "/reference_check",  to: "verses#check" # JSON: parse a typed reference (preach quick chase)
 

@@ -1,3 +1,4 @@
+<% content_for :title, "Home · BiblioRata" %>
 <%# Signed-in home: continue reading, verse of the day, today's plan, studies. %>
 <% vod_text = @verse_of_day&.text || "Open thou mine eyes, that I may behold wondrous things out of thy law." %>
 <% vod_ref = @verse_of_day ? @verse_of_day.reference_label : "Psalm 119:18" %>

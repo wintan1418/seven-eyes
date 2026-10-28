@@ -1,0 +1,51 @@
+<% content_for :title, "More · BiblioRata" %>
+<%# The mobile apps' More tab (also reachable on the web at /more): account,
+    plans, help, theme and legal links as one calm page. %>
+<div class="ps-root ui-more-page">
+  <%= render "studies/app_bar", title: "More" %>
+  <%= render "studies/menu_sheet" %>
+
+  <main class="ui-more-main">
+    <section class="ui-menu-section ui-menu-links" aria-label="Your account">
+      <% if authenticated? %>
+        <p class="ui-more-who"><%= icon(:user) %> <span><%= current_user.email_address %></span></p>
+        <%= link_to root_path, class: "ui-menu-item" do %><%= icon(:notes) %> Your studies &amp; notes<% end %>
+        <%= link_to reading_plans_path, class: "ui-menu-item" do %><%= icon(:calendar) %> Reading plans<% end %>
+        <%= link_to account_path, class: "ui-menu-item" do %><%= icon(:user) %> Account<% end %>
+      <% else %>
+        <p class="ui-menu-note">Sign in to keep your studies, notes, highlights and reading plans on every device.</p>
+        <%= link_to new_session_path, class: "ui-menu-item" do %><%= icon(:log_in) %> Sign in<% end %>
+        <%= link_to new_registration_path, class: "ui-menu-item" do %><%= icon(:user) %> Create a free account<% end %>
+      <% end %>
+    </section>
+
+    <section class="ui-menu-section">
+      <div class="ui-label">Theme</div>
+      <div class="ui-theme-row" role="group" aria-label="Theme">
+        <% [ [ "vellum", "Vellum" ], [ "paper", "Paper" ], [ "candlelight", "Candlelight" ], [ "auto", "Auto" ] ].each do |value, name| %>
+          <button type="button" class="ui-theme-swatch is-<%= value %>" aria-pressed="<%= reader_theme == value %>"
+                  data-action="theme#choose" data-theme-choice-param="<%= value %>">
+            <span class="sw" aria-hidden="true">Aa</span><span class="nm"><%= name %></span>
+          </button>
+        <% end %>
+      </div>
+    </section>
+
+    <nav class="ui-menu-section ui-menu-links" aria-label="Help">
+      <%= link_to guide_path, class: "ui-menu-item" do %><%= icon(:compass) %> Field guide<% end %>
+      <%= link_to whats_new_path, class: "ui-menu-item" do %><%= icon(:gift) %> What&rsquo;s new<% end %>
+      <%= link_to credits_path, class: "ui-menu-item" do %><%= icon(:book) %> Sources &amp; credits<% end %>
+      <%= link_to terms_path, class: "ui-menu-item" do %><%= icon(:check) %> Terms of service<% end %>
+      <%= link_to privacy_path, class: "ui-menu-item" do %><%= icon(:help) %> Privacy policy<% end %>
+    </nav>
+
+    <% if authenticated? %>
+      <div class="ui-menu-section ui-menu-links">
+        <%= button_to session_path, method: :delete, class: "ui-menu-item", form: { class: "contents" },
+              data: { native_action: "sign-out" } do %>
+          <%= icon(:log_out) %> Sign out
+        <% end %>
+      </div>
+    <% end %>
+  </main>
+</div>
