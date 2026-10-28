@@ -1,17 +1,19 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Reading theme on <body data-theme>: light, dark, sepia — or auto, which
-// follows the device's colour scheme (the CSS handles auto with a media query).
+// Reading theme on <body data-theme>: vellum (default cream), candlelight
+// (warm dark), paper (white) — or auto: vellum by day, candlelight when the
+// device is in dark mode (the CSS handles auto with a media query).
 // Persisted to localStorage and to the `ps_theme` cookie: the layout renders
 // <body data-theme> from the cookie, so the server's HTML already carries the
 // reader's theme and Turbo visits never flash the wrong colours.
 // Lives on <body>; theme buttons anywhere on the page carry
-// data-action="theme#choose" data-theme-choice-param="dark".
+// data-action="theme#choose" data-theme-choice-param="candlelight".
 const KEY = "ps:theme"
 const COOKIE = "ps_theme"
-const THEMES = ["auto", "light", "dark", "sepia"]
-const LEGACY = { candlelight: "dark", vellum: "auto" } // the old two-theme UI
-const COLORS = { light: "#FFFFFF", dark: "#111113", sepia: "#F7F1E3" }
+const THEMES = ["vellum", "candlelight", "paper", "auto"]
+const DEFAULT = "vellum"
+const LEGACY = { light: "paper", dark: "candlelight", sepia: "vellum" } // first cut of the redesign
+const COLORS = { vellum: "#F4EAD2", candlelight: "#17120C", paper: "#FFFFFF" }
 
 export default class extends Controller {
   connect() {
@@ -28,10 +30,10 @@ export default class extends Controller {
     this.remember(theme)
   }
 
-  // Quick light ⇄ dark flip (keyboard / single button).
+  // Quick day ⇄ night flip (keyboard / single button).
   toggle(event) {
     event?.preventDefault?.()
-    const next = this.effective() === "dark" ? "light" : "dark"
+    const next = this.effective() === "candlelight" ? "vellum" : "candlelight"
     this.apply(next)
     this.remember(next)
   }
@@ -53,7 +55,7 @@ export default class extends Controller {
   effective() {
     const theme = this.element.dataset.theme
     if (theme !== "auto") return theme
-    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "candlelight" : "vellum"
   }
 
   remember(theme) {
@@ -68,6 +70,6 @@ export default class extends Controller {
     stored = LEGACY[stored] || stored
     if (THEMES.includes(stored)) return stored
     const rendered = LEGACY[this.element.dataset.theme] || this.element.dataset.theme
-    return THEMES.includes(rendered) ? rendered : "auto"
+    return THEMES.includes(rendered) ? rendered : DEFAULT
   }
 }

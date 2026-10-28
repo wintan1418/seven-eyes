@@ -21,7 +21,7 @@
 /* Scripture */
 .ps-root:not(.is-presenting, .is-output) .ps-verses {
   font-family: var(--reader-font);
-  font-size: var(--reader-size);
+  font-size: calc(var(--reader-size) * var(--reader-scale, 1));
   line-height: var(--reader-line);
   color: var(--ui-fg);
   font-optical-sizing: auto;
@@ -116,7 +116,7 @@
   display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 0 20px; text-align: center;
 }
 .ps-root:not(.is-presenting, .is-output) .rd-chapter-head .rd-book {
-  font: 600 13px/1.2 var(--ui-font); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ui-fg-muted);
+  font: 600 14px/1.2 var(--heading-font, var(--ui-font)); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ui-accent);
 }
 .ps-root:not(.is-presenting, .is-output) .rd-chapter-head .rd-chapter-num {
   font: 600 44px/1.15 var(--reader-font); letter-spacing: -0.01em; color: var(--ui-fg); margin-top: 4px;

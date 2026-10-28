@@ -1,46 +1,49 @@
 /* ==========================================================================
-   Design tokens — the modern reader (light / dark / sepia, auto = device).
+   Design tokens — Vellum (default cream), Candlelight (dark), Paper (white), auto.
+   Every text colour is checked to WCAG AA (4.5:1) on every surface it sits on.
    Components use the --ui-* variables; Tailwind utilities get the same
    colours through the @theme inline block in application.tailwind.css.
    The legacy --vellum-* / --ink / --rubric / --gold variables stay defined
    (legacy/parchment.css :root) for the projector and preach CSS.
    ========================================================================== */
 
+/* Vellum — the default: BiblioRata's warm cream page, Garamond Scripture,
+   rubric (red) verse numbers. "auto" is Vellum by day, Candlelight at night. */
 :root,
-[data-theme="light"],
+[data-theme="vellum"],
 [data-theme="auto"] {
-  --ui-bg: #FFFFFF;
-  --ui-surface: #F6F6F4;
-  --ui-surface-2: #EDEDEA;
-  --ui-elevated: #FFFFFF;
-  --ui-border: #E3E2DE;
-  --ui-border-strong: #CFCDC7;
-  --ui-fg: #1C1C1E;
-  --ui-fg-muted: #6E6E73;
-  --ui-fg-subtle: #9A9AA0;
-  --ui-accent: #A63D2A;
-  --ui-accent-hover: #8C3020;
-  --ui-accent-soft: rgba(166, 61, 42, 0.10);
-  --ui-accent-fg: #FFFFFF;
-  --ui-focus: #2F6FEB;
-  --ui-vnum: #9A9AA0;
-  --ui-selected: #1C1C1E;
-  --ui-seg-on: #FFFFFF;
-  --ui-scrim: rgba(17, 17, 19, 0.38);
-  --ui-shadow-sm: 0 1px 2px rgba(17, 17, 19, 0.06), 0 1px 1px rgba(17, 17, 19, 0.04);
-  --ui-shadow-md: 0 4px 16px rgba(17, 17, 19, 0.08), 0 1px 3px rgba(17, 17, 19, 0.06);
-  --ui-shadow-lg: 0 16px 48px rgba(17, 17, 19, 0.16), 0 2px 8px rgba(17, 17, 19, 0.08);
-
-  --hl-ochre: rgba(255, 204, 0, 0.38);
-  --hl-sage: rgba(52, 199, 89, 0.26);
-  --hl-cobalt: rgba(10, 132, 255, 0.20);
-  --hl-rose: rgba(255, 55, 95, 0.20);
-  --hl-ochre-dot: #F5C400;
-  --hl-sage-dot: #34C759;
-  --hl-cobalt-dot: #0A84FF;
-  --hl-rose-dot: #FF375F;
-
-  --reader-font: "Source Serif 4", "Source Serif Pro", Georgia, "Noto Sans Symbols 2", serif;
+  --ui-bg: #F4EAD2;
+  --ui-surface: #EFE3C5;
+  --ui-surface-2: #E7D6AD;
+  --ui-elevated: #FBF5E6;
+  --ui-border: #D9C8A0;
+  --ui-border-strong: #C2AE82;
+  --ui-fg: #231408;
+  --ui-fg-muted: #4A3218;
+  --ui-fg-subtle: #654A2B;
+  --ui-accent: #8A2418;
+  --ui-accent-hover: #5E1A12;
+  --ui-accent-soft: rgba(138, 36, 24, 0.10);
+  --ui-accent-fg: #FFF8EA;
+  --ui-focus: #1F5FCC;
+  --ui-vnum: #8A2418;
+  --ui-selected: #8A2418;
+  --ui-seg-on: #FBF5E6;
+  --ui-scrim: rgba(35, 20, 8, 0.42);
+  --ui-shadow-sm: 0 1px 2px rgba(58, 38, 22, 0.08), 0 1px 1px rgba(58, 38, 22, 0.05);
+  --ui-shadow-md: 0 4px 16px rgba(58, 38, 22, 0.12), 0 1px 3px rgba(58, 38, 22, 0.08);
+  --ui-shadow-lg: 0 16px 48px rgba(58, 38, 22, 0.22), 0 2px 8px rgba(58, 38, 22, 0.10);
+  --hl-ochre: rgba(206, 158, 47, 0.36);
+  --hl-sage: rgba(108, 132, 78, 0.30);
+  --hl-cobalt: rgba(72, 96, 128, 0.26);
+  --hl-rose: rgba(168, 78, 88, 0.28);
+  --hl-ochre-dot: #C9971F;
+  --hl-sage-dot: #6C844E;
+  --hl-cobalt-dot: #486080;
+  --hl-rose-dot: #A84E58;
+  --reader-font: "EB Garamond", Georgia, "Noto Sans Symbols 2", serif;
+  --heading-font: "Cinzel", "EB Garamond", Georgia, serif;
+  --reader-scale: 1.1; /* Garamond reads small at the same px */
   color-scheme: light;
 }
 
@@ -58,87 +61,115 @@
   --panel-w: 400px;
 }
 
-[data-theme="dark"] {
-  --ui-bg: #111113;
-  --ui-surface: #202024;
-  --ui-surface-2: #2A2A30;
-  --ui-elevated: #19191C;
-  --ui-border: #2E2E34;
-  --ui-border-strong: #3C3C44;
-  --ui-fg: #ECECEC;
-  --ui-fg-muted: #A1A1AA;
-  --ui-fg-subtle: #71717A;
-  --ui-accent: #E07A5F;
-  --ui-accent-hover: #EA8F77;
-  --ui-accent-soft: rgba(224, 122, 95, 0.14);
-  --ui-accent-fg: #111113;
-  --ui-focus: #6EA0FF;
-  --ui-vnum: #71717A;
-  --ui-selected: #ECECEC;
-  --ui-seg-on: #3A3A42;
-  --ui-scrim: rgba(0, 0, 0, 0.55);
-  --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --ui-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --ui-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.55);
-  --hl-ochre: rgba(255, 214, 10, 0.28);
-  --hl-sage: rgba(48, 209, 88, 0.24);
-  --hl-cobalt: rgba(64, 156, 255, 0.26);
-  --hl-rose: rgba(255, 69, 58, 0.24);
+/* Candlelight — warm dark, for evening study. */
+[data-theme="candlelight"] {
+  --ui-bg: #17120C;
+  --ui-surface: #271E15;
+  --ui-surface-2: #33281C;
+  --ui-elevated: #1F1811;
+  --ui-border: #3A2D1F;
+  --ui-border-strong: #4D3C2A;
+  --ui-fg: #F1E6CC;
+  --ui-fg-muted: #D2C1A0;
+  --ui-fg-subtle: #B3A083;
+  --ui-accent: #EC9A7C;
+  --ui-accent-hover: #F4B198;
+  --ui-accent-soft: rgba(236, 154, 124, 0.14);
+  --ui-accent-fg: #17120C;
+  --ui-focus: #8DB2FF;
+  --ui-vnum: #D9A273;
+  --ui-selected: #D9A273;
+  --ui-seg-on: #3E3122;
+  --ui-scrim: rgba(0, 0, 0, 0.58);
+  --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --ui-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --ui-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --hl-ochre: rgba(226, 178, 64, 0.30);
+  --hl-sage: rgba(140, 170, 100, 0.28);
+  --hl-cobalt: rgba(110, 150, 200, 0.30);
+  --hl-rose: rgba(210, 110, 120, 0.30);
+  --hl-ochre-dot: #E2B240;
+  --hl-sage-dot: #8CAA64;
+  --hl-cobalt-dot: #6E96C8;
+  --hl-rose-dot: #D26E78;
+  --reader-font: "EB Garamond", Georgia, "Noto Sans Symbols 2", serif;
+  --heading-font: "Cinzel", "EB Garamond", Georgia, serif;
+  --reader-scale: 1.1; /* Garamond reads small at the same px */
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
   [data-theme="auto"] {
-    --ui-bg: #111113;
-    --ui-surface: #202024;
-    --ui-surface-2: #2A2A30;
-    --ui-elevated: #19191C;
-    --ui-border: #2E2E34;
-    --ui-border-strong: #3C3C44;
-    --ui-fg: #ECECEC;
-    --ui-fg-muted: #A1A1AA;
-    --ui-fg-subtle: #71717A;
-    --ui-accent: #E07A5F;
-    --ui-accent-hover: #EA8F77;
-    --ui-accent-soft: rgba(224, 122, 95, 0.14);
-    --ui-accent-fg: #111113;
-    --ui-focus: #6EA0FF;
-    --ui-vnum: #71717A;
-    --ui-selected: #ECECEC;
-  --ui-seg-on: #3A3A42;
-    --ui-scrim: rgba(0, 0, 0, 0.55);
-    --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --ui-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-    --ui-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.55);
-    --hl-ochre: rgba(255, 214, 10, 0.28);
-    --hl-sage: rgba(48, 209, 88, 0.24);
-    --hl-cobalt: rgba(64, 156, 255, 0.26);
-    --hl-rose: rgba(255, 69, 58, 0.24);
-    color-scheme: dark;
+  --ui-bg: #17120C;
+  --ui-surface: #271E15;
+  --ui-surface-2: #33281C;
+  --ui-elevated: #1F1811;
+  --ui-border: #3A2D1F;
+  --ui-border-strong: #4D3C2A;
+  --ui-fg: #F1E6CC;
+  --ui-fg-muted: #D2C1A0;
+  --ui-fg-subtle: #B3A083;
+  --ui-accent: #EC9A7C;
+  --ui-accent-hover: #F4B198;
+  --ui-accent-soft: rgba(236, 154, 124, 0.14);
+  --ui-accent-fg: #17120C;
+  --ui-focus: #8DB2FF;
+  --ui-vnum: #D9A273;
+  --ui-selected: #D9A273;
+  --ui-seg-on: #3E3122;
+  --ui-scrim: rgba(0, 0, 0, 0.58);
+  --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --ui-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --ui-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --hl-ochre: rgba(226, 178, 64, 0.30);
+  --hl-sage: rgba(140, 170, 100, 0.28);
+  --hl-cobalt: rgba(110, 150, 200, 0.30);
+  --hl-rose: rgba(210, 110, 120, 0.30);
+  --hl-ochre-dot: #E2B240;
+  --hl-sage-dot: #8CAA64;
+  --hl-cobalt-dot: #6E96C8;
+  --hl-rose-dot: #D26E78;
+  --reader-font: "EB Garamond", Georgia, "Noto Sans Symbols 2", serif;
+  --heading-font: "Cinzel", "EB Garamond", Georgia, serif;
+  --reader-scale: 1.1; /* Garamond reads small at the same px */
+  color-scheme: dark;
   }
 }
 
-[data-theme="sepia"] {
-  --ui-bg: #F7F1E3;
-  --ui-surface: #FBF7EE;
-  --ui-surface-2: #EFE6D2;
-  --ui-elevated: #FFFBF2;
-  --ui-border: #E2D6BC;
-  --ui-border-strong: #CDBD9A;
-  --ui-fg: #2A2017;
-  --ui-fg-muted: #6F5E4A;
-  --ui-fg-subtle: #9C8A70;
-  --ui-accent: #8A2418;
-  --ui-accent-hover: #6E1C12;
-  --ui-accent-soft: rgba(138, 36, 24, 0.09);
-  --ui-vnum: #8A6D4A;
-  --ui-selected: #2A2017;
-  --ui-seg-on: #FFFBF2;
-  --hl-ochre: rgba(206, 158, 47, 0.32);
-  --hl-sage: rgba(108, 132, 78, 0.28);
-  --hl-cobalt: rgba(72, 96, 128, 0.26);
-  --hl-rose: rgba(168, 78, 88, 0.28);
-  --reader-font: "EB Garamond", Georgia, "Noto Sans Symbols 2", serif;
+/* Paper — plain white, modern serif, for those who prefer it. */
+[data-theme="paper"] {
+  --ui-bg: #FFFFFF;
+  --ui-surface: #F6F6F4;
+  --ui-surface-2: #EDEDEA;
+  --ui-elevated: #FFFFFF;
+  --ui-border: #E0DFDA;
+  --ui-border-strong: #C9C7C0;
+  --ui-fg: #1C1C1E;
+  --ui-fg-muted: #4F4F55;
+  --ui-fg-subtle: #66666C;
+  --ui-accent: #A63D2A;
+  --ui-accent-hover: #8C3020;
+  --ui-accent-soft: rgba(166, 61, 42, 0.10);
+  --ui-accent-fg: #FFFFFF;
+  --ui-focus: #2F6FEB;
+  --ui-vnum: #8A2418;
+  --ui-selected: #1C1C1E;
+  --ui-seg-on: #FFFFFF;
+  --ui-scrim: rgba(17, 17, 19, 0.40);
+  --ui-shadow-sm: 0 1px 2px rgba(17, 17, 19, 0.06), 0 1px 1px rgba(17, 17, 19, 0.04);
+  --ui-shadow-md: 0 4px 16px rgba(17, 17, 19, 0.08), 0 1px 3px rgba(17, 17, 19, 0.06);
+  --ui-shadow-lg: 0 16px 48px rgba(17, 17, 19, 0.16), 0 2px 8px rgba(17, 17, 19, 0.08);
+  --hl-ochre: rgba(255, 204, 0, 0.38);
+  --hl-sage: rgba(52, 199, 89, 0.26);
+  --hl-cobalt: rgba(10, 132, 255, 0.20);
+  --hl-rose: rgba(255, 55, 95, 0.20);
+  --hl-ochre-dot: #F5C400;
+  --hl-sage-dot: #34C759;
+  --hl-cobalt-dot: #0A84FF;
+  --hl-rose-dot: #FF375F;
+  --reader-font: "Source Serif 4", "Source Serif Pro", Georgia, "Noto Sans Symbols 2", serif;
+  --heading-font: var(--ui-font);
+  --reader-scale: 1;
   color-scheme: light;
 }
 
