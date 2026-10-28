@@ -7,8 +7,11 @@
     <div>
       <div class="ps-guide-eyebrow">A Quill &amp; Compass</div>
       <h2 class="ps-guide-title">What's at your desk</h2>
-      <p class="ps-guide-sub">A guide to the tools — toggle it any time from the topbar.</p>
+      <p class="ps-guide-sub">A guide to the tools — bring it back any time from the ☰ menu.</p>
     </div>
+    <% if authenticated? %>
+      <%= button_to "Hide", dismiss_guide_path, method: :post, class: "ui-btn is-sm ps-guide-hide", form: { class: "contents" } %>
+    <% end %>
   </header>
 
   <div class="ps-guide-grid">

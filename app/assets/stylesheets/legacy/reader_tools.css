@@ -1,0 +1,146 @@
+/* ====== Offline indicator (PWA) ====== */
+.ps-offline-badge {
+  position: fixed;
+  top: 14px;
+  left: 16px;
+  background: rgba(35, 20, 8, 0.92);
+  color: var(--vellum-0);
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  border: 1px solid var(--rubric);
+  border-radius: 2px;
+  z-index: 200;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ps-offline-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--rubric); box-shadow: 0 0 6px var(--rubric); }
+
+/* ====== Wiki-style note links and backlinks panel ====== */
+.ps-note-link {
+  color: var(--rubric);
+  text-decoration: none;
+  font-style: normal;
+  border-bottom: 1px dotted var(--rubric);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ps-note-link:hover {
+  color: var(--rubric-deep);
+  border-bottom-style: solid;
+}
+
+.ps-backlinks {
+  padding: 12px 20px 14px;
+  border-bottom: 1px dashed rgba(138, 116, 68, 0.4);
+  background: rgba(255, 247, 224, 0.35);
+}
+.ps-backlinks-head {
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  font-size: 9.5px;
+  color: var(--rubric);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.ps-backlink {
+  display: block;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-left: 2px solid var(--gold);
+  background: rgba(255, 247, 224, 0.55);
+  border-radius: 0 2px 2px 0;
+  text-decoration: none;
+}
+.ps-backlink:hover { background: rgba(255, 247, 224, 0.9); }
+.ps-backlink-meta {
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  font-size: 9.5px;
+  color: var(--sepia);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.ps-backlink-meta .ref { color: var(--sepia-mute); }
+.ps-backlink-snippet {
+  font-family: "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+body[data-theme="candlelight"] .ps-backlinks { background: rgba(60, 40, 20, 0.4); }
+body[data-theme="candlelight"] .ps-backlink { background: rgba(60, 40, 20, 0.5); }
+body[data-theme="candlelight"] .ps-backlink:hover { background: rgba(80, 55, 25, 0.6); }
+
+/* ====== Interlinear mode: stack the gloss beneath each Strong's-tagged word ====== */
+.ps-root.is-interlinear .ps-verses { line-height: 1.45; }
+.ps-root.is-interlinear .ps-verse-text .ps-word {
+  display: inline-block;
+  text-align: center;
+  margin: 0 3px 16px;
+  vertical-align: top;
+  text-decoration: none;
+  line-height: 1.1;
+  position: relative;
+}
+.ps-root.is-interlinear .ps-word[data-gloss]::after {
+  content: attr(data-gloss);
+  display: block;
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-size: 0.52em;
+  letter-spacing: 0.04em;
+  color: var(--rubric);
+  margin-top: 3px;
+  line-height: 1;
+  opacity: 0.85;
+  white-space: nowrap;
+  text-transform: none;
+  font-weight: 600;
+}
+
+/* ====== Translation diff (word-level highlight when comparing same verse) ====== */
+/* Strong's words are plain spans, not <a> links — Android Chrome's long-press
+   link menu can't be suppressed and would block selecting Scripture text for
+   highlights / the Rabbi. Keep them selectable, with a pointer cursor for the
+   desktop tap-to-open-lexicon affordance. */
+.ps-word {
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.ps-verse-text, .ps-verse-body { -webkit-user-select: text; user-select: text; }
+.ps-diff-only {
+  background: rgba(216, 100, 50, 0.15);
+  border-bottom: 1px dotted rgba(216, 100, 50, 0.55);
+  border-radius: 1px;
+  padding: 0 1px;
+}
+body[data-theme="candlelight"] .ps-diff-only {
+  background: rgba(232, 130, 80, 0.18);
+  border-bottom-color: rgba(232, 130, 80, 0.6);
+}
+
+/* ====== Shared (read-only) study view ====== */
+.ps-shared-ref {
+  flex: 1;
+  padding: 6px 10px;
+  background: rgba(255, 247, 224, 0.5);
+  border: 1px solid rgba(138, 116, 68, 0.25);
+  border-radius: 2px;
+  font: 14px "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+body[data-theme="candlelight"] .ps-shared-ref {
+  background: rgba(60, 40, 20, 0.5);
+  color: var(--ink-soft);
+}
+

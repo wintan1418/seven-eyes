@@ -7,13 +7,13 @@ class WelcomeTest < ApplicationSystemTestCase
     visit root_path
 
     assert_selector "h1", text: "The Word, laid open."
-    assert_selector ".ps-illumined blockquote"
+    assert_selector ".ld-vod blockquote"
     assert_selector ".ps-canon-stats"
 
     fill_in "reference", with: "John 3:16"
     click_on "Read"
 
-    assert_selector ".ps-topbar"
-    assert_field with: "John 3:16"
+    assert_selector ".ui-appbar [data-reader-header-target='reference']", text: "John 3:16"
+    assert_selector "input[name='pane[reference]'][value='John 3:16']", visible: :all
   end
 end

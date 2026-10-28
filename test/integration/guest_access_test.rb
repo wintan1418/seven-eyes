@@ -56,7 +56,7 @@ class GuestAccessTest < ActionDispatch::IntegrationTest
   end
 
   test "a guest cannot write notes into a hidden pane" do
-    post studies_path
+    post studies_path, params: { pane_count: 2 }
     study = Study.last
     hidden = study.all_panes.last
     study.update!(pane_count: 1)

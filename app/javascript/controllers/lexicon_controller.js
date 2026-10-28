@@ -31,6 +31,9 @@ export default class extends Controller {
     // root-word drawer. Keyboard (Enter) and mouse clicks open it.
     const pointer = event?.pointerType || (event?.type === "click" ? this.pointerType : "")
     if (pointer === "touch" || pointer === "pen") { event?.preventDefault?.(); return }
+    // A click on a word is a tap on its verse (it selects the verse) unless
+    // the reader turned word study on; Enter on a focused word always opens.
+    if (event?.type === "click" && !this.element.classList.contains("is-interlinear")) return
     // A highlighted word's click belongs to the highlight's note editor.
     if (event?.target?.closest?.("[data-highlight-id]")) return
     this.load(event?.currentTarget?.dataset?.href)

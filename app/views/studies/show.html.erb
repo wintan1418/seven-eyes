@@ -1,9 +1,10 @@
 <%# The projector (?output=1) and stage (?stage=1) windows render this same page:
     mark them server-side so no onboarding (tour, prompts, banners) ever flashes
-    on the big screen before presentation_controller boots. %>
+    on the big screen before presentation_controller boots. Everything new in
+    the reading UI is marked [data-chrome] and hidden while presenting. %>
 <% output_window = params[:output] == "1" || params[:stage] == "1" %>
-<div class="ps-root<%= ' is-output' if output_window %>"
-     data-controller="book-browser ai-search search xref commentary lexicon rabbi <%= 'tour ' unless output_window %>shortcuts auth-gate new-study font-size presentation diff interlinear live setlist remote"
+<div class="ps-root rd-app<%= ' is-output' if output_window %><%= ' is-compare' if @study.pane_count > 1 %>"
+     data-controller="ai-search search xref commentary lexicon rabbi <%= 'tour ' unless output_window %>shortcuts auth-gate new-study font-size presentation diff interlinear live setlist remote reader-header verse-lines"
      data-live-url-value="<%= study_live_path(@study) %>"
      data-live-active-code-value="<%= LiveSession.current_for(@study)&.code unless output_window %>"
      data-remote-url-value="<%= study_remote_path(@study) %>"
@@ -15,177 +16,32 @@
      data-tour-authenticated-value="<%= authenticated?.present? %>"
      data-tour-done-value="<%= (authenticated? && current_user.tour_completed_at.present?).present? %>"
      data-tour-url-value="<%= preferences_path %>">
-  <%= render "topbar", study_name: @study.name, panes: @study.pane_count,
-        sync: @study.sync_scroll, saved: true, study: @study %>
-  <button type="button" class="ps-exit-presentation" data-action="presentation#exit"
-          title="Exit focus mode (Esc)">
-    <span>&#10005;</span> Exit Focus <span class="kbd">Esc</span>
-  </button>
-  <button type="button" class="ps-preach-enter" data-action="presentation#enterPreach"
-          title="Preach mode — verse by verse, tap/swipe to advance">
-    &#128272; Preach Mode
-  </button>
-  <button type="button" class="ps-preach-zone left"
-          data-action="presentation#prev" aria-label="Previous verse" tabindex="-1"></button>
-  <button type="button" class="ps-preach-zone right"
-          data-action="presentation#next" aria-label="Next verse" tabindex="-1"></button>
+  <%= render "studies/preach_chrome" %>
+  <%= render "studies/app_bar", study: @study %>
 
-  <button type="button" class="ps-preach-nav prev"
-          data-action="presentation#prev" aria-label="Previous verse">&#8249;</button>
-  <button type="button" class="ps-preach-nav next"
-          data-action="presentation#next" aria-label="Next verse">&#8250;</button>
-
-  <div class="ps-preach-bar">
-    <div class="ps-preach-bar-left">
-      <div class="ps-preach-counter" data-preach-counter>
-        <span class="num">verse 1</span>
-      </div>
-      <span class="ps-preach-live" title="The output window is live on the second screen">&#9679; Live</span>
-      <span class="ps-live-chip" data-live-target="chip" title="Phones following along right now">
-        <span class="dot" aria-hidden="true"></span>
-        <span data-live-target="count">0</span>&nbsp;following
-      </span>
-    </div>
-    <div class="ps-preach-bar-center">
-      <div class="ps-preach-group">
-        <span class="lbl">Group</span>
-        <% (1..3).each do |n| %>
-          <button type="button"
-                  class="<%= 'is-on' if n == 1 %>"
-                  data-action="presentation#setGroup"
-                  data-preach-group="<%= n %>"
-                  data-presentation-size-param="<%= n %>"
-                  title="<%= n %> verse#{'s' if n > 1} per slide"><%= n %></button>
-        <% end %>
-      </div>
-      <div class="ps-preach-group ps-preach-anchor">
-        <span class="lbl">Text</span>
-        <button type="button" data-preach-anchor-pin
-                data-action="presentation#pinAnchor"
-                title="Anchor the passage on screen as your main teaching text">&#9875;</button>
-        <button type="button" data-preach-anchor-home disabled
-                data-action="presentation#goAnchor"
-                title="Pin a passage as your teaching text first">&#8962;</button>
-      </div>
-      <button type="button" class="ps-preach-tool" disabled
-              data-preach-back
-              data-action="presentation#goBack"
-              title="Back to where you were — the previous scripture or song (B)">&#10558; Back</button>
-      <button type="button" class="ps-preach-tool"
-              data-action="setlist#toggle"
-              title="The preach queue — scriptures, songs and thoughts lined up for the service">&#9835; Queue</button>
-      <button type="button" class="ps-preach-tool"
-              data-action="presentation#openJump"
-              title="Go to a verse, chase any reference the preacher calls (rom 8:28), or describe a thought for AI search (G)">&#10148; Go</button>
-      <button type="button" class="ps-preach-tool"
-              data-preach-parallel
-              data-action="presentation#toggleParallel"
-              title="Show two translations side-by-side (P)">&#9783; Parallel</button>
-      <button type="button" class="ps-preach-tool"
-              data-preach-split
-              data-action="presentation#toggleSplit"
-              title="Divide the screen and show different scriptures side-by-side — click a region (or press 1–4) to make it active, then Go/Next move that side">&#9707; Split</button>
-      <button type="button" class="ps-preach-tool"
-              data-preach-emph
-              data-action="presentation#toggleEmphasis"
-              title="Emphasise the minister's key word — tap words on the verse to make them glow on screen">&#10038; Emphasise</button>
-      <button type="button" class="ps-preach-tool"
-              data-preach-project
-              data-action="presentation#openOutput"
-              title="Open the output window — drag it onto the projector screen, then click Fullscreen">&#10697; Project</button>
-      <button type="button" class="ps-preach-tool"
-              data-action="presentation#openStage"
-              title="Stage display for the pulpit — current verse, NEXT verse big, and a clock">&#8983; Stage</button>
-      <button type="button" class="ps-preach-tool"
-              data-action="presentation#toggleScreenPanel"
-              title="Projection screen look — theme and text size">&#10022; Screen</button>
-      <button type="button" class="ps-preach-tool"
-              data-preach-blank
-              data-action="presentation#toggleBlank"
-              title="Blank the projector — a calm holding screen for before the service and between segments (. key)">&#9634; Blank</button>
-      <button type="button" class="ps-preach-tool ps-golive"
-              data-live-target="button"
-              data-action="live#toggle"
-              title="Let the congregation follow along on their phones — live, no account needed">&#9737; Go Live</button>
-      <button type="button" class="ps-preach-tool"
-              data-remote-target="button"
-              data-action="remote#toggle"
-              title="Pair a phone as a remote clicker — next, previous, chase">&#9742; Remote</button>
-    </div>
-    <div class="ps-preach-bar-right">
-      <button type="button" class="ps-preach-tool"
-              data-action="presentation#prev" title="Previous verse (←)">&#8249; Prev</button>
-      <button type="button" class="ps-preach-tool primary"
-              data-action="presentation#next" title="Next verse (→ or Space)">Next &#8250;</button>
-    </div>
-  </div>
-
-  <div class="ps-preach-next" data-preach-next aria-hidden="true"></div>
-
-  <%# Reference banner — so the congregation sees "John 3:16 · KJV", not just "16" %>
-  <div class="ps-preach-ref" data-preach-ref aria-hidden="true"></div>
-
-  <button type="button" class="ps-out-full" data-action="presentation#toggleFullscreen"
-          title="Fullscreen on this screen">&#9974; Fullscreen</button>
-
-  <%# Content slide layer — a song stanza or thought projected instead of the verse %>
-  <div class="ps-preach-slide" data-preach-slide></div>
-
-  <%# Holding / blank screen — snaps the projector to a calm hold between segments %>
-  <div class="ps-preach-hold" data-preach-hold aria-hidden="true">
-    <span class="orn">&#10022;</span>
-  </div>
-
-  <%# Go-Live join card on the projector — QR + code for the whole room to scan %>
-  <div class="ps-preach-join" data-preach-join hidden></div>
-
-  <%# AI quick-search results for the Go box ("the walls of jericho" → chips) %>
-  <div class="ps-preach-finds" data-preach-finds hidden></div>
-
-  <%# Projection screen prefs (theme + text scale), broadcast to the output window %>
-  <div class="ps-screen-panel" hidden>
-    <div class="lbl">Projection screen</div>
-    <div class="row themes">
-      <button type="button" data-screen-theme="vellum" data-action="presentation#setTheme">Vellum</button>
-      <button type="button" data-screen-theme="ink" data-action="presentation#setTheme">Ink</button>
-      <button type="button" data-screen-theme="paper" data-action="presentation#setTheme">Paper</button>
-    </div>
-    <div class="row scale">
-      <button type="button" data-screen-scale-delta="-0.1" data-action="presentation#bumpScale">A&minus;</button>
-      <span class="val" data-screen-scale>100%</span>
-      <button type="button" data-screen-scale-delta="0.1" data-action="presentation#bumpScale">A&#43;</button>
-    </div>
-    <button type="button" class="done" data-action="presentation#toggleScreenPanel">Done</button>
-  </div>
-
-  <%# Stage display (?stage=1): NOW small, NEXT big, clock — for the pulpit %>
-  <div class="ps-stage" aria-hidden="true">
-    <div class="ps-stage-head">
-      <span class="ref" data-stage-ref></span>
-      <span class="clock" data-stage-clock></span>
-    </div>
-    <div class="ps-stage-now" data-stage-now></div>
-    <div class="ps-stage-next" data-stage-next></div>
-  </div>
-
-  <div class="ps-preach-jump" hidden>
-    <span>Go to</span>
-    <input type="text" inputmode="search" placeholder="28 &middot; or rom 8:28"
-           autocomplete="off" spellcheck="false" autocapitalize="none"
-           data-presentation-target="jumpInput"
-           data-action="keydown.enter->presentation#jumpSubmit keydown.esc->presentation#cancelJump">
-    <button type="button" data-action="presentation#jumpSubmit">Go</button>
-  </div>
   <div class="ps-shell">
-    <%= render "sidebar", studies: @studies, active_id: @study.id %>
     <main class="ps-workspace <%= workspace_cols_class(@study.pane_count) %>"
-          data-controller="sync-scroll" data-sync-scroll-enabled-value="<%= @study.sync_scroll %>">
+          data-controller="sync-scroll verse-select chapter-swipe"
+          data-action="click->verse-select#click touchstart->chapter-swipe#start:passive touchend->chapter-swipe#end"
+          data-sync-scroll-enabled-value="<%= @study.sync_scroll %>">
       <% @study.panes.each do |pane| %>
         <%= render "panes/pane", pane: pane %>
       <% end %>
     </main>
   </div>
-  <%= render "studies/book_browser" %>
+  <%= render "studies/compare_bar", study: @study if @study.pane_count > 1 %>
+  <% unless output_window %>
+    <%= render "studies/verse_action_bar", study: @study %>
+    <%= render "studies/tab_bar" %>
+  <% end %>
+
+  <% unless output_window %>
+    <%= render "studies/menu_sheet", studies: @studies, active_id: @study.id, study: @study, new_study_modal: true %>
+    <%= render "studies/passage_sheet" %>
+    <%= render "studies/translation_sheet" %>
+    <%= render "studies/reading_settings_sheet" %>
+    <%= render "studies/more_sheet", study: @study %>
+  <% end %>
   <%= render "studies/ai_search", study: @study %>
   <%= render "studies/search", study: @study %>
   <%= render "studies/xref_drawer" %>

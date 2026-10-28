@@ -1,0 +1,25 @@
+<%# Version picker (translation_picker controller). Public-domain texts only. %>
+<div class="ui-sheet ui-sheet--dialog ui-translation-sheet" data-controller="sheet translation-picker"
+     data-sheet-id-value="translation" data-action="sheet:opened->translation-picker#sync" data-chrome hidden>
+  <div class="ui-sheet-backdrop" data-action="click->sheet#close"></div>
+  <section class="ui-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="translation-sheet-title" tabindex="-1">
+    <header class="ui-sheet-head">
+      <h2 id="translation-sheet-title" class="ui-sheet-title">Versions</h2>
+      <button type="button" class="ui-iconbtn is-sm" data-action="sheet#close" aria-label="Close"><%= icon(:x) %></button>
+    </header>
+    <div class="ui-sheet-body">
+      <div class="ui-optionlist" role="radiogroup" aria-label="Translation">
+        <% translation_choices.each do |t| %>
+          <button type="button" class="ui-option" role="radio" aria-checked="false"
+                  data-translation-picker-target="option" data-translation-id="<%= t.id %>"
+                  data-action="translation-picker#choose">
+            <span class="code"><%= t.code %></span>
+            <span class="nm"><%= t.display_name %></span>
+            <%= icon(:check, css: "ui-icon tick") %>
+          </button>
+        <% end %>
+      </div>
+      <p class="ui-sheet-foot">Every version here is in the public domain. <%= link_to "Credits", credits_path %></p>
+    </div>
+  </section>
+</div>

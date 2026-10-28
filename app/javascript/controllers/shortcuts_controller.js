@@ -1,8 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 
 // Global keyboard shortcuts for the workspace (scoped on .ps-root):
-//   Cmd/Ctrl+K  focus the active pane's reference input
-//   1–4         make that pane active and focus its reference (when not typing)
+//   Cmd/Ctrl+K  open the passage picker for the active pane (also "/")
+//   1–4         make that pane active (when not typing)
 //   Cmd/Ctrl+S  save now: flushes every pane's notes and reports the real result
 //   Cmd/Ctrl+D  duplicate the active pane's reference into the next empty pane
 //   X           open cross-references for the active pane's first verse
@@ -68,7 +68,7 @@ export default class extends Controller {
 
     if (mod && event.key.toLowerCase() === "k") {
       event.preventDefault()
-      this.refInput(this.activePane)?.focus()
+      this.openPassage()
       return
     }
     if (mod && event.key.toLowerCase() === "s") {
@@ -90,11 +90,16 @@ export default class extends Controller {
     // Unmodified single-key shortcuts only when not typing.
     if (mod || this.typing(event.target)) return
 
-    if ([ "1", "2", "3", "4" ].includes(event.key)) {
+    if (document.querySelector(".ui-sheet.is-open")) return
+    if (event.key === "/") {
+      event.preventDefault()
+      this.openPassage()
+    } else if ([ "1", "2", "3", "4" ].includes(event.key)) {
       const pane = this.panes()[parseInt(event.key, 10) - 1]
-      if (pane) { event.preventDefault(); this.activePane = pane; this.markActive(); this.refInput(pane)?.focus() }
+      if (pane) { event.preventDefault(); this.activePane = pane; this.markActive() }
     } else if (event.key.toLowerCase() === "x") {
-      this.activePane?.querySelector(".ps-vnum")?.click()
+      const verse = this.activePane?.querySelector(".ps-verse.is-selected") || this.activePane?.querySelector(".ps-verse")
+      verse?.querySelector(".ps-vnum")?.click()
     }
   }
 
@@ -114,6 +119,11 @@ export default class extends Controller {
     this.flash("✓ Saved")
   }
 
+  openPassage() {
+    const paneId = (this.activePane || this.panes()[0])?.id?.replace("pane_", "")
+    window.dispatchEvent(new CustomEvent("sheet:open", { detail: { id: "passage", paneId } }))
+  }
+
   duplicateToNextEmpty() {
     const source = this.refInput(this.activePane)
     if (!source || !source.value.trim()) return
@@ -125,7 +135,7 @@ export default class extends Controller {
   }
 
   closeDrawers() {
-    document.querySelectorAll(".ps-book-drawer.is-open, .ps-ai-drawer.is-open, .ps-xref-host.is-open")
+    document.querySelectorAll(".ps-ai-drawer.is-open, .ps-search-drawer.is-open, .ps-xref-host.is-open")
       .forEach((d) => d.classList.remove("is-open"))
   }
 

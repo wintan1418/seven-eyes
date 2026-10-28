@@ -7,6 +7,7 @@ require "application_system_test_case"
 class StudySavingTest < ApplicationSystemTestCase
   setup do
     @user = users(:one)
+    @user.update!(tour_completed_at: Time.current) # the first-run tour would sit over the verses
     @kjv = Translation.create!(code: "KJV", name: "King James Version")
     @web = Translation.create!(code: "WEB", name: "World English Bible")
     @jer = Book.create!(osis_code: "Jer", name: "Jeremiah", testament: :old, position: 24, chapter_count: 52)
@@ -57,11 +58,13 @@ class StudySavingTest < ApplicationSystemTestCase
   test "notes typed just before a translation switch are kept" do
     sign_in
     visit study_path(@study)
+    wait_for_reader_js
     find(".ps-pane-tool[title='Notes']").click
     find(".ps-notes-area").fill_in(with: "Written a heartbeat before switching")
     # Switch inside the 700ms debounce window: the frame request must wait for
     # the notes to land, and the re-rendered pane must show them.
-    find(".ps-trans-select").select("WEB")
+    find(".ui-appbar [data-sheets-id-param='translation']").click
+    find(".ui-translation-sheet .ui-option", text: "WEB").click
     assert_selector ".ps-verse-text", text: /says Yahweh/, wait: 5
     assert_equal "Written a heartbeat before switching", @pane.reload.notes
     assert_equal "Written a heartbeat before switching", find(".ps-notes-area", visible: :all).value
@@ -70,6 +73,7 @@ class StudySavingTest < ApplicationSystemTestCase
   test "Cmd/Ctrl+S saves notes immediately and says so" do
     sign_in
     visit study_path(@study)
+    wait_for_reader_js
     # On a slow CI box the first click can land before Stimulus connects; retry.
     3.times do
       find(".ps-pane-tool[title='Notes']").click

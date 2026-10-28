@@ -70,7 +70,11 @@ class StudiesController < ApplicationController
 
   def update
     @study.update(study_params)
-    @study.sync_panes! if @study.saved_change_to_pane_count?
+    if @study.saved_change_to_pane_count?
+      before, after = @study.saved_change_to_pane_count
+      @study.sync_panes!
+      @study.seed_compare_panes! if after > before
+    end
     redirect_to @study
   end
 
@@ -356,7 +360,7 @@ class StudiesController < ApplicationController
   end
 
   def pane_count_param
-    return 4 if params[:pane_count].blank?
+    return 1 if params[:pane_count].blank?
     params[:pane_count].to_i.clamp(1, 4)
   end
 end

@@ -102,6 +102,21 @@ class PreachModeTest < ApplicationSystemTestCase
     assert_no_selector ".ps-preach-bar", visible: true
   end
 
+  test "focus mode from the More sheet, then the Preach Mode pill" do
+    visit root_path
+    page.execute_script("localStorage.setItem('scriptorium.tourDone', '1')")
+    fill_in "reference", with: "John 3:16"
+    click_on "Read"
+    assert_selector ".ps-pane .ps-verse"
+    find(".ui-appbar [data-sheets-id-param='more']").click
+    find(".ui-more-sheet button[title='Focus this pane (presentation mode)']").click
+    assert_selector ".ps-root.is-presenting .ps-pane.is-presented"
+    assert_no_selector ".ui-appbar", visible: true
+    find(".ps-preach-enter").click
+    assert_selector ".ps-root.is-preaching"
+    assert_selector "[data-preach-counter]", text: /verse 16/i
+  end
+
   private
 
   def start_preaching(reference)
@@ -110,8 +125,8 @@ class PreachModeTest < ApplicationSystemTestCase
     fill_in "reference", with: reference
     click_on "Read"
     assert_selector ".ps-pane .ps-verse"
-    find(".ps-pane button[title='Focus this pane (presentation mode)']", match: :first).click
-    find(".ps-preach-enter").click
+    # The app bar's Preach button goes straight from reading to preaching.
+    find(".ui-appbar button[data-action~='presentation#start']").click
     assert_selector ".ps-root.is-preaching"
   end
 

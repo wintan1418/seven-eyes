@@ -8,23 +8,20 @@ import { Controller } from "@hotwired/stimulus"
 const KEY = "scriptorium.tourDone"
 
 const STEPS = [
-  { title: "Welcome to your desk", body: "A 30-second tour of what you can do here. Skip anytime." },
-  { sel: '[data-tour="reference"]', title: "Look up any verse", body: "Type a reference — Jn 3:16, Rom 5, 1 Cor 13 — and press Enter." },
-  { sel: '[data-tour="translation"]', title: "Compare translations", body: "Switch the version in each pane to weigh the wording side by side." },
-  { sel: '[data-tour="panes"]', title: "One to four panes", body: "Lay out up to four passages at once. Click 1–4 to set the count." },
-  { sel: ".ps-vnum", title: "Cross-references", body: "Click a verse number to trace its Treasury-of-Scripture references, then load one into a pane.",
-    fallback: "Once a verse is loaded, click its small raised number to open cross-references." },
-  { sel: '[data-tour="commentary"]', title: "Commentary", body: "The 📜 button opens Matthew Henry's exposition beside the text.",
-    fallback: "Load a verse — the 📜 in the pane head opens the chapter's commentary." },
-  { sel: '[data-tour="verses"]', title: "Highlight & ask the Rabbi", body: "Select any words to highlight them in four colours — or choose ✢ Rabbi to have them explained in full context.",
-    fallback: "Load a verse, then select words to highlight them — or ask the AI Rabbi to explain them." },
-  { sel: '[data-tour="search"]', title: "Search the whole Bible", body: "Find any phrase across the text — “love your enemies” — and jump to it." },
-  { sel: '[data-tour="find"]', title: "AI ‘Find a verse’", body: "Describe a thought and the assistant suggests passages, validated against our own text." },
-  { sel: '[data-tour="sermon"]', title: "Compile a sermon", body: "Turn your study — passages and notes — into a printable manuscript." },
-  { sel: '[data-tour="view"]', title: "Reading view", body: "Text size, candle/day theme, word-diff, Strong's lemmas and sync-scroll all live here." },
-  { sel: '[data-tour="guide"]', title: "More any time", body: "Open the full illustrated guide whenever you like — and replay this tour from there.",
-    fallback: "Open the full illustrated guide from the topbar whenever you like." },
-  { title: "That's the desk", body: "Now go study the Word. ✢", final: true }
+  { title: "Welcome to BiblioRata", body: "A 20-second tour of the reader. Skip anytime." },
+  { sel: '[data-tour="reference"]', title: "Go to any passage", body: "Tap here to pick a book and chapter — or type a reference like Jn 3:16. ⌘K opens it from anywhere." },
+  { sel: '[data-tour="translation"]', title: "Choose a version", body: "Switch between the KJV, BSB, WEB and more." },
+  { sel: '[data-tour="verses"]', title: "Tap a verse", body: "Tap verses to highlight, note, copy, share or compare them. Select words to ask the AI Rabbi.",
+    fallback: "Once a chapter is open, tap a verse to highlight, note, copy or share it." },
+  { sel: '[data-tour="search"]', title: "Search the whole Bible", body: "Find any phrase — “love your enemies” — and jump to it." },
+  { sel: '[data-tour="view"]', title: "Make it comfortable", body: "Text size, light / sepia / dark, and one-verse-per-line live under Aa." ,
+    fallback: "Text size, theme and layout live in More → Reading settings." },
+  { sel: '[data-tour="panes"]', title: "Compare", body: "Read the same passage in two to four translations side by side.",
+    fallback: "Compare translations side by side from More → Compare." },
+  { sel: '[data-tour="preach"]', title: "Preach", body: "One tap puts the passage on the projector verse by verse — with live follow-along and a phone remote.",
+    fallback: "Preach mode, the queue, Go Live and the phone remote are all under More." },
+  { sel: '[data-tour="more"]', title: "Everything else", body: "Queue, sermon manuscript, AI find, sharing — and the ☰ menu holds your studies, plans and the full guide." },
+  { title: "You're all set", body: "Now go study the Word. ✢", final: true }
 ]
 
 export default class extends Controller {

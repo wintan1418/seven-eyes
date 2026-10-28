@@ -1,12 +1,16 @@
-<% content_for :title, "#{@reference} · Parallel Scripture" %>
+<% content_for :title, "#{@reference} · BiblioRata" %>
 <%
   meta_desc = (@prayer.presence || @verses.map(&:text).join(" ")).to_s.squish.truncate(180)
   og_image  = "#{request.base_url}/icon.png"
+  chapters = @verses.map(&:chapter).uniq
+  whole_chapter = chapters.size == 1 && @parsed.verse_start.nil?
+  prev_slug = neighbor_passage_slug(@book, chapters.first, :prev) if whole_chapter
+  next_slug = neighbor_passage_slug(@book, chapters.last, :next) if whole_chapter
 %>
 <% content_for :head do %>
   <meta name="description" content="<%= meta_desc %>">
   <meta property="og:type" content="article">
-  <meta property="og:site_name" content="Parallel Scripture">
+  <meta property="og:site_name" content="BiblioRata">
   <meta property="og:title" content="<%= @reference %> · <%= @translation&.name %>">
   <meta property="og:description" content="<%= meta_desc %>">
   <meta property="og:url" content="<%= passage_url(@slug) %>">
@@ -17,56 +21,74 @@
   <meta name="twitter:image" content="<%= og_image %>">
 <% end %>
 
-<div class="ps-root ps-pub-root">
-  <main class="ps-pub">
-    <a href="<%= root_path %>" class="ps-pub-brand">
-      <span class="cross">&#9769;</span>
-      <span>PARALLEL &middot; SCRIPTURE</span>
-    </a>
+<div class="pub-page">
+  <header class="ui-appbar pub-appbar">
+    <div class="ui-appbar-start">
+      <%= link_to root_path, class: "ui-brand" do %>
+        <span class="ui-brand-mark" aria-hidden="true"><%= icon(:book) %></span>
+        <span class="ui-brand-name">BiblioRata</span>
+      <% end %>
+    </div>
+    <div class="ui-appbar-center"></div>
+    <div class="ui-appbar-end">
+      <%= link_to open_passage_path(@slug, t: @translation&.code), class: "ui-btn is-sm is-primary pub-open" do %>
+        Open in BiblioRata
+      <% end %>
+    </div>
+  </header>
 
-    <article class="ps-pub-card">
-      <div class="ps-pub-ref">
-        <span class="r"><%= @reference %></span>
-        <span class="tr"><%= @translation&.display_name %></span>
-      </div>
-      <div class="ps-pub-rule"><span></span>&#10086;<span></span></div>
-
-      <% multi_chapter = @verses.map(&:chapter).uniq.size > 1 %>
-      <div class="ps-pub-verses">
-        <% @verses.each_with_index do |v, i| %>
-          <% if multi_chapter && (i.zero? || @verses[i - 1].chapter != v.chapter) %>
-            <h3 class="mb-2 mt-6 text-center font-display text-xs uppercase tracking-[0.22em] text-rubric">
-              <%= @book.name %> <%= v.chapter %>
-            </h3>
+  <main class="pub-main">
+    <article class="rd-column pub-column">
+      <header class="rd-chapter-head pub-head">
+        <span class="rd-book"><%= @book.name %></span>
+        <span class="rd-chapter-num"><%= @reference.delete_prefix("#{@book.name} ") %></span>
+        <nav class="pub-versions" aria-label="Version">
+          <% Translation.available.each do |t| %>
+            <%= link_to t.code, passage_path(@slug, t: t.code), class: "ui-pill#{' is-on' if t == @translation}",
+                  "aria-current": (t == @translation ? "page" : nil), title: t.display_name %>
           <% end %>
-          <p class="ps-pub-verse<%= " first" if i.zero? %>">
-            <% if @verses.size > 1 %><span class="vn"><%= v.verse_number %></span><% end %><%= v.text %>
-          </p>
+        </nav>
+      </header>
+
+      <div class="pub-verses">
+        <% @verses.each_with_index do |v, i| %>
+          <% if chapters.size > 1 && (i.zero? || @verses[i - 1].chapter != v.chapter) %>
+            <h3 class="pub-chapter-break"><%= @book.name %> <%= v.chapter %></h3>
+          <% end %>
+          <span class="pub-verse"><% if @verses.size > 1 %><sup class="vn"><%= v.verse_number %></sup><% end %><%= v.text %></span>
         <% end %>
       </div>
 
       <% if @prayer.present? %>
-        <section class="ps-pub-prayer">
-          <div class="lbl">&#10018; &nbsp; A Prayer from <%= @reference %></div>
+        <section class="pub-prayer">
+          <div class="ui-label">A prayer from <%= @reference %></div>
           <p><%= @prayer %></p>
         </section>
       <% end %>
+
+      <% if prev_slug || next_slug %>
+        <nav class="pub-chapters" aria-label="Chapters">
+          <% if prev_slug %>
+            <%= link_to passage_path(prev_slug, t: @translation&.code), class: "ui-btn", rel: "prev" do %><%= icon(:chevron_left) %> Previous<% end %>
+          <% end %>
+          <% if next_slug %>
+            <%= link_to passage_path(next_slug, t: @translation&.code), class: "ui-btn", rel: "next" do %>Next <%= icon(:chevron_right) %><% end %>
+          <% end %>
+        </nav>
+      <% end %>
+
+      <section class="pub-invite">
+        <h2>Read, compare and study &mdash; free</h2>
+        <p>
+          Open the whole Bible in a calm reader: compare translations side by side, trace
+          cross-references, study the original words, and take it into the pulpit.
+        </p>
+        <%= link_to "Open #{@reference} in BiblioRata", open_passage_path(@slug, t: @translation&.code), class: "ui-btn is-accent" %>
+      </section>
+
+      <footer class="pub-foot">
+        Scripture from the <%= @translation&.name %>. <%= link_to "Sources & credits", credits_path %>
+      </footer>
     </article>
-
-    <div class="ps-pub-cta">
-      <%= link_to "Open in Parallel Scripture &rsaquo;".html_safe,
-            open_passage_path(@slug, t: @translation&.code), class: "cta" %>
-      <%= link_to "Explore the whole Bible", root_path, class: "cta secondary",
-            style: "text-decoration:none;" %>
-    </div>
-
-    <p class="ps-pub-foot">
-      A quiet desk for the Word &mdash; lay passages side by side, trace cross-references,
-      study the original words, and let a careful AI help you see the text in context.
-    </p>
-    <p class="ps-pub-foot">
-      Scripture from the <%= @translation&.name %>.
-      <%= link_to "Sources & credits", credits_path %>
-    </p>
   </main>
 </div>

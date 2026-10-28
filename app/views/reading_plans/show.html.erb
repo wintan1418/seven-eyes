@@ -1,5 +1,6 @@
 <div class="ps-root">
-  <%= render "studies/topbar", study_name: @plan.name, panes: 4, sync: false, saved: true %>
+  <%= render "studies/app_bar", title: @plan.name %>
+  <%= render "studies/menu_sheet" %>
   <div class="ps-shell">
     <main class="ps-workspace is-doc" style="grid-template-columns: 1fr;">
       <div class="ps-plan-show">

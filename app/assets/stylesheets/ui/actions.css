@@ -1,0 +1,114 @@
+/* ==========================================================================
+   Verse selection + action bar, and the study panels as a docked right
+   panel (wide screens) / bottom sheet (phone).
+   ========================================================================== */
+
+/* Selected verses: a dotted underline, like YouVersion. */
+.ps-root:not(.is-presenting, .is-output) .ps-verse { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ps-root:not(.is-presenting, .is-output) .ps-verse.is-selected .ps-verse-text {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+  text-decoration-color: var(--ui-selected);
+  text-decoration-skip-ink: none;
+}
+
+/* Action bar ------------------------------------------------------------- */
+.ui-actionbar {
+  position: fixed; z-index: 40;
+  left: 50%; transform: translateX(-50%);
+  bottom: calc(var(--chrome-bottom, env(safe-area-inset-bottom, 0px)) + 12px);
+  width: min(560px, calc(100vw - 16px));
+  padding: 8px 10px 10px; border-radius: 18px;
+  background: var(--ui-elevated); color: var(--ui-fg); border: 1px solid var(--ui-border);
+  box-shadow: var(--ui-shadow-lg); font-family: var(--ui-font);
+  animation: ui-rise 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.ui-actionbar[hidden] { display: none; }
+@keyframes ui-rise { from { transform: translate(-50%, 16px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+.ui-actionbar-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 0 4px 6px; }
+.ui-actionbar-label { font: 600 15px var(--ui-font); letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ui-actionbar-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.ui-actionbar-swatches { display: flex; align-items: center; gap: 8px; padding: 4px 6px; }
+.ui-swatch {
+  width: 30px; height: 30px; padding: 0; border-radius: 999px; cursor: pointer;
+  border: 2px solid var(--ui-elevated); box-shadow: 0 0 0 1px var(--ui-border);
+  display: inline-flex; align-items: center; justify-content: center; color: var(--ui-fg-muted);
+}
+.ui-swatch:hover { transform: scale(1.08); }
+.ui-swatch.is-ochre { background: var(--hl-ochre-dot); }
+.ui-swatch.is-sage { background: var(--hl-sage-dot); }
+.ui-swatch.is-cobalt { background: var(--hl-cobalt-dot); }
+.ui-swatch.is-rose { background: var(--hl-rose-dot); }
+.ui-swatch.is-clear { background: var(--ui-surface-2); }
+.ui-swatch.is-clear svg { width: 14px; height: 14px; }
+.ui-swatch[hidden] { display: none; }
+.ui-actionbar-actions { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+.ui-action {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  min-width: 52px; height: 52px; padding: 0 6px; border: 0; border-radius: 12px;
+  background: transparent; color: var(--ui-fg); font: 500 11.5px var(--ui-font); cursor: pointer;
+}
+.ui-action:hover { background: var(--ui-surface); }
+.ui-action svg { width: 20px; height: 20px; }
+.ui-action-more { position: relative; }
+.ui-popmenu {
+  position: absolute; right: 0; bottom: calc(100% + 10px); width: 240px; padding: 6px;
+  background: var(--ui-elevated); border: 1px solid var(--ui-border); border-radius: 14px; box-shadow: var(--ui-shadow-lg);
+}
+.ui-popmenu[hidden] { display: none; }
+@media (max-width: 479px) {
+  .ui-actionbar-row { justify-content: center; }
+  .ui-actionbar-swatches { width: 100%; justify-content: center; padding-bottom: 6px; border-bottom: 1px solid var(--ui-border); }
+  .ui-actionbar-actions { margin: 0 auto; }
+}
+/* Room under the last verses while the bar is up */
+html.ui-has-actionbar .rd-column { padding-bottom: 240px; }
+html.ui-has-actionbar .rd-chapter-nav { opacity: 0; pointer-events: none; }
+
+/* The selection popover (selected words) sits above the tab bar too. */
+body .ps-hl-popover.is-touch-bar { bottom: calc(var(--chrome-bottom, env(safe-area-inset-bottom, 0px)) + 12px); }
+
+/* Study panels: right panel, docked beside the text on wide screens -------- */
+.ps-root:not(.is-presenting, .is-output) :is(.ps-xref-host, .ps-rabbi-host) .ps-drawer {
+  top: 0; height: 100%;
+}
+@media (min-width: 1280px) {
+  .ps-root.rd-app:not(.is-presenting, .is-output) :is(.ps-xref-host, .ps-rabbi-host) {
+    top: calc(var(--appbar-h) + env(safe-area-inset-top)); left: auto; width: var(--panel-w);
+  }
+  .ps-root.rd-app:not(.is-presenting, .is-output) :is(.ps-xref-host, .ps-rabbi-host) .ps-book-backdrop { display: none; }
+  .ps-root.rd-app:not(.is-presenting, .is-output) :is(.ps-xref-host, .ps-rabbi-host) .ps-drawer {
+    width: var(--panel-w); box-shadow: none; border-left: 1px solid var(--ui-border);
+  }
+  .ps-root.rd-app:not(.is-presenting, .is-output):has(:is(.ps-xref-host, .ps-rabbi-host).is-open) .ps-shell {
+    margin-right: var(--panel-w);
+  }
+  .ps-root.rd-app:not(.is-presenting, .is-output):has(:is(.ps-xref-host, .ps-rabbi-host).is-open) .ui-comparebar {
+    margin-right: var(--panel-w);
+  }
+}
+
+/* Phone: every side panel becomes a bottom sheet. */
+@media (max-width: 767px) {
+  .ps-root:not(.is-presenting, .is-output) :is(.ps-xref-host, .ps-rabbi-host) .ps-drawer,
+  .ps-root:not(.is-presenting, .is-output) :is(.ps-ai-panel, .ps-search-panel, .ps-setlist-panel) {
+    top: auto; bottom: 0; left: 0; right: 0; width: 100%; max-width: 100%;
+    height: 86dvh; border-left: 0; border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+    transform: translateY(100%); padding-bottom: env(safe-area-inset-bottom);
+  }
+  .ps-root:not(.is-presenting, .is-output) :is(.ps-xref-host, .ps-rabbi-host).is-open .ps-drawer,
+  .ps-root:not(.is-presenting, .is-output) .ps-ai-drawer.is-open .ps-ai-panel,
+  .ps-root:not(.is-presenting, .is-output) .ps-search-drawer.is-open .ps-search-panel,
+  .ps-root:not(.is-presenting, .is-output) .ps-setlist-host.is-open .ps-setlist-panel { transform: translateY(0); }
+}
+
+/* Strong's words only look clickable in word-study mode; otherwise a click
+   on a word is a tap on its verse. */
+.ps-root:not(.is-presenting, .is-output, .is-interlinear) .ps-word:hover { background: none; box-shadow: none; }
+.ps-root:not(.is-presenting, .is-output, .is-interlinear) .ps-word:focus:not(:focus-visible) { outline: none; }
+.ps-root.is-interlinear:not(.is-presenting, .is-output) .ps-word:hover { background: var(--ui-accent-soft); box-shadow: none; }
+.ps-root.is-interlinear:not(.is-presenting, .is-output) .ps-word[data-gloss]::after {
+  font-family: var(--ui-font); color: var(--ui-accent); font-weight: 500; letter-spacing: 0;
+}

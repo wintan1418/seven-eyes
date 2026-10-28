@@ -1,0 +1,339 @@
+/* ====== Pictures in the queue (Cloudinary) ====== */
+.ps-setlist-form .image-field { display: none; }
+.ps-setlist-form.kind-picture .title-field,
+.ps-setlist-form.kind-picture .image-field { display: block; }
+.ps-setlist-form input[type="file"] {
+  width: 100%; padding: 9px 11px; background: #fff7e0;
+  border: 1px dashed rgba(138, 116, 68, 0.55); border-radius: 2px;
+  font: 14px "EB Garamond", serif; color: var(--ink-soft); cursor: pointer;
+}
+.ps-setlist-form .image-hint {
+  font: italic 12.5px "EB Garamond", serif; color: var(--sepia-mute); padding: 0 2px;
+}
+.ps-setlist-item .thumb {
+  flex: none; width: 38px; height: 26px; object-fit: cover; border-radius: 2px;
+  border: 1px solid rgba(138, 116, 68, 0.4);
+}
+
+/* projected picture slide (operator + output window) */
+.ps-preach-slide .slide-img {
+  display: flex; align-items: center; justify-content: center;
+  max-width: 96vw; max-height: 100%;
+}
+.ps-preach-slide .slide-img img {
+  max-width: 94vw; max-height: 78vh; object-fit: contain;
+  border-radius: 3px; box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+.ps-root.is-output .ps-preach-slide .slide-img img { max-height: 92vh; border-radius: 0; box-shadow: none; }
+
+/* picture on the congregation's phones */
+.ps-live-picture {
+  display: block; width: 100%; border-radius: 4px; margin: 8px 0 20px;
+  border: 1px solid rgba(138, 116, 68, 0.4);
+}
+
+/* what's-new: ⟲ Back + Pictures cards */
+.ps-news .c-plum { --card-accent: #6e3b63; }
+.ps-news .c-teal { --card-accent: #2f6e62; }
+.mock-back { position: relative; width: 84%; height: 78%; }
+.mock-back .bk-screen {
+  position: absolute; inset: 0; border-radius: 4px; padding: 18px 16px;
+  display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center;
+  text-align: center; background: #f3e7c8; box-shadow: 0 0 0 3px rgba(216, 181, 80, 0.35);
+}
+.mock-back .bk-screen .t { font: 600 10px "Cinzel", serif; letter-spacing: 0.26em; color: #8a2418; }
+.mock-back .bk-screen .x { font: 500 15px/1.45 "EB Garamond", serif; color: #2a2118; }
+.mock-back .bk-a { animation: newsBackA 7s ease-in-out infinite; }
+.mock-back .bk-b { animation: newsBackB 7s ease-in-out infinite; }
+@keyframes newsBackA { 0%, 30% { opacity: 1; } 38%, 72% { opacity: 0; } 80%, 100% { opacity: 1; } }
+@keyframes newsBackB { 0%, 30% { opacity: 0; } 38%, 72% { opacity: 1; } 80%, 100% { opacity: 0; } }
+.mock-back .bk-key {
+  position: absolute; right: 10px; bottom: 10px; z-index: 2;
+  width: 38px; height: 38px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: #6e3b63; color: #fff7e0; font-size: 20px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  animation: newsBackKey 7s ease-in-out infinite;
+}
+@keyframes newsBackKey {
+  0%, 70% { transform: scale(1); }
+  74% { transform: scale(0.82); }
+  78%, 100% { transform: scale(1); }
+}
+.mock-pic { gap: 8px; }
+.mock-pic .pic-frame {
+  position: relative; width: 78%; height: 64%; border-radius: 3px; overflow: hidden;
+  background: linear-gradient(180deg, #cfe3ee 0%, #f0e3bd 70%);
+  border: 1px solid rgba(138, 116, 68, 0.45);
+  animation: newsPicIn 6s ease infinite;
+}
+@keyframes newsPicIn {
+  0%, 8% { opacity: 0; transform: scale(0.94); }
+  16%, 92% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.94); }
+}
+.mock-pic .sun {
+  position: absolute; top: 12%; right: 16%; width: 22px; height: 22px; border-radius: 50%;
+  background: #e8b13c; box-shadow: 0 0 18px rgba(232, 177, 60, 0.8);
+}
+.mock-pic .hill { position: absolute; bottom: -28%; border-radius: 50% 50% 0 0; background: #5c7045; }
+.mock-pic .hill.h1 { left: -12%; width: 75%; height: 58%; }
+.mock-pic .hill.h2 { right: -14%; width: 70%; height: 48%; background: #6f835a; }
+.mock-pic .pic-cap { font: 600 9px "Cinzel", serif; letter-spacing: 0.26em; color: #8a2418; }
+
+/* ----- Blank / holding screen (between-segments hold on the projector) -----
+   The holding layer only paints on the projector output (not the stage monitor,
+   which keeps showing NOW/NEXT so the preacher can see what's queued). On the
+   operator console the layer stays hidden — only the Blank button lights up. */
+.ps-preach-hold { display: none; }
+.ps-root.is-output.is-blank:not(.is-stage) .ps-preach-hold {
+  display: flex;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  align-items: center;
+  justify-content: center;
+  background: #14110b;
+  animation: holdFade 0.45s ease;
+}
+.ps-root.is-output.is-blank:not(.is-stage) .ps-preach-hold .orn {
+  font-family: "Cinzel", serif;
+  font-size: clamp(40px, 7vw, 104px);
+  color: rgba(208, 176, 116, 0.42);
+  animation: holdGlow 5s ease-in-out infinite;
+}
+/* While blanked, the projector's verse and any content slide stay dark. */
+.ps-root.is-output.is-blank:not(.is-stage) .ps-verses,
+.ps-root.is-output.is-blank:not(.is-stage) .ps-preach-slide { visibility: hidden; }
+@keyframes holdFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes holdGlow {
+  0%, 100% { opacity: 0.42; }
+  50% { opacity: 0.72; }
+}
+
+/* ====== Go-Live join card on the projector (whole-room QR) ====== */
+/* Pushed to the output window so the congregation can scan from their seats
+   instead of crowding the laptop. Full-screen, above the verse and any slide. */
+.ps-preach-join { display: none; }
+.ps-root.is-output.is-joining .ps-preach-join:not([hidden]) {
+  display: flex; position: fixed; inset: 0; z-index: 70;
+  flex-direction: column; align-items: center; justify-content: center; gap: 2.2vh;
+  background: #14110b; text-align: center; animation: holdFade 0.4s ease;
+}
+.ps-root.is-output.is-joining .ps-verses,
+.ps-root.is-output.is-joining .ps-preach-slide { visibility: hidden; }
+.ps-preach-join .join-eyebrow {
+  font: 600 clamp(14px, 1.8vw, 26px) "Cinzel", serif;
+  letter-spacing: 0.24em; text-transform: uppercase; color: rgba(216, 181, 80, 0.92);
+}
+.ps-preach-join .join-qr {
+  background: #fff; padding: clamp(14px, 1.8vw, 28px); border-radius: 10px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5); line-height: 0;
+}
+.ps-preach-join .join-qr svg {
+  width: clamp(180px, 30vh, 360px); height: clamp(180px, 30vh, 360px); display: block;
+}
+.ps-preach-join .join-code {
+  font: 700 clamp(34px, 6vw, 90px) "Cinzel", serif; letter-spacing: 0.18em; color: #f4e9c9;
+}
+.ps-preach-join .join-url {
+  font: 500 clamp(16px, 2vw, 30px) "EB Garamond", serif; color: rgba(238, 224, 188, 0.86);
+}
+.ps-preach-join .join-hint {
+  font: italic clamp(13px, 1.4vw, 20px) "EB Garamond", serif;
+  color: rgba(238, 224, 188, 0.6); max-width: 70vw;
+}
+/* Operator console: a faint pulse on the lit Blank button so the desk never
+   forgets the big screen is dark. */
+.ps-root:not(.is-output) [data-preach-blank].is-on {
+  background: var(--ink, #2b2118);
+  color: var(--vellum-0, #f4ecd9);
+  animation: holdBtnPulse 2.4s ease-in-out infinite;
+}
+@keyframes holdBtnPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(138, 36, 24, 0.0); }
+  50% { box-shadow: 0 0 0 3px rgba(138, 36, 24, 0.35); }
+}
+
+/* What's New — card 10: blank / holding screen */
+.mock-blank {
+  width: 86%; height: 76%; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  background: #14110b; box-shadow: 0 0 0 3px rgba(20, 17, 11, 0.5);
+  animation: newsBlankBreathe 4.5s ease-in-out infinite;
+}
+.mock-blank .orn {
+  font: 600 30px "Cinzel", serif;
+  color: rgba(208, 176, 116, 0.5);
+  animation: newsBlankGlow 4.5s ease-in-out infinite;
+}
+@keyframes newsBlankBreathe {
+  0%, 38%, 100% { background: #14110b; }
+  60%, 80% { background: #f3e7c8; }
+}
+@keyframes newsBlankGlow {
+  0%, 38%, 100% { opacity: 0.5; transform: scale(1); }
+  60%, 80% { opacity: 0; transform: scale(1.3); }
+}
+
+/* What's New — card 11: song library */
+.mock-library {
+  width: 88%; display: flex; flex-direction: column; gap: 6px;
+}
+.mock-library .lib-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 7px 10px; border-radius: 6px;
+  background: #fbf3df; border: 1px solid rgba(216, 181, 80, 0.5);
+}
+.mock-library .lib-row .t { font: 500 12px "EB Garamond", serif; color: #2b2118; }
+.mock-library .lib-row .tag {
+  font: 600 8px "Cinzel", serif; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 999px; background: #ece0c2; color: #6b5a44;
+}
+.mock-library .lib-row .tag.hymn { background: rgba(138, 36, 24, 0.12); color: #8a2418; }
+.mock-library .lib-row.pick {
+  animation: newsLibPick 4s ease-in-out infinite;
+}
+@keyframes newsLibPick {
+  0%, 55%, 100% { background: #fbf3df; border-color: rgba(216, 181, 80, 0.5); transform: translateX(0); }
+  70%, 85% { background: #f4e6c0; border-color: #8a2418; transform: translateX(3px); }
+}
+
+/* What's New — card 12: reconnect / refresh reliability */
+.mock-rejoin { width: 140px; }
+.mock-rejoin .ph-head .dot { animation: newsRejoinDot 4s ease-in-out infinite; }
+.mock-rejoin .rj-status { animation: newsRejoinText 4s step-end infinite; }
+.mock-rejoin .rj-lines {
+  width: 100%; display: flex; flex-direction: column; gap: 7px; padding: 2px;
+}
+.mock-rejoin .rj-lines .ln,
+.mock-rejoin .rj-lines .hl {
+  height: 7px; border-radius: 3px; background: rgba(159, 194, 232, 0.28);
+}
+.mock-rejoin .rj-lines .ln:nth-child(2) { width: 80%; }
+.mock-rejoin .rj-lines .ln:nth-child(4) { width: 70%; }
+.mock-rejoin .rj-lines .hl {
+  width: 100%; background: #8a2418;
+  animation: newsRejoinHl 4s ease-in-out infinite;
+}
+@keyframes newsRejoinDot {
+  0%, 45% { background: #c98a32; box-shadow: 0 0 8px #c98a32; }
+  60%, 100% { background: #4caf6e; box-shadow: 0 0 8px #4caf6e; }
+}
+@keyframes newsRejoinText {
+  0% { content: ""; }
+  60% { color: #4caf6e; }
+}
+@keyframes newsRejoinHl {
+  0%, 45% { opacity: 0.2; transform: translateY(6px); }
+  62%, 100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================================
+   Reference banner — so the congregation reads "John 3:16 · KJV", not just "16".
+   Shown across the top in preach mode on the operator's own projection AND the
+   second-screen output window; hidden for slides, the blank screen, the stage.
+   ========================================================================== */
+.ps-preach-ref { display: none; }
+.ps-root.is-preaching .ps-preach-ref {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px 24px;
+  z-index: 95;
+  pointer-events: none;
+  font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-size: clamp(13px, 1.5vw, 22px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--rubric);
+  background: linear-gradient(180deg, rgba(20, 16, 10, 0.06), transparent);
+}
+.ps-root.is-output .ps-preach-ref { padding: 22px 24px; }
+.ps-root.is-output.out-theme-ink .ps-preach-ref {
+  color: #d8b550;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35), transparent);
+}
+.ps-preach-ref:empty,
+.ps-root.is-preaching.is-blank .ps-preach-ref,
+.ps-root.is-preaching.is-slide .ps-preach-ref,
+.ps-root.is-stage .ps-preach-ref { display: none; }
+
+/* ============================================================================
+   ⌂ Teaching-text anchor — pin the main passage, snap home from any detour.
+   Reuses the .ps-preach-group cluster chrome; pinned state glows rubric.
+   ========================================================================== */
+.ps-preach-group button:disabled { opacity: 0.4; cursor: default; }
+.ps-preach-group button:disabled:hover { background: transparent; color: #d8c389; }
+.ps-preach-anchor button { font-size: 16px; }
+.ps-preach-anchor button[data-preach-anchor-pin].is-on {
+  background: var(--rubric);
+  color: var(--vellum-0);
+  border-color: var(--rubric-deep);
+}
+
+/* ============================================================================
+   ✷ Emphasis — the minister's key word glows on every screen (operator console,
+   projector output, and following phones). Keyed by verse number + word index
+   so all three renderers light the same word. Words are tappable on the
+   operator only while Emphasise is armed.
+   ========================================================================== */
+.ps-eword { transition: color 0.15s ease, background 0.15s ease, text-shadow 0.15s ease; }
+.ps-root.is-emphasising .ps-pane.is-presented .ps-verse.is-preach-current .ps-eword {
+  cursor: pointer;
+  border-radius: 5px;
+}
+.ps-root.is-emphasising .ps-pane.is-presented .ps-verse.is-preach-current .ps-eword:hover {
+  background: rgba(216, 181, 80, 0.2);
+}
+.ps-eword.is-emph {
+  color: var(--rubric);
+  font-weight: 700;
+  /* A full highlighter swipe + ring so it reads clearly on the light vellum of
+     both the operator console and the default projector theme — the old 40%
+     underline was nearly invisible against dark ink text on cream. */
+  background: rgba(216, 181, 80, 0.55);
+  box-shadow: 0 0 0 3px rgba(216, 181, 80, 0.55);
+  border-radius: 4px;
+}
+/* Keep emphasis luminous on the dark projector theme. */
+.ps-root.is-output.out-theme-ink .ps-eword.is-emph {
+  color: #f7d56b;
+  text-shadow: 0 0 20px rgba(240, 198, 78, 0.55);
+  background: rgba(240, 198, 78, 0.22);
+  box-shadow: 0 0 0 3px rgba(240, 198, 78, 0.22);
+}
+/* Armed: a quiet hint at the top of the operator console. */
+.ps-root.is-emphasising:not(.is-output) .ps-preach-ref::after {
+  content: "✷ tap a word on your screen to emphasise";
+  display: block;
+  margin-left: 18px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--gold);
+  opacity: 0.85;
+}
+
+/* The verse on screen must not be a minefield of links while preaching. Tapping
+   a verse number (cross-references) or a Strong's word (lexicon) used to open a
+   drawer and break the projection — most confusingly when the operator was
+   trying to tap a word to emphasise it. While preaching, the live verse takes
+   ONLY emphasis taps; the projector/output window is display-only and inert. */
+.ps-root.is-preaching .ps-verse-body { user-select: none; }
+.ps-root.is-preaching .ps-verse-body .ps-vnum,
+.ps-root.is-preaching .ps-verse-body .ps-word { pointer-events: none; }
+.ps-root.is-preaching .ps-eword { pointer-events: auto; }
+.ps-root.is-output .ps-verse-body { pointer-events: none; }
+
+/* Multi-add hint under the queue's reference field. */
+.ps-setlist-form .ref-hint { display: none; }
+.ps-setlist-form.kind-scripture .ref-hint {
+  display: block;
+  font: 400 11px "EB Garamond", serif;
+  color: var(--sepia);
+  line-height: 1.45;
+  margin: -2px 2px 8px;
+}
+.ps-setlist-form .ref-hint .eg { color: var(--rubric); font-style: italic; }

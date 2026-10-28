@@ -1,0 +1,195 @@
+/* ==========================================================================
+   Panels — the side panels (cross-refs, commentary, word study, Rabbi,
+   search, AI find, queue), modals and the selection popover, restyled for
+   the modern reader. Right-hand panel on wide screens, bottom sheet on a
+   phone. Scoped to reading mode so preach keeps its own look.
+   ========================================================================== */
+
+/* Panel containers -------------------------------------------------------- */
+.ps-root:not(.is-presenting, .is-output) :is(.ps-drawer, .ps-ai-panel, .ps-search-panel, .ps-book-panel, .ps-setlist-panel) {
+  width: min(var(--panel-w), 100vw);
+  flex-basis: auto;
+  background: var(--ui-bg);
+  color: var(--ui-fg);
+  border-left: 1px solid var(--ui-border);
+  box-shadow: var(--ui-shadow-lg);
+}
+.ps-root:not(.is-presenting, .is-output) .ps-rabbi-host .ps-drawer { width: min(440px, 100vw); }
+
+/* Modern type inside every panel; scripture snippets get the reader face. */
+.ps-root:not(.is-presenting, .is-output) :is(.ps-drawer, .ps-ai-panel, .ps-search-panel, .ps-book-panel, .ps-setlist-panel, .ps-modal, .ps-share-panel, .ps-live-card) * {
+  font-family: var(--ui-font);
+  letter-spacing: normal;
+}
+.ps-root:not(.is-presenting, .is-output) :is(.ps-xref-text, .ps-commentary-body, .ps-lex-text, .ps-rabbi-text, .ps-rabbi-selection, .ps-backlink-snippet, .ps-ai-verse, .verse-text),
+.ps-root:not(.is-presenting, .is-output) :is(.ps-xref-text, .ps-commentary-body, .ps-rabbi-text) * {
+  font-family: var(--reader-font);
+  font-style: normal;
+}
+
+.ps-root:not(.is-presenting, .is-output) .ps-book-backdrop { background: var(--ui-scrim); }
+
+/* Panel head */
+.ps-root:not(.is-presenting, .is-output) .ps-drawer-head {
+  padding: 16px 16px 14px 20px;
+  border-bottom: 1px solid var(--ui-border);
+  gap: 2px;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-drawer-eyebrow {
+  font-size: 17px; font-weight: 600; text-transform: none; color: var(--ui-fg);
+  letter-spacing: -0.01em; min-height: 32px;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-drawer-eyebrow .close,
+.ps-root:not(.is-presenting, .is-output) .ps-share-eyebrow .close {
+  width: 32px; height: 32px; border-radius: 999px; font-size: 14px;
+  color: var(--ui-fg-muted); background: var(--ui-surface);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-drawer-eyebrow .close:hover { background: var(--ui-surface-2); color: var(--ui-fg); }
+.ps-root:not(.is-presenting, .is-output) .ps-drawer-title {
+  font-size: 20px; font-weight: 600; font-style: normal; color: var(--ui-fg); letter-spacing: -0.01em;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-drawer-sub {
+  font-size: 13px; font-style: normal; color: var(--ui-fg-muted); line-height: 1.45;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-drawer-list { padding: 4px 0 24px; }
+
+/* Lists of verses / results */
+.ps-root:not(.is-presenting, .is-output) .ps-xref {
+  padding: 14px 20px; border-bottom: 1px solid var(--ui-border);
+}
+.ps-root:not(.is-presenting, .is-output) .ps-xref:hover { background: var(--ui-surface); }
+.ps-root:not(.is-presenting, .is-output) .ps-xref-ref {
+  font-size: 14px; font-weight: 600; text-transform: none; color: var(--ui-accent);
+}
+.ps-root:not(.is-presenting, .is-output) .ps-xref-votes { font-size: 12px; font-style: normal; color: var(--ui-fg-subtle); }
+.ps-root:not(.is-presenting, .is-output) .ps-xref-text { font-size: 16px; line-height: 1.6; color: var(--ui-fg); }
+.ps-root:not(.is-presenting, .is-output) .ps-xref-load {
+  font-size: 12px; font-weight: 600; text-transform: none;
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--ui-border); background: var(--ui-bg); color: var(--ui-fg);
+}
+.ps-root:not(.is-presenting, .is-output) .ps-xref-load:hover { background: var(--ui-fg); color: var(--ui-bg); border-color: var(--ui-fg); }
+.ps-root:not(.is-presenting, .is-output) :is(.ps-ai-hint) {
+  font-style: normal; font-size: 14px; color: var(--ui-fg-muted); line-height: 1.55;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-ai-resultcount {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--ui-fg-subtle);
+}
+
+/* Inputs inside panels */
+.ps-root:not(.is-presenting, .is-output) :is(.ps-ai-input, .ps-share-link-input) {
+  background: var(--ui-surface); border: 1px solid var(--ui-border); border-radius: 10px;
+  font-size: 16px; font-style: normal; color: var(--ui-fg); padding: 11px 14px;
+}
+.ps-root:not(.is-presenting, .is-output) :is(.ps-ai-input, .ps-share-link-input):focus {
+  border-color: var(--ui-focus); box-shadow: none; background: var(--ui-bg);
+}
+.ps-root:not(.is-presenting, .is-output) :is(.ps-drawer, .ps-ai-panel, .ps-search-panel, .ps-setlist-panel, .ps-modal) :is(.btn, .ps-share-btn) {
+  min-height: 44px; border-radius: 999px; font-size: 15px; font-weight: 600; text-transform: none;
+  letter-spacing: normal; border: 1px solid var(--ui-border); background: var(--ui-bg); color: var(--ui-fg);
+}
+.ps-root:not(.is-presenting, .is-output) :is(.ps-drawer, .ps-ai-panel, .ps-search-panel, .ps-setlist-panel, .ps-modal) :is(.btn.primary, .ps-share-btn.primary) {
+  background: var(--ui-fg); border-color: var(--ui-fg); color: var(--ui-bg);
+}
+
+/* Modals ------------------------------------------------------------------ */
+.ps-root:not(.is-presenting, .is-output) .ps-modal-shroud { position: fixed; background: var(--ui-scrim); z-index: 60; }
+.ps-root:not(.is-presenting, .is-output) .ps-modal {
+  width: min(420px, calc(100vw - 32px));
+  background: var(--ui-elevated); border: 1px solid var(--ui-border);
+  border-radius: var(--radius-sheet); box-shadow: var(--ui-shadow-lg);
+  padding: 28px 24px 22px;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-modal .corner { display: none; }
+.ps-root:not(.is-presenting, .is-output) .ps-modal h2 {
+  font-size: 13px; font-weight: 600; color: var(--ui-fg-muted); text-transform: none; letter-spacing: 0;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-modal .title {
+  font-size: 22px; font-weight: 600; font-style: normal; color: var(--ui-fg); letter-spacing: -0.015em;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-modal .sub {
+  font-size: 15px; font-style: normal; color: var(--ui-fg-muted); line-height: 1.5; text-align: center;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-modal .field-label {
+  font-size: 13px; font-weight: 600; text-transform: none; color: var(--ui-fg-muted);
+}
+.ps-root:not(.is-presenting, .is-output) .ps-modal input.field {
+  background: var(--ui-surface); border: 1px solid var(--ui-border); border-radius: 10px;
+  font-size: 16px; font-style: normal; color: var(--ui-fg); height: 44px;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-modal .seg {
+  border: 0; border-radius: 10px; background: var(--ui-surface-2); padding: 3px; gap: 2px;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-modal .seg button {
+  border: 0; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--ui-fg-muted); padding: 9px 4px;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-modal .seg button.is-on {
+  background: var(--ui-seg-on); color: var(--ui-fg); box-shadow: var(--ui-shadow-sm);
+}
+.ps-root:not(.is-presenting, .is-output) .ps-link-btn {
+  font-size: 14px; font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--ui-fg-muted);
+}
+
+/* Share modal + live/remote cards */
+.ps-root:not(.is-presenting, .is-output) .ps-share-panel {
+  background: var(--ui-elevated); border: 1px solid var(--ui-border);
+  border-radius: var(--radius-sheet); box-shadow: var(--ui-shadow-lg);
+}
+.ps-root:not(.is-presenting, .is-output) .ps-share-eyebrow { font-size: 17px; font-weight: 600; text-transform: none; color: var(--ui-fg); }
+.ps-root:not(.is-presenting, .is-output) .ps-share-modes button {
+  border-radius: 999px; font-size: 13px; font-weight: 600; text-transform: none;
+  border: 1px solid var(--ui-border); background: var(--ui-bg); color: var(--ui-fg-muted);
+}
+.ps-root:not(.is-presenting, .is-output) .ps-share-modes button.is-on { background: var(--ui-fg); color: var(--ui-bg); border-color: var(--ui-fg); }
+
+/* Selection popover (text selection → highlight / Rabbi / copy / share) ----- */
+body .ps-hl-popover {
+  background: var(--ui-elevated); color: var(--ui-fg);
+  border: 1px solid var(--ui-border); border-radius: 14px;
+  box-shadow: var(--ui-shadow-lg); padding: 6px 8px; gap: 4px;
+}
+body .ps-hl-popover::after {
+  background: var(--ui-elevated); border-color: var(--ui-border);
+}
+body .ps-hl-popover .ps-hl-swatch {
+  width: 26px; height: 26px; border-radius: 999px; border: 2px solid var(--ui-elevated);
+  box-shadow: 0 0 0 1px var(--ui-border);
+}
+.ps-hl-swatch.ochre { background: var(--hl-ochre-dot, #F5C400); }
+.ps-hl-swatch.sage { background: var(--hl-sage-dot, #34C759); }
+.ps-hl-swatch.cobalt { background: var(--hl-cobalt-dot, #0A84FF); }
+.ps-hl-swatch.rose { background: var(--hl-rose-dot, #FF375F); }
+body .ps-hl-popover .divider { background: var(--ui-border); margin: 4px 4px; }
+body .ps-hl-popover .x-ref {
+  font: 600 13px var(--ui-font); letter-spacing: 0; text-transform: none;
+  color: var(--ui-fg); padding: 8px 10px; border-radius: 999px;
+}
+body .ps-hl-popover .x-ref:hover { background: var(--ui-surface-2); color: var(--ui-fg); }
+body .ps-hl-popover.is-touch-bar {
+  bottom: calc(var(--chrome-bottom, env(safe-area-inset-bottom, 0px)) + 12px);
+  border-radius: 16px; padding: 8px 10px; gap: 6px;
+}
+body .ps-hl-popover.is-touch-bar .ps-hl-swatch { width: 32px; height: 32px; border-radius: 999px; }
+body .ps-hl-popover.is-touch-bar .x-ref { font-size: 14px; letter-spacing: 0; }
+body .ps-hl-edit-status { font: 500 12px var(--ui-font); color: var(--ui-accent); }
+
+/* Highlight editor (note + colour swap + delete), appended to <body> */
+body .ps-hl-edit {
+  background: var(--ui-elevated); color: var(--ui-fg);
+  border: 1px solid var(--ui-border); border-radius: 14px;
+  box-shadow: var(--ui-shadow-lg); padding: 12px; width: min(320px, calc(100vw - 24px));
+}
+body .ps-hl-edit .ps-hl-note {
+  background: var(--ui-surface); color: var(--ui-fg); border: 1px solid var(--ui-border);
+  border-radius: 10px; font: 15px/1.5 var(--ui-font); padding: 10px 12px;
+}
+body .ps-hl-edit .ps-hl-note:focus { border-color: var(--ui-focus); }
+body .ps-hl-edit .ps-hl-note::placeholder { color: var(--ui-fg-subtle); }
+body .ps-hl-edit .ps-hl-swatch { width: 26px; height: 26px; border-radius: 999px; border: 2px solid var(--ui-elevated); box-shadow: 0 0 0 1px var(--ui-border); }
+body .ps-hl-edit .ps-hl-swatch.is-on { outline: 2px solid var(--ui-fg); outline-offset: 1px; }
+body .ps-hl-del {
+  color: var(--ui-fg-muted); border: 1px solid var(--ui-border); border-radius: 999px;
+  padding: 6px 12px; font: 500 13px var(--ui-font);
+}
+body .ps-hl-del:hover { color: var(--ui-accent); border-color: var(--ui-accent); background: var(--ui-accent-soft); }

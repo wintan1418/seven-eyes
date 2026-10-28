@@ -1,0 +1,245 @@
+/* ============================================================================
+   What's New mocks — cards 13–16 (reference banner, emphasis, anchor, batch).
+   Built to match the live-look animation of the earlier cards: each loops on a
+   short timeline that plays the feature out in miniature.
+   ========================================================================== */
+
+/* 13 — the reference banner riding the top while the verse advances 16→17→18 */
+.mock-ref { justify-content: flex-start; gap: 9px; }
+.mock-ref .ref-banner {
+  align-self: stretch; margin: -12px -12px 2px;
+  padding: 8px 7px; background: rgba(138, 36, 24, 0.14);
+  border-bottom: 1px solid rgba(216, 181, 80, 0.5);
+  font: 600 10px "Cinzel", serif; letter-spacing: 0.2em; color: #8a2418;
+  display: flex; align-items: center; justify-content: center; gap: 2px;
+}
+.mock-ref .ref-vnum { font: 600 30px "Cinzel", serif; line-height: 1; }
+.mock-ref .nums span { color: #8a2418; }
+.mock-ref .ref-lines { position: relative; width: 100%; height: 38px; }
+.mock-ref .ref-lines span {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font: 500 13px/1.35 "EB Garamond", serif; color: #2a2118; opacity: 0;
+  animation: newsNum 6.6s infinite;
+}
+.mock-ref .ref-lines span:nth-child(2) { animation-delay: 2.2s; }
+.mock-ref .ref-lines span:nth-child(3) { animation-delay: 4.4s; }
+
+/* 14 — a tap, then "peace" glows here AND on the following phone beside it */
+.mock-emph-pair { display: flex; align-items: center; gap: 12px; width: 90%; }
+.mock-emph { flex: 1; height: 132px; }
+.mock-emph p { margin: 0; font: 500 14px/1.5 "EB Garamond", serif; color: #2a2118; }
+.mock-emph .glow {
+  position: relative; font-weight: 600; border-radius: 3px; padding: 0 2px;
+  animation: newsEmphGlow 3.3s ease-in-out infinite;
+}
+.mock-emph .glow .tapring {
+  position: absolute; top: 50%; left: 50%; width: 20px; height: 20px;
+  border: 2px solid #8a2418; border-radius: 50%;
+  animation: newsEmphTap 3.3s ease-out infinite;
+}
+@keyframes newsEmphTap {
+  0%, 16% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+  24% { opacity: 0.9; transform: translate(-50%, -50%) scale(0.7); }
+  42%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(2.1); }
+}
+@keyframes newsEmphGlow {
+  0%, 30% { background: linear-gradient(transparent 58%, rgba(216, 181, 80, 0) 58%); color: #2a2118; }
+  44%, 84% { background: linear-gradient(transparent 58%, rgba(216, 181, 80, 0.65) 58%); color: #8a2418; }
+  100% { background: linear-gradient(transparent 58%, rgba(216, 181, 80, 0) 58%); color: #2a2118; }
+}
+.mock-emph-phone {
+  width: 64px; padding: 10px 8px; border-radius: 11px;
+  background: #1a1208; border: 2px solid #6b5a2c;
+  display: flex; flex-direction: column; align-items: stretch; gap: 7px;
+}
+.mock-emph-phone .dot {
+  width: 6px; height: 6px; border-radius: 50%; background: #4caf6e;
+  box-shadow: 0 0 7px #4caf6e; align-self: center;
+}
+.mock-emph-phone .ln { height: 5px; border-radius: 99px; background: rgba(255, 247, 224, 0.22); }
+.mock-emph-phone .ln:nth-child(3) { width: 80%; }
+.mock-emph-phone .ln:nth-child(6) { width: 70%; }
+.mock-emph-phone .word {
+  align-self: center; font: 600 12px "EB Garamond", serif; padding: 0 3px; border-radius: 3px;
+  animation: newsEmphGlow 3.3s ease-in-out infinite;
+}
+
+/* 15 — pinned teaching text; detours come and go, H snaps home (pinged) */
+.mock-anchor { width: 84%; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.mock-anchor .home {
+  position: relative; padding: 10px 18px; border-radius: 3px; background: #8a2418; color: #fff7e0;
+  font: 600 12px "Cinzel", serif; letter-spacing: 0.16em;
+  box-shadow: 0 0 0 3px rgba(216, 181, 80, 0.3);
+}
+.mock-anchor .home .ping {
+  position: absolute; inset: -5px; border-radius: 5px; border: 2px solid #d8b550; opacity: 0;
+  animation: newsAnchorPing 6.6s ease-out infinite;
+}
+.mock-anchor .trail { display: flex; gap: 8px; align-items: center; min-height: 26px; }
+.mock-anchor .trail span {
+  padding: 6px 10px; border-radius: 3px; opacity: 0;
+  background: rgba(255, 247, 224, 0.1); border: 1px solid rgba(163, 129, 46, 0.5);
+  color: #d8c389; font: 600 9.5px "Cinzel", serif; letter-spacing: 0.12em;
+}
+.mock-anchor .trail .d1 { animation: newsAnchorD1 6.6s infinite; }
+.mock-anchor .trail .d2 { animation: newsAnchorD2 6.6s infinite; }
+.mock-anchor .trail .key {
+  background: #d8b550; color: #1d1107; border-color: #d8b550;
+  animation: newsAnchorKey 6.6s infinite;
+}
+.mock-anchor .trail .key b { font-weight: 800; }
+@keyframes newsAnchorD1 {
+  0%, 4% { opacity: 0; transform: translateY(6px); }
+  10%, 55% { opacity: 1; transform: translateY(0); }
+  64%, 100% { opacity: 0; transform: translateY(-4px); }
+}
+@keyframes newsAnchorD2 {
+  0%, 18% { opacity: 0; transform: translateY(6px); }
+  24%, 55% { opacity: 1; transform: translateY(0); }
+  64%, 100% { opacity: 0; transform: translateY(-4px); }
+}
+@keyframes newsAnchorKey {
+  0%, 40% { opacity: 0; transform: scale(0.9); }
+  48% { opacity: 1; transform: scale(1.08); }
+  56% { opacity: 1; transform: scale(1); }
+  66%, 100% { opacity: 0; }
+}
+@keyframes newsAnchorPing {
+  0%, 54% { opacity: 0; transform: scale(1); }
+  60% { opacity: 0.95; transform: scale(1); }
+  84%, 100% { opacity: 0; transform: scale(1.18); }
+}
+
+/* 16 — type a comma list, three scriptures drop into the queue together */
+.mock-batch { width: 88%; display: flex; flex-direction: column; gap: 11px; }
+.mock-batch .batch-type {
+  display: flex; align-items: center; gap: 7px; padding: 8px 11px;
+  background: rgba(35, 20, 8, 0.92); border: 1px solid #a3812e; border-radius: 3px;
+}
+.mock-batch .batch-type .lbl {
+  font: 600 8.5px "Cinzel", serif; letter-spacing: 0.2em; color: #6fd0c0; text-transform: uppercase;
+}
+.mock-batch .batch-type .typed {
+  overflow: hidden; white-space: nowrap; display: inline-block;
+  font: 600 13px "EB Garamond", serif; color: #fff7e0; max-width: 26ch;
+  animation: newsBatchType 7s steps(26, end) infinite;
+}
+.mock-batch .batch-type .caret {
+  width: 2px; height: 15px; background: #6fd0c0; animation: newsCaret 0.8s steps(1) infinite;
+}
+@keyframes newsBatchType { 0% { max-width: 0; } 32%, 92% { max-width: 26ch; } 100% { max-width: 0; } }
+.mock-batch .batch-items { display: flex; flex-direction: column; gap: 6px; }
+.mock-batch .bi {
+  display: flex; align-items: center; gap: 8px; padding: 7px 11px;
+  background: rgba(255, 247, 224, 0.93); border-radius: 3px;
+  font: 600 13px "EB Garamond", serif; color: #2a2118; opacity: 0;
+  animation: newsBatchDrop 7s ease infinite;
+}
+.mock-batch .bi .ic { color: #8a2418; }
+@keyframes newsBatchDrop {
+  0%, 36% { opacity: 0; transform: translateX(-16px); }
+  44% { opacity: 1; transform: translateX(0); }
+  90% { opacity: 1; transform: translateX(0); }
+  96%, 100% { opacity: 0; transform: translateX(12px); }
+}
+
+/* 17 — split projection: two different passages, the active side ringed in gold */
+.mock-split { width: 92%; height: 76%; display: flex; gap: 7px; }
+.mock-split .sp-region {
+  flex: 1; border-radius: 4px; padding: 9px 8px; background: #f3e7c8;
+  box-shadow: inset 0 0 0 1px rgba(216, 181, 80, 0.5);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  text-align: center; position: relative;
+}
+.mock-split .sp-ref {
+  font: 600 8.5px "Cinzel", serif; letter-spacing: 0.14em; color: #8a2418;
+}
+.mock-split .sp-text { font: 500 12px/1.42 "EB Garamond", serif; color: #2a2118; }
+.mock-split .sp-region::after {
+  content: ""; position: absolute; inset: 0; border-radius: 4px;
+  box-shadow: inset 0 0 0 2px #d8b550; opacity: 0;
+}
+.mock-split .sp-region.a::after { animation: newsSplitRing 6s ease-in-out infinite; }
+.mock-split .sp-region.b::after { animation: newsSplitRing 6s ease-in-out infinite; animation-delay: 3s; }
+@keyframes newsSplitRing { 0%, 38% { opacity: 1; } 46%, 96% { opacity: 0; } 100% { opacity: 1; } }
+
+/* 18 — Go-Live join code projected for the whole room */
+.mock-join { background: #14110b; box-shadow: 0 0 0 3px rgba(20, 17, 11, 0.5); gap: 7px; }
+.mock-join .mj-eyebrow {
+  font: 600 8px "Cinzel", serif; letter-spacing: 0.22em; text-transform: uppercase;
+  color: rgba(216, 181, 80, 0.9);
+}
+.mock-join .mj-qr {
+  width: 74px; height: 74px; border-radius: 4px; padding: 6px; background: #fff;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+  animation: newsJoinPulse 4s ease-in-out infinite;
+}
+.mock-join .mj-qr::before {
+  content: ""; display: block; width: 100%; height: 100%;
+  /* three filled finder corners over a fine module field — reads as a QR */
+  background:
+    linear-gradient(#1a140c, #1a140c) 0 0 / 16px 16px no-repeat,
+    linear-gradient(#1a140c, #1a140c) 100% 0 / 16px 16px no-repeat,
+    linear-gradient(#1a140c, #1a140c) 0 100% / 16px 16px no-repeat,
+    repeating-conic-gradient(#1a140c 0 25%, #fff 0 50%) 0 0 / 8px 8px;
+}
+.mock-join .mj-code {
+  font: 700 19px "Cinzel", serif; letter-spacing: 0.14em; color: #f4e9c9;
+}
+.mock-join .mj-url { font: 500 10px "EB Garamond", serif; color: rgba(238, 224, 188, 0.8); }
+@keyframes newsJoinPulse {
+  0%, 100% { box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45); }
+  50% { box-shadow: 0 8px 26px rgba(216, 181, 80, 0.5); }
+}
+
+.news-card p .fine { display: inline; font-size: 0.86em; opacity: 0.72; font-style: italic; }
+
+/* 19 — Rabbi illustration mock: a framed "painting" that fades in, + the button */
+.mock-illus { display: flex; flex-direction: column; align-items: center; gap: 9px; }
+.mock-illus .mi-frame {
+  margin: 0; padding: 7px; width: 132px; background: var(--vellum-0);
+  border: 1px solid var(--gold); border-radius: 4px; box-shadow: inset 0 0 0 3px rgba(216, 181, 80, 0.14);
+}
+.mock-illus .mi-art {
+  position: relative; height: 78px; border-radius: 3px; overflow: hidden;
+  background:
+    radial-gradient(60% 70% at 50% 30%, rgba(244, 233, 201, 0.85), transparent 70%),
+    linear-gradient(160deg, #b58a3c 0%, #8a5a26 42%, #4a3418 100%);
+}
+.mock-illus .mi-glow {
+  position: absolute; inset: 0; margin: auto; width: 40px; height: 40px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 246, 214, 0.95), rgba(216, 181, 80, 0.35) 55%, transparent 72%);
+  animation: newsIllusGlow 3.6s ease-in-out infinite;
+}
+.mock-illus .mi-frame figcaption {
+  margin-top: 6px; text-align: center; font: italic 10px "EB Garamond", serif; color: var(--sepia-mute);
+}
+.mock-illus .mi-btn {
+  font: 600 8.5px "Cinzel", serif; letter-spacing: 0.12em; text-transform: uppercase; color: var(--rubric);
+  padding: 6px 11px; background: var(--vellum-0); border: 1px solid var(--gold); border-radius: 4px;
+}
+@keyframes newsIllusGlow {
+  0%, 100% { transform: scale(0.9); opacity: 0.75; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mock-illus .mi-glow { animation: none !important; }
+}
+
+/* keep the new cards legible when motion is turned off */
+@media (prefers-reduced-motion: reduce) {
+  .mock-split .sp-region.a::after { opacity: 1 !important; }
+  .mock-split .sp-region.b::after { opacity: 0 !important; }
+  .mock-ref .nums span:not(:first-child),
+  .mock-ref .ref-lines span:not(:first-child) { opacity: 0 !important; }
+  .mock-ref .nums span:first-child,
+  .mock-ref .ref-lines span:first-child { opacity: 1 !important; }
+  .mock-emph .glow, .mock-emph-phone .word {
+    background: linear-gradient(transparent 58%, rgba(216, 181, 80, 0.65) 58%) !important; color: #8a2418 !important;
+  }
+  .mock-emph .tapring { display: none; }
+  .mock-anchor .trail span { opacity: 1 !important; transform: none !important; }
+  .mock-batch .batch-type .typed { max-width: none !important; }
+  .mock-batch .bi { opacity: 1 !important; transform: none !important; }
+  .mock-join .mj-qr { animation: none !important; }
+}

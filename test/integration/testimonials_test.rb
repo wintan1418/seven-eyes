@@ -32,16 +32,16 @@ class TestimonialsTest < ActionDispatch::IntegrationTest
       name: "Hidden", status: "pending"
     )
     get root_path
-    assert_select ".ps-scroll blockquote", text: /revival week/
-    assert_select ".ps-scroll", count: 1
-    assert_select ".ps-scroll .scroll-avatar", text: "P" # circular initial medallion
+    assert_select ".ld-voice blockquote", text: /revival week/
+    assert_select ".ld-voice", count: 1
+    assert_select ".ld-voice .ld-voice-avatar", text: "P" # initial avatar
   end
 
   test "the welcome shows no marginalia section when nothing is publishable" do
     get root_path
-    assert_select ".ps-marginalia", count: 0
+    assert_select ".ld-voices", count: 0
     # ...but still invites the first testimonial.
-    assert_select ".ps-marginalia-invite a[href=?]", "/testimonials/new"
+    assert_select ".ld-voices-invite a[href=?]", "/testimonials/new"
   end
 
   # Regression: after a visitor submits, testimonials_tag re-renders their
