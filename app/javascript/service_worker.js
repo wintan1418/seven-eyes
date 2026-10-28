@@ -21,6 +21,7 @@
 //     a small "you're offline" page.
 // Redirected, non-200 or opaque responses are never cached as-is.
 import { getMeta, setMeta } from "./lib/offline/db"
+import { downloadedBibles } from "./lib/offline/store"
 import { renderOfflinePane, offlineReferenceCheck } from "./lib/offline/offline_pane"
 import { flushOutbox, queuePaneVisit } from "./lib/offline/outbox"
 
@@ -37,7 +38,8 @@ const STUDY_PAGE = /^\/studies\/\d+$/
 const OWN_PAGES = [ /^\/$/, /^\/read$/, /^\/more$/, /^\/offline$/, /^\/reading_plans$/, /^\/reading_plans\/\d+$/ ]
 const PANE_PATH = /^\/studies\/(\d+)\/panes\/(\d+)$/
 const FONT_HOSTS = [ "fonts.googleapis.com", "fonts.gstatic.com" ]
-const PANE_TIMEOUT_MS = 8000
+const PANE_TIMEOUT_MS = 8000 // only when a downloaded Bible can answer instead
+const MAX_SAVED_PAGES = 60
 
 self.addEventListener("install", () => {
   self.skipWaiting()
@@ -154,7 +156,10 @@ async function savePage(response) {
   const key = pageKey(new URL(response.url))
   if (!key) return // redirected somewhere we don't keep (sign-in, a guest's expired study…)
   const cache = await caches.open(PAGES_CACHE)
+  await cache.delete(key) // re-adding keeps the newest pages last
   await cache.put(key, await plainCopy(response))
+  const keys = await cache.keys()
+  for (const old of keys.slice(0, Math.max(0, keys.length - MAX_SAVED_PAGES))) await cache.delete(old)
   const path = new URL(key).pathname
   if (STUDY_PAGE.test(path) && !new URL(key).search) await setMeta("lastStudyUrl", path).catch(() => {})
 }
@@ -217,8 +222,11 @@ function fetchWithTimeout(request, ms) {
 async function paneRequest(event, url) {
   const request = event.request
   const copy = request.clone()
+  // A slow connection still gets its answer from the server — unless a
+  // downloaded Bible can answer after a while instead.
+  const canAnswer = (await downloadedBibles()).length > 0
   try {
-    return await fetchWithTimeout(request, PANE_TIMEOUT_MS)
+    return await (canAnswer ? fetchWithTimeout(request, PANE_TIMEOUT_MS) : fetch(request))
   } catch (e) {
     const [ , studyId, paneId ] = url.pathname.match(PANE_PATH)
     let form
