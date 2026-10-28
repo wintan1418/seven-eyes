@@ -1,0 +1,44 @@
+/* ==========================================================================
+   Inside the iOS / Android apps (Hotwire Native) — body.hotwire-native.
+   The native tab bar (Bible · Notes · Plans · More) and native top bar (title,
+   search, theme, settings) replace the web's duplicate chrome. The passage and
+   version chips, the verse action bar and every sheet stay. Preach mode, the
+   projector and the stage screen are untouched: presenting already hides all
+   [data-chrome], and nothing here applies to .is-presenting / .is-output.
+   ========================================================================== */
+
+/* No web tab bar — and no room reserved for it under the fixed bars. */
+body.hotwire-native .ui-tabbar { display: none !important; }
+html:has(body.hotwire-native) { --tabbar-h: 0px; }
+html:has(body.hotwire-native .rd-app:not(.is-presenting, .is-output)) { --chrome-bottom: 0px; }
+html:has(body.hotwire-native .rd-app:not(.is-presenting, .is-output)) .ps-toast { bottom: 16px; }
+
+/* The native top bar has the theme button. */
+body.hotwire-native .ui-theme-float { display: none !important; }
+
+/* Pages without a passage: the native title replaces the whole web app bar. */
+body.hotwire-native .ui-appbar:not(:has(.ui-chip)) { display: none; }
+
+/* The reader: keep only the passage + version chips, as a slim row under the
+   native bar. ☰, brand, search, theme, settings and More move to native
+   buttons (they click these hidden ones via data-native-action). */
+body.hotwire-native .ps-root:not(.is-presenting, .is-output) .ui-appbar {
+  grid-template-columns: minmax(0, 1fr);
+  height: 48px;
+  padding-top: 0;
+}
+body.hotwire-native .ps-root:not(.is-presenting, .is-output) .ui-appbar-start,
+body.hotwire-native .ps-root:not(.is-presenting, .is-output) .ui-appbar-end { display: none; }
+
+/* The More page (the apps' More tab; also at /more on the web). */
+.ui-more-main {
+  max-width: 560px; margin: 0 auto;
+  padding: 8px max(16px, env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  font-family: var(--ui-font);
+}
+.ui-more-who {
+  display: flex; align-items: center; gap: 10px; margin: 0 4px 8px;
+  font: 500 14px var(--ui-font); color: var(--ui-fg-muted); overflow-wrap: anywhere;
+}
+.ui-more-who svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.ui-more-main .ui-theme-row { margin-top: 6px; }

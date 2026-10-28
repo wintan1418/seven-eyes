@@ -6,7 +6,7 @@
 <header class="ui-appbar" data-chrome>
   <div class="ui-appbar-start">
     <button type="button" class="ui-iconbtn" data-action="sheets#open" data-sheets-id-param="menu"
-            aria-label="Menu" title="Menu" data-shot="menu"><%= icon(:menu) %></button>
+            data-native-action="menu" aria-label="Menu" title="Menu" data-shot="menu"><%= icon(:menu) %></button>
     <%= link_to root_path, class: "ui-brand", "aria-label": "BiblioRata home" do %>
       <span class="ui-brand-mark" aria-hidden="true"><%= icon(:book) %></span>
       <span class="ui-brand-name">BiblioRata</span>
@@ -31,11 +31,11 @@
     </div>
 
     <div class="ui-appbar-end">
-      <button type="button" class="ui-iconbtn" data-action="search#open" aria-label="Search the Bible"
+      <button type="button" class="ui-iconbtn" data-action="search#open" data-native-action="search" aria-label="Search the Bible"
               title="Search the Bible" data-tour="search"><%= icon(:search) %></button>
       <%= render "shared/theme_toggle" %>
       <button type="button" class="ui-iconbtn is-wide-only" data-action="sheets#open" data-sheets-id-param="settings"
-              aria-label="Reading settings" title="Text size, theme and reading options" data-shot="settings"
+              data-native-action="settings" aria-label="Reading settings" title="Text size, theme and reading options" data-shot="settings"
               data-tour="view"><%= icon(:type) %></button>
       <% if study.pane_count > 1 %>
         <%= button_to study_path(study), method: :patch, params: { study: { pane_count: 1 } },
@@ -51,7 +51,7 @@
         <%= icon(:presentation) %><span>Preach</span>
       </button>
       <button type="button" class="ui-iconbtn is-narrow-more" data-action="sheets#open" data-sheets-id-param="more"
-              aria-label="More" title="More" data-shot="more" data-tour="more"><%= icon(:more) %></button>
+              data-native-action="tools" aria-label="More" title="More" data-shot="more" data-tour="more"><%= icon(:more) %></button>
     </div>
   <% else %>
     <div class="ui-appbar-center">

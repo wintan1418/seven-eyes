@@ -33,4 +33,10 @@ module ApplicationHelper
       tag.meta(name: "theme-color", content: THEME_COLORS.fetch(theme))
     end
   end
+
+  # Page title inside the iOS/Android apps, where it is shown in the native top
+  # bar: just the page's own name, without the site-name suffix.
+  def native_page_title(title)
+    title.to_s.split(/\s[·—|-]\s/).first.presence || "BiblioRata"
+  end
 end
