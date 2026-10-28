@@ -94,9 +94,15 @@ export async function requestPersistence() {
 
 // ---- highlights -------------------------------------------------------------
 
+// verse_id is always stored as a number: the page reads ids from data
+// attributes (strings), the bundles carry numbers, and IndexedDB keys of
+// different types never match.
+const normalize = (h) => ({ ...h, verse_id: Number(h.verse_id) })
+
 export async function highlightsFor(verseIds) {
   const out = []
-  for (const id of verseIds) {
+  for (const raw of verseIds) {
+    const id = Number(raw)
     try { out.push(...await getAllByIndex("highlights", "verse_id", id)) } catch { /* none */ }
   }
   return out
@@ -106,11 +112,11 @@ export async function replaceHighlights(list) {
   await transaction([ "highlights" ], (tx) => {
     const store = tx.objectStore("highlights")
     store.clear()
-    list.forEach((h) => store.put(h))
+    list.forEach((h) => store.put(normalize(h)))
   })
 }
 
-export const putHighlight = (h) => put("highlights", h).catch(() => {})
+export const putHighlight = (h) => put("highlights", normalize(h)).catch(() => {})
 export const deleteHighlight = (id) => del("highlights", id).catch(() => {})
 export const getHighlight = (id) => get("highlights", id).catch(() => undefined)
 

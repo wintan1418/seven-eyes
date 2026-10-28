@@ -71,17 +71,20 @@ export default class extends Controller {
   async renderSync(pending) {
     if (!this.hasSyncTarget) return
     const count = pending ?? await pendingCount()
-    clearTimeout(this._syncTimer)
     if (count > 0) {
+      clearTimeout(this._syncTimer)
+      this._syncTimer = null
       this.syncTarget.textContent = `${count} change${count === 1 ? "" : "s"} waiting to sync`
       this.syncTarget.hidden = false
       this._hadPending = true
     } else if (this._hadPending) {
+      // Everything queued has reached the server: say so, briefly.
       this._hadPending = false
       this.syncTarget.textContent = "All changes saved"
       this.syncTarget.hidden = false
-      this._syncTimer = setTimeout(() => { this.syncTarget.hidden = true }, 4000)
-    } else {
+      clearTimeout(this._syncTimer)
+      this._syncTimer = setTimeout(() => { this.syncTarget.hidden = true; this._syncTimer = null }, 5000)
+    } else if (!this._syncTimer) {
       this.syncTarget.hidden = true
     }
   }

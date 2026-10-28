@@ -1,4 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
+import { queueNote, pendingNote, flushOutbox, subscribe } from "../lib/offline/outbox"
+import { owner, signedIn } from "../lib/offline/page"
 
 // Debounced background auto-save for a pane's notes. Submits the notes form via
 // fetch (not Turbo) so the pane frame is never re-rendered while typing.
@@ -13,11 +15,17 @@ import { Controller } from "@hotwired/stimulus"
 //   • pagehide / tab hidden / disconnect flush immediately with a keepalive
 //     request, so the last ~700ms of typing survives closing the tab.
 //   • A window `notes:flush` event (Cmd/Ctrl+S) saves now and reports back.
+//   • No connection: a signed-in reader's text goes to the outbox (IndexedDB)
+//     with the notes revision it was built on, and is sent when the network
+//     is back. If the notes changed elsewhere meanwhile, the server keeps
+//     both (NotesSync) and this textarea shows the merged text. Guests get
+//     the usual "create an account to save" prompt.
 const DEBOUNCE_MS = 700
 const KEEPALIVE_LIMIT = 60000 // browsers cap keepalive bodies at 64KB
 
 export default class extends Controller {
   static targets = ["status"]
+  static values = { revision: Number }
 
   connect() {
     this.timeout = null
@@ -36,6 +44,36 @@ export default class extends Controller {
     window.addEventListener("pagehide", this._onPageHide)
     document.addEventListener("visibilitychange", this._onVisibility)
     window.addEventListener("notes:flush", this._onFlush)
+    this._unsubscribe = subscribe((m) => this.synced(m))
+    this.restorePending()
+  }
+
+  get path() {
+    try { return new URL(this.element.action, window.location.href).pathname } catch { return this.element.getAttribute("action") }
+  }
+
+  // A note typed offline and not yet sent wins over the copy the page came with.
+  async restorePending() {
+    if (!this.textarea || !signedIn()) return
+    const op = await pendingNote(this.path, owner()).catch(() => null)
+    if (!op) return
+    const text = op.body["pane[notes]"]
+    if (!this.dirty && text !== this.textarea.value) this.textarea.value = text
+    this.saved = text
+    this.setStatus(navigator.onLine ? "Syncing…" : "Saved on this device — will sync when you're online")
+  }
+
+  // The outbox delivered this pane's note.
+  synced(message) {
+    if (message?.type !== "notes-synced" || message.url !== this.path) return
+    if (message.revision != null) this.revisionValue = message.revision
+    if (message.conflict && message.notes != null && !this.dirty) {
+      this.textarea.value = message.notes
+      this.saved = message.notes
+      this.setStatus("Synced — your offline edit was added below the newer notes")
+    } else if (!this.dirty) {
+      this.setStatus("Saved just now")
+    }
   }
 
   disconnect() {
@@ -43,6 +81,7 @@ export default class extends Controller {
     window.removeEventListener("pagehide", this._onPageHide)
     document.removeEventListener("visibilitychange", this._onVisibility)
     window.removeEventListener("notes:flush", this._onFlush)
+    this._unsubscribe?.()
     this.flushNow()
   }
 
@@ -76,6 +115,7 @@ export default class extends Controller {
     if (!this.dirty || this.guest) return
     const value = this.textarea.value
     this.saved = value
+    if (!navigator.onLine) { this.queue(value).catch(() => {}); return }
     this.request(value, { keepalive: true }).catch(() => {})
   }
 
@@ -85,14 +125,16 @@ export default class extends Controller {
     if (value === this.saved && !explicit) return "clean"
     if (value === this.saved && !this.guest) { this.setStatus("Saved just now"); return "clean" }
 
+    // An offline edit is still waiting: this text joins it, so the two are
+    // sent as one (and checked against the server copy) — never out of order.
+    if (await pendingNote(this.path, owner()).catch(() => null)) return this.queue(value, { flush: true })
+
     this.setStatus("Saving…")
     let res
     try {
       res = await this.request(value)
     } catch {
-      this.setStatus("Save failed — will retry")
-      this.retryLater()
-      return "failed"
+      return this.offline(value)
     }
     if (res.status === 401) {
       this.guest = true
@@ -106,8 +148,40 @@ export default class extends Controller {
       return "failed"
     }
     this.saved = value
+    const revision = parseInt(res.headers.get("X-Notes-Revision"), 10)
+    if (!Number.isNaN(revision)) this.revisionValue = revision
     this.setStatus(this.dirty ? "Editing…" : "Saved just now")
     return "saved"
+  }
+
+  // The request never reached the server.
+  async offline(value) {
+    if (!signedIn()) {
+      this.guest = true
+      this.setStatus("Sign in to save")
+      window.dispatchEvent(new CustomEvent("auth:required"))
+      return "unauthorized"
+    }
+    return this.queue(value)
+  }
+
+  async queue(value, { flush = false } = {}) {
+    if (!signedIn()) return this.offline(value)
+    try {
+      await queueNote(this.path, value, { baseRevision: this.revisionValue, owner: owner() })
+    } catch {
+      this.setStatus("Save failed — will retry")
+      this.retryLater()
+      return "failed"
+    }
+    this.saved = value
+    if (flush && navigator.onLine) {
+      this.setStatus("Syncing…")
+      flushOutbox().catch(() => {})
+    } else {
+      this.setStatus("Saved on this device — will sync when you're online")
+    }
+    return "queued"
   }
 
   retryLater() {

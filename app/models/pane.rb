@@ -4,9 +4,17 @@ class Pane < ApplicationRecord
 
   validates :position, presence: true
 
+  # Every change to the notes gets a new revision, so a note written offline
+  # can tell whether the server copy moved on meanwhile (see NotesSync).
+  before_save :bump_notes_revision, if: :will_save_change_to_notes?
+
   DEFAULT_TRANSLATION = "KJV".freeze
 
   def frame_id = "pane_#{id}"
+
+  def bump_notes_revision
+    self.notes_revision = notes_revision.to_i + 1
+  end
 
   def empty? = reference.blank?
 

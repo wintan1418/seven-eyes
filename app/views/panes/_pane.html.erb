@@ -150,7 +150,7 @@
     </nav>
 
     <%= form_with url: study_pane_path(study, pane), method: :patch, class: "ps-notes-form",
-          data: { controller: "notes", turbo: false, pane_target: "notes" } do %>
+          data: { controller: "notes", turbo: false, pane_target: "notes", notes_revision_value: pane.notes_revision } do %>
       <div class="ps-notes">
         <div class="ps-notes-head">
           <span>Notes <span class="saving" data-notes-target="status">&mdash; <%= pane.notes.present? ? "Saved" : "auto-saves as you write" %></span></span>

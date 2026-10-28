@@ -17,9 +17,21 @@ class PanesController < ApplicationController
     # (the debounced autosave, a keepalive flush, or a full pane form).
     return head(:unauthorized) if writes_notes? && !authenticated?
 
-    @pane.update(pane_params)
+    sync = nil
+    if writes_notes?
+      sync = NotesSync.call(pane: @pane, text: pane_params[:notes],
+                            base_revision: params[:base_revision], edited_at: params[:edited_at])
+      @pane.update(pane_params.except(:notes))
+      response.headers["X-Notes-Revision"] = sync.revision.to_s
+    else
+      @pane.update(pane_params)
+    end
 
-    if params[:autosave]
+    if sync && params[:autosave] && params.key?(:base_revision)
+      # A replayed offline edit: say what the notes are now and whether the
+      # offline text had to be added below a newer copy.
+      render json: { notes: sync.notes, revision: sync.revision, conflict: sync.conflict? }
+    elsif params[:autosave]
       head :no_content
     else
       render partial: "panes/pane", locals: { pane: @pane }
