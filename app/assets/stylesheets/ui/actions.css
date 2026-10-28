@@ -88,6 +88,11 @@ body .ps-hl-popover.is-touch-bar { bottom: calc(var(--chrome-bottom, env(safe-ar
   .ps-root.rd-app:not(.is-presenting, .is-output):has(:is(.ps-xref-host, .ps-rabbi-host).is-open) .ui-comparebar {
     margin-right: var(--panel-w);
   }
+  /* Keep the verse action bar centred over the text, clear of the panel. */
+  .ps-root.rd-app:not(.is-presenting, .is-output):has(:is(.ps-xref-host, .ps-rabbi-host).is-open) .ui-actionbar {
+    left: calc((100vw - var(--panel-w)) / 2);
+    width: min(560px, calc(100vw - var(--panel-w) - 32px));
+  }
 }
 
 /* Phone: every side panel becomes a bottom sheet. */

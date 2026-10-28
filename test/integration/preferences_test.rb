@@ -18,15 +18,16 @@ class PreferencesTest < ActionDispatch::IntegrationTest
     get root_path
     assert_select "body[data-theme=vellum]"
 
-    cookies[:ps_theme] = "candlelight"
+    cookies[:ps_reader_theme] = "candlelight"
     get root_path
     assert_select "body[data-theme=candlelight]"
 
-    cookies[:ps_theme] = "dark" # first-cut redesign name
+    cookies[:ps_reader_theme] = ""
+    cookies[:ps_theme] = "light" # left over from the first cut of the redesign
     get root_path
-    assert_select "body[data-theme=candlelight]"
+    assert_select "body[data-theme=vellum]"
 
-    cookies[:ps_theme] = "<script>"
+    cookies[:ps_reader_theme] = "<script>"
     get root_path
     assert_select "body[data-theme=vellum]"
   end

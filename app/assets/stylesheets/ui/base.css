@@ -17,10 +17,12 @@ html, body {
 
 :focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
 
-/* Reading mode: retire the vellum fibre texture and remap the legacy palette
-   onto the theme tokens, so every older component inside the workspace
-   (drawers, modals, results lists) follows vellum / candlelight / paper. */
-.ps-root:not(.is-presenting, .is-output) {
+/* The older components (drawers, plan cards, guide, account pages…) use the
+   legacy parchment variables. Point them at the theme tokens on every page,
+   so they follow vellum / candlelight / paper everywhere — and restore the
+   original parchment values for the projector / stage screens, which keep
+   their own look. */
+body {
   --vellum-0: var(--ui-bg);
   --vellum-1: var(--ui-surface);
   --vellum-2: var(--ui-surface-2);
@@ -34,6 +36,25 @@ html, body {
   --rubric-deep: var(--ui-accent-hover);
   --gold: var(--ui-border-strong);
   --gold-deep: var(--ui-border-strong);
+  --legacy-card: var(--ui-elevated);
+}
+.ps-root.is-presenting, .ps-root.is-output {
+  --vellum-0: #f4ead2;
+  --vellum-1: #efe3c5;
+  --vellum-2: #e7d6ad;
+  --vellum-edge: #c9b88e;
+  --vellum-shadow: #8a7444;
+  --ink: #231408;
+  --ink-soft: #3a2616;
+  --sepia: #5a3b1f;
+  --sepia-mute: #8a6d4a;
+  --rubric: #8a2418;
+  --rubric-deep: #5e1a12;
+  --gold: #a3812e;
+  --gold-deep: #6f5318;
+  --legacy-card: #fff7e0;
+}
+.ps-root:not(.is-presenting, .is-output) {
   background: var(--ui-bg);
   color: var(--ui-fg);
   font-family: var(--ui-font);

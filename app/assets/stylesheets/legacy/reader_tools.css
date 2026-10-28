@@ -37,7 +37,7 @@
 .ps-backlinks {
   padding: 12px 20px 14px;
   border-bottom: 1px dashed rgba(138, 116, 68, 0.4);
-  background: rgba(255, 247, 224, 0.35);
+  background: color-mix(in srgb, var(--legacy-card) 35%, transparent);
 }
 .ps-backlinks-head {
   font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
@@ -53,11 +53,11 @@
   padding: 8px 10px;
   margin-bottom: 6px;
   border-left: 2px solid var(--gold);
-  background: rgba(255, 247, 224, 0.55);
+  background: color-mix(in srgb, var(--legacy-card) 55%, transparent);
   border-radius: 0 2px 2px 0;
   text-decoration: none;
 }
-.ps-backlink:hover { background: rgba(255, 247, 224, 0.9); }
+.ps-backlink:hover { background: color-mix(in srgb, var(--legacy-card) 90%, transparent); }
 .ps-backlink-meta {
   font-family: "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
   font-weight: 600;
@@ -132,7 +132,7 @@ body[data-theme="candlelight"] .ps-diff-only {
 .ps-shared-ref {
   flex: 1;
   padding: 6px 10px;
-  background: rgba(255, 247, 224, 0.5);
+  background: color-mix(in srgb, var(--legacy-card) 50%, transparent);
   border: 1px solid rgba(138, 116, 68, 0.25);
   border-radius: 2px;
   font: 14px "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;

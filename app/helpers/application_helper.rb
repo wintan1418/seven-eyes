@@ -3,17 +3,21 @@ module ApplicationHelper
   DEFAULT_THEME = "vellum".freeze
   # Browser chrome colour per theme (the PWA status bar / mobile address bar).
   THEME_COLORS = { "vellum" => "#F4EAD2", "candlelight" => "#17120C", "paper" => "#FFFFFF" }.freeze
-  # Names used by the first cut of the redesign (never released) → current names.
-  THEME_ALIASES = { "light" => "paper", "dark" => "candlelight", "sepia" => "vellum" }.freeze
+  # The reader's theme lives in the `ps_reader_theme` cookie. The first cut of
+  # the redesign stored light/auto in the older `ps_theme` cookie for everyone,
+  # which kept people on a white or dark page instead of the cream default — so
+  # that cookie is ignored, except for the original UI's explicit dark choice.
+  THEME_COOKIE = :ps_reader_theme
+  LEGACY_COOKIE = :ps_theme
 
-  # The reader's theme, from the ps_theme cookie the theme controller writes —
-  # rendered server-side on <body data-theme> so a Turbo visit never flashes
+  # Rendered server-side on <body data-theme> so a Turbo visit never flashes
   # the wrong colours. Vellum (cream) is the default; "auto" is Vellum by day
   # and Candlelight when the device is in dark mode.
   def reader_theme
-    value = cookies[:ps_theme].to_s
-    value = THEME_ALIASES.fetch(value, value)
-    READER_THEMES.include?(value) ? value : DEFAULT_THEME
+    value = cookies[THEME_COOKIE].to_s
+    return value if READER_THEMES.include?(value)
+    return "candlelight" if cookies[LEGACY_COOKIE].to_s == "candlelight"
+    DEFAULT_THEME
   end
 
   # <meta name="theme-color"> for the current theme; for "auto" one per colour

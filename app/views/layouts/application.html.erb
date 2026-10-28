@@ -31,9 +31,13 @@
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
 
-  <%# Theme comes from the ps_theme cookie (written by the theme controller) so
+  <%# Theme comes from the ps_reader_theme cookie (written by the theme controller) so
       dark-mode readers never see a light flash on a Turbo visit. %>
   <body data-controller="guide theme sheets" data-theme="<%= reader_theme %>">
+    <%# Pages without the app bar (guide, sign-in, plans, legal…) still get the
+        light/dark switch; hidden wherever an app bar already has one, and on
+        the projector / stage screens. %>
+    <%= render "shared/theme_toggle", extra_class: "ui-theme-float" %>
     <div data-controller="offline">
       <div class="ps-offline-badge" data-offline-target="badge" hidden>&#9679; Offline</div>
     </div>

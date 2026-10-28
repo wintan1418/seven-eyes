@@ -126,7 +126,7 @@ body > .ps-root { height: 100vh; }
   font: 600 10.5px "Cinzel", "Segoe UI", sans-serif;
   letter-spacing: 0.12em;
   color: var(--ink);
-  background: #fff7e0;
+  background: var(--legacy-card);
   text-transform: uppercase;
   cursor: pointer;
   min-width: 72px;
@@ -134,7 +134,7 @@ body > .ps-root { height: 100vh; }
 }
 .ps-trans-select:focus { outline: none; border-color: var(--rubric); }
 /* keep the options popup legible across browsers (esp. Windows Chrome) */
-.ps-trans-select option { background: #fff7e0; color: #231408; font-weight: 600; }
+.ps-trans-select option { background: var(--ui-elevated); color: var(--ui-fg); font-weight: 600; }
 .ps-pane-tool:disabled { opacity: 0.4; cursor: default; }
 
 /* turbo-frame is the replaceable pane unit; make it lay out like the section */
@@ -164,7 +164,7 @@ turbo-frame.ps-pane[busy] .ps-verses { filter: blur(0.3px); }
 .ps-ai-drawer.is-open .ps-ai-panel { transform: translateX(0); }
 .ps-ai-panel form { padding: 14px 18px 6px; margin: 0; }
 .ps-ai-input {
-  width: 100%; padding: 10px 12px; background: #fff7e0;
+  width: 100%; padding: 10px 12px; background: var(--legacy-card);
   border: 1px solid rgba(138, 116, 68, 0.4); border-radius: 2px;
   font: 15px "EB Garamond", serif; color: var(--ink); resize: vertical; outline: none;
 }
@@ -261,52 +261,53 @@ a.ps-vnum:hover { color: var(--rubric-deep); text-decoration: underline; }
   width: min(960px, 92%);
   margin: 36px auto 60px;
   padding: 22px 24px 24px;
-  background: var(--vellum-0);
-  border: 1px solid var(--vellum-edge);
-  box-shadow: inset 0 0 0 1px rgba(163, 129, 46, 0.3),
-              0 8px 24px -14px rgba(50, 30, 10, 0.35);
-  border-radius: 2px;
+  background: var(--ui-elevated);
+  color: var(--ui-fg);
+  border: 1px solid var(--ui-border);
+  box-shadow: var(--ui-shadow-sm);
+  border-radius: 14px;
   text-align: left;
 }
 .ps-guide-head {
   display: flex; justify-content: space-between; align-items: flex-start;
-  gap: 16px; margin-bottom: 14px;
+  gap: 16px; margin-bottom: 16px;
 }
 .ps-guide-eyebrow {
-  font: 600 9.5px "Cinzel", serif; letter-spacing: 0.22em;
-  text-transform: uppercase; color: var(--sepia-mute);
+  font: 600 11px var(--heading-font, "Cinzel", serif); letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--ui-fg-subtle);
 }
 .ps-guide-title {
-  font-family: "EB Garamond", serif; font-size: 26px; color: var(--ink);
+  font-family: var(--reader-font); font-size: 28px; color: var(--ui-fg);
   margin: 2px 0 4px;
 }
 .ps-guide-sub {
-  font: italic 14px "EB Garamond", serif; color: var(--sepia); margin: 0;
+  font: italic 15px var(--reader-font); color: var(--ui-fg-muted); margin: 0;
 }
 .ps-guide-grid {
-  display: grid; gap: 10px;
+  display: grid; gap: 12px;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 .ps-guide-card {
-  display: flex; flex-direction: column; gap: 4px;
-  padding: 12px 14px;
-  background: rgba(255, 247, 224, 0.5);
-  border: 1px solid rgba(163, 129, 46, 0.3);
-  border-radius: 2px;
-  color: var(--ink);
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 14px 16px;
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+  color: var(--ui-fg);
   text-decoration: none;
   min-height: 92px;
 }
-a.ps-guide-card:hover { background: #fff7e0; border-color: var(--gold); }
+a.ps-guide-card { transition: border-color 0.15s ease, background-color 0.15s ease; }
+a.ps-guide-card:hover { background: var(--ui-surface-2); border-color: var(--ui-accent); }
 .ps-guide-card .orn {
-  font-size: 18px; color: var(--gold); line-height: 1;
+  font-size: 18px; color: var(--ui-accent); line-height: 1;
 }
 .ps-guide-card .t {
-  font: 600 13px "Cinzel", serif; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--rubric);
+  font: 600 13px var(--heading-font, "Cinzel", serif); letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ui-accent);
 }
 .ps-guide-card .d {
-  font: 14px/1.45 "EB Garamond", serif; color: var(--ink-soft); font-style: italic;
+  font: 15px/1.5 var(--reader-font); color: var(--ui-fg-muted);
 }
 /* the small "Open Plans ›" label inside a guide card is a flat inline marker —
    override the global .cta chunky-button styles back to a plain label. */
@@ -314,24 +315,24 @@ a.ps-guide-card:hover { background: #fff7e0; border-color: var(--gold); }
   display: inline; padding: 0; background: transparent;
   border: 0; box-shadow: none;
   margin-top: 6px;
-  font: 600 10.5px "Cinzel", serif; letter-spacing: 0.16em;
-  text-transform: uppercase; color: var(--rubric);
+  font: 600 12px var(--ui-font); letter-spacing: 0.04em;
+  color: var(--ui-accent);
 }
 .ps-guide-card .kbd {
-  font: 600 10px "Cinzel", serif; padding: 1px 4px;
-  border: 1px solid rgba(163, 129, 46, 0.4); border-radius: 2px;
-  color: var(--sepia); background: var(--vellum-0);
+  font: 600 11px var(--ui-font); padding: 1px 5px;
+  border: 1px solid var(--ui-border-strong); border-radius: 4px;
+  color: var(--ui-fg); background: var(--ui-elevated);
 }
 
-/* headline card spans the full row, larger */
+/* headline card spans the full row, larger, with a soft accent wash */
 .ps-guide-card-lg {
   grid-column: 1 / -1;
-  background: linear-gradient(180deg, #f5e7c4 0%, #ead7a6 100%);
-  border-color: var(--gold);
+  background: linear-gradient(180deg, var(--ui-accent-soft), transparent 140%), var(--ui-surface);
+  border-color: var(--ui-border-strong);
   min-height: 0; padding: 18px 22px;
 }
 .ps-guide-card-lg .t { font-size: 15px; }
-.ps-guide-card-lg .d { font-size: 16px; color: var(--ink); }
+.ps-guide-card-lg .d { font-size: 17px; color: var(--ui-fg); }
 .ps-guide-card-lg .orn { font-size: 22px; }
 
 /* ---- "Today's reading" panel on the Scriptorium welcome ---- */
@@ -346,7 +347,7 @@ a.ps-guide-card:hover { background: #fff7e0; border-color: var(--gold); }
   border-radius: 2px;
   text-align: left;
 }
-.ps-today-panel--soft { background: rgba(255, 247, 224, 0.45); }
+.ps-today-panel--soft { background: color-mix(in srgb, var(--legacy-card) 45%, transparent); }
 .ps-today-label {
   font: 600 9.5px "Cinzel", serif; letter-spacing: 0.2em;
   text-transform: uppercase; color: var(--sepia-mute);
@@ -392,7 +393,7 @@ a.ps-guide-card:hover { background: #fff7e0; border-color: var(--gold); }
   border-radius: 2px; text-decoration: none; color: var(--ink);
   box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset;
 }
-.ps-plan-card:hover { background: #fff7e0; border-color: var(--gold); }
+.ps-plan-card:hover { background: var(--legacy-card); border-color: var(--gold); }
 .ps-plan-card-name { font: italic 18px/1.2 "EB Garamond", serif; }
 .ps-plan-card-meta {
   font: 600 10.5px "Cinzel", serif; color: var(--sepia-mute);
@@ -450,7 +451,7 @@ a.ps-guide-card:hover { background: #fff7e0; border-color: var(--gold); }
   background: var(--rubric); color: var(--vellum-0); border-color: var(--rubric-deep);
 }
 .ps-plan-refs {
-  width: 100%; padding: 8px 10px; background: rgba(255, 247, 224, 0.6);
+  width: 100%; padding: 8px 10px; background: color-mix(in srgb, var(--legacy-card) 60%, transparent);
   border: 1px solid rgba(138, 116, 68, 0.3); border-radius: 2px;
   font: italic 15px "EB Garamond", serif; color: var(--ink); outline: none;
 }
@@ -477,7 +478,7 @@ a.ps-guide-card:hover { background: #fff7e0; border-color: var(--gold); }
   position: relative;
   aspect-ratio: 1; min-height: 28px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(255, 247, 224, 0.5);
+  background: color-mix(in srgb, var(--legacy-card) 50%, transparent);
   border: 1px solid rgba(163, 129, 46, 0.25);
   border-radius: 2px;
   font: 12px "EB Garamond", serif; color: var(--sepia);
@@ -535,7 +536,7 @@ a.ps-guide-card:hover { background: #fff7e0; border-color: var(--gold); }
 }
 .ps-hl-edit .ps-hl-note {
   width: 100%;
-  background: rgba(255, 247, 224, 0.08);
+  background: color-mix(in srgb, var(--legacy-card) 8%, transparent);
   color: var(--vellum-0);
   border: 1px solid rgba(163, 129, 46, 0.45);
   border-radius: 2px;
@@ -711,17 +712,16 @@ a.ps-guide-card:hover { background: #fff7e0; border-color: var(--gold); }
    Guide-panel footer link + first-run "?" hint dot
    ==================================================================== */
 .ps-guide-foot {
-  margin-top: 16px; padding-top: 14px;
-  border-top: 1px dashed rgba(163, 129, 46, 0.4);
+  margin-top: 18px; padding-top: 14px;
+  border-top: 1px solid var(--ui-border);
   display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
 }
 .ps-guide-foot-link {
-  font: 600 10.5px "Cinzel", serif; letter-spacing: 0.16em;
-  text-transform: uppercase; color: var(--rubric); text-decoration: none;
+  font: 600 13px var(--ui-font); color: var(--ui-accent); text-decoration: none;
 }
-.ps-guide-foot-link:hover { color: var(--rubric-deep); }
+.ps-guide-foot-link:hover { color: var(--ui-accent-hover); text-decoration: underline; }
 .ps-guide-foot-note {
-  font: italic 13px "EB Garamond", serif; color: var(--sepia);
+  font: italic 14px var(--reader-font); color: var(--ui-fg-muted);
 }
 
 /* the "?" hint dot in each pane head — calm, with a tooltip on hover/focus */
@@ -897,7 +897,7 @@ a.ps-guide-card:hover { background: #fff7e0; border-color: var(--gold); }
 .ps-tut-panes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px !important; }
 .ps-tut-pane {
   border: 1px solid rgba(163, 129, 46, 0.3); border-radius: 2px;
-  padding: 8px 10px; background: rgba(255, 247, 224, 0.5);
+  padding: 8px 10px; background: color-mix(in srgb, var(--legacy-card) 50%, transparent);
 }
 .ps-tut-pane-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; }
 .ps-tut-pane-head .num { color: var(--gold-deep); font: 600 12px "Cinzel", serif; }
@@ -962,7 +962,7 @@ a.ps-guide-card:hover { background: #fff7e0; border-color: var(--gold); }
 .ps-tut-find .results span {
   font: 600 10px "Cinzel", serif; color: var(--sepia);
   border: 1px solid rgba(163, 129, 46, 0.4); border-radius: 2px; padding: 3px 8px;
-  background: rgba(255, 247, 224, 0.6);
+  background: color-mix(in srgb, var(--legacy-card) 60%, transparent);
 }
 
 .ps-tut-lex .word { font: 18px "EB Garamond", serif; color: var(--ink); }
