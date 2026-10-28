@@ -33,6 +33,7 @@
     <div class="ui-appbar-end">
       <button type="button" class="ui-iconbtn" data-action="search#open" aria-label="Search the Bible"
               title="Search the Bible" data-tour="search"><%= icon(:search) %></button>
+      <%= render "shared/theme_toggle" %>
       <button type="button" class="ui-iconbtn is-wide-only" data-action="sheets#open" data-sheets-id-param="settings"
               aria-label="Reading settings" title="Text size, theme and reading options" data-shot="settings"
               data-tour="view"><%= icon(:type) %></button>

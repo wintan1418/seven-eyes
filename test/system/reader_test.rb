@@ -61,6 +61,17 @@ class ReaderTest < ApplicationSystemTestCase
     assert_selector ".ps-workspace .ps-pane", count: 1
   end
 
+  test "the sun/moon button flips between cream and candlelight, and it sticks" do
+    open_reader("John 3")
+    assert_selector "body[data-theme='vellum']"
+    find(".ui-appbar .ui-theme-toggle").click
+    assert_selector "body[data-theme='candlelight']"
+    visit current_path
+    assert_selector "body[data-theme='candlelight']"
+    find(".ui-appbar .ui-theme-toggle").click
+    assert_selector "body[data-theme='vellum']"
+  end
+
   private
 
   def open_reader(reference)
