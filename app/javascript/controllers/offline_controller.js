@@ -38,10 +38,12 @@ export default class extends Controller {
     this._update = () => this.render()
     this._onSubmit = (e) => this._maybeSignOut(e)
     this._onClick = (e) => this._guard(e)
+    this._onToast = (e) => this.toast(e.detail?.message)
     window.addEventListener("online", this._update)
     window.addEventListener("offline", this._update)
     document.addEventListener("submit", this._onSubmit, true)
     document.addEventListener("click", this._onClick, true)
+    window.addEventListener("offline:toast", this._onToast)
     this._unsubscribe = subscribe((m) => this._onMessage(m))
     this.render()
     this.renderSync()
@@ -52,6 +54,7 @@ export default class extends Controller {
     window.removeEventListener("offline", this._update)
     document.removeEventListener("submit", this._onSubmit, true)
     document.removeEventListener("click", this._onClick, true)
+    window.removeEventListener("offline:toast", this._onToast)
     this._unsubscribe?.()
   }
 

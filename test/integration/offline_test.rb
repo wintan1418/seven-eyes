@@ -89,3 +89,21 @@ class OfflineTest < ActionDispatch::IntegrationTest
     assert_not_includes owner, users(:one).id.to_s
   end
 end
+
+class OfflinePlansPageTest < ActionDispatch::IntegrationTest
+  test "plan days carry their date, and the coming week its passages, for offline use" do
+    user = users(:one)
+    sign_in_as user
+    study = user.studies.create!(name: "Plan", pane_count: 1)
+    plan = user.reading_plans.create!(name: "Gospel", start_date: Date.current, study:)
+    plan.plan_days.create!(day_number: 1, refs: "Genesis 1, Genesis 2, Genesis 3, Psalm 1, Matt 1, Mark 1")
+    plan.plan_days.create!(day_number: 30, refs: "John 1")
+
+    get reading_plan_path(plan)
+    assert_select "[data-controller~='plan-offline'][data-plan-offline-study-url-value='#{study_path(study)}']"
+    assert_select "turbo-frame[data-date='#{Date.current.iso8601}'][data-pane-refs='Genesis 1-3|Psalm 1|Matt 1|Mark 1']"
+    far = css_select("turbo-frame[data-date='#{(Date.current + 29).iso8601}']").first
+    assert_nil far["data-pane-refs"], "only the coming week's passages are listed"
+    assert_select "a[data-action~='plan-offline#begin']"
+  end
+end

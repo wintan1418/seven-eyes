@@ -121,8 +121,28 @@ subscribe((message) => {
     .forEach((el) => { el.dataset.highlightId = message.id })
 })
 
+// /studies/:id?refs=Genesis 1|Psalm 1 — a reading plan opened offline: load
+// the day's passages into the panes (rendered from the downloaded Bibles).
+function applyPlanRefs() {
+  const url = new URL(window.location.href)
+  const refs = (url.searchParams.get("refs") || "").split("|").map((r) => r.trim()).filter(Boolean)
+  if (!refs.length || !/^\/studies\/\d+$/.test(url.pathname)) return
+  url.searchParams.delete("refs")
+  history.replaceState(history.state, "", url.pathname + url.search)
+  const forms = [ ...document.querySelectorAll(".ps-workspace .ps-pane form.rd-pane-form") ]
+  refs.slice(0, forms.length).forEach((ref, i) => {
+    const input = forms[i].querySelector("input[name='pane[reference]']")
+    if (!input) return
+    input.value = ref
+    forms[i].requestSubmit()
+  })
+  const rest = refs.slice(forms.length)
+  if (rest.length) window.dispatchEvent(new CustomEvent("offline:toast", { detail: { message: `Also today: ${rest.join(", ")}` } }))
+}
+
 let started = false
 function start() {
+  applyPlanRefs()
   syncSession().then(refreshIfStale).then(syncNow).catch(() => {})
   if (started) return
   started = true

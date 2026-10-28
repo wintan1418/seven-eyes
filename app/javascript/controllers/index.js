@@ -64,6 +64,9 @@ application.register("pane", PaneController)
 import PassagePickerController from "./passage_picker_controller"
 application.register("passage-picker", PassagePickerController)
 
+import PlanOfflineController from "./plan_offline_controller"
+application.register("plan-offline", PlanOfflineController)
+
 import PresentationController from "./presentation_controller"
 application.register("presentation", PresentationController)
 
