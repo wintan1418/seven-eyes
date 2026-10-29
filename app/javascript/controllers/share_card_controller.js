@@ -331,6 +331,16 @@ export default class extends Controller {
 
   // ---------------- actions ----------------
 
+  // The BiblioRata Android app (1.0.3+) shares and copies through its own
+  // bridge: a WebView can't hand files to other apps or save downloads.
+  get native() { return window.BiblioRataNative }
+
+  shareNatively(data) {
+    if (!this.native) return false
+    this.native.shareImage(this.canvasTarget.toDataURL("image/png"), data?.url || "")
+    return true
+  }
+
   toBlob() {
     return new Promise((resolve) => this.canvasTarget.toBlob(resolve, "image/png"))
   }
@@ -344,6 +354,7 @@ export default class extends Controller {
 
   async download() {
     if (!this.current()) return
+    if (this.shareNatively(this.current())) return // the share sheet has "Save" too
     const blob = await this.toBlob()
     if (!blob) return
     const a = document.createElement("a")
@@ -360,6 +371,7 @@ export default class extends Controller {
   async share() {
     const data = this.current()
     if (!data) return
+    if (this.shareNatively(data)) return
     const blob = await this.toBlob()
     if (blob && navigator.canShare && navigator.share) {
       const file = new File([blob], this.filename(), { type: "image/png" })
@@ -389,6 +401,7 @@ export default class extends Controller {
 
   async copyImage() {
     if (!this.current()) return
+    if (this.shareNatively(this.current())) return // phones can't put pictures on the clipboard from a WebView
     try {
       // Safari only allows clipboard.write inside the click, so hand it a
       // Promise of the blob rather than awaiting the canvas first.
@@ -407,6 +420,7 @@ export default class extends Controller {
   }
 
   async copyLink() {
+    if (this.native) { this.native.copy(this.linkTarget.value); this.flash(this.copyLinkTarget, "Copied!"); return }
     try {
       await navigator.clipboard.writeText(this.linkTarget.value)
       this.flash(this.copyLinkTarget, "Copied!")
@@ -417,6 +431,7 @@ export default class extends Controller {
     const data = this.mode === "prayer" ? this.prayer : this.card
     const body = this.mode === "prayer" ? data?.prayer : this.quote(data?.text)
     const text = `${body}\n\n${data?.reference || ""}\n${data?.url || ""}`.trim()
+    if (this.native) { this.native.copy(text); this.flash(this.copyTextTarget, "Copied!"); return }
     try {
       await navigator.clipboard.writeText(text)
       this.flash(this.copyTextTarget, "Copied!")

@@ -48,7 +48,7 @@ const PREACH_CLASSES = [
 ]
 
 export default class extends Controller {
-  static targets = ["jumpInput"]
+  static targets = ["jumpInput", "jumpHint"]
   static values = { quickFindUrl: String }
 
   initialize() {
@@ -470,7 +470,34 @@ export default class extends Controller {
     const wrapper = this.jumpInputTarget.closest(".ps-preach-jump")
     if (wrapper) wrapper.hidden = false
     this.jumpInputTarget.value = ""
+    this._lastCheck = null
+    this._setJumpHint("Type a reference, a verse number, or describe a passage")
     this.jumpInputTarget.focus()
+  }
+
+  // Live preview while typing, so the operator sees exactly what Enter will put
+  // on the screen before pressing it. The parse is cached and reused by Enter.
+  jumpPreview() {
+    const raw = this.jumpInputTarget.value.trim()
+    clearTimeout(this._previewTimer)
+    if (!raw) return this._setJumpHint("Type a reference, a verse number, or describe a passage")
+    if (/^\d+$/.test(raw)) return this._setJumpHint(`↵ Verse ${raw} in this chapter`, "ok")
+    this._previewTimer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/reference_check?q=${encodeURIComponent(raw)}`, { headers: { Accept: "application/json" } })
+        const parsed = await res.json()
+        if (this.jumpInputTarget.value.trim() !== raw) return // typed on
+        this._lastCheck = { raw, parsed }
+        if (parsed.ok) this._setJumpHint(`↵ ${parsed.label || parsed.chapter_reference}`, "ok")
+        else this._setJumpHint(this.hasQuickFindUrlValue ? `↵ Search the Scriptures for “${raw}”` : "Not a reference yet: try “jn 3:16”", "ai")
+      } catch { /* offline: Enter still tries */ }
+    }, 120)
+  }
+
+  _setJumpHint(text, tone = "") {
+    if (!this.hasJumpHintTarget) return
+    this.jumpHintTarget.textContent = text
+    this.jumpHintTarget.dataset.tone = tone
   }
 
   // The Go box takes a bare verse number ("28" → jump within this chapter),
@@ -498,12 +525,14 @@ export default class extends Controller {
   // move up through the normal broadcast. Text the parser can't read falls
   // through to the AI quick search ("the prodigal son" → references).
   async _chase(raw, { silent = false, remember = true } = {}) {
-    let parsed
-    try {
-      const res = await fetch(`/reference_check?q=${encodeURIComponent(raw)}`,
-                              { headers: { Accept: "application/json" } })
-      parsed = await res.json()
-    } catch { return }
+    let parsed = this._lastCheck?.raw === raw ? this._lastCheck.parsed : null // already checked while typing
+    if (!parsed) {
+      try {
+        const res = await fetch(`/reference_check?q=${encodeURIComponent(raw)}`,
+                                { headers: { Accept: "application/json" } })
+        parsed = await res.json()
+      } catch { return }
+    }
     if (!parsed.ok) {
       if (silent) return
       // Not a reference — treat it as a question for the AI study assistant
@@ -1953,7 +1982,7 @@ export default class extends Controller {
       if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") { e.preventDefault(); this.next() }
       else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); this.prev() }
       else if (e.key === "Home") { e.preventDefault(); this._transition(() => this._setCurrentIndex(0)) }
-      else if (e.key === "g" || e.key === "G") { e.preventDefault(); this.openJump() }
+      else if (e.key === "g" || e.key === "G" || e.key === "/") { e.preventDefault(); this.openJump() }
       else if (e.key === "p" || e.key === "P") { e.preventDefault(); this.toggleParallel() }
       else if (e.key === "b" || e.key === "B" || e.key === "Backspace") { e.preventDefault(); this.goBack() }
       else if (e.key === "h" || e.key === "H") { e.preventDefault(); this.goAnchor() }
