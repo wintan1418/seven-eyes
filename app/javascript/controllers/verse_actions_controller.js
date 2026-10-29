@@ -65,7 +65,8 @@ export default class extends Controller {
       : verses.map(v => `${v.verse} ${v.text}`).join(" ")
     const payload = `${body}\n— ${this.selection.label}${this.selection.translation ? ` ${this.selection.translation}` : ""}`
     try {
-      await navigator.clipboard.writeText(payload)
+      if (window.BiblioRataNative) window.BiblioRataNative.copy(payload) // the app's clipboard (WebView often refuses)
+      else await navigator.clipboard.writeText(payload)
       this.toast("Copied")
     } catch {
       this.toast("Couldn't copy — select the words and copy instead")

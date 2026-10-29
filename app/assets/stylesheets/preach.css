@@ -626,3 +626,16 @@
    display or while presenting/preaching. */
 .ps-root.is-presenting [data-chrome],
 .ps-root.is-output [data-chrome] { display: none !important; }
+
+/* Go box: what Enter will do, shown live under the field. */
+.ps-root.is-preaching .ps-preach-jump:not([hidden]) { flex-wrap: wrap; justify-content: center; max-width: min(92vw, 560px); }
+.ps-preach-jump-hint {
+  flex-basis: 100%;
+  text-align: center;
+  font: 500 15px "EB Garamond", serif;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: rgba(216, 195, 137, 0.75);
+}
+.ps-preach-jump-hint[data-tone="ok"] { color: var(--vellum-0); }
+.ps-preach-jump-hint[data-tone="ai"] { color: var(--gold); font-style: italic; }

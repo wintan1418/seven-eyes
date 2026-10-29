@@ -170,9 +170,30 @@ export default class extends Controller {
 
   // ---- On-device speech synthesis (foreground-only fallback) ----
 
+  // In the Android app (1.0.3+), WebView has no speechSynthesis, so the app
+  // reads aloud with the phone's own voice through window.BiblioRataNative.
   speakFallback() {
     const text = this.collectText()
-    if (!("speechSynthesis" in window) || !text) return this.reset()
+    if (!text) return this.reset()
+
+    const native = window.BiblioRataNative
+    if (native?.speak) {
+      this._onNativeSpeech ??= (e) => {
+        if (active !== this) return
+        if (e.detail === "end") this.reset()
+        if (e.detail === "error") { this.reset(); this.notify("This phone has no reading voice. Install one in Settings → Text-to-speech.") }
+      }
+      window.addEventListener("native:speech", this._onNativeSpeech)
+      native.speak(text)
+      this.setState("playing")
+      return
+    }
+
+    if (!("speechSynthesis" in window)) {
+      this.reset()
+      this.notify("Audio isn't available for this chapter right now. Please try again later.")
+      return
+    }
 
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(text)
@@ -182,6 +203,20 @@ export default class extends Controller {
     utterance.onerror = this._onEnd
     window.speechSynthesis.speak(utterance)
     this.setState("playing")
+  }
+
+  // A short message, so the button never just does nothing.
+  notify(text) {
+    let toast = document.querySelector(".ps-toast.js-flash")
+    if (!toast) {
+      toast = document.createElement("div")
+      toast.className = "ps-toast js-flash"
+      document.body.appendChild(toast)
+    }
+    toast.textContent = text
+    toast.style.opacity = "1"
+    clearTimeout(this._toastTimer)
+    this._toastTimer = setTimeout(() => { toast.style.opacity = "0" }, 3200)
   }
 
   collectText() {
@@ -196,6 +231,7 @@ export default class extends Controller {
   stop() {
     // Only silence what this pane started — another pane may be narrating.
     if (active === this && "speechSynthesis" in window) window.speechSynthesis.cancel()
+    if (active === this) window.BiblioRataNative?.stopSpeaking?.()
     this.reset()
   }
 
@@ -204,6 +240,7 @@ export default class extends Controller {
     this.releaseAudio()
     if (active === this) this.clearMediaSession()
     this._armed = null
+    if (this._onNativeSpeech) window.removeEventListener("native:speech", this._onNativeSpeech)
     this.setState("idle")
     if (active === this) active = null
   }

@@ -60,7 +60,7 @@
               title="The preach queue — scriptures, songs and thoughts lined up for the service">&#9835; Queue</button>
       <button type="button" class="ps-preach-tool"
               data-action="presentation#openJump"
-              title="Go to a verse, chase any reference the preacher calls (rom 8:28), or describe a thought for AI search (G)">&#10148; Go</button>
+              title="Go to a verse, chase any reference the preacher calls (rom 8:28), or describe a thought for AI search (G or /)">&#10148; Go to verse</button>
       <button type="button" class="ps-preach-tool"
               data-preach-parallel
               data-action="presentation#toggleParallel"
@@ -154,9 +154,11 @@
 
   <div class="ps-preach-jump" hidden>
     <span>Go to</span>
-    <input type="text" inputmode="search" placeholder="28 &middot; or rom 8:28"
+    <input type="text" inputmode="search" placeholder="jn 3 16 &middot; 28 &middot; or a phrase"
            autocomplete="off" spellcheck="false" autocapitalize="none"
            data-presentation-target="jumpInput"
-           data-action="keydown.enter->presentation#jumpSubmit keydown.esc->presentation#cancelJump">
+           data-action="input->presentation#jumpPreview keydown.enter->presentation#jumpSubmit keydown.esc->presentation#cancelJump">
     <button type="button" data-action="presentation#jumpSubmit">Go</button>
+    <%# What Enter will do, live as you type: "→ John 3:16", "Verse 28", or an AI search. %>
+    <span class="ps-preach-jump-hint" data-presentation-target="jumpHint" aria-live="polite">Type a reference, a verse number, or describe a passage</span>
   </div>

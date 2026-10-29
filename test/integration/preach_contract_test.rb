@@ -64,6 +64,9 @@ class PreachContractTest < ActionDispatch::IntegrationTest
     assert_select ".ps-preach-bar"
     assert_select ".ps-preach-enter[data-action~='presentation#enterPreach']"
     assert_select ".ps-preach-jump input[data-presentation-target='jumpInput']"
+    # Live preview of what Enter will do (QA: search must be swift during a service).
+    assert_select ".ps-preach-jump input[data-presentation-target='jumpInput'][data-action*='presentation#jumpPreview']"
+    assert_select ".ps-preach-jump [data-presentation-target='jumpHint']"
     assert_select "[data-action~='setlist#toggle']", minimum: 1
     assert_select "[data-live-target='button'][data-action~='live#toggle']"
     assert_select "[data-live-target='chip'] [data-live-target='count']"
