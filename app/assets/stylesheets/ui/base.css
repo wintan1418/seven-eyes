@@ -172,5 +172,11 @@ body {
   font: 500 14px/1.2 var(--ui-font); letter-spacing: 0; text-transform: none;
   padding: 11px 18px; box-shadow: var(--ui-shadow-lg);
   bottom: calc(24px + env(safe-area-inset-bottom));
+  /* Centred with left:50%, so without a width it shrank to half the screen
+     and longer messages wrapped into a tall blob. Size to the text instead. */
+  width: max-content; max-width: min(calc(100vw - 32px), 440px);
+  justify-content: center; text-align: center; line-height: 1.35;
 }
+/* Two lines read better in a rounded card than a squashed pill. */
+.ps-toast.is-long { border-radius: 16px; }
 .ps-toast .check { color: inherit; opacity: 0.7; }

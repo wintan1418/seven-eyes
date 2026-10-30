@@ -191,7 +191,7 @@ export default class extends Controller {
 
     if (!("speechSynthesis" in window)) {
       this.reset()
-      this.notify("Audio isn't available for this chapter right now. Please try again later.")
+      this.notify("Listening isn't available right now. Please try again later.")
       return
     }
 
@@ -214,6 +214,7 @@ export default class extends Controller {
       document.body.appendChild(toast)
     }
     toast.textContent = text
+    toast.classList.toggle("is-long", text.length > 40)
     toast.style.opacity = "1"
     clearTimeout(this._toastTimer)
     this._toastTimer = setTimeout(() => { toast.style.opacity = "0" }, 3200)
