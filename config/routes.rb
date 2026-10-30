@@ -45,6 +45,7 @@ Rails.application.routes.draw do
 
   # Audio Bible: cached per-chapter narration (JSON status + playable URL).
   get "/audio/chapter", to: "audio_chapters#show", as: :audio_chapter
+  get "/audio/sample", to: "audio_chapters#sample", as: :audio_sample
 
   resources :highlights, only: %i[ create update destroy ]
 

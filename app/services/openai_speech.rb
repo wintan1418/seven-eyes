@@ -17,10 +17,11 @@ class OpenaiSpeech
 
   def self.configured? = new("").send(:api_key).present?
   def self.voice = ENV["OPENAI_TTS_VOICE"].presence || DEFAULT_VOICE
-  def self.synthesize(text) = new(text).synthesize
+  def self.synthesize(text, voice: nil) = new(text, voice:).synthesize
 
-  def initialize(text)
+  def initialize(text, voice: nil)
     @text = text.to_s
+    @voice = voice.presence || self.class.voice
   end
 
   def synthesize
@@ -31,7 +32,7 @@ class OpenaiSpeech
     uri = URI(ENV["OPENAI_TTS_ENDPOINT"].presence || DEFAULT_URL)
     res = post(uri, {
       model: ENV["OPENAI_TTS_MODEL"].presence || DEFAULT_MODEL,
-      voice: self.class.voice,
+      voice: @voice,
       input: @text[0, MAX_INPUT],
       response_format: "mp3",
       speed: 0.95

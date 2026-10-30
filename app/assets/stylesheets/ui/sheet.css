@@ -180,3 +180,35 @@
 }
 .ui-toggle[aria-pressed="true"] .sw, .ui-toggle.is-active .sw { background: var(--ui-accent); }
 .ui-toggle[aria-pressed="true"] .sw::after, .ui-toggle.is-active .sw::after { transform: translateX(18px); }
+
+/* ----- Listening voice chooser ----- */
+.ui-voice-list { display: flex; flex-direction: column; gap: 6px; }
+.ui-voice {
+  display: flex; align-items: center; gap: 6px;
+  border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-elevated);
+  padding: 4px 6px 4px 4px;
+}
+.ui-voice.is-on { border-color: var(--ui-accent); background: var(--ui-accent-soft); }
+.ui-voice-pick {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px;
+  padding: 8px; background: none; border: 0; text-align: left; color: var(--ui-fg); cursor: pointer;
+}
+.ui-voice-dot {
+  flex: none; width: 18px; height: 18px; border-radius: 999px;
+  border: 2px solid var(--ui-border-strong); display: grid; place-items: center;
+}
+.ui-voice.is-on .ui-voice-dot { border-color: var(--ui-accent); }
+.ui-voice.is-on .ui-voice-dot::after {
+  content: ""; width: 8px; height: 8px; border-radius: 999px; background: var(--ui-accent);
+}
+.ui-voice-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ui-voice-name { font: 600 14px/1.25 var(--ui-font); }
+.ui-voice-detail { font: 400 12.5px/1.3 var(--ui-font); color: var(--ui-fg-subtle); }
+.ui-voice-tag {
+  display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 999px;
+  font: 700 10px/1.4 var(--ui-font); letter-spacing: 0.04em;
+  background: var(--ui-accent-soft); color: var(--ui-accent); vertical-align: 1px;
+}
+.ui-voice-play { flex: none; font-size: 12px; }
+.ui-voice-play.is-playing { color: var(--ui-accent); }
+.ui-voice-note { margin: 8px 2px 0; font: 400 12px/1.4 var(--ui-font); color: var(--ui-fg-subtle); }

@@ -22,6 +22,15 @@ class ChapterNarrationTest < ActiveSupport::TestCase
     @record = ChapterAudio.create!(translation: @kjv, book: @john, chapter: 3, voice: "onyx")
   end
 
+  # Temporarily replace a class method (minitest 6 has no built-in stubs).
+  def swap(klass, name, impl)
+    original = klass.method(name)
+    klass.define_singleton_method(name, impl)
+    yield
+  ensure
+    klass.define_singleton_method(name, original)
+  end
+
   def add_verse(num, text)
     Verse.create!(translation: @kjv, book: @john, chapter: 3, verse_number: num, text: text)
   end
@@ -72,5 +81,17 @@ class ChapterNarrationTest < ActiveSupport::TestCase
     refute FakeNarration.new(@record).call
     assert @record.reload.failed?
     assert_equal "no_verses", @record.error
+  end
+
+  test "a Google voice is read by Google; filenames name non-default voices" do
+    record = ChapterAudio.create!(translation: @kjv, book: @john, chapter: 4, voice: "google:en-GB-Neural2-B")
+    Verse.create!(translation: @kjv, book: @john, chapter: 4, verse_number: 1, text: "When therefore the Lord knew")
+    calls = []
+    fake = ->(text, voice:, language:) { calls << [ voice, language ]; OpenaiSpeech::Result.new(ok: true, audio: "G".b) }
+    swap(GoogleSpeech, :synthesize, fake) do
+      assert ChapterNarration.call(record)
+    end
+    assert_equal [ [ "en-GB-Neural2-B", "en-GB" ] ], calls
+    assert_equal "kjv-john-4-en-gb-neural2-b.mp3", record.reload.audio.filename.to_s
   end
 end

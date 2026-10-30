@@ -20,6 +20,13 @@ function audioElement() {
   return sharedAudio
 }
 
+// The listener's chosen voice ("auto" = best available; "device" = the
+// phone's own voice). Picked in Reading settings; see voice_choice_controller.
+export const VOICE_KEY = "bibliorata:voice"
+export function chosenVoice() {
+  try { return localStorage.getItem(VOICE_KEY) || "auto" } catch { return "auto" }
+}
+
 const POLL_MS = 4000
 const MAX_POLLS = 45 // ~3 minutes — long chapters take a while to narrate
 
@@ -60,7 +67,7 @@ export default class extends Controller {
     active = this
 
     const params = this.chapterParams()
-    if (!params) return this.speakFallback()
+    if (!params || chosenVoice() === "device") return this.speakFallback()
 
     this.setState("loading")
     try {
@@ -81,7 +88,7 @@ export default class extends Controller {
   }
 
   async fetchInfo({ osis, chapter, translation }) {
-    const url = `/audio/chapter?osis=${encodeURIComponent(osis)}&chapter=${encodeURIComponent(chapter)}&translation=${encodeURIComponent(translation)}`
+    const url = `/audio/chapter?osis=${encodeURIComponent(osis)}&chapter=${encodeURIComponent(chapter)}&translation=${encodeURIComponent(translation)}&voice=${encodeURIComponent(chosenVoice())}`
     const res = await fetch(url, { headers: { Accept: "application/json" } })
     return res.json()
   }
@@ -147,7 +154,7 @@ export default class extends Controller {
     if (!("mediaSession" in navigator)) return
     navigator.mediaSession.metadata = new MediaMetadata({
       title: info.title,
-      artist: info.translation_name || info.translation,
+      artist: [info.translation_name || info.translation, info.voice_name].filter(Boolean).join(" · "),
       album: "BiblioRata Audio Bible"
     })
     navigator.mediaSession.playbackState = "playing"

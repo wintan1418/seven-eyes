@@ -3,11 +3,22 @@ require "test_helper"
 class AudioChaptersTest < ActionDispatch::IntegrationTest
   include ActiveJob::TestHelper
 
+  # These tests cover the OpenAI path; the human KJV recording and Google are
+  # switched off here (voice-order tests are in audio_voices_test.rb).
+  ENV_KEYS = %w[KJV_RECORDING GOOGLE_TTS_API_KEY].freeze
+
   setup do
+    @saved_env = ENV_KEYS.index_with { |k| ENV[k] }
+    ENV["KJV_RECORDING"] = "off"
+    ENV.delete("GOOGLE_TTS_API_KEY")
     @kjv = Translation.create!(code: "KJV", name: "King James Version")
     @john = Book.create!(osis_code: "John", name: "John", testament: :new, position: 43, chapter_count: 21)
     Verse.create!(translation: @kjv, book: @john, chapter: 3, verse_number: 16,
                   text: "For God so loved the world")
+  end
+
+  teardown do
+    @saved_env.each { |k, v| v.nil? ? ENV.delete(k) : ENV[k] = v }
   end
 
   # OpenaiSpeech.configured? reads only these ENV keys in test (credentials are
