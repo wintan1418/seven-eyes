@@ -1,0 +1,28 @@
+<%# Listening voice for the Audio Bible. Saved on this device (localStorage) by
+    voice_choice_controller; reader_controller sends it with each chapter. %>
+<div class="ui-setting ui-voice-setting" data-controller="voice-choice"
+     data-voice-choice-sample-url-value="<%= audio_sample_path %>">
+  <div class="ui-label">Listening voice</div>
+  <div class="ui-voice-list" role="radiogroup" aria-label="Listening voice">
+    <% options = [ [ AudioVoices::AUTO, "Auto", "Best available: a real reader for the KJV, then natural AI voices", nil ] ] +
+                 AudioVoices.selectable.map { |v| [ v.id, v.name, v.detail, v ] } %>
+    <% options.each do |id, name, detail, voice| %>
+      <div class="ui-voice" data-voice-choice-target="option" data-voice-id="<%= id %>">
+        <button type="button" class="ui-voice-pick" role="radio" aria-checked="false"
+                data-action="voice-choice#choose" data-voice-choice-id-param="<%= id %>">
+          <span class="ui-voice-dot" aria-hidden="true"></span>
+          <span class="ui-voice-text">
+            <span class="ui-voice-name"><%= name %><% if voice&.provider == :recording %> <span class="ui-voice-tag">KJV</span><% end %></span>
+            <span class="ui-voice-detail"><%= detail %></span>
+          </span>
+        </button>
+        <% if voice %>
+          <button type="button" class="ui-iconbtn is-sm ui-voice-play" title="Hear <%= name %>"
+                  aria-label="Hear <%= name %>" data-voice-choice-target="play"
+                  data-action="voice-choice#preview" data-voice-choice-id-param="<%= id %>">&#9658;</button>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+  <p class="ui-voice-note">The human reader covers the King James Version. Other translations use the next voice.</p>
+</div>

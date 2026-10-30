@@ -82,6 +82,9 @@ application.register("rabbi", RabbiController)
 import ReaderController from "./reader_controller"
 application.register("reader", ReaderController)
 
+import VoiceChoiceController from "./voice_choice_controller"
+application.register("voice-choice", VoiceChoiceController)
+
 import ReaderHeaderController from "./reader_header_controller"
 application.register("reader-header", ReaderHeaderController)
 

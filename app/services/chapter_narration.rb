@@ -1,7 +1,8 @@
 # Narrate one chapter into a cached mp3 on a ChapterAudio record: build the
 # spoken text (a short heading, then every verse — no verse numbers, they read
 # terribly aloud), chunk it under the TTS input cap at verse boundaries,
-# synthesize each chunk, and attach the concatenated audio. Sequentially
+# synthesize each chunk with the record's voice (Google or OpenAI), and attach
+# the concatenated audio. Sequentially
 # encoded mp3 segments concatenate cleanly, so no transcoding is needed.
 class ChapterNarration
   MAX_CHUNK = 3800 # comfortably under OpenaiSpeech::MAX_INPUT
@@ -32,7 +33,13 @@ class ChapterNarration
   private
 
   # Seam for tests (mirrors FakeRabbi / FakeChapterPrayer).
-  def synthesize(text) = OpenaiSpeech.synthesize(text)
+  def synthesize(text)
+    voice = AudioVoices.find(@record.voice) || AudioVoices.default_openai
+    case voice.provider
+    when :google then GoogleSpeech.synthesize(text, voice: voice.provider_voice, language: voice.language)
+    else OpenaiSpeech.synthesize(text, voice: voice.provider_voice)
+    end
+  end
 
   def heading
     "#{@record.book.name}, chapter #{@record.chapter}. #{@record.translation.name}."
@@ -53,7 +60,9 @@ class ChapterNarration
   end
 
   def filename
-    "#{@record.translation.code}-#{@record.book.osis_code}-#{@record.chapter}.mp3".downcase
+    voice = @record.voice.to_s.split(":").last.to_s.parameterize
+    suffix = voice.empty? || voice == "onyx" ? "" : "-#{voice}"
+    "#{@record.translation.code}-#{@record.book.osis_code}-#{@record.chapter}#{suffix}.mp3".downcase
   end
 
   def fail!(error)
