@@ -337,3 +337,54 @@
   margin: -2px 2px 8px;
 }
 .ps-setlist-form .ref-hint .eg { color: var(--rubric); font-style: italic; }
+
+/* ============================================================================
+   Projection readability — church screens seen from the back of the room.
+   Applies to the second-screen output window and to preaching full screen on
+   this device (not the operator's small mirror while projecting elsewhere).
+   Heavier, darker verse text (weight set in the Projection screen panel), bold
+   verse numbers, and a large reference with room reserved beneath it.
+   ========================================================================== */
+:is(.ps-root.is-output, .ps-root.is-presenting:not(.is-projecting)).is-preaching {
+  --ps-ref-size: calc(clamp(22px, 3vw, 58px) * min(var(--ps-out-scale, 1), 1.3));
+}
+:is(.ps-root.is-output, .ps-root.is-presenting:not(.is-projecting)).is-preaching .ps-pane:is(.is-presented, .is-paired) .ps-verse.is-preach-current {
+  font-weight: var(--ps-out-weight, 600);
+  letter-spacing: 0.005em;
+}
+:is(.ps-root.is-output, .ps-root.is-presenting:not(.is-projecting)).is-preaching:not(.out-theme-ink, .out-theme-paper) .ps-pane:is(.is-presented, .is-paired) .ps-verse.is-preach-current {
+  color: #1a1007; /* vellum: near-black ink, not the softer reading brown */
+}
+:is(.ps-root.is-output, .ps-root.is-presenting:not(.is-projecting)).is-preaching .ps-pane:is(.is-presented, .is-paired) .ps-verse.is-preach-current .ps-vnum {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-weight: 800;
+  font-size: 0.6em;
+  letter-spacing: 0;
+  line-height: 1.1;
+  vertical-align: baseline;
+  margin-bottom: 0.15em;
+  color: var(--rubric-deep);
+}
+.ps-root.is-output.out-theme-ink.is-preaching .ps-pane:is(.is-presented, .is-paired) .ps-verse.is-preach-current .ps-vnum { color: #e6c55f; }
+
+:is(.ps-root.is-output, .ps-root.is-presenting:not(.is-projecting)).is-preaching .ps-preach-ref {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-weight: 800;
+  font-size: var(--ps-ref-size);
+  letter-spacing: 0.06em;
+  line-height: 1.15;
+  padding: 0.55em 24px 0.45em;
+  color: var(--rubric-deep);
+  background: linear-gradient(180deg, rgba(251, 245, 230, 0.95) 60%, rgba(251, 245, 230, 0));
+}
+.ps-root.is-output.out-theme-ink.is-preaching .ps-preach-ref {
+  color: #ecca63;
+  background: linear-gradient(180deg, rgba(10, 8, 5, 0.92) 60%, rgba(10, 8, 5, 0));
+}
+.ps-root.is-output.out-theme-paper.is-preaching .ps-preach-ref {
+  background: linear-gradient(180deg, rgba(251, 248, 241, 0.96) 60%, rgba(251, 248, 241, 0));
+}
+/* Room for the reference so the first line of Scripture never sits under it. */
+:is(.ps-root.is-output, .ps-root.is-presenting:not(.is-projecting)).is-preaching:not(.is-slide, .is-blank, .is-stage) .ps-pane:is(.is-presented, .is-paired) .ps-verses {
+  padding-top: calc(var(--ps-ref-size) * 2.1);
+}

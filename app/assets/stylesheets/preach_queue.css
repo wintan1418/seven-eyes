@@ -226,6 +226,7 @@
   min-width: 52px; text-align: center;
   font: 600 12px "Cinzel", serif; color: var(--vellum-0); letter-spacing: 0.1em;
 }
+.ps-screen-panel .hint { margin: 0; font: 400 11px/1.4 "Inter", system-ui, sans-serif; color: rgba(241, 230, 204, 0.75); }
 .ps-screen-panel .done {
   padding: 8px; background: var(--rubric); color: var(--vellum-0);
   border: 1px solid var(--rubric-deep); border-radius: 3px; cursor: pointer;

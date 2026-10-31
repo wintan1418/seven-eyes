@@ -91,7 +91,17 @@ export default class extends Controller {
       window.addEventListener("preach:command", this._onCommand)
       window.addEventListener("preach:join", this._onJoin)
       window.addEventListener("preach:notice", this._onNotice)
+      // Going full screen on the projector (or resizing) changes the room the
+      // verse has: refit so it fills the new screen.
+      this._onResize = () => {
+        clearTimeout(this._resizeTimer)
+        this._resizeTimer = setTimeout(() => {
+          if (this.element.classList.contains("is-preaching")) this._autoFit()
+        }, 120)
+      }
+      window.addEventListener("resize", this._onResize)
       this._screen = this._loadScreenPrefs()
+      this._applyWeight(this._screen.weight) // also for preaching full screen on this device
       // Never let Turbo snapshot the page mid-sermon: a restored snapshot
       // would come back "preaching" with no key bindings behind it.
       this._onBeforeCache = () => this._teardownForCache()
@@ -1301,10 +1311,24 @@ export default class extends Controller {
     event?.preventDefault?.()
     const delta = parseFloat(event.currentTarget.dataset.screenScaleDelta || "0")
     const next = (this._screen.scale || 1) + delta
-    this._screen.scale = Math.round(Math.min(1.6, Math.max(0.7, next)) * 10) / 10
+    this._screen.scale = Math.round(Math.min(2, Math.max(0.7, next)) * 10) / 10
     this._saveScreenPrefs()
     this._sendScreen()
     this._syncScreenPanel()
+  }
+
+  // Regular or bold Scripture on the projection (bold reads better from far away).
+  setWeight(event) {
+    event?.preventDefault?.()
+    this._screen.weight = event.currentTarget.dataset.screenWeight === "regular" ? "regular" : "bold"
+    this._saveScreenPrefs()
+    this._applyWeight(this._screen.weight)
+    this._sendScreen()
+    this._syncScreenPanel()
+  }
+
+  _applyWeight(weight) {
+    this.element.style.setProperty("--ps-out-weight", weight === "regular" ? "400" : "600")
   }
 
   _syncScreenPanel() {
@@ -1313,15 +1337,18 @@ export default class extends Controller {
     panel.querySelectorAll("[data-screen-theme]").forEach(b => {
       b.classList.toggle("is-on", b.dataset.screenTheme === this._screen.theme)
     })
+    panel.querySelectorAll("[data-screen-weight]").forEach(b => {
+      b.classList.toggle("is-on", b.dataset.screenWeight === (this._screen.weight || "bold"))
+    })
     const lbl = panel.querySelector("[data-screen-scale]")
     if (lbl) lbl.textContent = `${Math.round((this._screen.scale || 1) * 100)}%`
   }
 
   _loadScreenPrefs() {
     try {
-      return { theme: "vellum", scale: 1, ...JSON.parse(localStorage.getItem(SCREEN_PREFS_KEY) || "{}") }
+      return { theme: "vellum", scale: 1, weight: "bold", ...JSON.parse(localStorage.getItem(SCREEN_PREFS_KEY) || "{}") }
     } catch {
-      return { theme: "vellum", scale: 1 }
+      return { theme: "vellum", scale: 1, weight: "bold" }
     }
   }
 
@@ -1331,7 +1358,7 @@ export default class extends Controller {
 
   _sendScreen() {
     if (!this._screen) return
-    this._send({ type: "screen", theme: this._screen.theme, scale: this._screen.scale })
+    this._send({ type: "screen", theme: this._screen.theme, scale: this._screen.scale, weight: this._screen.weight })
   }
 
   // Output window: restyle the projection (the stage display keeps its own look).
@@ -1340,6 +1367,7 @@ export default class extends Controller {
     this.element.classList.toggle("out-theme-ink", msg.theme === "ink")
     this.element.classList.toggle("out-theme-paper", msg.theme === "paper")
     this.element.style.setProperty("--ps-out-scale", String(msg.scale || 1))
+    this._applyWeight(msg.weight)
     requestAnimationFrame(() => {
       this._autoFit()
       if (this._slide) this._paintSlide()
@@ -1773,6 +1801,8 @@ export default class extends Controller {
     if (this._onCommand) window.removeEventListener("preach:command", this._onCommand)
     if (this._onJoin) window.removeEventListener("preach:join", this._onJoin)
     if (this._onNotice) window.removeEventListener("preach:notice", this._onNotice)
+    if (this._onResize) window.removeEventListener("resize", this._onResize)
+    clearTimeout(this._resizeTimer)
     if (this._onBeforeCache) document.removeEventListener("turbo:before-cache", this._onBeforeCache)
     clearTimeout(this._toastTimer)
     this._unbindRegionClicks()
@@ -1891,12 +1921,14 @@ export default class extends Controller {
   // the .ps-verses container without scrolling. Resets between calls so a short
   // verse after a long one grows back to the natural CSS clamp size.
   _autoFit() {
+    const grow = this._fitGrows()
     this._allActivePanes().forEach(pane => {
       const container = pane.querySelector(".ps-verses")
       const currents = pane.querySelectorAll(".ps-verse.is-preach-current")
       if (!container || currents.length === 0) return
 
       currents.forEach(v => v.style.fontSize = "")
+      if (grow) return this._fitToScreen(container, currents)
       if (container.scrollHeight <= container.clientHeight + 1) return
 
       let fs = parseFloat(getComputedStyle(currents[0]).fontSize) || 64
@@ -1907,6 +1939,35 @@ export default class extends Controller {
         iters--
       }
     })
+  }
+
+  // On the projection itself, short passages were left small in the middle of
+  // a big screen. Grow (or shrink) the text to the largest size that fits,
+  // capped by the screen size and the operator's A− / A+ setting.
+  _fitGrows() {
+    const c = this.element.classList
+    if (!c.contains("is-preaching") || c.contains("is-stage") || this._slide) return false
+    return c.contains("is-output") || !c.contains("is-projecting")
+  }
+
+  _fitToScreen(container, currents) {
+    const set = px => currents.forEach(v => v.style.fontSize = `${px}px`)
+    const fits = () => container.scrollHeight <= container.clientHeight + 1
+    const scale = this.element.classList.contains("is-output")
+      ? parseFloat(getComputedStyle(this.element).getPropertyValue("--ps-out-scale")) || 1
+      : this._screen?.scale || 1
+    const cap = Math.min(window.innerHeight * 0.11, window.innerWidth * 0.07) * scale
+    let lo = AUTOFIT_MIN_PX
+    let hi = Math.max(lo, cap)
+    set(hi)
+    if (fits()) return
+    for (let i = 0; i < 14 && hi - lo > 0.5; i++) {
+      const mid = (lo + hi) / 2
+      set(mid)
+      if (fits()) lo = mid
+      else hi = mid
+    }
+    set(lo)
   }
 
   _clearAutoFit() {

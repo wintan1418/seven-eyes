@@ -61,6 +61,9 @@ class PreachContractTest < ActionDispatch::IntegrationTest
     PREACH_HOOKS.each { |hook| assert_select ".ps-root [#{hook}]", { minimum: 1 }, "missing [#{hook}]" }
     assert_select "[data-preach-group]", 3
     assert_select ".ps-screen-panel"
+    # Projection readability: Regular/Bold for the church screen.
+    assert_select ".ps-screen-panel [data-screen-weight='regular'][data-action~='presentation#setWeight']"
+    assert_select ".ps-screen-panel [data-screen-weight='bold'][data-action~='presentation#setWeight']"
     assert_select ".ps-preach-bar"
     assert_select ".ps-preach-enter[data-action~='presentation#enterPreach']"
     assert_select ".ps-preach-jump input[data-presentation-target='jumpInput']"
