@@ -1,7 +1,7 @@
 <% content_for :title, "#{@reference} · BiblioRata" %>
 <%
   meta_desc = (@prayer.presence || @verses.map(&:text).join(" ")).to_s.squish.truncate(180)
-  og_image  = "#{request.base_url}/icon.png"
+  og_image  = "#{request.base_url}/og-image.jpg"
   chapters = @verses.map(&:chapter).uniq
   whole_chapter = chapters.size == 1 && @parsed.verse_start.nil?
   prev_slug = neighbor_passage_slug(@book, chapters.first, :prev) if whole_chapter
@@ -9,13 +9,17 @@
 %>
 <% content_for :head do %>
   <meta name="description" content="<%= meta_desc %>">
+<% end %>
+<% content_for :og do %>
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="BiblioRata">
   <meta property="og:title" content="<%= @reference %> · <%= @translation&.name %>">
   <meta property="og:description" content="<%= meta_desc %>">
   <meta property="og:url" content="<%= passage_url(@slug) %>">
   <meta property="og:image" content="<%= og_image %>">
-  <meta name="twitter:card" content="summary">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<%= @reference %> · <%= @translation&.name %>">
   <meta name="twitter:description" content="<%= meta_desc %>">
   <meta name="twitter:image" content="<%= og_image %>">

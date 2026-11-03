@@ -25,9 +25,30 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="BiblioRata">
 
+    <link rel="icon" href="/favicon.ico" sizes="32x32">
     <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+    <%# Link previews (WhatsApp, Facebook, X…). Pages with their own preview
+        (a shared passage) set content_for :og instead. %>
+    <% if content_for?(:og) %>
+      <%= yield :og %>
+    <% else %>
+      <% og_title = content_for(:title) || "BiblioRata" %>
+      <% og_desc = "Read, compare and study the Bible, free. Side-by-side translations, cross-references, audio and live projection." %>
+      <meta property="og:type" content="website">
+      <meta property="og:site_name" content="BiblioRata">
+      <meta property="og:title" content="<%= og_title %>">
+      <meta property="og:description" content="<%= og_desc %>">
+      <meta property="og:url" content="<%= request.base_url + request.path %>">
+      <meta property="og:image" content="<%= request.base_url %>/og-image.jpg">
+      <meta property="og:image:width" content="1200">
+      <meta property="og:image:height" content="630">
+      <meta name="twitter:card" content="summary_large_image">
+      <meta name="twitter:title" content="<%= og_title %>">
+      <meta name="twitter:description" content="<%= og_desc %>">
+      <meta name="twitter:image" content="<%= request.base_url %>/og-image.jpg">
+    <% end %>
 
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
