@@ -101,4 +101,12 @@ class PassagesTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Open Scriptures"
     refute_includes response.body, "NET Bible"
   end
+
+  test "every page has a BiblioRata link preview, not the Rails default" do
+    get root_path
+    assert_select "meta[property='og:image'][content$='/og-image.jpg']"
+    assert_select "meta[name='twitter:card'][content='summary_large_image']"
+    assert_select "link[rel='icon'][href='/icon.svg']", count: 0
+    refute File.exist?(Rails.root.join("public/icon.svg"))
+  end
 end
