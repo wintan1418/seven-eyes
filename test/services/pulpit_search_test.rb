@@ -56,4 +56,26 @@ class PulpitSearchTest < ActiveSupport::TestCase
     assert_equal :no_key, FakeSearch.new("x", error: :no_key).call.error
     assert_equal :api, FakeSearch.new("x", error: :api).call.error
   end
+
+  test "words quoted from a verse find it in the Bible text, without the AI" do
+    luke = Book.create!(osis_code: "Luke", name: "Luke", testament: :new, position: 42, chapter_count: 24)
+    Verse.create!(translation: @kjv, book: luke, chapter: 12, verse_number: 15,
+                  text: "And he said unto them, Take heed, and beware of covetousness: for a man's life consisteth not in the abundance of the things which he possesseth.")
+    ai = FakeSearch.new("life consist", error: :api) # the AI isn't reached
+
+    result = ai.call
+    assert result.ok?
+    assert_equal [ "Luke 12:15" ], result.suggestions.map(&:reference)
+    assert_match(/consisteth/, result.suggestions.first.preview)
+    assert_equal "", result.summary
+
+    assert_equal [ "Luke 12:15" ], FakeSearch.new("A MAN'S LIFE", error: :api).call.suggestions.map(&:reference)
+    assert_equal [ "Luke 12:15" ], FakeSearch.new("take heed and beware", error: :api).call.suggestions.map(&:reference)
+  end
+
+  test "single words and unmatched phrases still go to the AI" do
+    payload = { topic: "Pentecost", summary: "The Spirit poured out.", references: [ "Acts 2:1" ] }
+    assert_equal "Pentecost", FakeSearch.new("pentecost", payload:).call.topic
+    assert_equal "Pentecost", FakeSearch.new("tongues of fire upon them", payload:).call.topic
+  end
 end
