@@ -61,6 +61,14 @@ class PulpitSearch
   def call
     return Result.new(ok: false, error: :blank) if @query.empty?
 
+    # Words quoted from a verse ("life consist") are looked up in the Bible
+    # text first: instant, exact, and no AI guesswork. Only when nothing
+    # matches (or it's a single word or a theme) does the AI step in.
+    hits = phrase_hits
+    if hits.any?
+      return Result.new(ok: true, topic: "“#{@query.truncate(60)}” in Scripture", summary: "", suggestions: hits)
+    end
+
     res = chat_completion
     return Result.new(ok: false, error: res.error || :api) unless res.ok?
 
@@ -79,6 +87,36 @@ class PulpitSearch
   end
 
   private
+
+  # Verses containing the typed words, in Bible order. First as a phrase,
+  # ignoring punctuation and letter case ("life consist" finds "life
+  # consisteth"); then as a full-text phrase with the last word as a prefix
+  # ("walls of jericho" finds "the walls of Jericho"). Needs two or more words.
+  def phrase_hits
+    words = @query.downcase.scan(/[a-z']+/).map { |w| w.delete("'") }.reject(&:empty?)
+    return [] if words.size < 2
+
+    translation = @translation || Translation.default
+    return [] unless translation
+
+    scope = Verse.where(translation:).joins(:book).includes(:book)
+                 .order("books.position", :chapter, :verse_number).limit(MAX_REFS)
+    # Apostrophes vanish ("man's" -> "mans"); other punctuation becomes a space.
+    plain = %q{lower(regexp_replace(replace(replace(verses.text, '''', ''), '’', ''), '[^A-Za-z]+', ' ', 'g'))}
+    verses = scope.where("#{plain} LIKE ?", "%#{Verse.sanitize_sql_like(words.join(' '))}%").to_a
+    if verses.empty?
+      tsquery = (words[0...-1] + [ "#{words.last}:*" ]).join(" <-> ")
+      verses = scope.where("verses.text_vector @@ to_tsquery('english', ?)", tsquery).to_a
+    end
+
+    verses.map do |v|
+      Suggestion.new(reference: "#{v.book.name} #{v.chapter}:#{v.verse_number}", osis: v.book.osis_code,
+                     chapter: v.chapter, verse_start: v.verse_number, verse_end: v.verse_number, preview: v.text)
+    end
+  rescue ActiveRecord::StatementInvalid => e
+    Rails.logger.warn("[PulpitSearch] phrase search: #{e.message}")
+    []
+  end
 
   # Network seam — overridden in tests to avoid a live API call.
   def chat_completion
