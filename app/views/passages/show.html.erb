@@ -68,6 +68,7 @@
         <section class="pub-prayer">
           <div class="ui-label">A prayer from <%= @reference %></div>
           <p><%= @prayer %></p>
+          <%= render "shared/ai_report", kind: "prayer", key: "prayer", context: @reference, excerpt: @prayer %>
         </section>
       <% end %>
 

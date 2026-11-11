@@ -22,6 +22,7 @@ class AdminController < ApplicationController
     @recent_users = User.order(created_at: :desc).includes(:studies).limit(RECENT_LIMIT)
     @recent_studies = Study.recent.includes(:user).limit(RECENT_LIMIT)
     @recent_lives = LiveSession.order(created_at: :desc).includes(:study).limit(RECENT_LIMIT)
+    @ai_reports = AiReport.recent.includes(:user).limit(RECENT_LIMIT)
     @signups_this_week = User.where(created_at: 1.week.ago..).count
     @studies_this_week = Study.where(created_at: 1.week.ago..).count
   end

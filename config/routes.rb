@@ -49,6 +49,9 @@ Rails.application.routes.draw do
 
   resources :highlights, only: %i[ create update destroy ]
 
+  # "Report this answer" on AI-generated content (Play AI-content policy).
+  resources :ai_reports, only: %i[ create ]
+
   resource :preferences, only: %i[ update ]
 
   get    "/whats-new",     to: "whats_new#show", as: :whats_new

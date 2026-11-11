@@ -75,6 +75,9 @@
       Generated guidance &mdash; weigh it against the text and the Spirit. Verse wording is always
       from your own translations, never the model.
       <% if result.provider %><span class="ps-rabbi-provider">&middot; via <%= result.provider %></span><% end %>
+      <%= render "shared/ai_report", kind: "rabbi", key: "rabbi_#{verse_id}",
+            context: "#{result.origin} — #{result.selection}",
+            excerpt: [ ex.summary, ex.background, ex.context, ex.meaning, ex.caution, ex.application ].compact_blank.join("\n\n") %>
     </div>
 
   <% elsif result.error == :no_key %>

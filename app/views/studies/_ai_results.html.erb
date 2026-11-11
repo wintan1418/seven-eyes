@@ -22,6 +22,8 @@
           </div>
         </div>
       <% end %>
+      <%= render "shared/ai_report", kind: "find_verse", key: "find_verse",
+            context: query, excerpt: result.suggestions.map(&:reference).join(", ") %>
     <% end %>
   <% elsif result.error == :no_key %>
     <div class="ps-ai-hint">&#9888; OpenAI key not configured. Add <code>OPENAI_API_KEY</code> to your <code>.env</code> file and restart the server.</div>

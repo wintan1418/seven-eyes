@@ -42,6 +42,27 @@
     </section>
   <% end %>
 
+  <section class="panel">
+    <h2>Reported AI answers</h2>
+    <table>
+      <thead><tr><th>When</th><th>What</th><th>About</th><th>Excerpt</th><th>By</th></tr></thead>
+      <tbody>
+        <% @ai_reports.each do |report| %>
+          <tr>
+            <td><%= report.created_at.strftime("%-d %b %Y %H:%M") %></td>
+            <td><%= report.kind.humanize %></td>
+            <td><%= report.context %></td>
+            <td><%= truncate(report.excerpt.to_s, length: 240) %></td>
+            <td><%= report.user&.email_address || "guest" %></td>
+          </tr>
+        <% end %>
+        <% if @ai_reports.empty? %>
+          <tr><td colspan="5" class="empty">No reports.</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+
   <div class="cols">
     <section class="panel">
       <h2>Recent accounts</h2>

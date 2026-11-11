@@ -53,6 +53,7 @@ class RabbiTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "John 3:16"
     assert_includes response.body, "The plain love of God."
     assert_includes response.body, "Romans 5:8"
+    assert_select "turbo-frame#ai_report_rabbi_#{@v16.id} form[action=?]", ai_reports_path
   end
 
   test "a prompt-injected exposition renders as plain text — no link, no script" do

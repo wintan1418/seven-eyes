@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_28_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_170000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "ai_reports", force: :cascade do |t|
+    t.bigint "user_id"
+    t.string "kind", null: false
+    t.string "context"
+    t.text "excerpt"
+    t.datetime "created_at", null: false
+    t.index ["created_at"], name: "index_ai_reports_on_created_at"
+    t.index ["user_id"], name: "index_ai_reports_on_user_id"
   end
 
   create_table "books", force: :cascade do |t|
@@ -479,6 +489,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_170000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "ai_reports", "users"
   add_foreign_key "chapter_audios", "books"
   add_foreign_key "chapter_audios", "translations"
   add_foreign_key "commentaries", "books"

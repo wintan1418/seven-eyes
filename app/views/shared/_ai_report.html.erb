@@ -1,0 +1,14 @@
+<%# locals: kind (AiReport::KINDS), key (unique on the page), context, excerpt
+    A "Report this answer" control for AI-generated content, required by Google
+    Play's AI-generated content policy. It posts inside its own frame, so the
+    thanks replaces just the button and the reader never leaves the page. %>
+<% frame = "ai_report_#{key.to_s.parameterize(separator: '_')}" %>
+<%= turbo_frame_tag frame, class: "ps-ai-report" do %>
+  <%= button_to ai_reports_path,
+        params: { kind: kind, frame: frame, context: context.to_s.truncate(AiReport::CONTEXT_LIMIT),
+                  excerpt: excerpt.to_s.truncate(AiReport::EXCERPT_LIMIT) },
+        class: "ps-ai-report-btn", form: { class: "contents" },
+        data: { turbo_confirm: "Report this AI-generated content as offensive, harmful or wrong? We'll review it." } do %>
+    &#9873; Report this answer
+  <% end %>
+<% end %>
