@@ -2,9 +2,6 @@
 <% content_for :head do %>
   <meta name="description" content="A calm, free Bible reader for pastors and serious readers. Compare public-domain translations side by side, follow 343,000+ cross-references, and carry the same passage into the pulpit — live projection your congregation follows on their phones. No account needed.">
 <% end %>
-<% vod_text = @verse_of_day&.text || "Open thou mine eyes, that I may behold wondrous things out of thy law." %>
-<% vod_ref = @verse_of_day ? @verse_of_day.reference_label : "Psalm 119:18" %>
-<% vod_trans = @verse_of_day ? @verse_of_day.translation_code : "KJV" %>
 
 <div class="ld-page ps-landing">
   <header class="ui-appbar ld-appbar ld-nav">
@@ -49,18 +46,9 @@
       </div>
     </section>
 
-    <section class="ld-vod" aria-labelledby="vod-title">
-      <div class="ld-vod-card">
-        <div class="ui-label" id="vod-title">Verse of the day</div>
-        <blockquote class="ld-vod-text"><%= vod_text %></blockquote>
-        <div class="ld-vod-foot">
-          <span class="ld-vod-ref"><%= vod_ref %> &middot; <%= vod_trans %></span>
-          <%= button_to studies_path, params: { reference: vod_ref, pane_count: 1 }, class: "ui-btn is-sm", form: { class: "contents" } do %>
-            Read the chapter <%= icon(:chevron_right) %>
-          <% end %>
-        </div>
-      </div>
-    </section>
+    <div class="ld-vod">
+      <%= render "daily_words/card", word: @daily_word, compact: true, heading_id: "vod-title" %>
+    </div>
 
     <section class="ld-features" aria-label="What you can do">
       <article class="ld-feature">

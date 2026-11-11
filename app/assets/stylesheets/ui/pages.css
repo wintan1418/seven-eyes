@@ -73,11 +73,6 @@
 .ld-quick .ui-pill { height: 32px; }
 
 .ld-vod { max-width: 44rem; margin: 24px auto 0; }
-.ld-vod-card { padding: 28px 28px 22px; border-radius: 22px; background: var(--ui-surface); }
-.ld-vod-text { margin: 12px 0 0; font: 400 22px/1.6 var(--reader-font); color: var(--ui-fg); }
-@media (min-width: 768px) { .ld-vod-text { font-size: 26px; } }
-.ld-vod-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
-.ld-vod-ref { font: 600 14px var(--ui-font); color: var(--ui-fg-muted); }
 
 .ld-features { max-width: 60rem; margin: 72px auto 0; display: grid; gap: 28px; }
 @media (min-width: 768px) { .ld-features { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; } }
@@ -140,8 +135,7 @@ a.hm-card:hover { background: var(--ui-surface-2); }
 .hm-continue-ref { font: 600 26px/1.15 var(--reader-font); letter-spacing: -0.01em; }
 .hm-continue-meta { font: 400 13px var(--ui-font); color: var(--ui-fg-muted); }
 .hm-continue-go { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); color: var(--ui-fg-subtle); }
-.hm-vod blockquote { margin: 0; font: 400 18px/1.6 var(--reader-font); }
-.hm-vod-foot, .hm-plan-foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: auto; font: 600 13px var(--ui-font); color: var(--ui-fg-muted); }
+.hm-plan-foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: auto; font: 600 13px var(--ui-font); color: var(--ui-fg-muted); }
 .hm-plan-refs { margin: 0; font: 400 16px/1.5 var(--ui-font); }
 .hm-plan-foot { justify-content: flex-start; }
 .hm-plan-foot .ui-btn { text-decoration: none; }

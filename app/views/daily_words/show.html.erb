@@ -1,0 +1,85 @@
+<%
+  today = @word.nil? || @word.date == DailyWord.today_date
+  page_title = if @word.nil? then "Word for Today"
+               elsif today then "Word for Today: #{@word.reference}"
+               else "Word for #{@word.date.strftime('%-d %B %Y')}: #{@word.reference}"
+               end
+  meta_desc = @word ? [ @word.verse_text, @word.reflection ].compact.join(" ").squish.truncate(180) :
+                      "A passage of Scripture for today, with a short reflection and prayer."
+  og_image = "#{request.base_url}/og-image.jpg"
+  canonical = @word ? daily_word_url(@word) : today_url
+%>
+<% content_for :title, "#{page_title} · BiblioRata" %>
+<% content_for :head do %>
+  <meta name="description" content="<%= meta_desc %>">
+  <link rel="canonical" href="<%= canonical %>">
+<% end %>
+<% content_for :og do %>
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="BiblioRata">
+  <meta property="og:title" content="<%= page_title %>">
+  <meta property="og:description" content="<%= meta_desc %>">
+  <meta property="og:url" content="<%= canonical %>">
+  <meta property="og:image" content="<%= og_image %>">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= page_title %>">
+  <meta name="twitter:description" content="<%= meta_desc %>">
+  <meta name="twitter:image" content="<%= og_image %>">
+<% end %>
+
+<div class="pub-page dw-page">
+  <header class="ui-appbar pub-appbar">
+    <div class="ui-appbar-start">
+      <%= link_to root_path, class: "ui-brand" do %>
+        <span class="ui-brand-mark" aria-hidden="true"><%= icon(:book) %></span>
+        <span class="ui-brand-name">BiblioRata</span>
+      <% end %>
+    </div>
+    <div class="ui-appbar-center"></div>
+    <div class="ui-appbar-end">
+      <%= render "shared/theme_toggle" %>
+      <%= link_to "Open BiblioRata", root_path, class: "ui-btn is-sm is-primary pub-open" %>
+    </div>
+  </header>
+
+  <main class="pub-main">
+    <article class="rd-column pub-column">
+      <header class="dw-page-head">
+        <h1 id="dw-title"><%= today ? "Word for Today" : "Word for #{@word.date.strftime('%A')}" %></h1>
+        <% if @word %>
+          <p><%= @word.date.strftime("%A, %-d %B %Y") %></p>
+        <% end %>
+      </header>
+
+      <%= render "daily_words/card", word: @word, heading_id: "dw-title", show_head: false %>
+
+      <% unless today %>
+        <p class="dw-today-link"><%= link_to "Read today's word", today_path, class: "ui-btn is-sm" %></p>
+      <% end %>
+
+      <% if @archive.any? %>
+        <section class="dw-archive" aria-labelledby="dw-archive-title">
+          <h2 id="dw-archive-title">Recent words</h2>
+          <ol>
+            <% @archive.each do |word| %>
+              <li>
+                <%= link_to daily_word_path(word) do %>
+                  <span><%= word.reference %></span>
+                  <span class="when"><%= word.date.strftime("%a %-d %b") %></span>
+                <% end %>
+              </li>
+            <% end %>
+          </ol>
+        </section>
+      <% end %>
+
+      <footer class="pub-foot">
+        Scripture from the <%= @word ? (Translation.find_by(code: @word.translation_code)&.name || @word.translation_code) : "King James Version" %>.
+        Reflection and prayer are written with AI from the passage.
+        <%= link_to "Sources & credits", credits_path %>
+      </footer>
+    </article>
+  </main>
+</div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_11_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -106,6 +106,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_120000) do
     t.integer "votes", default: 0, null: false
     t.index ["from_book_id", "from_chapter", "from_verse"], name: "index_xrefs_on_from_location"
     t.index ["to_book_id"], name: "index_cross_references_on_to_book_id"
+  end
+
+  create_table "daily_words", force: :cascade do |t|
+    t.date "date", null: false
+    t.string "reference", null: false
+    t.string "osis_code", null: false
+    t.integer "chapter", null: false
+    t.integer "verse_start", null: false
+    t.integer "verse_end", null: false
+    t.string "translation_code", null: false
+    t.text "verse_text", null: false
+    t.text "reflection"
+    t.text "prayer"
+    t.datetime "composed_at"
+    t.datetime "ai_attempted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["date"], name: "index_daily_words_on_date", unique: true
   end
 
   create_table "highlights", force: :cascade do |t|

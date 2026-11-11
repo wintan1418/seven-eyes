@@ -42,6 +42,27 @@
     </section>
   <% end %>
 
+  <section class="panel dw-admin">
+    <h2>Word for Today</h2>
+    <% if (msg = flash[:notice] || flash[:alert]) %>
+      <p class="dw-admin-flash"><%= msg %></p>
+    <% end %>
+    <% if @daily_word %>
+      <p class="dw-admin-ref">
+        <%= link_to @daily_word.reference, today_path %> &middot; <%= @daily_word.translation_code %> &middot;
+        <%= @daily_word.composed? ? "written #{time_ago_in_words(@daily_word.composed_at)} ago" : "no reflection yet (verse only)" %>
+      </p>
+      <% if @daily_word.composed? %>
+        <p class="dw-admin-text"><%= @daily_word.reflection %></p>
+        <p class="dw-admin-text"><em><%= @daily_word.prayer %></em></p>
+      <% end %>
+    <% else %>
+      <p class="dw-admin-text">Today's word appears with the first visit of the day.</p>
+    <% end %>
+    <%= button_to "Regenerate today's word", admin_regenerate_daily_word_path, class: "dw-admin-btn",
+          data: { turbo_confirm: "Ask the AI to write today's reflection and prayer again?" } %>
+  </section>
+
   <section class="panel">
     <h2>Reported AI answers</h2>
     <table>

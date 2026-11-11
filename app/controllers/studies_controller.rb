@@ -27,7 +27,7 @@ class StudiesController < ApplicationController
 
   def index
     @studies = authenticated? ? current_user.studies.recent.includes(:panes) : []
-    @verse_of_day = DailyVerse.for
+    @daily_word = DailyWord.today
     @show_guide = !authenticated? || current_user.guide_dismissed_at.blank?
     @canon_stats = Rails.cache.fetch("home_canon_stats_v1", expires_in: 12.hours) do
       { translations: Translation.count, verses: Verse.count, cross_references: CrossReference.count }
