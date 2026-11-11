@@ -11,6 +11,9 @@
       <%= image_tag image, alt: (caption || "Illustration of the passage"), class: "ps-rabbi-illus-img" %>
       <figcaption><%= caption.presence || "An artist's rendering — imagined, not a photograph." %></figcaption>
     </figure>
+    <%= render "shared/ai_report", kind: "illustration", key: "illustration_#{verse_id}",
+          context: "#{style} illustration — #{selection}",
+          excerpt: [ caption, *annotations.map { |a| [ a.label, a.note ].compact_blank.join(": ") } ].compact_blank.join("\n") %>
     <% if annotations.any? %>
       <div class="ps-rabbi-notice">
         <div class="ps-rabbi-notice-head">&#9635; What to notice</div>
