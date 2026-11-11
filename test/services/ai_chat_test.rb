@@ -90,7 +90,8 @@ class AiChatTest < ActiveSupport::TestCase
 
     gemini = BodyCapture.new(:gemini)
     assert gemini.call.ok?
-    assert_equal AiChat::DEFAULT_MAX_TOKENS, gemini.bodies.first.dig(:generationConfig, :maxOutputTokens)
+    # Gemini gets extra room for its thinking on top of the answer's ceiling.
+    assert_equal AiChat::DEFAULT_MAX_TOKENS + AiChat::GEMINI_THINKING_ROOM, gemini.bodies.first.dig(:generationConfig, :maxOutputTokens)
 
     routellm = BodyCapture.new(:routellm)
     assert routellm.call.ok?
