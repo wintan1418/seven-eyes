@@ -6,10 +6,11 @@ require "json"
 # shape, so they get their own tiny client. Returns a base64 data: URL ready to
 # drop straight into an <img src>, or a Result with an error on any failure.
 #
-# Model is configurable via OPENAI_IMAGE_MODEL (default gpt-image-1, which this
-# account is verified for and returns base64 directly). If an account only has
-# dall-e-3, set OPENAI_IMAGE_MODEL=dall-e-3 — it returns a temporary URL which we
-# download and encode. Quality (gpt-image-1 only) via OPENAI_IMAGE_QUALITY.
+# Model: OPENAI_IMAGE_MODEL if set, otherwise the newest gpt-image model the
+# account offers (AiModels asks OpenAI). If OpenAI says the model doesn't exist,
+# we look again and retry once, so a retired model can't break illustrations.
+# gpt-image models return base64; dall-e-3 returns a temporary URL, which we
+# download and encode. Quality (gpt-image only) via OPENAI_IMAGE_QUALITY.
 class OpenaiImage
   DEFAULT_MODEL   = "gpt-image-1".freeze
   DEFAULT_URL     = "https://api.openai.com/v1/images/generations".freeze
@@ -50,24 +51,37 @@ class OpenaiImage
       Rails.application.credentials.dig(:openai, :api_key)
   end
 
-  def model = ENV["OPENAI_IMAGE_MODEL"].presence || DEFAULT_MODEL
+  def model = ENV["OPENAI_IMAGE_MODEL"].presence || AiModels.openai_image(api_key) || DEFAULT_MODEL
 
-  def request
+  def request(model_name = model, retried: false)
     uri = URI(ENV["OPENAI_IMAGE_ENDPOINT"].presence || DEFAULT_URL)
-    # No response_format: the current images endpoint rejects it. gpt-image-1
+    # No response_format: the current images endpoint rejects it. gpt-image
     # returns base64; dall-e-3 returns a temporary URL — we handle both below.
-    body = { model: model, prompt: @prompt[0, MAX_PROMPT], n: 1, size: @size }
-    body[:quality] = ENV["OPENAI_IMAGE_QUALITY"].presence || DEFAULT_QUALITY if model.start_with?("gpt-image")
+    body = { model: model_name, prompt: @prompt[0, MAX_PROMPT], n: 1, size: @size }
+    body[:quality] = ENV["OPENAI_IMAGE_QUALITY"].presence || DEFAULT_QUALITY if model_name.start_with?("gpt-image")
 
     res = post(uri, body.to_json, auth: "Bearer #{api_key}")
     unless res.is_a?(Net::HTTPSuccess)
-      Rails.logger.warn("[OpenaiImage] #{uri.host} -> #{res.code}: #{res.body.to_s.truncate(300)}")
+      Rails.logger.warn("[OpenaiImage] #{uri.host} -> #{res.code} (#{model_name}): #{res.body.to_s.truncate(300)}")
+      if !retried && unknown_model?(res)
+        AiModels.refresh!(:openai)
+        fresh = AiModels.openai_image(api_key, exclude: model_name)
+        return request(fresh, retried: true) if fresh && fresh != model_name
+      end
       return nil
     end
 
     datum = JSON.parse(res.body).dig("data", 0) || {}
     return datum["b64_json"] if datum["b64_json"].present?
     fetch_base64(datum["url"]) if datum["url"].present?
+  end
+
+  # OpenAI's answer when a model has been retired or never existed.
+  def unknown_model?(res)
+    res.code.to_i.in?([ 400, 404 ]) && res.body.to_s.match?(/model|does not exist|not found/i) &&
+      (JSON.parse(res.body).dig("error", "param") == "model" || res.body.to_s.include?("does not exist"))
+  rescue JSON::ParserError
+    false
   end
 
   # dall-e returns a short-lived URL; download it once and base64-encode so the

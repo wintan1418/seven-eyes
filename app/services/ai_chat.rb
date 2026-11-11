@@ -22,7 +22,8 @@ require "json"
 class AiChat
   OPENAI_DEFAULT_MODEL   = "gpt-4o-mini".freeze
   OPENAI_DEFAULT_URL     = "https://api.openai.com/v1/chat/completions".freeze
-  GEMINI_DEFAULT_MODEL   = "gemini-2.0-flash".freeze
+  # Fallback only: the live model comes from AiModels (Google retires old names).
+  GEMINI_DEFAULT_MODEL   = "gemini-flash-latest".freeze
   ROUTELLM_DEFAULT_MODEL = "route-llm".freeze
   ROUTELLM_DEFAULT_URL   = "https://routellm.abacus.ai/v1/chat/completions".freeze
 
@@ -37,6 +38,7 @@ class AiChat
   # prompt is capped, and a hung provider is abandoned quickly (a Puma thread
   # waiting 40s on an LLM is a thread nobody else can use).
   DEFAULT_MAX_TOKENS = 1500
+  GEMINI_THINKING_ROOM = 2048
   MAX_PROMPT_CHARS   = 24_000
   OPEN_TIMEOUT       = 5
   READ_TIMEOUT       = 20
@@ -130,29 +132,45 @@ class AiChat
 
   # ---- Gemini (Google Generative Language API) ----
 
-  def gemini_request
-    model = ENV["GEMINI_MODEL"].presence || GEMINI_DEFAULT_MODEL
+  def gemini_request(model = nil, retried: false)
+    key = key_for(:gemini)
+    model ||= ENV["GEMINI_MODEL"].presence || AiModels.gemini_flash(key) || GEMINI_DEFAULT_MODEL
     uri = URI("https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent")
 
+    # Newer Flash models "think" first, and thinking counts against the output
+    # limit — leave room for it so the answer isn't cut off.
     body = {
       system_instruction: { parts: [ { text: @system } ] },
       contents: [ { role: "user", parts: [ { text: @user } ] } ],
-      generationConfig: { temperature: @temperature, maxOutputTokens: @max_tokens }
+      generationConfig: { temperature: @temperature, maxOutputTokens: @max_tokens + GEMINI_THINKING_ROOM }
     }
     body[:generationConfig][:responseMimeType] = "application/json" if @json
 
-    key = key_for(:gemini)
     # Gemini accepts an AI Studio API key (via the x-goog-api-key header) OR an
-    # OAuth access token (via Authorization: Bearer). We can't always tell which
-    # a key is from its shape, so try the header key first, then Bearer.
+    # OAuth access token (via Authorization: Bearer). Try the header key first,
+    # and Bearer only if the key itself was refused.
     appliers = [
       ->(req) { req["x-goog-api-key"] = key },
       ->(req) { req["Authorization"] = "Bearer #{key}" }
     ]
 
     appliers.each do |apply_auth|
+      @last_status = nil
       res = post_json(uri, body, &apply_auth)
-      return JSON.parse(res).dig("candidates", 0, "content", "parts", 0, "text") if res
+      if res
+        candidate = JSON.parse(res).dig("candidates", 0) || {}
+        # A cut-off answer (half a JSON object) is worse than none: fail over instead.
+        return nil if candidate["finishReason"] == "MAX_TOKENS"
+        return candidate.dig("content", "parts")&.reject { |p| p["thought"] }&.map { |p| p["text"] }&.compact&.join.presence
+      end
+      break if @last_status == 404
+    end
+
+    # The model was retired: look up the current one and try once more.
+    if @last_status == 404 && !retried
+      AiModels.refresh!(:gemini)
+      fresh = AiModels.gemini_flash(key, exclude: [ model, "models/#{model}" ])
+      return gemini_request(fresh, retried: true) if fresh && fresh != model
     end
     nil
   end
@@ -194,6 +212,7 @@ class AiChat
     req.body = body.to_json
 
     res = http.request(req)
+    @last_status = res.code.to_i
     unless res.is_a?(Net::HTTPSuccess)
       Rails.logger.warn("[AiChat] #{uri.host} -> #{res.code}: #{res.body.to_s.truncate(300)}")
       return nil
