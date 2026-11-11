@@ -1,0 +1,22 @@
+<% content_for :title, "Word not found · BiblioRata" %>
+<div class="pub-page dw-page">
+  <header class="ui-appbar pub-appbar">
+    <div class="ui-appbar-start">
+      <%= link_to root_path, class: "ui-brand" do %>
+        <span class="ui-brand-mark" aria-hidden="true"><%= icon(:book) %></span>
+        <span class="ui-brand-name">BiblioRata</span>
+      <% end %>
+    </div>
+    <div class="ui-appbar-center"></div>
+    <div class="ui-appbar-end"><%= render "shared/theme_toggle" %></div>
+  </header>
+  <main class="pub-main">
+    <article class="rd-column pub-column">
+      <header class="dw-page-head">
+        <h1>No word for that day</h1>
+        <p>There is no Word for Today for that date yet.</p>
+      </header>
+      <p class="dw-today-link"><%= link_to "Read today's word", today_path, class: "ui-btn is-accent" %></p>
+    </article>
+  </main>
+</div>

@@ -1,8 +1,5 @@
 <% content_for :title, "Home · BiblioRata" %>
-<%# Signed-in home: continue reading, verse of the day, today's plan, studies. %>
-<% vod_text = @verse_of_day&.text || "Open thou mine eyes, that I may behold wondrous things out of thy law." %>
-<% vod_ref = @verse_of_day ? @verse_of_day.reference_label : "Psalm 119:18" %>
-<% vod_trans = @verse_of_day ? @verse_of_day.translation_code : "KJV" %>
+<%# Signed-in home: word for today, continue reading, today's plan, studies. %>
 <% resume = @studies.first %>
 <div class="ps-root hm-root" data-controller="new-study">
   <%= render "studies/app_bar", title: "Home" %>
@@ -23,6 +20,8 @@
       </header>
 
       <div class="hm-grid">
+        <%= render "daily_words/card", word: @daily_word, compact: true, heading_id: "hm-word-title", share_modal: false %>
+
         <% if resume %>
           <%= link_to study_path(resume), class: "hm-card hm-continue" do %>
             <span class="ui-label">Continue reading</span>
@@ -32,17 +31,6 @@
             <span class="hm-continue-go"><%= icon(:chevron_right) %></span>
           <% end %>
         <% end %>
-
-        <section class="hm-card hm-vod">
-          <span class="ui-label">Verse of the day</span>
-          <blockquote><%= vod_text %></blockquote>
-          <div class="hm-vod-foot">
-            <span><%= vod_ref %> &middot; <%= vod_trans %></span>
-            <%= button_to studies_path, params: { reference: vod_ref, pane_count: 1 }, class: "ui-btn is-sm", form: { class: "contents" } do %>
-              Read <%= icon(:chevron_right) %>
-            <% end %>
-          </div>
-        </section>
 
         <% if @active_plan && @plan_today %>
           <section class="hm-card hm-plan">
@@ -101,4 +89,6 @@
     </div>
   </main>
   <%= render "studies/new_study_modal" %>
+  <%# Outside .hm-main (its own stacking context), so the modal covers the app bar. %>
+  <%= render "daily_words/share_modal", word: @daily_word if @daily_word %>
 </div>

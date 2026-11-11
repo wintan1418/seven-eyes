@@ -103,6 +103,9 @@ application.register("setlist", SetlistController)
 import ShareCardController from "./share_card_controller"
 application.register("share-card", ShareCardController)
 
+import DailyWordController from "./daily_word_controller"
+application.register("daily-word", DailyWordController)
+
 import ShareController from "./share_controller"
 application.register("share", ShareController)
 

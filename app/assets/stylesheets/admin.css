@@ -73,3 +73,15 @@
   font: 600 10px "Cinzel", serif; letter-spacing: 0.18em; text-transform: uppercase;
 }
 .ps-preach-finds .card .project:hover { background: var(--rubric-deep); }
+
+/* Word for Today panel */
+.ps-admin .dw-admin-ref { margin: 0 0 8px; font-size: 16px; color: var(--ink-soft); }
+.ps-admin .dw-admin-ref a { color: var(--rubric); }
+.ps-admin .dw-admin-text { margin: 0 0 8px; max-width: 46rem; font-size: 15px; line-height: 1.55; color: var(--ink-soft); }
+.ps-admin .dw-admin-flash { margin: 0 0 10px; font-style: italic; color: var(--rubric); }
+.ps-admin .dw-admin-btn {
+  margin-top: 4px; padding: 7px 14px; cursor: pointer; background: transparent; color: var(--rubric);
+  font: 600 10.5px "Cinzel", serif; letter-spacing: 0.16em; text-transform: uppercase;
+  border: 1px solid rgba(138, 116, 68, 0.55); border-radius: 3px;
+}
+.ps-admin .dw-admin-btn:hover { background: var(--vellum-1); }

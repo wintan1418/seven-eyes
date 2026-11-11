@@ -1,8 +1,11 @@
-<%# locals: study — the share-as-image modal (passage card + chapter prayer). %>
+<%# locals: study — the share-as-image modal (passage card + chapter prayer).
+    Pages without a study (Word for Today) pass card_url / prayer_url instead. %>
+<% card_url = local_assigns[:card_url] || share_card_study_path(study) %>
+<% prayer_url = local_assigns[:prayer_url] || prayer_study_path(study) %>
 <div class="ps-share-host" data-share-card-target="host"
      data-controller="share-card"
-     data-share-card-card-url-value="<%= share_card_study_path(study) %>"
-     data-share-card-prayer-url-value="<%= prayer_study_path(study) %>">
+     data-share-card-card-url-value="<%= card_url %>"
+     data-share-card-prayer-url-value="<%= prayer_url %>">
   <div class="ps-book-backdrop" data-action="share-card#close"></div>
   <aside class="ps-share-panel">
     <div class="ps-share-head">

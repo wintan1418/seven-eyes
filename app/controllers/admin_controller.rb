@@ -1,5 +1,5 @@
 # The pastor's bird's-eye view: who is using the app and what's happening.
-# Read-only; only accounts flagged admin (bin/rails admin:grant EMAIL=...) get in.
+# Read-only (apart from re-writing today's Word for Today); only accounts flagged admin (bin/rails admin:grant EMAIL=...) get in.
 class AdminController < ApplicationController
   before_action :require_admin
 
@@ -25,6 +25,19 @@ class AdminController < ApplicationController
     @ai_reports = AiReport.recent.includes(:user).limit(RECENT_LIMIT)
     @signups_this_week = User.where(created_at: 1.week.ago..).count
     @studies_this_week = Study.where(created_at: 1.week.ago..).count
+    @daily_word = DailyWord.find_by(date: DailyWord.today_date)
+  end
+
+  # Ask the AI to write today's reflection and prayer again (e.g. after a
+  # report). Synchronous: the admin waits a few seconds and sees the result.
+  # On failure the old text stays.
+  def regenerate_daily_word
+    word = DailyWord.ensure_for(DailyWord.today_date)
+    if word&.claim_composition(force: true) && word.compose!
+      redirect_to admin_path, notice: "Today's word was rewritten."
+    else
+      redirect_to admin_path, alert: "The AI couldn't write a new one just now; the old text is kept."
+    end
   end
 
   private

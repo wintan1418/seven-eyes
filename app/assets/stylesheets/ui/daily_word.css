@@ -1,0 +1,55 @@
+/* Word for Today ----------------------------------------------------------
+   The card (signed-in home, landing, /today) and the public /today page.
+   Uses the reader tokens, so it follows light / sepia / dark. */
+.dw-card {
+  display: flex; flex-direction: column; gap: 12px; padding: 24px 24px 20px;
+  border-radius: 22px; background: var(--ui-surface); color: var(--ui-fg); font-family: var(--ui-font);
+}
+@media (min-width: 768px) { .dw-card { padding: 30px 32px 24px; } }
+.dw-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; }
+.dw-label { margin: 0; }
+.dw-label a { color: inherit; text-decoration: none; }
+.dw-label a:hover { color: var(--ui-accent); }
+.dw-date { font: 500 13px var(--ui-font); color: var(--ui-fg-subtle); }
+.dw-verse { margin: 4px 0 0; font: 400 22px/1.55 var(--reader-font); color: var(--ui-fg); }
+@media (min-width: 768px) { .dw-verse { font-size: 25px; } }
+.dw-card.is-compact .dw-verse { font-size: 20px; }
+@media (min-width: 768px) { .dw-card.is-compact .dw-verse { font-size: 22px; } }
+.dw-ref { margin: 0; font: 600 14px var(--ui-font); color: var(--ui-accent); }
+.dw-reflection { margin: 4px 0 0; font: 400 16px/1.65 var(--ui-font); color: var(--ui-fg-muted); max-width: 42rem; }
+.dw-reflection.is-fallback { font-style: italic; }
+.dw-prayer { border-top: 1px solid var(--ui-border); padding-top: 10px; }
+.dw-prayer summary {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer; list-style: none;
+  font: 600 13px var(--ui-font); color: var(--ui-fg-muted);
+}
+.dw-prayer summary::-webkit-details-marker { display: none; }
+.dw-prayer summary svg { width: 16px; height: 16px; }
+.dw-prayer summary .dw-chev { display: inline-flex; transition: transform .15s; }
+.dw-prayer summary .dw-chev svg { width: 14px; height: 14px; }
+.dw-prayer[open] summary .dw-chev { transform: rotate(180deg); }
+.dw-prayer p { margin: 8px 0 0; font: italic 400 18px/1.6 var(--reader-font); color: var(--ui-fg); }
+.dw-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.dw-actions .ui-btn { gap: 6px; }
+.dw-actions .ui-btn svg { width: 16px; height: 16px; }
+.dw-card .ps-ai-report { align-self: flex-start; }
+
+/* Home: the word leads, full width, above Continue / plan. */
+.hm-grid > .dw-card { grid-column: 1 / -1; }
+@media (min-width: 900px) { .hm-grid:has(> .dw-card) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Public /today page */
+.dw-page-head { margin: 28px 0 18px; text-align: center; }
+.dw-page-head h1 { margin: 0; font: 600 34px/1.15 var(--reader-font); letter-spacing: -0.01em; }
+@media (min-width: 768px) { .dw-page-head h1 { font-size: 42px; } }
+.dw-page-head p { margin: 8px 0 0; font: 400 15px var(--ui-font); color: var(--ui-fg-muted); }
+.dw-archive { margin-top: 40px; }
+.dw-archive h2 { margin: 0 0 12px; font: 700 18px var(--ui-font); letter-spacing: -0.01em; }
+.dw-archive ol { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--ui-border); }
+.dw-archive li a {
+  display: flex; justify-content: space-between; gap: 12px; padding: 12px 4px;
+  border-bottom: 1px solid var(--ui-border); color: var(--ui-fg); text-decoration: none; font: 400 15px var(--ui-font);
+}
+.dw-archive li a:hover { background: var(--ui-surface); }
+.dw-archive .when { color: var(--ui-fg-muted); white-space: nowrap; }
+.dw-today-link { margin-top: 16px; text-align: center; }

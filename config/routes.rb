@@ -36,12 +36,21 @@ Rails.application.routes.draw do
   get "/remote/:code", to: "remotes#show", as: :remote_pad
 
   get "/admin", to: "admin#show", as: :admin
+  post "/admin/daily_word/regenerate", to: "admin#regenerate_daily_word", as: :admin_regenerate_daily_word
 
   get "/s/:token", to: "shared_studies#show", as: :shared_study
 
   # Public, no-login share pages for a passage + an optional chapter prayer.
   get "/p/:slug/open", to: "passages#open", as: :open_passage
   get "/p/:slug",      to: "passages#show", as: :passage
+
+  # Word for Today: today's passage + AI reflection, past days, share JSON.
+  get "/today", to: "daily_words#show", as: :today
+  constraints date: /\d{4}-\d{2}-\d{2}/ do
+    get "/today/:date",        to: "daily_words#show",   as: :daily_word
+    get "/today/:date/card",   to: "daily_words#card",   as: :daily_word_card, defaults: { format: :json }
+    get "/today/:date/prayer", to: "daily_words#prayer", as: :daily_word_prayer, defaults: { format: :json }
+  end
 
   # Audio Bible: cached per-chapter narration (JSON status + playable URL).
   get "/audio/chapter", to: "audio_chapters#show", as: :audio_chapter

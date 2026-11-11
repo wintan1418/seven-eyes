@@ -1,0 +1,62 @@
+<%# locals: word (DailyWord or nil), compact (home/landing: prayer folds away),
+    heading_id, show_head (false on /today, whose page heading already says it),
+    share_modal (false where the page renders daily_words/share_modal itself,
+    outside a stacking context — the signed-in home's scroller).
+    The Word for Today: verse, AI reflection and prayer, and Read / Share / Copy.
+    With no word (no Bible seeded) a fixed verse stands in; with no reflection
+    yet (AI off or still writing) a gentle line does. %>
+<% compact = local_assigns.fetch(:compact, false) %>
+<% heading_id = local_assigns.fetch(:heading_id, "dw-title") %>
+<% show_head = local_assigns.fetch(:show_head, true) %>
+<% share_modal = local_assigns.fetch(:share_modal, true) %>
+<% if word %>
+  <% url = daily_word_url(word) %>
+  <section class="dw-card<%= ' is-compact' if compact %>" aria-labelledby="<%= heading_id %>"
+           data-controller="daily-word" data-daily-word-text-value="<%= word.share_text(url) %>">
+    <% if show_head %>
+      <header class="dw-head">
+        <h2 class="ui-label dw-label" id="<%= heading_id %>">
+          <%= link_to_unless_current "Word for today", today_path %>
+        </h2>
+        <time class="dw-date" datetime="<%= word.date.iso8601 %>"><%= word.date.strftime("%A, %-d %B") %></time>
+      </header>
+    <% end %>
+
+    <blockquote class="dw-verse"><%= word.verse_text %></blockquote>
+    <p class="dw-ref"><%= word.reference %> &middot; <%= word.translation_code %></p>
+
+    <% if word.composed? %>
+      <p class="dw-reflection"><%= word.reflection %></p>
+      <details class="dw-prayer"<%= " open" unless compact %>>
+        <summary><%= icon(:prayer) %> A prayer for today <span class="dw-chev"><%= icon(:chevron_down) %></span></summary>
+        <p><%= word.prayer %></p>
+      </details>
+    <% else %>
+      <p class="dw-reflection is-fallback"><%= DailyWord::FALLBACK_LINE %></p>
+    <% end %>
+
+    <div class="dw-actions">
+      <%= button_to studies_path, params: { reference: word.chapter_label, pane_count: 1 },
+            class: "ui-btn is-sm is-accent", form: { class: "contents" } do %>
+        <%= icon(:book) %> Read the chapter
+      <% end %>
+      <button type="button" class="ui-btn is-sm" data-action="daily-word#share"><%= icon(:share) %> Share</button>
+      <button type="button" class="ui-btn is-sm" data-action="daily-word#copy" data-daily-word-target="copy"><%= icon(:copy) %> Copy text</button>
+    </div>
+
+    <% if word.composed? %>
+      <%= render "shared/ai_report", kind: "daily_word", key: "daily_word_#{word.date.iso8601}",
+                 context: word.reference, excerpt: [ word.reflection, word.prayer ].join("\n\n") %>
+    <% end %>
+
+    <%= render "daily_words/share_modal", word: word if share_modal %>
+  </section>
+<% else %>
+  <section class="dw-card<%= ' is-compact' if compact %>" aria-labelledby="<%= heading_id %>">
+    <% if show_head %>
+      <header class="dw-head"><h2 class="ui-label dw-label" id="<%= heading_id %>">Word for today</h2></header>
+    <% end %>
+    <blockquote class="dw-verse">Open thou mine eyes, that I may behold wondrous things out of thy law.</blockquote>
+    <p class="dw-ref">Psalms 119:18 &middot; KJV</p>
+  </section>
+<% end %>
