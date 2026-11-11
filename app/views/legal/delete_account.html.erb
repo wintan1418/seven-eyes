@@ -1,0 +1,53 @@
+<% content_for :title, "Delete Your Account · BiblioRata" %>
+<div class="ps-root ps-tut-root">
+  <div class="ps-tut">
+    <header class="ps-tut-hero">
+      <div class="eyebrow">&#9769; &nbsp; BiblioRata &nbsp; &#9769;</div>
+      <h1>Delete your BiblioRata account</h1>
+      <p class="lede">How to permanently delete your BiblioRata account and the data in it.</p>
+      <div class="ps-tut-hero-cta">
+        <%= link_to "Back to your desk", root_path, class: "cta secondary" %>
+        <%= link_to "Privacy Policy", privacy_path, class: "cta secondary" %>
+      </div>
+    </header>
+
+    <article class="mx-auto max-w-3xl px-6 pb-16 text-[17px] leading-relaxed">
+      <p>This page is for the BiblioRata app on Android and iPhone and the website at
+         bibliorata.com. They share one account, so deleting it in one place deletes it
+         everywhere.</p>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">Delete it yourself (takes a minute)</h2>
+      <ol class="ml-6 list-decimal">
+        <li><strong>In the app:</strong> open the <strong>More</strong> tab and tap
+            <strong>Account</strong>. <strong>On the web:</strong> sign in and go to
+            <%= link_to "bibliorata.com/account", account_url %>.</li>
+        <li>Under <strong>Delete my account</strong>, type your password.</li>
+        <li>Tap <strong>Delete my account</strong> and confirm.</li>
+      </ol>
+      <p class="mt-4">Your account is deleted straight away. If you want a copy first, use
+         <strong>Download my data</strong> on the same page.</p>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">Can&rsquo;t sign in? Ask us</h2>
+      <p>Email <%= mail_to LegalController.contact_email, nil,
+           subject: "Delete my BiblioRata account" %> from the email address you signed up with,
+         with the subject &ldquo;Delete my BiblioRata account&rdquo;. We will delete the account
+         and confirm by email within 30 days. We may ask you to confirm the request from that
+         address before we delete anything.</p>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">What is deleted</h2>
+      <ul class="ml-6 list-disc">
+        <li>Your account: email address and password.</li>
+        <li>Your studies, notes, highlights, reading plans, plan progress and reflections.</li>
+        <li>Your preach queues and any pictures you uploaded for them.</li>
+        <li>Your live sessions and shared-study links (shared links stop working).</li>
+        <li>Your sign-in sessions, AI usage counters, and any testimonials or ratings you left.</li>
+      </ul>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">What may be kept, and for how long</h2>
+      <p>Copies in our backups are overwritten within a limited time, and server logs (IP
+         addresses and pages requested) are kept for a short period for security. Neither is used
+         to restore your account. Bibles you downloaded for offline reading stay on your device
+         until you remove them in the app or uninstall it.</p>
+    </article>
+  </div>
+</div>

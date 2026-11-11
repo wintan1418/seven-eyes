@@ -84,9 +84,26 @@ class AccountsTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "AI-generated content"
     get privacy_path
     assert_response :success
-    assert_includes response.body, "What we store"
+    assert_includes response.body, "What we collect"
+    assert_not_includes response.body, "DRAFT TEMPLATE"
+    assert_select "a[href=?]", delete_account_path
     get new_registration_path
     assert_select "a[href=?]", terms_path
     assert_select "a[href=?]", privacy_path
+  end
+
+  test "the delete-account page is public and explains how to delete" do
+    get delete_account_path
+    assert_response :success
+    assert_includes response.body, "Delete your BiblioRata account"
+    assert_includes response.body, "More"
+    assert_includes response.body, LegalController.contact_email
+  end
+
+  test "no legal page shows template placeholders" do
+    [ terms_path, privacy_path, delete_account_path ].each do |path|
+      get path
+      assert_no_match(/\[(LEGAL ENTITY|DATE|JURISDICTION|LAWYER|ADD:|N\]|13\/16)/, response.body, path)
+    end
   end
 end

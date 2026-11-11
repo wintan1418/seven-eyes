@@ -4,7 +4,7 @@
     <header class="ps-tut-hero">
       <div class="eyebrow">&#9769; &nbsp; BiblioRata &nbsp; &#9769;</div>
       <h1>Privacy Policy</h1>
-      <p class="lede">Last updated: [DATE — set before publishing]</p>
+      <p class="lede">Last updated: <%= LegalController::PRIVACY_UPDATED_ON.to_fs(:long) %></p>
       <div class="ps-tut-hero-cta">
         <%= link_to "Back to your desk", root_path, class: "cta secondary" %>
         <%= link_to "Terms of Service", terms_path, class: "cta secondary" %>
@@ -12,70 +12,129 @@
     </header>
 
     <article class="mx-auto max-w-3xl px-6 pb-16 text-[17px] leading-relaxed">
-      <p class="my-4 rounded border border-dashed p-4 italic">
-        DRAFT TEMPLATE — to be reviewed and completed by the owner and a qualified lawyer (GDPR /
-        UK GDPR / CCPA or local equivalents as applicable) before BiblioRata is sold or offered
-        commercially. Bracketed items must be filled in.
-      </p>
+      <p>BiblioRata (&ldquo;we&rdquo;, &ldquo;us&rdquo;) is a Bible reading, study and preaching
+         app. This policy covers the website at bibliorata.com and the BiblioRata apps for Android
+         and iPhone, which show the same service. We collect only what the app needs to work, we
+         never sell your data, and we don&rsquo;t show ads.</p>
 
-      <h2 class="mt-8 mb-2 text-xl font-semibold">1. Who is responsible</h2>
-      <p>[LEGAL ENTITY NAME], [REGISTERED ADDRESS], is the controller of the personal data described
-         here. Contact: <%= mail_to LegalController.contact_email %>.</p>
-
-      <h2 class="mt-8 mb-2 text-xl font-semibold">2. What we store</h2>
+      <h2 class="mt-8 mb-2 text-xl font-semibold">1. What we collect</h2>
+      <p>You can read the Bible, compare translations and use most study tools without an account.
+         If you create one, we store:</p>
       <ul class="ml-6 list-disc">
-        <li><strong>Account:</strong> your email address and a securely hashed password (we never
-            see your password itself), plus display preferences.</li>
-        <li><strong>Your study content:</strong> studies, pane references, notes, highlights and
-            highlight notes, preach queues (songs, thoughts, pictures you upload), reading plans
-            and reflections.</li>
-        <li><strong>Sign-in sessions:</strong> the IP address and browser user-agent of each
-            sign-in, kept so you stay signed in (sessions expire after 30 days).</li>
-        <li><strong>Guests:</strong> a study tied to a browser cookie, without an account.</li>
-        <li><strong>Feedback:</strong> testimonials and ratings you choose to submit.</li>
-        <li><strong>Operational data:</strong> server logs (IP address, pages requested) and, if
-            enabled, error reports, kept for up to [N] days for security and debugging. Note text
-            and AI prompts are filtered out of logs.</li>
+        <li><strong>Account:</strong> your email address and your password, stored only as a
+            secure hash (we never see the password itself), plus your display preferences such as
+            theme and text size.</li>
+        <li><strong>Your study content:</strong> studies, the passages open in them, notes,
+            highlights and highlight notes, reading plans and the days you finish, plan
+            reflections, and preach queues (songs, thoughts and any pictures you upload for
+            them).</li>
+        <li><strong>Sign-in sessions:</strong> the IP address and browser or app version of each
+            sign-in, so you stay signed in. Sessions expire after 30 days.</li>
+        <li><strong>Testimonials:</strong> if you choose to leave a testimonial or a rating, we
+            store what you write. If we publish a testimonial on our home page, it is shown with the
+            part of your email address before the &ldquo;@&rdquo;.</li>
+      </ul>
+      <p class="mt-4">Without an account, a study you work on is kept on our server and linked
+         to your browser or app by a cookie.</p>
+      <p class="mt-4">Information collected automatically:</p>
+      <ul class="ml-6 list-disc">
+        <li><strong>Server logs:</strong> your IP address, browser or app version and the pages you
+            request, kept for security and troubleshooting. The text of your notes and of your AI
+            questions is filtered out of these logs.</li>
+        <li><strong>Error reports:</strong> when something breaks, a technical report of the
+            error may be sent to our error-monitoring service. We configure it not to include your
+            email address, IP address, cookies or what you typed.</li>
+        <li><strong>On your device:</strong> Bibles you download for offline reading, and
+            settings such as your theme, are stored in your browser or app on your device.</li>
+      </ul>
+      <p class="mt-4">We do not use advertising, analytics or tracking tools, and we don&rsquo;t
+         collect your location, contacts, photos library, microphone or camera. The only pictures
+         we receive are ones you choose to upload.</p>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">2. How we use it</h2>
+      <ul class="ml-6 list-disc">
+        <li>To provide the app: save your studies, notes, highlights and plans and show them on
+            every device you sign in on.</li>
+        <li>To run the features you ask for, such as AI study help, audio Bible, sharing and
+            live follow-along.</li>
+        <li>To send you emails you request, such as a password reset.</li>
+        <li>To keep the service secure, prevent abuse and fix problems.</li>
       </ul>
 
-      <h2 class="mt-8 mb-2 text-xl font-semibold">3. AI features and third parties</h2>
-      <p>When you use an AI feature, the passage you selected, the surrounding chapter and the text
-         you typed are sent to our AI providers ([e.g. Google Gemini, OpenAI, Abacus.AI]) to
-         generate the answer. Don&rsquo;t put personal or confidential information into AI
-         questions. Some AI answers are cached so a repeat question doesn&rsquo;t cost another call.
-         Other processors: hosting ([HOSTING PROVIDER]), image storage (Cloudinary, for pictures you
-         upload), email delivery ([EMAIL PROVIDER]) and error monitoring ([e.g. Sentry], if enabled).
-         We do not sell your personal data or use it for advertising.</p>
+      <h2 class="mt-8 mb-2 text-xl font-semibold">3. AI features</h2>
+      <p>The AI tools (the Rabbi, Find a Verse, quick search, chapter prayers, diagrams and
+         illustrations) need an account. When you use one, the passage you selected, the
+         surrounding chapter and the text you typed are sent to an AI provider (Google Gemini,
+         OpenAI or Abacus.AI) to produce the answer. Some answers are cached so a repeated question
+         doesn&rsquo;t need another call. Please don&rsquo;t put personal or confidential
+         information into AI questions.</p>
 
-      <h2 class="mt-8 mb-2 text-xl font-semibold">4. Why we use it (legal bases)</h2>
-      <p>To provide the Service you asked for (contract), to keep it secure and prevent abuse
-         (legitimate interests), and to send you password-reset emails you request.
-         [LAWYER: confirm bases for your jurisdiction.]</p>
+      <h2 class="mt-8 mb-2 text-xl font-semibold">4. What others can see</h2>
+      <p>Your studies, notes and highlights are private to you. Some things become visible to
+         others only when you choose: a study you share by link, a passage or prayer you share, and
+         a live session you start (anyone with the link or QR code can follow it). A published
+         testimonial is visible on our home page.</p>
 
-      <h2 class="mt-8 mb-2 text-xl font-semibold">5. Cookies</h2>
-      <p>We use strictly necessary cookies only: a session cookie, a sign-in cookie, and a
-         security token. Some preferences (such as projection settings) are kept in your
-         browser&rsquo;s local storage.</p>
+      <h2 class="mt-8 mb-2 text-xl font-semibold">5. Who we share it with</h2>
+      <p>We don&rsquo;t sell or rent your data and we don&rsquo;t share it for advertising. We use
+         these service providers to run BiblioRata, and each gets only what it needs:</p>
+      <ul class="ml-6 list-disc">
+        <li><strong>Hosting and security:</strong> our servers and database (Hetzner, in the EU),
+            and Cloudflare, which protects and speeds up the site.</li>
+        <li><strong>Image storage:</strong> Cloudinary stores pictures you upload to a preach
+            queue.</li>
+        <li><strong>AI providers:</strong> Google, OpenAI and Abacus.AI, as described above. Google
+            and OpenAI also turn Scripture text into speech for the audio Bible; no personal data is
+            sent for that.</li>
+        <li><strong>Email:</strong> an email delivery provider sends password-reset emails.</li>
+        <li><strong>Error monitoring:</strong> Sentry, for the error reports described above.</li>
+      </ul>
+      <p class="mt-4">We may also disclose information if the law requires it, or to protect
+         someone&rsquo;s safety.</p>
 
-      <h2 class="mt-8 mb-2 text-xl font-semibold">6. Your rights and choices</h2>
-      <p>From the Account page you can <strong>download all your data</strong> as a JSON file and
-         <strong>permanently delete your account</strong> and everything in it. You may also contact
-         us to access, correct or erase your data, or to object to processing. You can complain to
-         your local data-protection authority.</p>
+      <h2 class="mt-8 mb-2 text-xl font-semibold">6. Cookies</h2>
+      <p>We use only cookies that the app needs: a session cookie, a sign-in cookie, a security
+         token, and small preference cookies such as your reading theme. No advertising or tracking
+         cookies.</p>
 
-      <h2 class="mt-8 mb-2 text-xl font-semibold">7. Retention</h2>
-      <p>Your content is kept until you delete it or your account. Guest studies not claimed by an
-         account may be removed after [N] days. Backups are overwritten within [N] days.</p>
+      <h2 class="mt-8 mb-2 text-xl font-semibold">7. Your choices and rights</h2>
+      <ul class="ml-6 list-disc">
+        <li><strong>Download your data:</strong> on the Account page, download every study, note,
+            highlight and reading plan as a file.</li>
+        <li><strong>Delete your account:</strong> in the app go to More &rarr; Account &rarr;
+            Delete my account, or on the web at <%= link_to "bibliorata.com/account", account_url %>.
+            This permanently deletes your account and everything in it.
+            <%= link_to "How to delete your account", delete_account_path %> also explains how to ask
+            us by email.</li>
+        <li>You can contact us to access, correct or erase your data, or to object to how we use
+            it. Depending on where you live, you may also complain to your data-protection
+            authority.</li>
+      </ul>
 
-      <h2 class="mt-8 mb-2 text-xl font-semibold">8. Security</h2>
-      <p>Traffic is encrypted (HTTPS), passwords are hashed, and access is rate-limited. No system is
-         perfectly secure; we will notify you of a breach affecting your data as the law requires.</p>
+      <h2 class="mt-8 mb-2 text-xl font-semibold">8. How long we keep it</h2>
+      <p>We keep your content while your account is open. When you delete your account, your
+         studies, notes, highlights, reading plans, sign-in sessions, testimonials and uploaded
+         pictures are deleted from our live systems straight away. Copies may remain in backups for
+         a limited time until they are overwritten, and server logs are kept for a short period for
+         security.</p>
 
-      <h2 class="mt-8 mb-2 text-xl font-semibold">9. Children</h2>
-      <p>The Service is not directed at children under [13/16], and they should not create accounts.</p>
+      <h2 class="mt-8 mb-2 text-xl font-semibold">9. Security</h2>
+      <p>All traffic is encrypted (HTTPS), passwords are stored only as secure hashes, and sign-in
+         and other sensitive actions are rate-limited. No system is perfectly secure, so please use
+         a strong, unique password. We will tell you about a breach affecting your data as the law
+         requires.</p>
 
-      <h2 class="mt-8 mb-2 text-xl font-semibold">10. Changes</h2>
-      <p>We will post changes to this policy here and update the date above.</p>
+      <h2 class="mt-8 mb-2 text-xl font-semibold">10. Children</h2>
+      <p>BiblioRata is not directed at children under 13, and children under 13 should not create
+         an account. If you believe a child under 13 has an account, contact us and we will delete
+         it.</p>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">11. Changes</h2>
+      <p>If we change this policy, we will post the new version here and update the date above.
+         For significant changes we will also let you know in the app.</p>
+
+      <h2 class="mt-8 mb-2 text-xl font-semibold">12. Contact us</h2>
+      <p>Questions or requests about your privacy: <%= mail_to LegalController.contact_email %>.</p>
     </article>
   </div>
 </div>
