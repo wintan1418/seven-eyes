@@ -49,17 +49,17 @@ class AiChatTest < ActiveSupport::TestCase
     assert_equal :api, res.error
   end
 
-  test "prefers Gemini when its key is present" do
+  test "prefers OpenAI when both keys are present" do
     res = FakeChat.new(keys: { openai: "k", gemini: "g" }, openai: "from-openai", gemini: "from-gemini").call
     assert res.ok?
-    assert_equal :gemini, res.provider
-    assert_equal "from-gemini", res.content
+    assert_equal :openai, res.provider
+    assert_equal "from-openai", res.content
   end
 
-  test "fails over from Gemini to OpenAI when Gemini is unavailable" do
-    res = FakeChat.new(keys: { openai: "k", gemini: "g" }, gemini: :raise, openai: "saved").call
+  test "fails over from OpenAI to Gemini when OpenAI is unavailable" do
+    res = FakeChat.new(keys: { openai: "k", gemini: "g" }, openai: :raise, gemini: "saved").call
     assert res.ok?
-    assert_equal :openai, res.provider
+    assert_equal :gemini, res.provider
   end
 
   # Captures the request body instead of touching the network.
@@ -103,5 +103,15 @@ class AiChatTest < ActiveSupport::TestCase
     chat.call
     user_msg = chat.bodies.first[:messages].last[:content]
     assert_equal AiChat::MAX_PROMPT_CHARS, user_msg.length
+  end
+
+  test "OpenAI is tried first by default, and AI_PROVIDER_ORDER can change that" do
+    assert_equal %i[openai gemini routellm], AiChat.provider_order
+    ENV["AI_PROVIDER_ORDER"] = "gemini, openai"
+    assert_equal %i[gemini openai routellm], AiChat.provider_order
+    ENV["AI_PROVIDER_ORDER"] = "nonsense"
+    assert_equal %i[openai gemini routellm], AiChat.provider_order
+  ensure
+    ENV.delete("AI_PROVIDER_ORDER")
   end
 end

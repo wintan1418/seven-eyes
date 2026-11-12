@@ -27,12 +27,17 @@ class AiChat
   ROUTELLM_DEFAULT_MODEL = "route-llm".freeze
   ROUTELLM_DEFAULT_URL   = "https://routellm.abacus.ai/v1/chat/completions".freeze
 
-  # Order = priority. A provider is skipped if it has no key. Gemini is tried
-  # first (preferred when its quota is healthy); OpenAI is the automatic fail-over
-  # when Gemini is unavailable (e.g. its free tier hit a hard limit:0 quota), then
-  # RouteLLM last. Fail-over is transparent — a dead provider just costs one failed
-  # request before the next is tried.
-  PROVIDERS = %i[ gemini openai routellm ].freeze
+  # Order = priority. A provider is skipped if it has no key. OpenAI is tried
+  # first; Gemini is the fail-over (new Gemini keys only get the newest model,
+  # which is often slow or "high demand"), then RouteLLM last. Fail-over is
+  # transparent: a dead provider just costs one failed request before the next.
+  # AI_PROVIDER_ORDER (e.g. "gemini,openai") overrides the order without a deploy.
+  PROVIDERS = %i[ openai gemini routellm ].freeze
+
+  def self.provider_order
+    custom = ENV["AI_PROVIDER_ORDER"].to_s.split(",").map { |name| name.strip.downcase.to_sym } & PROVIDERS
+    custom.any? ? custom + (PROVIDERS - custom) : PROVIDERS
+  end
 
   # Cost/latency guards: every request carries an output-token ceiling, the
   # prompt is capped, and a hung provider is abandoned quickly (a Puma thread
@@ -60,7 +65,7 @@ class AiChat
   end
 
   def call
-    configured = PROVIDERS.select { |p| key_for(p).present? }
+    configured = self.class.provider_order.select { |p| key_for(p).present? }
     return Result.new(ok: false, error: :no_key) if configured.empty?
     # Global daily backstop across every AI feature — fails soft, never raises.
     return Result.new(ok: false, error: :budget) unless AiBudget.charge(:chat)

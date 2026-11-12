@@ -42,10 +42,10 @@ class AiModels
 
     def pick_gemini_flash(ids)
       names = ids.map { |id| id.delete_prefix("models/") }
-      return "gemini-flash-latest" if names.include?("gemini-flash-latest")
-
+      # Newest numbered model first: Google keeps listing "gemini-flash-latest"
+      # but refuses it (404 "no longer available to new users") on new keys.
       stable = names.grep(/\Agemini-\d+(\.\d+)?-flash\z/)
-      stable.max_by { |id| version(id, "gemini") }
+      stable.max_by { |id| version(id, "gemini") } || ("gemini-flash-latest" if names.include?("gemini-flash-latest"))
     end
 
     private
