@@ -536,6 +536,39 @@
   animation: ps-live-pulse 2.2s ease-in-out infinite;
 }
 .ps-root.is-projecting .ps-preach-live { display: inline-flex; }
+
+/* "Ready offline" — whether this study's Bibles are on the device */
+.ps-preach-offline {
+  display: inline-flex;
+  align-items: center;
+  max-width: 22rem;
+  padding: 5px 12px;
+  border: 1px solid rgba(163, 129, 46, 0.5);
+  border-radius: 999px;
+  background: rgba(216, 181, 80, 0.1);
+  color: var(--gold);
+  font: inherit;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: default;
+}
+.ps-preach-offline[hidden] { display: none; }
+.ps-preach-offline > span { overflow: hidden; text-overflow: ellipsis; }
+.ps-preach-offline[data-state="ready"] {
+  border-color: rgba(127, 174, 107, 0.7);
+  background: rgba(127, 174, 107, 0.16);
+  color: #b9d9a8;
+}
+.ps-preach-offline[data-state="missing"] {
+  border-color: rgba(214, 140, 90, 0.75);
+  background: rgba(138, 36, 24, 0.28);
+  color: #f0c8b4;
+  cursor: pointer;
+}
+.ps-preach-offline[data-state="downloading"] { animation: ps-live-pulse 2.2s ease-in-out infinite; }
+@media (max-width: 900px) { .ps-preach-offline { max-width: 11rem; } }
 @keyframes ps-live-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.55; }

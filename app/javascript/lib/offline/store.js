@@ -2,7 +2,7 @@
 // aliases, icons), the reader's highlights, and who the data belongs to.
 // Used by the page (Downloads page, Get ready for Sunday, sync) and by the
 // service worker (rendering panes with no signal).
-import { get, getAll, getAllByIndex, put, del, clear, transaction, getMeta, setMeta } from "./db"
+import { get, getAll, getAllByIndex, put, del, clear, transaction, getMeta, setMeta, openDb, promisify } from "./db"
 
 export { getMeta, setMeta }
 
@@ -60,6 +60,7 @@ export async function downloadBible(summary, { onProgress = () => {}, signal } =
   const record = {
     code: bundle.code, id: bundle.id, name: bundle.name, display_name: bundle.display_name,
     vulgate: !!bundle.vulgate, version: bundle.version, size: summary.size, bytes: summary.bytes || text.length,
+    books: bundle.books.length,
     downloadedAt: new Date().toISOString()
   }
   await transaction([ "books", "bibles" ], (tx) => {
@@ -80,6 +81,22 @@ export async function removeBible(code) {
 
 export async function bookText(code, osis) {
   try { return await get("books", [ code, osis ]) } catch { return undefined }
+}
+
+const bookRange = (code) => IDBKeyRange.bound([ code, "" ], [ code, "\uffff" ])
+
+// Every book of one downloaded translation (the offline keyword search).
+export async function allBookTexts(code) {
+  try { return await getAll("books", bookRange(code)) } catch { return [] }
+}
+
+// How many books of a translation are on the device — "the whole Bible (66
+// books)", not just the passage being read.
+export async function bookCount(code) {
+  try {
+    const db = await openDb()
+    return await promisify(db.transaction("books").objectStore("books").count(bookRange(code)))
+  } catch { return 0 }
 }
 
 // Rough device usage for the Downloads page.

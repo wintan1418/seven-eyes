@@ -46,7 +46,9 @@ async function content(manifest, parse, downloaded, reference, translation) {
 
 // context: { position, compare, signedIn, translationId } — sent by the page
 // with every pane request (see page.js) because the form doesn't carry it all.
-export async function renderOfflinePane({ studyId, paneId, reference, translationId, context = {}, token }) {
+// onlyIfReady: return null unless the passage itself renders from a download
+// (preach mode's local-first load falls back to the server for anything else).
+export async function renderOfflinePane({ studyId, paneId, reference, translationId, context = {}, token, onlyIfReady = false }) {
   const { manifest, parse } = await parserFromManifest()
   if (!manifest || !parse) return null
   const downloaded = await downloadedBibles()
@@ -54,6 +56,7 @@ export async function renderOfflinePane({ studyId, paneId, reference, translatio
 
   const translation = effectiveTranslation(manifest, translationId || context.translationId)
   const result = await content(manifest, parse, downloaded, reference, translation)
+  if (onlyIfReady && !result.ok) return null
   const highlights = result.ok && context.signedIn ? await highlightsFor(result.verses.map((v) => v.id)) : []
 
   const icon = (name, css) => {

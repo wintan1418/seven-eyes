@@ -6,7 +6,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 
   # Lets offline tests cut the test server off (see OfflineTestHelper).
   Capybara.app = NetworkUnplug.new(Capybara.app) unless Capybara.app.is_a?(NetworkUnplug)
-  teardown { NetworkUnplug.unplugged = false }
+  teardown { NetworkUnplug.unplugged = false; NetworkUnplug.hanging = false }
 
   # On the study page: wait until Stimulus has connected (the theme
   # controller marks the current theme in the settings sheet on connect), so

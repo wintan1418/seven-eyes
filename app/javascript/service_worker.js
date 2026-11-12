@@ -16,6 +16,8 @@
 //     with no network the pane is rendered from the Bibles downloaded to
 //     IndexedDB (lib/offline/offline_pane.js) — same markup as the server.
 //   • /reference_check (preach Go box) is answered offline by the JS parser.
+//   • Both skip the network entirely while it is marked slow (lib/offline/
+//     network.js: a timeout marks it for 3 minutes; the page shares the mark).
 //   • Writes queued offline (outbox) are replayed on Background Sync.
 //   • Everything else passes straight through. An uncached page offline gets
 //     a small "you're offline" page.
@@ -24,6 +26,7 @@ import { getMeta, setMeta } from "./lib/offline/db"
 import { downloadedBibles } from "./lib/offline/store"
 import { renderOfflinePane, offlineReferenceCheck } from "./lib/offline/offline_pane"
 import { flushOutbox, queuePaneVisit } from "./lib/offline/outbox"
+import { networkSlowStored, markNetworkSlow, markNetworkFine } from "./lib/offline/network"
 
 const CONFIG = self.PS_SW || { version: "ps-dev", assets: [] }
 const CACHE_PREFIX = "ps-"
@@ -38,7 +41,10 @@ const STUDY_PAGE = /^\/studies\/\d+$/
 const OWN_PAGES = [ /^\/$/, /^\/read$/, /^\/more$/, /^\/offline$/, /^\/reading_plans$/, /^\/reading_plans\/\d+$/ ]
 const PANE_PATH = /^\/studies\/(\d+)\/panes\/(\d+)$/
 const FONT_HOSTS = [ "fonts.googleapis.com", "fonts.gstatic.com" ]
-const PANE_TIMEOUT_MS = 8000 // only when a downloaded Bible can answer instead
+// Only when a downloaded Bible can answer instead: a pane that hasn't come
+// back in 2 s comes from the device (preach mode can't wait out a dead signal).
+const PANE_TIMEOUT_MS = 2000
+const CHECK_TIMEOUT_MS = 1500 // /reference_check — the JS parser can always answer
 const MAX_SAVED_PAGES = 60
 
 self.addEventListener("install", () => {
@@ -219,6 +225,19 @@ function fetchWithTimeout(request, ms) {
   return fetch(request, { signal: controller.signal }).finally(() => clearTimeout(timer))
 }
 
+// fetchWithTimeout that feeds the shared circuit breaker.
+async function timed(request, ms) {
+  const started = Date.now()
+  try {
+    const res = await fetchWithTimeout(request, ms)
+    if (Date.now() - started < ms) markNetworkFine()
+    return res
+  } catch (e) {
+    markNetworkSlow()
+    throw e
+  }
+}
+
 async function paneRequest(event, url) {
   const request = event.request
   const copy = request.clone()
@@ -226,7 +245,8 @@ async function paneRequest(event, url) {
   // downloaded Bible can answer after a while instead.
   const canAnswer = (await downloadedBibles()).length > 0
   try {
-    return await (canAnswer ? fetchWithTimeout(request, PANE_TIMEOUT_MS) : fetch(request))
+    if (canAnswer && await networkSlowStored()) throw new Error("network marked slow")
+    return await (canAnswer ? timed(request, PANE_TIMEOUT_MS) : fetch(request))
   } catch (e) {
     const [ , studyId, paneId ] = url.pathname.match(PANE_PATH)
     let form
@@ -249,7 +269,8 @@ async function paneRequest(event, url) {
 
 async function referenceCheck(request, url) {
   try {
-    return await fetch(request)
+    if (await networkSlowStored()) throw new Error("network marked slow")
+    return await timed(request, CHECK_TIMEOUT_MS)
   } catch (e) {
     const body = await offlineReferenceCheck(url.searchParams.get("q") || "").catch(() => null)
     if (!body) return Response.error()

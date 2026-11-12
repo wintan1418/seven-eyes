@@ -65,13 +65,13 @@ export default class extends Controller {
     } else if (have && summary && have.version !== summary.version) {
       state.textContent = `Update available${size}`
     } else if (have) {
-      state.textContent = `✓ On this device · ${mb(have.bytes)}`
+      state.textContent = `✓ Whole Bible on this device${have.books ? ` (${have.books} books)` : ""} · ${mb(have.bytes)}`
     } else {
       state.textContent = summary ? `Not downloaded${size}` : (navigator.onLine ? "Not downloaded" : "Not downloaded — connect to download")
     }
     const stale = have && summary && have.version !== summary.version
     download.hidden = busy || (!!have && !stale) || !summary
-    download.querySelector("span").textContent = stale ? "Update" : "Download"
+    download.querySelector("span").textContent = stale ? "Update whole Bible" : "Download whole Bible"
     remove.hidden = busy || !have
   }
 

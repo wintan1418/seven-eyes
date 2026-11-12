@@ -29,6 +29,13 @@
         <span class="dot" aria-hidden="true"></span>
         <span data-live-target="count">0</span>&nbsp;following
       </span>
+      <%# Whether this study's Bibles are on the device (preach_offline_controller
+          downloads them for signed-in presenters on entering preach). %>
+      <button type="button" class="ps-preach-offline" hidden data-state="checking"
+              data-controller="preach-offline" data-action="preach-offline#download"
+              data-preach-offline>
+        <span data-preach-offline-target="label">Checking offline&hellip;</span>
+      </button>
     </div>
     <div class="ps-preach-bar-center">
       <div class="ps-preach-group">

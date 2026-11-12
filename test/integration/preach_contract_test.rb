@@ -12,7 +12,7 @@ class PreachContractTest < ActionDispatch::IntegrationTest
     data-preach-counter data-preach-group data-preach-anchor-pin data-preach-anchor-home
     data-preach-back data-preach-parallel data-preach-split data-preach-emph data-preach-project
     data-preach-blank data-preach-next data-preach-ref data-preach-slide data-preach-hold
-    data-preach-join data-preach-finds data-stage-ref data-stage-clock data-stage-now data-stage-next
+    data-preach-join data-preach-finds data-preach-offline data-stage-ref data-stage-clock data-stage-now data-stage-next
   ].freeze
 
   # Root classes the presentation/live/diff/interlinear controllers toggle and
