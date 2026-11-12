@@ -9,8 +9,9 @@ class AiModelsTest < ActiveSupport::TestCase
     assert_nil AiModels.pick_openai_image(%w[gpt-4o])
   end
 
-  test "picks gemini-flash-latest, else the newest stable Flash" do
-    assert_equal "gemini-flash-latest", AiModels.pick_gemini_flash(%w[models/gemini-3.8-flash models/gemini-flash-latest])
+  test "picks the newest numbered Flash, else gemini-flash-latest" do
+    assert_equal "gemini-3.8-flash", AiModels.pick_gemini_flash(%w[models/gemini-3.8-flash models/gemini-flash-latest models/gemini-2.5-flash])
+    assert_equal "gemini-flash-latest", AiModels.pick_gemini_flash(%w[models/gemini-flash-latest models/gemini-2.5-flash-lite])
     assert_equal "gemini-3.8-flash", AiModels.pick_gemini_flash(%w[models/gemini-2.5-flash models/gemini-3.8-flash models/gemini-3.8-flash-lite models/gemini-4-pro models/gemini-3.9-flash-preview])
     assert_nil AiModels.pick_gemini_flash(%w[models/gemini-4-pro])
   end
