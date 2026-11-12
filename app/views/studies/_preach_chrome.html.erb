@@ -64,7 +64,7 @@
               title="Back to where you were — the previous scripture or song (B)">&#10558; Back</button>
       <button type="button" class="ps-preach-tool"
               data-action="setlist#toggle"
-              title="The preach queue — scriptures, songs and thoughts lined up for the service">&#9835; Queue</button>
+              title="The preach queue — scriptures, songs and thoughts lined up for the service, with Preview (Q)">&#9835; Queue</button>
       <button type="button" class="ps-preach-tool"
               data-action="presentation#openJump"
               title="Go to a verse, chase any reference the preacher calls (rom 8:28), or describe a thought for AI search (G or /)">&#10148; Go to verse</button>
@@ -102,6 +102,9 @@
               data-remote-target="button"
               data-action="remote#toggle"
               title="Pair a phone as a remote clicker — next, previous, chase">&#9742; Remote</button>
+      <button type="button" class="ps-preach-tool"
+              data-action="presentation#toggleKeys"
+              title="Keyboard shortcuts (?)">&#9000; Keys</button>
     </div>
     <div class="ps-preach-bar-right">
       <button type="button" class="ps-preach-tool"
@@ -164,13 +167,54 @@
     <div class="ps-stage-next" data-stage-next></div>
   </div>
 
+  <%# The preach keyboard, one card ("?" or ⌨ Keys). Operator only. %>
+  <div class="ps-preach-keys" data-preach-keys hidden role="dialog" aria-label="Keyboard shortcuts">
+    <div class="head">
+      <span>Keyboard shortcuts</span>
+      <button type="button" class="close" data-action="presentation#toggleKeys" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="cols">
+      <dl>
+        <dt>On screen</dt>
+        <div><dd><kbd>&rarr;</kbd> <kbd>Space</kbd></dd><dd>Next verse</dd></div>
+        <div><dd><kbd>&larr;</kbd></dd><dd>Previous verse</dd></div>
+        <div><dd><kbd>G</kbd> <kbd>/</kbd></dd><dd>Go to a verse / reference (<kbd>Enter</kbd> live, <kbd>Shift</kbd>+<kbd>Enter</kbd> Preview)</dd></div>
+        <div><dd><kbd>1</kbd>&ndash;<kbd>3</kbd></dd><dd>Verses per slide</dd></div>
+        <div><dd><kbd>B</kbd></dd><dd>Back to where you were</dd></div>
+        <div><dd><kbd>H</kbd></dd><dd>Home to the teaching text</dd></div>
+        <div><dd><kbd>P</kbd></dd><dd>Parallel translations</dd></div>
+        <div><dd><kbd>.</kbd></dd><dd>Blank the projector</dd></div>
+        <div><dd><kbd>Esc</kbd></dd><dd>Close / leave preach (twice while projecting)</dd></div>
+      </dl>
+      <dl>
+        <dt>Queue &amp; Preview</dt>
+        <div><dd><kbd>Q</kbd></dd><dd>Into the queue</dd></div>
+        <div><dd><kbd>&uarr;</kbd> <kbd>&darr;</kbd></dd><dd>Pick a queue item</dd></div>
+        <div><dd><kbd>Enter</kbd></dd><dd>Preview it &mdash; again to go live</dd></div>
+        <div><dd><kbd>N</kbd></dd><dd>Preview the next queue item</dd></div>
+        <div><dd><kbd>L</kbd></dd><dd>Go live with what&rsquo;s in Preview</dd></div>
+        <div><dd><kbd>Alt</kbd>+<kbd>&uarr;</kbd> <kbd>&darr;</kbd></dd><dd>Move the item up / down</dd></div>
+        <div><dd><kbd>Delete</kbd></dd><dd>Remove it (<kbd>U</kbd> undoes)</dd></div>
+        <div><dd><kbd>E</kbd></dd><dd>Edit it</dd></div>
+        <div><dd><kbd>A</kbd></dd><dd>Type new items to add</dd></div>
+        <div><dd><kbd>?</kbd></dd><dd>This card</dd></div>
+      </dl>
+    </div>
+  </div>
+
   <div class="ps-preach-jump" hidden>
     <span>Go to</span>
     <input type="text" inputmode="search" placeholder="jn 3 16 &middot; 28 &middot; or a phrase"
            autocomplete="off" spellcheck="false" autocapitalize="none"
            data-presentation-target="jumpInput"
-           data-action="input->presentation#jumpPreview keydown.enter->presentation#jumpSubmit keydown.esc->presentation#cancelJump">
+           data-action="input->presentation#jumpPreview keydown.enter->presentation#jumpSubmit keydown.shift+enter->presentation#jumpPreviewSubmit keydown.esc->presentation#cancelJump">
     <button type="button" data-action="presentation#jumpSubmit">Go</button>
+    <button type="button" class="ps-preach-jump-preview" data-action="presentation#jumpPreviewSubmit"
+            title="Load it into Preview — the projector doesn't change until you Go live (Shift+Enter)">Preview</button>
+    <%# Opt-in: Enter previews instead of going straight to the screen. %>
+    <button type="button" class="ps-preach-jump-mode" data-preview-first aria-pressed="false"
+            data-action="preview#togglePreviewFirst"
+            title="When on, Enter loads Preview instead of the projector">Preview first</button>
     <%# What Enter will do, live as you type: "→ John 3:16", "Verse 28", or an AI search. %>
     <span class="ps-preach-jump-hint" data-presentation-target="jumpHint" aria-live="polite">Type a reference, a verse number, or describe a passage</span>
   </div>

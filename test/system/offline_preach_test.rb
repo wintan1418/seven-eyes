@@ -56,9 +56,9 @@ class OfflinePreachTest < ApplicationSystemTestCase
     assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-chapter='4'][data-verse-num='2']"
     assert_selector "[data-preach-counter]", text: /verse 2/i
 
-    # The queue: present a scripture item.
-    find(".ps-preach-bar [data-action~='setlist#toggle']").click
-    find(".ps-setlist-item .present", text: "John 4:3").click
+    # The queue (docked open on a wide screen): double-click puts a scripture item on screen.
+    find(".ps-preach-bar [data-action~='setlist#toggle']").click unless has_selector?(".ps-setlist-host.is-open", wait: 0)
+    find(".ps-setlist-item .present", text: "John 4:3").double_click
     assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-chapter='4'][data-verse-num='3']"
     find(".ps-setlist-host .ps-drawer-head .close").click if has_selector?(".ps-setlist-host.is-open", wait: 0)
 

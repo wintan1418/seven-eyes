@@ -207,8 +207,18 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   the ended overlay fetches `/live/:code/recap` — "tonight's scriptures" with `/p/:slug/open` links.
 - **Preach queue ("setlist")** — `SetlistItem` (study-scoped; kind enum scripture/song/thought;
   scripture validates through `ReferenceParser`, song/thought split `body` into stanzas on blank
-  lines). CRUD + `move` re-render the `setlist` Turbo Frame (`studies/_setlist`, drawer
-  `studies/_setlist_drawer`, `setlist` Stimulus controller). Clicking an item dispatches
+  lines). **Local-first** (Nov 2026): the `setlist` controller keeps the queue on the device
+  (IndexedDB meta `setlist:<study>`), renders it itself and syncs through the outbox
+  (`setlist-create/-update/-destroy/-order` ops; items carry a `client_id`, so replays are
+  idempotent and URLs may name `tmp-…` ids; `PATCH /studies/:id/setlist/order` takes the whole
+  order). On load the frame's `data-items` + device copy + pending ops merge
+  (`lib/offline/setlist_state.js`, node-tested). Several references at once are parsed on the
+  device. Pictures still upload through the Turbo Frame form. In preach mode the queue docks as
+  a column ≥1100px (`is-queue-open`), topped by the operator console (`preview` controller):
+  red LIVE · amber PREVIEW (+ Go live, `L`) · NEXT · chapter verse list (`GET /verse_chapter`
+  only when the Bible isn't downloaded). Click previews, double-click / Enter-on-preview goes
+  live; Go box Shift+Enter previews. What goes live is auto-added (setting, default on).
+  Keys: `?` card in preach (`data-preach-keys`). Clicking an item dispatches
   `setlist:present`; the presentation controller chases scriptures or projects **content slides**
   (`is-slide`, `[data-preach-slide]` layer, next/prev walk stanzas). Slides flow to the output
   window (BroadcastChannel `slide` field) and to live followers (`kind=slide` + `slide_*` columns

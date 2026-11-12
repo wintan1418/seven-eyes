@@ -1,0 +1,32 @@
+<%# locals: item — one queue row. setlist_controller.js#_itemElement builds the
+    same markup on the device; keep the two in step. %>
+<li class="ps-setlist-item kind-<%= item.kind %>" role="option" aria-selected="false"
+    data-kind="<%= item.scripture? ? "scripture" : "slide" %>"
+    data-cid="<%= item.client_id.presence || "srv-#{item.id}" %>"
+    data-reference="<%= item.reference %>"
+    data-title="<%= item.title %>"
+    data-body="<%= item.body %>"
+    data-image="<%= item.media_url %>">
+  <span class="grip" data-action="pointerdown->setlist#dragStart" title="Drag to reorder" aria-hidden="true">&#10303;</span>
+  <button type="button" class="present" data-action="click->setlist#present dblclick->setlist#presentLive"
+          title="Click to preview (in preach mode) · double-click to go live">
+    <% if item.picture? %>
+      <img class="thumb" src="<%= item.media_url %>" alt="" loading="lazy">
+    <% else %>
+      <span class="icon"><%= item.scripture? ? "&#167;".html_safe : (item.song? ? "&#9835;".html_safe : "&#10086;".html_safe) %></span>
+    <% end %>
+    <span class="lbl"><%= item.label %></span>
+    <% if (item.song? || item.thought?) && item.stanzas.size > 1 %>
+      <span class="meta"><%= item.stanzas.size %> stanzas</span>
+    <% end %>
+  </button>
+  <span class="sync" data-sync hidden></span>
+  <span class="ops">
+    <% unless item.picture? %>
+      <button type="button" class="op" data-action="setlist#edit" title="Edit (E)">&#9998;</button>
+    <% end %>
+    <button type="button" class="op" data-action="setlist#moveUp" title="Move up (Alt+↑)">&#8593;</button>
+    <button type="button" class="op" data-action="setlist#moveDown" title="Move down (Alt+↓)">&#8595;</button>
+    <button type="button" class="op danger" data-action="setlist#remove" title="Remove (Delete)">&#10005;</button>
+  </span>
+</li>
