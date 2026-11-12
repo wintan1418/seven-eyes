@@ -6,13 +6,13 @@ require "test_helper"
 # here. A redesign may move things and restyle them, but every hook below must
 # survive — if one of these assertions fails, a pastor's Sunday breaks.
 class PreachContractTest < ActionDispatch::IntegrationTest
-  ROOT_CONTROLLERS = %w[presentation live setlist remote font-size diff interlinear].freeze
+  ROOT_CONTROLLERS = %w[presentation preview live setlist remote font-size diff interlinear].freeze
 
   PREACH_HOOKS = %w[
     data-preach-counter data-preach-group data-preach-anchor-pin data-preach-anchor-home
     data-preach-back data-preach-parallel data-preach-split data-preach-emph data-preach-project
     data-preach-blank data-preach-next data-preach-ref data-preach-slide data-preach-hold
-    data-preach-join data-preach-finds data-preach-offline data-stage-ref data-stage-clock data-stage-now data-stage-next
+    data-preach-join data-preach-finds data-preach-offline data-preach-keys data-preview-first data-stage-ref data-stage-clock data-stage-now data-stage-next
   ].freeze
 
   # Root classes the presentation/live/diff/interlinear controllers toggle and
@@ -26,6 +26,7 @@ class PreachContractTest < ActionDispatch::IntegrationTest
   WINDOW_EVENTS = %w[
     setlist:present preach:command preach:join preach:state preach:notice auth:required
     notes:flush lexicon:open rabbi:ask share:open
+    preview:load preview:golive preview:typing setlist:add setlist:focus setlist:preview-next preach:passage
   ].freeze
 
   setup do

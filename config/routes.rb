@@ -21,7 +21,8 @@ Rails.application.routes.draw do
     get :quick_find, on: :member
     resource :live, only: %i[ create update destroy ], controller: "live_sessions"
     resource :remote, only: %i[ create ], controller: "remotes"
-    resources :setlist_items, only: %i[ create update destroy ], path: "setlist" do
+    resources :setlist_items, only: %i[ index create update destroy ], path: "setlist" do
+      patch :order, on: :collection
       post :move, on: :member
       get :library, on: :collection
     end
@@ -98,6 +99,7 @@ Rails.application.routes.draw do
   post "/offline/prepare",     to: "offline#prepare",    as: :offline_prepare, defaults: { format: :json }
 
   get "/verse_count",      to: "verses#count" # JSON: verses in a book+chapter (for the browser)
+  get "/verse_chapter",    to: "verses#chapter" # JSON: a reference's whole chapter (queue preview)
   get "/reference_check",  to: "verses#check" # JSON: parse a typed reference (preach quick chase)
 
   root "studies#index"

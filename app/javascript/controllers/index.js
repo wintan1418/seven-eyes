@@ -103,6 +103,9 @@ application.register("search", SearchController)
 import SetlistController from "./setlist_controller"
 application.register("setlist", SetlistController)
 
+import PreviewController from "./preview_controller"
+application.register("preview", PreviewController)
+
 import ShareCardController from "./share_card_controller"
 application.register("share-card", ShareCardController)
 

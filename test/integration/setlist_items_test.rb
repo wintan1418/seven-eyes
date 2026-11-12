@@ -166,4 +166,114 @@ class SetlistItemsTest < ActionDispatch::IntegrationTest
     assert_nil item.media_url
     assert_nil item.media_public_id
   end
+
+  # ---- the local-first queue (JSON, replayed through the offline outbox) ----
+
+  def json_post(study, attrs)
+    post study_setlist_items_path(study), params: { setlist_item: attrs }, as: :json
+  end
+
+  test "a device-made scripture is created once per client_id, however often it is replayed" do
+    study = owner_study
+    assert_difference -> { SetlistItem.count }, 1 do
+      json_post(study, kind: "scripture", reference: "rom 8:28", client_id: "tmp-abc-1")
+      assert_response :created
+      json_post(study, kind: "scripture", reference: "rom 8:28", client_id: "tmp-abc-1")
+      assert_response :success
+    end
+    body = response.parsed_body
+    assert_equal "tmp-abc-1", body["client_id"]
+    assert_equal "Romans 8:28", body["label"]
+    assert body["server_time"].positive?
+  end
+
+  test "an explicit position inserts the item there and keeps positions dense" do
+    study = owner_study
+    study.setlist_items.create!(kind: :song, title: "A")
+    study.setlist_items.create!(kind: :song, title: "B")
+    json_post(study, kind: "thought", title: "Mid", client_id: "tmp-mid", position: 1)
+    assert_response :created
+    assert_equal %w[A Mid B], study.setlist_items.in_order.map(&:title)
+    assert_equal [ 0, 1, 2 ], study.setlist_items.in_order.map(&:position)
+    assert_equal 1, response.parsed_body["position"]
+  end
+
+  test "an unreadable reference is a JSON 422 with the reason" do
+    study = owner_study
+    assert_no_difference -> { SetlistItem.count } do
+      json_post(study, kind: "scripture", reference: "blorbity 9", client_id: "tmp-bad")
+    end
+    assert_response :unprocessable_entity
+    assert_match(/couldn't be read/, response.parsed_body["error"])
+  end
+
+  test "update, destroy and order accept the device's client id" do
+    study = owner_study
+    json_post(study, kind: "thought", title: "One", client_id: "tmp-one")
+    json_post(study, kind: "thought", title: "Two", client_id: "tmp-two")
+    json_post(study, kind: "thought", title: "Three", client_id: "tmp-three")
+
+    patch study_setlist_item_path(study, "tmp-two"), params: { setlist_item: { title: "Second" } }, as: :json
+    assert_response :success
+    assert_equal "Second", response.parsed_body["title"]
+
+    three = study.setlist_items.find_by!(client_id: "tmp-three")
+    patch order_study_setlist_items_path(study), params: { order: [ three.id.to_s, "tmp-one", "tmp-two" ] }, as: :json
+    assert_response :success
+    assert_equal %w[Three One Second], response.parsed_body["items"].map { |i| i["title"] }
+    assert_equal %w[Three One Second], study.setlist_items.in_order.map(&:title)
+
+    delete study_setlist_item_path(study, "tmp-one"), as: :json
+    assert_response :success
+    assert_equal %w[Three Second], study.setlist_items.in_order.map(&:title)
+
+    # A replayed delete of something already gone is a 404 (the outbox settles it).
+    delete study_setlist_item_path(study, "tmp-one"), as: :json
+    assert_response :not_found
+  end
+
+  test "an order naming unknown or missing items keeps the rest after it" do
+    study = owner_study
+    a = study.setlist_items.create!(kind: :song, title: "A")
+    b = study.setlist_items.create!(kind: :song, title: "B")
+    c = study.setlist_items.create!(kind: :song, title: "C")
+    patch order_study_setlist_items_path(study), params: { order: [ c.id.to_s, "tmp-gone" ] }, as: :json
+    assert_response :success
+    assert_equal [ c, a, b ], study.setlist_items.in_order.to_a
+  end
+
+  test "the queue index returns items in order" do
+    study = owner_study
+    study.setlist_items.create!(kind: :scripture, reference: "rom 8:28")
+    get study_setlist_items_path(study), as: :json
+    assert_response :success
+    assert_equal [ "Romans 8:28" ], response.parsed_body["items"].map { |i| i["label"] }
+  end
+
+  test "a guest's device-made items land on their session study" do
+    post studies_path
+    study = Study.last
+    json_post(study, kind: "scripture", reference: "rom 8:28", client_id: "tmp-guest")
+    assert_response :created
+    assert_equal [ "tmp-guest" ], study.setlist_items.pluck(:client_id)
+  end
+
+  test "JSON writes to someone else's study are not found" do
+    study = users(:two).studies.create!(name: "Private", pane_count: 1)
+    item = study.setlist_items.create!(kind: :thought, title: "x", client_id: "tmp-x")
+    sign_in_as users(:one)
+    json_post(study, kind: "thought", title: "y", client_id: "tmp-y")
+    assert_response :not_found
+    patch order_study_setlist_items_path(study), params: { order: [ item.id.to_s ] }, as: :json
+    assert_response :not_found
+    delete study_setlist_item_path(study, "tmp-x"), as: :json
+    assert_response :not_found
+    assert SetlistItem.exists?(item.id)
+  end
+
+  test "pictures still need the form (and an account)" do
+    study = owner_study
+    json_post(study, kind: "picture", title: "x", client_id: "tmp-pic")
+    assert_response :unprocessable_entity
+  end
 end

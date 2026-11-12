@@ -153,6 +153,67 @@ export async function queuePlanDay(url, done, owner) {
   return upsert({ kind: "plan-day", key, owner, url, method: done ? "POST" : "DELETE", format: "form", body: {}, done })
 }
 
+// ---- the preach queue (setlist) ---------------------------------------------
+// Every op carries `setlist` = { studyId, action, cid, … } so the queue can
+// replay what hasn't reached the server on top of what has (setlist_state.js).
+// Items are addressed by server id when known, else by the device's cid — the
+// server finds either, and a replayed create with the same cid is a no-op.
+
+const setlistBase = (studyId) => `/studies/${studyId}/setlist`
+const itemUrl = (studyId, item) => `${setlistBase(studyId)}/${encodeURIComponent(item.id ?? item.cid)}`
+const itemBody = (item) => ({ kind: item.kind, reference: item.reference ?? "", title: item.title ?? "", body: item.body ?? "" })
+
+export function queueSetlistCreate(studyId, item, position, owner) {
+  return upsert({
+    kind: "setlist-create", key: `sl:${item.cid}`, owner, url: setlistBase(studyId), method: "POST", format: "json",
+    body: { setlist_item: { ...itemBody(item), client_id: item.cid, position } },
+    setlist: { studyId: String(studyId), action: "create", cid: item.cid, item: { ...item, id: null }, position }
+  })
+}
+
+export function queueSetlistUpdate(studyId, item, fields, owner) {
+  const merge = (op) => ({
+    ...op, body: { setlist_item: { ...op.body.setlist_item, ...fields } },
+    setlist: { ...op.setlist, fields: { ...op.setlist.fields, ...fields } }
+  })
+  return upsert({
+    kind: "setlist-update", key: `slu:${item.cid}`, owner, url: itemUrl(studyId, item), method: "PATCH", format: "json",
+    body: { setlist_item: fields }, setlist: { studyId: String(studyId), action: "update", cid: item.cid, fields }
+  }, merge)
+}
+
+// Removing an item always sends a DELETE (a 404 for one the server never got
+// is fine): a create already on the wire can't be called back.
+export async function queueSetlistDestroy(studyId, item, owner) {
+  await removeOps((o) => o.owner === owner && (o.key === `sl:${item.cid}` || o.key === `slu:${item.cid}`))
+  return upsert({
+    kind: "setlist-destroy", key: `sld:${item.cid}`, owner, url: itemUrl(studyId, item), method: "DELETE", format: "json",
+    setlist: { studyId: String(studyId), action: "destroy", cid: item.cid, id: item.id ?? null }
+  })
+}
+
+// Undo of a remove: forget the DELETE if it hasn't gone; true if it was still queued.
+export async function cancelSetlistDestroy(item, owner) {
+  const ops = await opsWhere((o) => o.owner === owner && o.key === `sld:${item.cid}`)
+  for (const op of ops) await del("outbox", op.seq).catch(() => {})
+  if (ops.length) await announce()
+  return ops.length > 0
+}
+
+// The whole order, as the device has it. Re-queued (not coalesced) so it runs
+// after every create queued before it.
+export async function queueSetlistOrder(studyId, keys, owner) {
+  await removeOps((o) => o.owner === owner && o.key === `slo:${studyId}`)
+  return upsert({
+    kind: "setlist-order", key: `slo:${studyId}`, owner, url: `${setlistBase(studyId)}/order`, method: "PATCH", format: "json",
+    body: { order: keys }, setlist: { studyId: String(studyId), action: "order", order: keys }
+  })
+}
+
+export async function setlistOps(studyId, owner) {
+  return opsWhere((o) => o.setlist && o.setlist.studyId === String(studyId) && o.owner === owner)
+}
+
 async function removeOps(pred) {
   for (const op of await opsWhere(pred)) await del("outbox", op.seq).catch(() => {})
 }
@@ -244,6 +305,13 @@ async function settle(op, res, json) {
     await deleteHighlight(op.tmpId)
     await putHighlight({ ...(local || op.body.highlight), id: data.id, color: data.color || local?.color, note: data.note ?? local?.note ?? "" })
     broadcast({ type: "highlight-id", tmp: op.tmpId, id: data.id })
+  } else if (op.setlist) {
+    const s = op.setlist
+    broadcast({
+      type: "setlist-sync", studyId: s.studyId, action: s.action, cid: s.cid, ok: res.ok, status: res.status,
+      id: data.id ?? null, error: res.ok ? null : (data.error || "The server couldn't save this"),
+      serverTime: data.server_time || null
+    })
   }
 
   const current = await get("outbox", op.seq).catch(() => null)
@@ -252,6 +320,8 @@ async function settle(op, res, json) {
     await del("outbox", op.seq)
   } else if (rebase) {
     await put("outbox", { ...current, body: { ...current.body, ...rebase } })
+  } else if (current.kind === "setlist-update" && res.ok) {
+    // Edited again while this was on the wire: keep it, the next flush sends the latest.
   } else {
     await del("outbox", op.seq)
   }

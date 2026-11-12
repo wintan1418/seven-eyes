@@ -541,6 +541,7 @@ export default class extends Controller {
   jumpPreview() {
     const raw = this.jumpInputTarget.value.trim()
     clearTimeout(this._previewTimer)
+    window.dispatchEvent(new CustomEvent("preview:typing", { detail: { raw, source: "go" } }))
     if (!raw) return this._setJumpHint("Type a reference, a verse number, or describe a passage")
     if (/^\d+$/.test(raw)) return this._setJumpHint(`↵ Verse ${raw} in this chapter`, "ok")
     // Read on the device, instantly — no network.
@@ -580,6 +581,7 @@ export default class extends Controller {
   jumpSubmit(event) {
     event?.preventDefault?.()
     const raw = this.jumpInputTarget.value.trim()
+    if (raw && (event?.shiftKey || this._previewFirst())) { this._jumpToPreview(raw); return }
     this._closeJump()
     if (!raw) return
     if (/^\d+$/.test(raw)) {
@@ -590,6 +592,34 @@ export default class extends Controller {
       return
     }
     this._chase(raw)
+  }
+
+  // Go box with Shift+Enter (or "Preview first" ticked): the reference goes to
+  // the operator's Preview, never the projector. Text that isn't a reference
+  // still searches as usual — its results are one-tap choices anyway.
+  jumpPreviewSubmit(event) {
+    event?.preventDefault?.()
+    const raw = this.jumpInputTarget.value.trim()
+    if (raw) this._jumpToPreview(raw)
+  }
+
+  _previewFirst() {
+    return !!this.element.querySelector("[data-preview-first][aria-pressed='true']")
+  }
+
+  _jumpToPreview(raw) {
+    let reference = raw
+    if (/^\d+(?:\s*[-–]\s*\d+)?$/.test(raw)) {
+      const chapter = this.element.querySelector(".ps-pane.is-presented input[name='pane[reference]']")?.value
+        ?.trim().replace(/\s*[:.]\s*\d+.*$/, "")
+      if (!chapter) return
+      reference = `${chapter}:${raw.replace(/\s+/g, "")}`
+    } else {
+      const local = localCheck(raw)
+      if (local && !local.ok) { this._closeJump(); this._chase(raw); return } // a described thought: search
+    }
+    this._closeJump()
+    window.dispatchEvent(new CustomEvent("preview:load", { detail: { kind: "scripture", reference, source: "go" } }))
   }
 
   // Quick chase: validate the reference server-side first (a misheard call
@@ -619,12 +649,12 @@ export default class extends Controller {
       this._flashJumpError(raw)
       return
     }
-    this._loadPassage(parsed.chapter_reference, parsed.verse_start, { remember })
+    this._loadPassage(parsed.chapter_reference, parsed.verse_start, { remember, label: remember ? (parsed.label || raw) : null })
   }
 
   // Load a whole chapter through the presented pane's own Turbo Frame form,
   // then land on the given verse. Shared by chase, the queue, and AI finds.
-  _loadPassage(chapterReference, verseStart, { remember = true } = {}) {
+  _loadPassage(chapterReference, verseStart, { remember = true, label = undefined } = {}) {
     const pane = this.element.querySelector(".ps-pane.is-presented")
     const input = pane?.querySelector("input[name='pane[reference]']")
     if (!input) return
@@ -651,6 +681,9 @@ export default class extends Controller {
       }
       this._paint()
       requestAnimationFrame(() => this._autoFit())
+      // What went on the screen — the queue offers it / adds it (setlist controller).
+      const went = label === undefined ? (verseStart ? `${chapterReference}:${verseStart}` : chapterReference) : label
+      if (went) window.dispatchEvent(new CustomEvent("preach:passage", { detail: { reference: went } }))
     })
     this._submitPane(pane)
   }
@@ -2204,6 +2237,12 @@ export default class extends Controller {
       else if (e.key === "b" || e.key === "B" || e.key === "Backspace") { e.preventDefault(); this.goBack() }
       else if (e.key === "h" || e.key === "H") { e.preventDefault(); this.goAnchor() }
       else if (e.key === "." || e.key === "0") { e.preventDefault(); this.toggleBlank() }
+      // The queue and Preview (preview / setlist controllers): L sends what's in
+      // Preview live, N previews the next queue item, Q puts the keyboard in the queue.
+      else if (e.key === "l" || e.key === "L") { e.preventDefault(); window.dispatchEvent(new CustomEvent("preview:golive")) }
+      else if (e.key === "n" || e.key === "N") { e.preventDefault(); window.dispatchEvent(new CustomEvent("setlist:preview-next")) }
+      else if (e.key === "q" || e.key === "Q") { e.preventDefault(); window.dispatchEvent(new CustomEvent("setlist:focus")) }
+      else if (e.key === "?") { e.preventDefault(); this.toggleKeys() }
       else if (e.key >= "1" && e.key <= "4") {
         // In split, number keys pick which region is active (1–4); otherwise
         // they set the verse-group size, matching the bar's 1–3 buttons.
@@ -2287,6 +2326,14 @@ export default class extends Controller {
       document.removeEventListener("touchend", this._touchEndHandler)
       this._touchEndHandler = null
     }
+  }
+
+  // ----- the keyboard help card ("?" in preach mode) -----
+
+  toggleKeys(event) {
+    event?.preventDefault?.()
+    const card = this.element.querySelector("[data-preach-keys]")
+    if (card) card.hidden = !card.hidden
   }
 
   // ----- console toast (Esc confirmation, live/remote failures) -----

@@ -1,0 +1,309 @@
+/* ====== Preach queue as an operator console (preview → live) ======
+   Operator screen only: everything here is hidden on the projector (?output=1)
+   and stage (?stage=1) windows. LIVE is red, PREVIEW amber — never confusable.
+   ≥1100px in preach mode the open queue docks as a right column so the live
+   verse stays in view; narrower it stays a drawer that doesn't dim the screen. */
+.ps-root {
+  --ps-dock-w: 400px;
+  --ps-live: #d6332a;
+  --ps-live-soft: rgba(214, 51, 42, 0.16);
+  --ps-preview: #f0a500;
+  --ps-preview-soft: rgba(240, 165, 0, 0.16);
+}
+.ps-root.is-output .ps-setlist-host,
+.ps-root.is-output .ps-queue-toast,
+.ps-root.is-output .ps-preach-keys,
+.ps-root.is-output .ps-console { display: none !important; }
+
+/* ---- the console block (preach mode only) ---- */
+.ps-console, .ps-autoqueue { display: none; }
+.ps-root.is-preaching:not(.is-output) .ps-console {
+  display: flex; flex-direction: column; gap: 8px; flex: none;
+  padding: 10px 12px 12px; background: #1c140c; color: #f4ead2;
+  border-bottom: 1px solid rgba(163, 129, 46, 0.5);
+  font-family: Inter, system-ui, sans-serif;
+}
+.ps-root.is-preaching:not(.is-output) .ps-autoqueue {
+  display: flex; align-items: center; gap: 8px; flex: none;
+  padding: 7px 14px; font: 12px Inter, system-ui, sans-serif; color: var(--sepia);
+  border-top: 1px dashed rgba(138, 116, 68, 0.45); cursor: pointer;
+}
+.ps-root.is-preaching .ps-setlist-panel .ps-drawer-sub,
+.ps-root.is-preaching .ps-setlist-panel .ui-sunday { display: none; }
+.ps-root.is-preaching .ps-setlist-panel .ps-drawer-head { padding-top: 10px; padding-bottom: 8px; }
+
+.ps-console-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ps-console-row .tag {
+  flex: none; min-width: 64px; text-align: center; padding: 3px 8px; border-radius: 4px;
+  font: 700 11px/1.3 Inter, system-ui, sans-serif; letter-spacing: 0.12em; text-transform: uppercase;
+}
+.ps-console-row .what {
+  flex: 1; min-width: 0; font: 600 15px/1.3 "Source Serif 4", "EB Garamond", serif;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ps-console .mini {
+  flex: none; padding: 3px 8px; border-radius: 4px; cursor: pointer;
+  background: transparent; color: inherit; border: 1px solid currentColor;
+  font: 600 11px Inter, system-ui, sans-serif; opacity: 0.85;
+}
+.ps-console .mini:hover { opacity: 1; }
+
+/* LIVE — red frame, what the projector shows right now */
+.ps-console-row.is-live {
+  padding: 7px 8px; border: 2px solid var(--ps-live); border-radius: 6px; background: var(--ps-live-soft);
+}
+.ps-console-row.is-live .tag { background: var(--ps-live); color: #fff; }
+.ps-console-row.is-live .tag::before { content: "● "; }
+.ps-console-row.is-live.is-blank { border-style: dashed; }
+
+/* PREVIEW — amber frame, staged and NOT on screen */
+.ps-console-preview {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 7px 8px 8px; border: 2px solid var(--ps-preview); border-radius: 6px; background: var(--ps-preview-soft);
+}
+.ps-console-preview .tag { background: var(--ps-preview); color: #1c140c; }
+.ps-console-preview[data-state="empty"] { border-style: dashed; opacity: 0.75; }
+.ps-console-preview[data-state="empty"] .what { font-style: italic; font-weight: 400; font-size: 13px; opacity: 0.8; }
+.ps-console-preview[data-state="error"] .what { color: #ffb4a8; }
+.ps-console-preview[data-state="live"] .what::after {
+  content: "on screen"; margin-left: 8px; padding: 1px 6px; border-radius: 3px; vertical-align: 2px;
+  font: 700 9px Inter, system-ui, sans-serif; letter-spacing: 0.1em; text-transform: uppercase;
+  background: var(--ps-live); color: #fff;
+}
+.ps-preview-text {
+  max-height: 128px; overflow-y: auto; padding: 2px 2px 0;
+  font: 400 14.5px/1.5 "Source Serif 4", "EB Garamond", serif; color: #f4ead2; outline: none;
+}
+.ps-preview-text:empty { display: none; }
+.ps-preview-text:focus-visible { box-shadow: 0 0 0 2px var(--ps-preview); border-radius: 3px; }
+.ps-preview-text sup { font: 600 10px Inter, sans-serif; color: var(--ps-preview); margin-right: 2px; }
+.ps-preview-text .muted { color: rgba(244, 234, 210, 0.6); font-style: italic; }
+.ps-preview-text .tag { display: block; margin-top: 4px; font-size: 12px; }
+.ps-preview-text .thumb { max-height: 90px; max-width: 100%; border-radius: 3px; display: block; }
+.ps-preview-text .stanza { white-space: pre-line; }
+.ps-golive-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 9px 12px; border-radius: 5px; cursor: pointer;
+  background: var(--ps-live); color: #fff; border: 0;
+  font: 700 14px Inter, system-ui, sans-serif; letter-spacing: 0.04em;
+}
+.ps-golive-btn:hover:not(:disabled) { filter: brightness(1.1); }
+.ps-golive-btn:disabled { background: #4a3a2a; color: rgba(255, 255, 255, 0.45); cursor: default; }
+.ps-golive-btn .kbd {
+  padding: 1px 6px; border-radius: 3px; border: 1px solid rgba(255, 255, 255, 0.55);
+  font: 600 11px Inter, sans-serif;
+}
+
+/* NEXT — one glance at what the queue has coming */
+.ps-console-row.is-next .tag { color: #d8c389; border: 1px solid rgba(216, 195, 137, 0.6); }
+.ps-console-row.is-next .next-btn {
+  text-align: left; background: transparent; border: 0; color: #f4ead2; cursor: pointer; padding: 2px 0;
+}
+.ps-console-row.is-next .next-btn:hover:not(:disabled) { text-decoration: underline; }
+.ps-console-row.is-next .next-btn:disabled { color: rgba(244, 234, 210, 0.5); font-style: italic; font-weight: 400; cursor: default; }
+
+/* ---- chapter verse list (EasyWorship-style) ---- */
+.ps-verse-list { display: flex; flex-direction: column; min-height: 0; }
+.ps-verse-list[hidden] { display: none; }
+.ps-verse-list .head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 2px 2px 4px; }
+.ps-verse-list .ttl { font: 700 12px Inter, sans-serif; letter-spacing: 0.06em; color: #d8c389; }
+.ps-verse-list .hint { font: 11px Inter, sans-serif; color: rgba(244, 234, 210, 0.5); }
+.ps-verse-list .rows {
+  list-style: none; margin: 0; padding: 0; max-height: 30vh; overflow-y: auto;
+  border: 1px solid rgba(163, 129, 46, 0.35); border-radius: 4px; background: rgba(0, 0, 0, 0.2);
+}
+.ps-verse-list .vrow { display: flex; align-items: stretch; border-bottom: 1px solid rgba(163, 129, 46, 0.15); border-left: 4px solid transparent; }
+.ps-verse-list .vrow .pick {
+  flex: 1; min-width: 0; display: grid; grid-template-columns: 3.4em 1fr; gap: 6px; text-align: left;
+  padding: 5px 6px; background: transparent; border: 0; color: #f4ead2; cursor: pointer;
+  font: 13.5px/1.4 "Source Serif 4", "EB Garamond", serif;
+}
+.ps-verse-list .vrow .pick:hover, .ps-verse-list .vrow .pick:focus-visible { background: rgba(255, 255, 255, 0.07); outline: none; }
+.ps-verse-list .vrow .ref { font: 600 11px/1.9 Inter, sans-serif; color: #d8c389; }
+.ps-verse-list .vrow .add {
+  flex: none; width: 30px; background: transparent; border: 0; border-left: 1px solid rgba(163, 129, 46, 0.2);
+  color: #d8c389; font: 600 16px Inter, sans-serif; cursor: pointer;
+}
+.ps-verse-list .vrow .add:hover { background: rgba(216, 195, 137, 0.15); }
+.ps-verse-list .vrow.is-queued .add { font-size: 0; }
+.ps-verse-list .vrow.is-queued .add::after { content: "✓"; font-size: 13px; opacity: 0.7; }
+.ps-verse-list .vrow.is-target { border-left-color: rgba(240, 165, 0, 0.6); }
+.ps-verse-list .vrow.is-preview { border-left-color: var(--ps-preview); background: var(--ps-preview-soft); }
+.ps-verse-list .vrow.is-live { border-left-color: var(--ps-live); background: var(--ps-live-soft); }
+.ps-verse-list .vrow.is-live .ref { color: #ff8a80; }
+.ps-verse-list .vrow.is-live .ref::after { content: " LIVE"; font-size: 8.5px; letter-spacing: 0.08em; }
+
+/* ---- queue rows ---- */
+.ps-setlist-items:focus { outline: none; }
+.ps-setlist-items:focus-visible .ps-setlist-item.is-selected,
+.ps-setlist-items:focus-within .ps-setlist-item.is-selected { box-shadow: 0 0 0 2px #3b6fd8; }
+.ps-setlist-item { position: relative; border-left-width: 4px; transition: background 0.2s; }
+.ps-setlist-items.is-sorting .ps-setlist-item { transition: transform 0.14s ease; }
+.ps-setlist-items.is-sorting .ps-setlist-item.is-dragging {
+  transition: none; z-index: 2; box-shadow: 0 10px 24px rgba(40, 25, 10, 0.35); background: #fff7e0;
+}
+.ps-setlist-item .grip {
+  flex: none; align-self: stretch; display: inline-flex; align-items: center; padding: 0 2px 0 6px;
+  color: var(--sepia-mute); cursor: grab; touch-action: none; user-select: none; font-size: 14px;
+}
+.ps-setlist-items.is-sorting .grip { cursor: grabbing; }
+.ps-setlist-item .present .num {
+  flex: none; min-width: 1.4em; font: 600 11px Inter, sans-serif; color: var(--sepia-mute);
+}
+.ps-setlist-item.is-selected { background: #fff3cf; }
+.ps-setlist-item.is-live { border-color: var(--ps-live); border-left-color: var(--ps-live); box-shadow: none; }
+.ps-setlist-item.is-preview { border-left-color: var(--ps-preview); background: #fff1c9; }
+.ps-setlist-item.is-live .present::after,
+.ps-setlist-item.is-preview:not(.is-live) .present::after,
+.ps-setlist-item.is-next:not(.is-live, .is-preview) .present::after {
+  flex: none; margin-left: auto; padding: 1px 6px; border-radius: 3px;
+  font: 700 9px/1.5 Inter, sans-serif; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.ps-setlist-item.is-live .present::after { content: "Live"; background: var(--ps-live); color: #fff; }
+.ps-setlist-item.is-preview:not(.is-live) .present::after { content: "Preview"; background: var(--ps-preview); color: #1c140c; }
+.ps-setlist-item.is-next:not(.is-live, .is-preview) .present::after { content: "Next"; border: 1px solid var(--sepia-mute); color: var(--sepia); }
+.ps-setlist-item.is-editing { outline: 2px dashed var(--ps-preview); }
+.ps-setlist-item.is-new { animation: ps-queue-in 0.6s ease; }
+@keyframes ps-queue-in { from { background: #ffe9a8; } to { background: var(--vellum-0); } }
+
+/* per-item sync state: never silently dropped */
+.ps-setlist-item .sync {
+  flex: none; font: italic 11px Inter, sans-serif; color: #8a6400; white-space: nowrap;
+}
+.ps-setlist-item .sync[hidden] { display: none; }
+.ps-setlist-item .sync[data-state="saving"] { color: var(--sepia-mute); }
+.ps-setlist-item .sync .retry {
+  padding: 2px 7px; border-radius: 3px; cursor: pointer; font: 600 11px Inter, sans-serif; font-style: normal;
+  background: rgba(138, 36, 24, 0.12); color: var(--rubric-deep); border: 1px solid rgba(138, 36, 24, 0.5);
+}
+.ps-setlist-item[data-sync-state="waiting"] { border-style: dashed; }
+.ps-setlist-item[data-sync-state="error"] { border-color: rgba(138, 36, 24, 0.7); }
+/* In the header, not the list: a notice appearing must never move the rows under the pointer. */
+.ps-setlist-host.is-order-waiting .ps-drawer-eyebrow > span:first-child::after {
+  content: "· order will sync when online"; margin-left: 8px;
+  font: italic 11px Inter, sans-serif; letter-spacing: 0; text-transform: none; color: #8a6400;
+}
+
+/* add / edit form */
+.ps-setlist-form .err[hidden] { display: none; }
+.ps-setlist-form .ref-hint[data-tone="ok"] { color: #2f6b2f; }
+.ps-setlist-form .ref-hint[data-tone="error"] { color: var(--rubric-deep); }
+.ps-setlist-form .form-actions { display: flex; gap: 8px; }
+.ps-setlist-form .form-actions .add { flex: 1; }
+.ps-setlist-form .cancel-edit {
+  padding: 10px 14px; border-radius: 2px; cursor: pointer; background: transparent;
+  border: 1px solid rgba(138, 116, 68, 0.5); color: var(--sepia); font: 600 11px Inter, sans-serif;
+}
+.ps-setlist-form .cancel-edit[hidden] { display: none; }
+.ps-setlist-form.is-editing { box-shadow: inset 0 3px 0 var(--ps-preview); }
+.ps-root.is-preaching .ps-setlist-form { padding-top: 10px; padding-bottom: 10px; gap: 6px; }
+.ps-root.is-preaching .ps-setlist-form textarea { min-height: 70px; }
+
+/* undo toast */
+.ps-queue-toast {
+  position: fixed; left: 24px; bottom: 88px; z-index: 140;
+  display: flex; align-items: center; gap: 12px; padding: 9px 12px 9px 14px;
+  background: rgba(20, 16, 10, 0.95); color: #f4ead2; border-radius: 6px;
+  font: 13px Inter, system-ui, sans-serif; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.ps-queue-toast[hidden] { display: none; }
+.ps-queue-toast .undo {
+  padding: 3px 10px; border-radius: 4px; cursor: pointer; background: transparent;
+  color: #ffd27a; border: 1px solid rgba(255, 210, 122, 0.6); font: 600 12px Inter, sans-serif;
+}
+.ps-root:not(.is-preaching) .ps-queue-toast { bottom: 24px; }
+
+/* Go box: Preview button + "Preview first" */
+.ps-preach-jump .ps-preach-jump-preview { background: transparent; border: 1px solid var(--ps-preview); color: var(--ps-preview); }
+.ps-preach-jump .ps-preach-jump-preview:hover { background: var(--ps-preview-soft); }
+.ps-preach-jump .ps-preach-jump-mode {
+  background: transparent; border: 1px dashed rgba(216, 195, 137, 0.5); color: #d8c389; font-size: 10px; letter-spacing: 0.1em;
+}
+.ps-preach-jump .ps-preach-jump-mode[aria-pressed="true"] { background: var(--ps-preview); border: 1px solid var(--ps-preview); color: #1c140c; }
+
+/* keyboard help card */
+.ps-preach-keys { display: none; }
+.ps-root.is-preaching:not(.is-output) .ps-preach-keys:not([hidden]) {
+  display: block; position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 150;
+  width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 120px); overflow-y: auto;
+  padding: 16px 20px 18px; background: rgba(20, 14, 8, 0.98); color: #f4ead2;
+  border: 1px solid var(--gold); border-radius: 8px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  font: 13px Inter, system-ui, sans-serif;
+}
+.ps-preach-keys .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font: 700 13px Inter, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: #d8c389; }
+.ps-preach-keys .close { background: transparent; border: 0; color: #f4ead2; font-size: 16px; cursor: pointer; }
+.ps-preach-keys .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.ps-preach-keys dl { margin: 0; }
+.ps-preach-keys dt { font: 700 11px Inter, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: #d8c389; margin-bottom: 6px; }
+.ps-preach-keys dl > div { display: grid; grid-template-columns: 9.5em 1fr; gap: 8px; padding: 3px 0; }
+.ps-preach-keys dd { margin: 0; }
+.ps-preach-keys kbd {
+  display: inline-block; min-width: 1.6em; padding: 1px 5px; text-align: center; border-radius: 4px;
+  border: 1px solid rgba(216, 195, 137, 0.5); background: rgba(255, 255, 255, 0.06); font: 600 11.5px Inter, sans-serif;
+}
+@media (max-width: 640px) { .ps-preach-keys .cols { grid-template-columns: 1fr; } }
+
+/* ---- narrow screens: a drawer that doesn't dim the screen ---- */
+.ps-root.is-preaching .ps-setlist-host.is-open .ps-book-backdrop { opacity: 0; }
+
+/* ---- wide screens: docked column beside the live view ---- */
+@media (min-width: 1100px) {
+  .ps-root.is-preaching:not(.is-output) .ps-setlist-host.is-open {
+    inset: 0 0 72px auto; width: var(--ps-dock-w); z-index: 97;
+  }
+  .ps-root.is-preaching:not(.is-output) .ps-setlist-host.is-open .ps-book-backdrop { display: none; }
+  .ps-root.is-preaching:not(.is-output) .ps-setlist-host.is-open .ps-setlist-panel {
+    width: 100%; max-width: none; transform: none; transition: none;
+    box-shadow: -6px 0 18px -8px rgba(50, 30, 10, 0.5);
+  }
+  .ps-root.is-preaching.is-queue-open:not(.is-output) .ps-workspace { padding-right: calc(var(--ps-dock-w) + 32px); }
+  .ps-root.is-preaching.is-queue-open:not(.is-output) .ps-preach-ref { right: var(--ps-dock-w); }
+  .ps-root.is-preaching.is-queue-open.is-slide:not(.is-output) .ps-preach-slide { right: var(--ps-dock-w); }
+  .ps-root.is-preaching.is-queue-open:not(.is-output) .ps-preach-zone { width: calc((100% - var(--ps-dock-w)) / 2); }
+  .ps-root.is-preaching.is-queue-open:not(.is-output) .ps-preach-zone.right { right: var(--ps-dock-w); }
+  .ps-root.is-preaching.is-queue-open:not(.is-output) .ps-preach-nav.next { right: calc(var(--ps-dock-w) + 22px); }
+  .ps-root.is-preaching.is-queue-open:not(.is-output) .ps-exit-presentation { right: calc(var(--ps-dock-w) + 22px); }
+  .ps-root.is-preaching.is-queue-open:not(.is-output) .ps-preach-next { right: calc(var(--ps-dock-w) + 24px); }
+  .ps-root.is-preaching.is-queue-open:not(.is-output) .ps-screen-panel { right: calc(var(--ps-dock-w) + 24px); }
+  .ps-root.is-preaching.is-queue-open:not(.is-output) :is(.ps-preach-jump:not([hidden]), .ps-preach-finds:not([hidden]), .ps-preach-toast) {
+    left: calc((100% - var(--ps-dock-w)) / 2);
+  }
+}
+@media (min-width: 1500px) { .ps-root { --ps-dock-w: 440px; } }
+
+/* ---- preach mode: give the queue itself the room ---- */
+.ps-root.is-preaching .ps-verse-list .rows { max-height: 22vh; }
+.ps-root.is-preaching .ps-preview-text { max-height: 96px; }
+.ps-root.is-preaching .ps-setlist-items { min-height: 140px; }
+.ps-root.is-preaching .ps-setlist-form .ref-hint:not([data-tone="ok"], [data-tone="error"]) { display: none; }
+.ps-root.is-preaching .ps-setlist-form .add { padding: 8px; }
+.ps-root.is-preaching .ps-setlist-form .kinds label { padding: 5px 4px; }
+/* Row buttons show on the row being pointed at or picked (keys do the rest: E, Alt+↑↓, Delete). */
+.ps-root.is-preaching .ps-setlist-item:not(:hover, :focus-within, .is-selected) .ops { display: none; }
+.ps-root.is-preaching .ps-setlist-item .op { width: 24px; height: 24px; }
+
+/* The sync state sits on its own line under the label, so a long reference never gets squeezed out. */
+.ps-setlist-item { flex-wrap: wrap; row-gap: 0; }
+.ps-setlist-item .ops { order: 2; }
+.ps-setlist-item .sync { order: 3; flex: 1 0 100%; padding: 0 12px 7px 52px; margin-top: -4px; }
+.ps-setlist-item .present { min-width: 0; flex: 1 1 0; }
+.ps-setlist-item .present .lbl { min-width: 4em; }
+
+/* Stable console: previewing, listing a chapter or going live must never change
+   the console height — the queue below would jump under the pointer. */
+.ps-root.is-preaching .ps-preview-text { display: block; height: 66px; max-height: none; }
+.ps-root.is-preaching .ps-verse-list .rows { height: 22vh; max-height: none; }
+.ps-verse-list .rows .empty { padding: 10px; font: italic 12.5px Inter, sans-serif; color: rgba(244, 234, 210, 0.55); }
+
+/* A short screen: the panel scrolls rather than hiding the add form. */
+.ps-root.is-preaching .ps-setlist-panel { overflow-y: auto; }
+.ps-root.is-preaching .ps-setlist-panel turbo-frame { flex: 1 0 auto; overflow: visible; }
+.ps-root.is-preaching .ps-setlist-items { max-height: 40vh; }
+.ps-root.is-preaching .ps-verse-list .rows { height: 18vh; }
+
+/* LIVE / PREVIEW / NEXT never scroll out of sight. */
+.ps-root.is-preaching:not(.is-output) .ps-console { position: sticky; top: 0; z-index: 3; }
+/* A row showing its buttons drops the stanza count so the label keeps room. */
+.ps-root.is-preaching .ps-setlist-item:is(:hover, :focus-within, .is-selected) .present .meta { display: none; }
+.ps-setlist-item .present .lbl { min-width: 2.5em; }
+.ps-root.is-preaching .ps-setlist-form .kinds label { white-space: nowrap; letter-spacing: 0.06em; }

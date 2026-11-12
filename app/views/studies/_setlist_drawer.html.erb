@@ -1,18 +1,64 @@
-<%# locals: study — the preach queue drawer (works before and during preach mode) %>
+<%# locals: study — the preach queue (works before and during preach mode).
+    In preach mode on a wide screen (≥1100px) it docks as a side column of the
+    operator screen instead of covering it, topped by the operator console:
+    LIVE (what the projector shows) · PREVIEW (staged, not on screen) · NEXT
+    (one glance at the queue) and the chapter verse list. None of this ever
+    renders on the projector or stage windows (.is-output). %>
 <div class="ps-setlist-host" data-setlist-target="host">
   <div class="ps-book-backdrop" data-action="setlist#close"></div>
-  <aside class="ps-setlist-panel">
+  <aside class="ps-setlist-panel" aria-label="Preach queue">
     <div class="ps-drawer-head">
       <div class="ps-drawer-eyebrow">
         <span>&#9835; &nbsp; Preach Queue</span>
-        <button class="close" type="button" data-action="setlist#close">&#10005;</button>
+        <button class="close" type="button" data-action="setlist#close" title="Hide the queue">&#10005;</button>
       </div>
       <div class="ps-drawer-sub">
         Line up the service in order &mdash; scriptures, songs, thoughts.
-        In preach mode, click an item to put it on the screen.
+        In preach mode, click an item to preview it, then Go live.
       </div>
     </div>
+
+    <section class="ps-console" data-preview-target="console" aria-label="Live and preview">
+      <div class="ps-console-row is-live">
+        <span class="tag">Live</span>
+        <span class="what" data-preview-target="liveLabel">Nothing on screen yet</span>
+        <button type="button" class="mini" data-preview-target="queueLive" data-action="preview#queueLive" hidden
+                title="Add what's on screen to the queue">&#43; Queue</button>
+      </div>
+      <div class="ps-console-preview" data-preview-target="previewCard" data-state="empty">
+        <div class="ps-console-row is-preview">
+          <span class="tag">Preview</span>
+          <span class="what" data-preview-target="previewLabel">Click a queue item or a verse</span>
+          <button type="button" class="mini" data-preview-target="queuePreview" data-action="preview#queuePreview" hidden
+                  title="Add this to the queue">&#43; Queue</button>
+        </div>
+        <div class="ps-preview-text" data-preview-target="previewText" tabindex="0"
+             data-action="keydown->preview#previewKey" aria-live="polite"></div>
+        <button type="button" class="ps-golive-btn" data-preview-target="goLive" data-action="preview#goLive" disabled
+                title="Put the preview on the projector (L, or Enter here)">Go live <span class="kbd">L</span></button>
+      </div>
+      <div class="ps-console-row is-next">
+        <span class="tag">Next</span>
+        <button type="button" class="what next-btn" data-setlist-target="nextUp" data-action="setlist#previewNext"
+                title="Preview the next queue item (N)">&mdash;</button>
+      </div>
+      <div class="ps-verse-list" data-preview-target="verseList">
+        <div class="head">
+          <span class="ttl" data-preview-target="verseListTitle">Chapter</span>
+          <span class="hint">click: preview &middot; double-click: live &middot; &#43;: queue</span>
+        </div>
+        <ol class="rows" data-preview-target="verseRows">
+          <li class="empty">Type a reference (here or in Go to verse) and its whole chapter lists here.</li>
+        </ol>
+      </div>
+    </section>
+
     <%= render "studies/setlist", study: study %>
+
+    <label class="ps-autoqueue">
+      <input type="checkbox" checked data-setlist-target="autoQueue" data-action="setlist#toggleAutoQueue">
+      Add scriptures I project to the queue automatically
+    </label>
 
     <%# Preach without Wi-Fi: Bibles, passages and screens saved to this device. %>
     <section class="ui-sunday" data-controller="sunday-ready"
