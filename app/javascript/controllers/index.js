@@ -70,6 +70,9 @@ application.register("passage-picker", PassagePickerController)
 import PlanOfflineController from "./plan_offline_controller"
 application.register("plan-offline", PlanOfflineController)
 
+import PreachOfflineController from "./preach_offline_controller"
+application.register("preach-offline", PreachOfflineController)
+
 import PresentationController from "./presentation_controller"
 application.register("presentation", PresentationController)
 

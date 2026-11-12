@@ -16,18 +16,23 @@ export const signedIn = () => document.body?.dataset.nativeSignedIn === "true"
 
 // ---- pane requests --------------------------------------------------------------
 
-document.addEventListener("turbo:before-fetch-request", (event) => {
-  const headers = event.detail?.fetchOptions?.headers
-  const frameId = headers?.["Turbo-Frame"]
-  if (!frameId || !frameId.startsWith("pane_")) return
-  const frame = document.getElementById(frameId)
-  const context = {
+// What a pane render needs that its form doesn't carry (also used by the
+// page-side local render in local_pane.js).
+export function paneContext(frame) {
+  return {
     position: Number(frame?.dataset.panePosition || 0),
     compare: !!frame?.closest(".ps-root.is-compare"),
     signedIn: signedIn(),
     owner: owner(),
     translationId: frame?.querySelector("select[name='pane[translation_id]']")?.value || null
   }
+}
+
+document.addEventListener("turbo:before-fetch-request", (event) => {
+  const headers = event.detail?.fetchOptions?.headers
+  const frameId = headers?.["Turbo-Frame"]
+  if (!frameId || !frameId.startsWith("pane_")) return
+  const context = paneContext(document.getElementById(frameId))
   headers["X-Offline-Pane"] = encodeURIComponent(JSON.stringify(context))
 })
 

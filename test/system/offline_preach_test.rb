@@ -37,8 +37,8 @@ class OfflinePreachTest < ApplicationSystemTestCase
     find(".ui-appbar [data-sheets-id-param='more']").click
     find(".ui-more-sheet [data-sunday-prepare]").click
     within(".ui-sunday") do
-      assert_selector "li.is-ok", text: "KJV downloaded to this device", wait: 20
-      assert_selector "li.is-ok", text: "2 passages ready offline", wait: 20
+      assert_selector "li.is-ok", text: /Whole KJV Bible saved on this device \(\d+ books?\)/, wait: 20
+      assert_selector "li.is-ok", text: "2 passages in this study checked", wait: 20
       assert_selector "li.is-ok", text: /projector and stage screens saved/i, wait: 20
       assert_selector "li.is-warn", text: /live follow-along and the phone remote need internet/i
     end

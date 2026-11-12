@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
-import { fetchManifest, downloadedBibles, downloadBible, requestPersistence, refreshHighlights, bookText, setMeta, getMeta } from "../lib/offline/store"
+import { fetchManifest, downloadedBibles, downloadBible, requestPersistence, refreshHighlights, bookText, bookCount, setMeta, getMeta } from "../lib/offline/store"
 import { makeParser } from "../lib/offline/reference_parser"
 import { passageVerses } from "../lib/offline/pane_renderer"
 import { precachePages } from "../lib/offline/page"
@@ -9,7 +9,8 @@ import { precachePages } from "../lib/offline/page"
 // Wi-Fi. It downloads every Bible the study's panes use, checks every queued
 // scripture and pane passage against those downloads, saves the study page,
 // the projector (?output=1) and stage (?stage=1) screens and their assets, and
-// shows a checklist — "✓ 12 passages ready offline".
+// shows a checklist — "Whole KJV Bible saved on this device (66 books) ✓",
+// then "✓ 12 of this study's passages checked — ready offline".
 export default class extends Controller {
   static targets = ["button", "list", "summary"]
   static values = { studyUrl: String, signedIn: Boolean }
@@ -67,14 +68,20 @@ export default class extends Controller {
     for (const t of wanted) {
       const current = have.find((d) => d.code === t.code)
       if (current && current.version === t.version) continue
-      await downloadBible(t, { onProgress: (f) => this.set(bibles, "busy", `Downloading the ${t.code}… ${Math.round(f * 100)}%`) })
+      await downloadBible(t, { onProgress: (f) => this.set(bibles, "busy", `Downloading the whole ${t.code} Bible… ${Math.round(f * 100)}%`) })
     }
     requestPersistence()
     have = await downloadedBibles()
-    this.set(bibles, "ok", `${wanted.map((t) => t.code).join(", ")} downloaded to this device`)
+    // Whole translations are saved, not just this study's passages — say so
+    // plainly (a tester thought only the passage he was on had downloaded).
+    bibles.remove()
+    for (const t of wanted) {
+      const books = have.find((d) => d.code === t.code)?.books || await bookCount(t.code)
+      this.item("ok", `Whole ${t.code} Bible saved on this device (${books} books) ✓`)
+    }
 
     // 2. Every passage the service may call for.
-    const passages = this.item("busy", "Checking passages…")
+    const passages = this.item("busy", "Checking this study's passages…")
     const parse = makeParser(manifest.canon)
     const refs = this.references()
     const missing = []
@@ -82,8 +89,8 @@ export default class extends Controller {
       if (!(await this.readable(parse, ref, wanted))) missing.push(ref)
     }
     const ready = refs.length - missing.length
-    if (missing.length) this.set(passages, "warn", `${ready} of ${refs.length} passages ready offline — not found: ${missing.join(", ")}`)
-    else this.set(passages, "ok", `${ready} passage${ready === 1 ? "" : "s"} ready offline`)
+    if (missing.length) this.set(passages, "warn", `${ready} of the ${refs.length} passages in this study ready offline — not found: ${missing.join(", ")}`)
+    else this.set(passages, "ok", `${ready} passage${ready === 1 ? "" : "s"} in this study checked — ready offline`)
 
     // 3. The study, projector and stage screens (and their CSS/JS/fonts).
     const screens = this.item("busy", "Saving the study, projector and stage screens…")

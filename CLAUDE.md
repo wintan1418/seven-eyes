@@ -175,8 +175,15 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   `ai_search` Stimulus controller + `studies/_ai_search` / `_ai_results`; endpoint `GET
   /studies/:id/suggest`. Missing key degrades gracefully to a "configure your key" notice.
   The same service powers the preach-mode **AI quick search**: `GET /studies/:id/quick_find`
-  (JSON) — the Go box falls back to it when `/reference_check` can't parse the input, and offers
+  (JSON) — the Go box falls back to it when the reference can't be parsed, and offers
   the results as one-tap chips (`_quickFind` in `presentation_controller`).
+- **Offline-first preach** — preach mode parses references on the device (`lib/offline/local_pane`,
+  JS port of `ReferenceParser`) and renders passages in a downloaded Bible straight from IndexedDB
+  into the pane frame (operator *and* projector/stage), saving the reference in the background
+  (outbox when offline). Server calls go through `lib/offline/network.js` (2 s timeout; a timeout
+  marks the network "slow" for 3 min, shared with the service worker). AI quick find falls back to
+  an on-device keyword search after 3 s ("Offline search (keywords)"). Entering preach auto-downloads
+  the study's translations for signed-in users; `preach_offline` badge shows "Ready offline".
 - **Live follow-along ("Go Live")** — congregants follow the pulpit on their phones in real time.
   Operator: "Go Live" in the preach bar (`live` Stimulus controller) creates a `LiveSession`
   (short join code + QR via `rqrcode`) and PATCHes preach state to `/studies/:id/live`; the server

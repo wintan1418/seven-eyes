@@ -5,9 +5,15 @@
 #     and its service worker, see a network error, as on a dead Wi-Fi), and
 #   • Network.emulateNetworkConditions makes navigator.onLine false and fires
 #     the page's `offline` event, so the UI shows its offline state.
+#
+# NetworkUnplug.hanging simulates the worse case a church gets: "data on but
+# dead" — requests are accepted and never answered (navigator.onLine stays
+# true), until the flag is cleared (or 30 s pass).
 class NetworkUnplug
+  HANG_LIMIT = 30
+
   class << self
-    attr_accessor :unplugged
+    attr_accessor :unplugged, :hanging
   end
 
   def initialize(app)
@@ -15,6 +21,10 @@ class NetworkUnplug
   end
 
   def call(env)
+    if self.class.hanging
+      deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + HANG_LIMIT
+      sleep 0.05 while self.class.hanging && Process.clock_gettime(Process::CLOCK_MONOTONIC) < deadline
+    end
     if self.class.unplugged && env["rack.hijack"]
       io = env["rack.hijack"].call
       io.close rescue nil # rubocop:disable Style/RescueModifier
@@ -31,7 +41,13 @@ module OfflineTestHelper
       offline: true, latency: 0, downloadThroughput: -1, uploadThroughput: -1)
   end
 
+  # Signal bars but no data: every request hangs (navigator.onLine stays true).
+  def go_dead_network
+    NetworkUnplug.hanging = true
+  end
+
   def go_online
+    NetworkUnplug.hanging = false
     NetworkUnplug.unplugged = false
     page.driver.browser.execute_cdp("Network.emulateNetworkConditions",
       offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1)
@@ -58,8 +74,8 @@ module OfflineTestHelper
   def download_bible(code)
     within(".ui-offline-row[data-code='#{code}']") do
       assert_no_text "Checking"
-      find("[data-role='download']").click unless has_text?("On this device", wait: 0)
-      assert_text "On this device", wait: 20
+      find("[data-role='download']").click unless has_text?(/on this device/i, wait: 0)
+      assert_text(/on this device/i, wait: 20)
     end
   end
 

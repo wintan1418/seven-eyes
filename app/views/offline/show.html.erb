@@ -16,7 +16,7 @@
         data-offline-downloads-signed-in-value="<%= authenticated?.present? %>">
     <section class="ui-menu-section">
       <p class="ui-offline-intro">
-        Download a Bible to read it with no signal &mdash; on a plane, in a village church, or when the
+        Download a <strong>whole Bible</strong> (all 66 books, not just the passage you are reading) to read it with no signal &mdash; on a plane, in a village church, or when the
         Wi&#8209;Fi drops in the middle of a sermon. Every chapter, the passage and version pickers and
         preach mode keep working.
       </p>
@@ -40,7 +40,7 @@
                         aria-label="Downloading <%= t.code %>"></progress>
             </div>
             <button type="button" class="ui-btn is-sm" data-role="download" hidden
-                    data-action="offline-downloads#download"><%= icon(:download) %><span>Download</span></button>
+                    data-action="offline-downloads#download"><%= icon(:download) %><span>Download whole Bible</span></button>
             <button type="button" class="ui-btn is-sm is-quiet" data-role="remove" hidden
                     data-action="offline-downloads#remove" aria-label="Remove <%= t.code %> from this device">Remove</button>
           </li>

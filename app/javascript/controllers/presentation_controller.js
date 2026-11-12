@@ -1,4 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
+import { warmLocal, localCheck, loadPaneLocally } from "../lib/offline/local_pane"
+import { quickFetch, isNetworkSlow } from "../lib/offline/network"
+import { allBookTexts } from "../lib/offline/store"
+import { searchVerses } from "../lib/offline/keyword_search"
 
 // Drives focus-pane presentation mode plus the EasyWorship-style preach sub-mode.
 //
@@ -32,6 +36,13 @@ import { Controller } from "@hotwired/stimulus"
 //   moves to a different passage). While an output is connected the operator
 //   window becomes a console: .is-projecting shrinks the live verse and shows
 //   a next-verse preview strip above the bottom bar.
+//
+// Offline-first (a church's data signal is often "on but dead"): references
+// are parsed on the device (lib/offline/local_pane), and a passage in a
+// downloaded Bible is rendered from IndexedDB straight into the pane's frame —
+// on the operator and in the projector/stage windows alike. The server is
+// only asked, briefly (lib/offline/network's circuit breaker), for what the
+// device can't answer; AI quick find falls back to an on-device keyword search.
 const FADE_MS = 160
 const AUTOFIT_MAX_ITERS = 24
 const AUTOFIT_MIN_PX = 18
@@ -39,6 +50,8 @@ const SCREEN_PREFS_KEY = "ps-screen-prefs"
 const GROUP_MAX = 3 // the preach bar offers 1–3 verses per slide
 const ESC_CONFIRM_MS = 1500
 const LOAD_TIMEOUT_MS = 10_000 // a pane load that never answers stops blocking
+const CHECK_TIMEOUT_MS = 1500 // the server's reference check, for what the device can't read
+const QUICK_FIND_TIMEOUT_MS = 3000 // AI quick find, before the on-device keyword search
 const SWIPE_IGNORE = ".ps-setlist-host, .ps-drawer, .ps-ai-drawer, .ps-book-drawer, .ps-search-drawer, " +
   ".ps-rabbi-host, .ps-xref-host, .ps-share-host, .ps-modal, .ps-live-panel, .ps-screen-panel, " +
   ".ps-preach-finds, .ps-preach-bar, .ps-preach-jump, .ps-preach-next, [data-no-swipe]"
@@ -79,6 +92,7 @@ export default class extends Controller {
       this._channel = new BroadcastChannel(`ps-preach:${window.location.pathname}`)
       this._channel.onmessage = (e) => this._onMessage(e.data)
     }
+    warmLocal() // the reference parser + download list, before anyone types
     if (this._isOutput) {
       this._enterOutput(parseInt(params.get("pane") || "0", 10))
     } else {
@@ -157,6 +171,9 @@ export default class extends Controller {
     if (!this.element.classList.contains("is-presenting")) return
     this.element.classList.add("is-preaching")
     this._preachIndex = 0
+    warmLocal({ force: true })
+    // preach_offline_controller: make the study's Bibles ready offline.
+    window.dispatchEvent(new CustomEvent("preach:enter"))
     this._paint()
     requestAnimationFrame(() => this._autoFit())
     this._bindKeys()
@@ -181,6 +198,7 @@ export default class extends Controller {
     if (!this._isOutput) {
       this._send({ type: "exit" }) // the output window closes itself
       this._setProjecting(false)
+      this._refreshLocalPanes()
     }
     this._exitSplit({ repaint: false })
     this.element.classList.remove("is-preaching", "is-parallel")
@@ -492,16 +510,29 @@ export default class extends Controller {
     clearTimeout(this._previewTimer)
     if (!raw) return this._setJumpHint("Type a reference, a verse number, or describe a passage")
     if (/^\d+$/.test(raw)) return this._setJumpHint(`↵ Verse ${raw} in this chapter`, "ok")
+    // Read on the device, instantly — no network.
+    const local = localCheck(raw)
+    if (local?.ok) {
+      this._lastCheck = { raw, parsed: local }
+      return this._setJumpHint(`↵ ${local.label || local.chapter_reference}`, "ok")
+    }
+    // The device can't read it (or hasn't loaded its parser): a brief server check.
     this._previewTimer = setTimeout(async () => {
-      try {
-        const res = await fetch(`/reference_check?q=${encodeURIComponent(raw)}`, { headers: { Accept: "application/json" } })
-        const parsed = await res.json()
-        if (this.jumpInputTarget.value.trim() !== raw) return // typed on
-        this._lastCheck = { raw, parsed }
-        if (parsed.ok) this._setJumpHint(`↵ ${parsed.label || parsed.chapter_reference}`, "ok")
-        else this._setJumpHint(this.hasQuickFindUrlValue ? `↵ Search the Scriptures for “${raw}”` : "Not a reference yet: try “jn 3:16”", "ai")
-      } catch { /* offline: Enter still tries */ }
+      const parsed = await this._serverCheck(raw)
+      if (this.jumpInputTarget.value.trim() !== raw) return // typed on
+      if (parsed) this._lastCheck = { raw, parsed }
+      if (parsed?.ok) this._setJumpHint(`↵ ${parsed.label || parsed.chapter_reference}`, "ok")
+      else if (parsed || local) this._setJumpHint(this.hasQuickFindUrlValue ? `↵ Search the Scriptures for “${raw}”` : "Not a reference yet: try “jn 3:16”", "ai")
     }, 120)
+  }
+
+  // /reference_check with a short deadline; null when the network can't answer.
+  async _serverCheck(raw) {
+    try {
+      const { res, body } = await quickFetch(`/reference_check?q=${encodeURIComponent(raw)}`,
+        { headers: { Accept: "application/json" } }, { timeoutMs: CHECK_TIMEOUT_MS, read: "json" })
+      return res.ok && body ? body : null
+    } catch { return null }
   }
 
   _setJumpHint(text, tone = "") {
@@ -536,12 +567,16 @@ export default class extends Controller {
   // through to the AI quick search ("the prodigal son" → references).
   async _chase(raw, { silent = false, remember = true } = {}) {
     let parsed = this._lastCheck?.raw === raw ? this._lastCheck.parsed : null // already checked while typing
+    if (!parsed?.ok) {
+      // On the device first; the server only for what the device can't read.
+      await warmLocal()
+      const local = localCheck(raw)
+      parsed = local?.ok ? local : ((await this._serverCheck(raw)) || local || parsed)
+    }
     if (!parsed) {
-      try {
-        const res = await fetch(`/reference_check?q=${encodeURIComponent(raw)}`,
-                                { headers: { Accept: "application/json" } })
-        parsed = await res.json()
-      } catch { return }
+      // No parser on the device and no network: still try the keyword search.
+      if (!silent && this.hasQuickFindUrlValue) this._quickFind(raw)
+      return
     }
     if (!parsed.ok) {
       if (silent) return
@@ -584,7 +619,28 @@ export default class extends Controller {
       this._paint()
       requestAnimationFrame(() => this._autoFit())
     })
-    input.form?.requestSubmit()
+    this._submitPane(pane)
+  }
+
+  // Back in the reader: panes preach rendered on the device lack the server's
+  // extras (Strong's word links) — reload them from the server when the
+  // network is good (the service worker still answers from the device if not).
+  _refreshLocalPanes() {
+    if (navigator.onLine === false || isNetworkSlow()) return
+    this._workspacePanes().forEach(pane => {
+      if (pane.querySelector(":scope > .rd-pane-meta[data-offline]")) pane.querySelector("form.rd-pane-form")?.requestSubmit()
+    })
+  }
+
+  // Load the pane's form (reference/translation already set): from the
+  // downloaded Bible when it has the passage, else through Turbo as usual
+  // (where the service worker still has its own offline fallback).
+  _submitPane(pane, { mirror = false } = {}) {
+    const form = pane.querySelector("form.rd-pane-form") ||
+      pane.querySelector("input[name='pane[reference]']")?.form
+    if (!form) return
+    loadPaneLocally(pane, { mirror }).then((done) => { if (!done) form.requestSubmit() },
+                                           () => form.requestSubmit())
   }
 
   // Run `callback(ok)` exactly once when this pane's Turbo Frame finishes
@@ -648,22 +704,89 @@ export default class extends Controller {
     const box = this._findsBox()
     if (!box) return
     this._findsOpen = true
+    const search = (this._findSeq = (this._findSeq || 0) + 1)
+    const current = () => this._findsOpen && this._findSeq === search // the operator moved on?
     box.hidden = false
     box.innerHTML = `<div class="head"><span class="lbl">&#10038; Searching the Scriptures&hellip;</span></div>`
-    let data
+
+    // The AI answer, or — if it hasn't come back in a few seconds (dead
+    // signal) — a keyword search of the downloaded Bibles meanwhile. A late AI
+    // answer still replaces the keyword results.
+    const ai = this._askQuickFind(q)
+    const first = await Promise.race([ ai, new Promise(r => setTimeout(() => r({ late: true }), QUICK_FIND_TIMEOUT_MS)) ])
+    if (!current()) return
+    if (first.unauthorized) {
+      // AI search needs an account — open the sign-in gate instead of "Nothing found".
+      box.hidden = true
+      this._findsOpen = false
+      window.dispatchEvent(new CustomEvent("auth:required"))
+      return
+    }
+    if (first.data) { this._renderAiFinds(box, q, first.data); return }
+
+    const local = await this._keywordFind(q)
+    if (!current()) return
+    const waiting = first.late
+    if (local.length) this._renderKeywordFinds(box, q, local, { waiting })
+    if (!waiting) {
+      if (!local.length) this._renderAiFinds(box, q, null, { offline: true })
+      return
+    }
+    const late = await ai
+    if (!current()) return
+    if (late.data) this._renderAiFinds(box, q, late.data)
+    else if (local.length) this._renderKeywordFinds(box, q, local, { waiting: false })
+    else this._renderAiFinds(box, q, null, { offline: true })
+  }
+
+  // GET quick_find → { data } | { unauthorized } | { failed }. Skips the
+  // network at once when it is known to be down or dead.
+  async _askQuickFind(q) {
+    if (navigator.onLine === false || isNetworkSlow()) return { failed: true }
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 25_000)
     try {
       const res = await fetch(`${this.quickFindUrlValue}?q=${encodeURIComponent(q)}`,
-                              { headers: { Accept: "application/json" } })
-      if (res.status === 401) {
-        // AI search needs an account — open the sign-in gate instead of "Nothing found".
-        box.hidden = true
-        this._findsOpen = false
-        window.dispatchEvent(new CustomEvent("auth:required"))
-        return
-      }
-      data = await res.json()
-    } catch { data = null }
-    if (!this._findsOpen) return // the operator moved on while we searched
+                              { headers: { Accept: "application/json" }, signal: controller.signal })
+      if (res.status === 401) return { unauthorized: true }
+      return { data: await res.json() }
+    } catch {
+      return { failed: true }
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+
+  // Keyword search over the presented pane's Bible (or any downloaded one).
+  async _keywordFind(q) {
+    try {
+      const { downloaded, translations, books } = await warmLocal()
+      if (!downloaded?.length) return []
+      const paneTrans = this.element.querySelector(".ps-pane.is-presented select[name='pane[translation_id]']")?.value
+      const code = translations.find(t => String(t.id) === String(paneTrans))?.code
+      const pick = downloaded.find(d => d.code === code) || downloaded[0]
+      const records = await allBookTexts(pick.code)
+      return searchVerses(records, q, { limit: 10 }).map(h => {
+        const name = books.get(h.osis)?.name || h.osis
+        return { reference: `${name} ${h.chapter}:${h.num}`, chapter_reference: `${name} ${h.chapter}`,
+                 verse_start: h.num, preview: h.text.length > 140 ? `${h.text.slice(0, 139)}…` : h.text }
+      })
+    } catch {
+      return []
+    }
+  }
+
+  _renderKeywordFinds(box, q, results, { waiting }) {
+    box.innerHTML = ""
+    const head = document.createElement("div")
+    head.className = "head"
+    head.innerHTML = `<span class="lbl">&#10038; Offline search (keywords)${waiting ? " &middot; still asking the study assistant&hellip;" : ""}</span>` +
+                     `<button type="button" class="close" data-action="presentation#cancelFinds">&#10005;</button>`
+    box.appendChild(head)
+    this._appendFindChips(box, results)
+  }
+
+  _renderAiFinds(box, q, data, { offline = false } = {}) {
     if (!data?.ok || (!data.summary && !data.suggestions?.length)) {
       // A genuine miss (e.g. not a biblical subject) — tell the operator plainly
       // instead of a silent flash, so the Go box never feels broken.
@@ -674,9 +797,9 @@ export default class extends Controller {
       card.className = "card"
       const sum = document.createElement("div")
       sum.className = "sum"
-      sum.textContent = navigator.onLine
-        ? `No Scripture matched “${q}”. Try a fuller phrase — a name, place, story, or theme.`
-        : `You're offline — AI search needs internet. References like “Rom 8:28” still work.`
+      sum.textContent = offline
+        ? `No signal for the AI search, and no downloaded Bible matched “${q}”. References like “Rom 8:28” still work.`
+        : `No Scripture matched “${q}”. Try a fuller phrase — a name, place, story, or theme.`
       card.appendChild(sum)
       box.appendChild(card)
       return
@@ -707,7 +830,12 @@ export default class extends Controller {
       card.append(topic, sum, project)
       box.appendChild(card)
     }
-    ;(data.suggestions || []).forEach(s => {
+    this._appendFindChips(box, data.suggestions || [])
+  }
+
+  // One-tap chips: [{ reference, chapter_reference, verse_start, preview }].
+  _appendFindChips(box, suggestions) {
+    suggestions.forEach(s => {
       const btn = document.createElement("button")
       btn.type = "button"
       btn.className = "find"
@@ -980,7 +1108,7 @@ export default class extends Controller {
         this._paint()
         requestAnimationFrame(() => this._autoFit())
       })
-      input.form?.requestSubmit()
+      this._submitPane(pane)
     } finally {
       this._restoring = false
     }
@@ -1576,7 +1704,7 @@ export default class extends Controller {
       this._loadsPending = Math.max(0, this._loadsPending - 1)
       if (this._loadsPending === 0 && this._latestState) this._applyState(this._latestState)
     })
-    refInput.form?.requestSubmit()
+    this._submitPane(pane, { mirror: true })
     return true
   }
 

@@ -23,7 +23,10 @@ class ReferenceParserParityTest < ActiveSupport::TestCase
     "Isaiah 53:5,", "Is 40:31", "lam 3:22-23", "joel 2:28", "am 5:24", "mic 6:8", "hab 2:4",
     "zeph 3:17", "hag 2:9", "zech 4:6", "mal 3:10", "mark 16:15", "luke 15", "ga 5:22", "eph 6:10-18",
     "col 3", "1 tim 4:12", "2 tim 3:16-17", "titus 2", "jas 1:2-4", "1 pet 5:7", "2 pet 3:9",
-    "1 john 4:8", "2 jn 6", "Revelation 21:1-4", "gen", "g", "ge", "jo 3", "1 sam 17", "2sam 7"
+    "1 john 4:8", "2 jn 6", "Revelation 21:1-4", "gen", "g", "ge", "jo 3", "1 sam 17", "2sam 7",
+    # What a preacher calls out in preach mode's Go box — now parsed on the device first.
+    "jn 3:16", "john 3 16", "John 3:16", "1 cor 13", "rom 8:28-30", "ps 23", "song of songs 2:1",
+    "1 Cor 13:4-7", "Rom 8:28", "phil 4:13", "heb 11:1", "ps 119:105", "isa 40:31", "matt 28:19-20"
   ].freeze
 
   setup do
