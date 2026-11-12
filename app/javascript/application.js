@@ -4,6 +4,7 @@ import "./lib/frame_guard"
 import "./controllers"
 import "./lib/native_app"
 import "./lib/offline/page"
+import "./lib/offline/ready"
 
 // PWA: register the service worker for offline reading / installable use.
 // Conservative — only on HTTPS or localhost, and a `?sw=off` query bails out

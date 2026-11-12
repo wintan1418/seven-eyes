@@ -3,7 +3,9 @@
 # chapter rendered offline still shows them). See OfflineBundle and
 # app/javascript/lib/offline/.
 class OfflineController < ApplicationController
-  allow_unauthenticated_access only: %i[ show manifest bible highlights ]
+  allow_unauthenticated_access only: %i[ show manifest bible highlights prepare ]
+
+  RECENT_OFFLINE = 5 # recent studies each device keeps for offline use
 
   # Icons the offline pane renderer draws (same markup as ReaderHelper#icon).
   RENDER_ICONS = %i[ chevron_down chevron_left chevron_right listen memorize notes x commentary image prayer book help ].freeze
@@ -58,6 +60,26 @@ class OfflineController < ApplicationController
       highlights: current_user.highlights.pluck(:id, :verse_id, :char_start, :char_end, :color, :note).map do |id, verse_id, s, e, color, note|
         { id:, verse_id:, char_start: s, char_end: e, color:, note: note.to_s }
       end
+    }
+  end
+
+  # POST /offline/prepare — what this device should keep for offline use: the
+  # reader's Quick Present study (made on first ask) and their most recent
+  # studies. lib/offline/ready.js saves those pages and downloads the Bible.
+  def prepare
+    return head(:unauthorized) unless authenticated?
+
+    response.headers["Cache-Control"] = "private, no-store"
+    quick = QuickPresent.ensure!(current_user)
+    pane = quick.panes.first
+    translation = pane&.effective_translation
+    recent = current_user.studies.where(quick_present: false).recent.limit(RECENT_OFFLINE)
+    render json: {
+      quick_present: {
+        id: quick.id, url: study_path(quick), name: quick.name, reference: pane&.reference,
+        translation: translation && { id: translation.id, code: translation.code }
+      },
+      recent: recent.map { |s| { id: s.id, url: study_path(s), name: s.name } }
     }
   end
 end

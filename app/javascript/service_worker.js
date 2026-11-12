@@ -18,6 +18,9 @@
 //   • /reference_check (preach Go box) is answered offline by the JS parser.
 //   • Both skip the network entirely while it is marked slow (lib/offline/
 //     network.js: a timeout marks it for 3 minutes; the page shares the mark).
+//     So do saved pages; a saved page also never waits more than 4 s on a
+//     request that hangs, and ?saved=1 ("Present offline") opens the saved
+//     copy at once (refreshing it in the background).
 //   • Writes queued offline (outbox) are replayed on Background Sync.
 //   • Everything else passes straight through. An uncached page offline gets
 //     a small "you're offline" page.
@@ -45,6 +48,7 @@ const FONT_HOSTS = [ "fonts.googleapis.com", "fonts.gstatic.com" ]
 // back in 2 s comes from the device (preach mode can't wait out a dead signal).
 const PANE_TIMEOUT_MS = 2000
 const CHECK_TIMEOUT_MS = 1500 // /reference_check — the JS parser can always answer
+const PAGE_TIMEOUT_MS = 4000 // a saved page rather than wait on a request that hangs this long
 const MAX_SAVED_PAGES = 60
 
 self.addEventListener("install", () => {
@@ -172,14 +176,31 @@ async function savePage(response) {
 
 async function networkFirst(event, key) {
   const request = event.request
-  try {
-    const fresh = await fetch(request)
+  const cached = await caches.open(PAGES_CACHE).then((c) => c.match(key)).catch(() => null)
+  // "Present offline" (?saved=1), or a network known to be dead: the saved
+  // copy at once, refreshed in the background when there is a network.
+  const slow = await networkSlowStored().catch(() => false)
+  if (cached && (slow || new URL(request.url).searchParams.get("saved") === "1")) {
+    if (!slow) event.waitUntil(fetch(request).then((fresh) => savePage(fresh)).catch(() => {}))
+    return cached
+  }
+
+  const fresh = fetch(request).then((res) => {
     // waitUntil: WebKit may suspend the worker once the response is handed
     // over, before a background save finishes.
-    event.waitUntil(savePage(fresh.clone()).catch(() => {}))
-    return fresh
+    event.waitUntil(savePage(res.clone()).catch(() => {}))
+    return res
+  })
+  fresh.catch(() => {}) // when the saved copy answered first
+  let timer
+  try {
+    if (!cached) return await fresh
+    // "Data on but dead": a saved page doesn't wait out a hanging request.
+    return await Promise.race([
+      fresh,
+      new Promise((resolve) => { timer = setTimeout(() => { markNetworkSlow(); resolve(cached) }, PAGE_TIMEOUT_MS) })
+    ])
   } catch (e) {
-    const cached = await caches.open(PAGES_CACHE).then((c) => c.match(key))
     if (cached) return cached
     // /read opens your last study.
     if (new URL(key).pathname === "/read") {
@@ -187,6 +208,8 @@ async function networkFirst(event, key) {
       if (last) return Response.redirect(last, 302)
     }
     return offlineFallback(request)
+  } finally {
+    clearTimeout(timer)
   }
 }
 
@@ -343,7 +366,8 @@ async function precache(urls) {
   for (const raw of urls) {
     const url = new URL(raw, self.location.origin)
     try {
-      const res = await fetch(url.href, { credentials: "same-origin", headers: { Accept: "text/html" } })
+      // X-Offline-Precache: saving a study isn't opening it (it keeps its place in "recent").
+      const res = await fetch(url.href, { credentials: "same-origin", headers: { Accept: "text/html", "X-Offline-Precache": "1" } })
       if (!cacheable(res)) { failed.push(url.pathname + url.search); continue }
       await savePage(res.clone())
       for (const asset of assetUrls(await res.text())) {

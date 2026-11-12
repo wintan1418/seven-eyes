@@ -2,6 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 import { downloadedBibles, clearPersonal } from "../lib/offline/store"
 import { pendingCount, flushOutbox, subscribe } from "../lib/offline/outbox"
 import { clearSavedPages } from "../lib/offline/page"
+import { openQuickPresent, networkDown } from "../lib/offline/ready"
 
 // The calm offline layer on every page (wrapper near the top of <body>):
 //   • a badge while the device is offline — "Offline · reading from your
@@ -9,7 +10,10 @@ import { clearSavedPages } from "../lib/offline/page"
 //   • a sync pill — "3 changes waiting to sync" / "Syncing…" / "All changes saved",
 //   • a gentle "needs internet" message instead of a silent failure when an
 //     online-only feature (AI, cross-references, commentary, live, remote…)
-//     is tapped while offline,
+//     is tapped while offline (or while the network is known to be dead).
+//     Nothing on the projection path is blocked: "New study" opens Quick
+//     Present (lib/offline/ready.js) and Bible search runs on the device
+//     when a Bible is downloaded,
 //   • on sign-out (any DELETE form to /session): send queued changes first,
 //     then drop saved pages, cached highlights and the outbox, so nothing from
 //     this reader stays on a shared device.
@@ -18,7 +22,6 @@ const NEEDS_INTERNET = [
   [ "a[data-turbo-frame='commentary_drawer'], [data-action~='verse-actions#commentary']", "The commentary needs" ],
   [ "[data-action*='rabbi#'], [data-action~='verse-actions#rabbi']", "The AI Rabbi needs" ],
   [ "[data-action*='ai-search#']", "AI Find a Verse needs" ],
-  [ "[data-action~='search#open']", "Bible search needs" ],
   [ "[data-action~='live#toggle']", "Live follow-along needs" ],
   [ "[data-action~='remote#toggle']", "The phone remote needs" ],
   [ "[data-action~='reader#toggle']", "The audio Bible needs" ],
@@ -26,10 +29,13 @@ const NEEDS_INTERNET = [
   [ "[data-action~='pane#share'], [data-action~='verse-actions#share']", "Share pictures need" ],
   [ "[data-action~='pane#prayer']", "Chapter prayers need" ],
   [ "[data-action~='share#copy']", "Share links need" ],
-  [ "[data-action~='new-study#open'], form.ui-menu-new-form button", "New studies need" ],
-  [ "[data-tour='panes'], [data-action~='diff#toggle']", "Changing the layout needs" ],
+  [ "[data-tour='panes']", "Adding a pane needs internet. Your downloaded Bibles still work in the panes you have.", { full: true } ],
   [ "a[href$='/sermon'], a[href*='/sermon?']", "The sermon manuscript needs" ]
 ]
+// "New study" with no internet opens Quick Present (ready on the device) instead.
+const NEW_STUDY = "[data-action~='new-study#open'], form.ui-menu-new-form button"
+// Bible search isn't listed: offline it searches the downloaded Bibles (search
+// controller), and says in the drawer when there are none.
 
 export default class extends Controller {
   static targets = ["badge", "label", "sync"]
@@ -44,6 +50,7 @@ export default class extends Controller {
     document.addEventListener("submit", this._onSubmit, true)
     document.addEventListener("click", this._onClick, true)
     window.addEventListener("offline:toast", this._onToast)
+    window.addEventListener("offline:prepared", this._update)
     this._unsubscribe = subscribe((m) => this._onMessage(m))
     this.render()
     this.renderSync()
@@ -55,6 +62,7 @@ export default class extends Controller {
     document.removeEventListener("submit", this._onSubmit, true)
     document.removeEventListener("click", this._onClick, true)
     window.removeEventListener("offline:toast", this._onToast)
+    window.removeEventListener("offline:prepared", this._update)
     this._unsubscribe?.()
   }
 
@@ -103,14 +111,22 @@ export default class extends Controller {
   }
 
   _guard(event) {
-    if (navigator.onLine) return
+    // "New study" also takes the Quick Present path when the network is
+    // known to be dead (data on, nothing coming back): creating one would hang.
+    if (!networkDown()) return
     const target = event.target instanceof Element ? event.target : null
     if (!target) return
-    for (const [ selector, what ] of NEEDS_INTERNET) {
+    const stop = () => { event.preventDefault(); event.stopImmediatePropagation() }
+    if (target.closest(NEW_STUDY)) {
+      stop()
+      openQuickPresent()
+      return
+    }
+    if (navigator.onLine !== false) return
+    for (const [ selector, what, options ] of NEEDS_INTERNET) {
       if (target.closest(selector)) {
-        event.preventDefault()
-        event.stopImmediatePropagation()
-        this.toast(`${what} internet — you're offline.`)
+        stop()
+        this.toast(options?.full ? what : `${what} internet — you're offline.`)
         return
       }
     }

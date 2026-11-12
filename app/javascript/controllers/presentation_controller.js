@@ -120,7 +120,40 @@ export default class extends Controller {
       // would come back "preaching" with no key bindings behind it.
       this._onBeforeCache = () => this._teardownForCache()
       document.addEventListener("turbo:before-cache", this._onBeforeCache)
+      // A Turbo visit may update the address bar only after this connects.
+      this._onArrive = () => this._presentOnArrival()
+      document.addEventListener("turbo:load", this._onArrive, { once: true })
+      this._presentOnArrival()
     }
+  }
+
+  // ?present=1 ("Present offline" / Quick Present): straight into preach mode
+  // with the Go box open. ?saved=1 means the page came from the device's saved
+  // copy: the projector and stage windows open from theirs too.
+  _presentOnArrival() {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("present") !== "1" || !this.element.isConnected) return
+    this._preferSaved = params.get("saved") === "1"
+    const url = new URL(window.location.href)
+    url.searchParams.delete("present")
+    url.searchParams.delete("saved")
+    history.replaceState(history.state, "", url.pathname + url.search + url.hash)
+    // After the sibling controllers (preach_offline listens for preach:enter) connect.
+    requestAnimationFrame(() => {
+      if (!this.element.isConnected || this.element.classList.contains("is-preaching")) return
+      this.start({}) // no click: the default pane
+      this.openJump()
+    })
+  }
+
+  // The projector/stage URL: the saved copy when the network can't be trusted.
+  _screenUrl(param) {
+    const pane = this.element.querySelector(".ps-pane.is-presented")
+    const url = new URL(window.location.href)
+    url.searchParams.set(param, "1")
+    url.searchParams.set("pane", String(Math.max(0, this._workspacePanes().indexOf(pane))))
+    if (this._preferSaved || navigator.onLine === false || isNetworkSlow()) url.searchParams.set("saved", "1")
+    return url
   }
 
   // ----- focus mode (whole pane) -----
@@ -1507,10 +1540,7 @@ export default class extends Controller {
   openStage(event) {
     event?.preventDefault?.()
     if (!this.element.classList.contains("is-preaching")) return
-    const pane = this.element.querySelector(".ps-pane.is-presented")
-    const url = new URL(window.location.href)
-    url.searchParams.set("stage", "1")
-    url.searchParams.set("pane", String(Math.max(0, this._workspacePanes().indexOf(pane))))
+    const url = this._screenUrl("stage")
     this._stageWindow = this._openNamedWindow(this._stageWindow, url, "ps-preach-stage", "popup=yes,width=1100,height=650")
     if (!this._stageWindow) alert("The browser blocked the stage window — allow pop-ups for this site, then click Stage again.")
   }
@@ -1597,10 +1627,7 @@ export default class extends Controller {
   openOutput(event) {
     event?.preventDefault?.()
     if (!this.element.classList.contains("is-preaching")) return
-    const pane = this.element.querySelector(".ps-pane.is-presented")
-    const url = new URL(window.location.href)
-    url.searchParams.set("output", "1")
-    url.searchParams.set("pane", String(Math.max(0, this._workspacePanes().indexOf(pane))))
+    const url = this._screenUrl("output")
     this._outputWindow = this._openNamedWindow(this._outputWindow, url, "ps-preach-output", "popup=yes,width=1280,height=720")
     if (!this._outputWindow) {
       alert("The browser blocked the output window — allow pop-ups for this site, then click Project again.")
@@ -1925,6 +1952,7 @@ export default class extends Controller {
     if (this._isOutput) this._send({ type: "bye", role: this._isStage ? "stage" : "output" })
     this._channel?.close()
     this._channel = null
+    if (this._onArrive) document.removeEventListener("turbo:load", this._onArrive)
     if (this._onSetlist) window.removeEventListener("setlist:present", this._onSetlist)
     if (this._onCommand) window.removeEventListener("preach:command", this._onCommand)
     if (this._onJoin) window.removeEventListener("preach:join", this._onJoin)

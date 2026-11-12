@@ -157,4 +157,6 @@ export async function clearPersonal({ outbox = true } = {}) {
   if (outbox) await clear("outbox").catch(() => {})
   await setMeta("lastStudyUrl", null).catch(() => {})
   await setMeta("highlightsAt", 0).catch(() => {})
+  await setMeta("quickPresent", null).catch(() => {}) // lib/offline/ready.js
+  await setMeta("offlinePreparedAt", null).catch(() => {})
 }

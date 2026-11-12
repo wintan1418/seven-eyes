@@ -32,6 +32,11 @@
     </section>
 
     <nav class="ui-menu-section ui-menu-links" aria-label="Offline">
+      <% if authenticated? %>
+        <button type="button" class="ui-menu-item" data-controller="quick-present" data-action="quick-present#open">
+          <%= icon(:presentation) %> Present offline &mdash; project with no internet
+        </button>
+      <% end %>
       <%= link_to offline_path, class: "ui-menu-item" do %><%= icon(:download) %> Offline Bibles &mdash; read with no signal<% end %>
     </nav>
 

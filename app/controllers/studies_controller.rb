@@ -43,11 +43,14 @@ class StudiesController < ApplicationController
   end
 
   def show
-    @study.touch_opened!
+    # The service worker saving pages for offline use (X-Offline-Precache) is
+    # not the reader opening the study: don't reshuffle "recent" or prompt.
+    precache = request.headers["X-Offline-Precache"].present?
+    @study.touch_opened! unless precache
     @studies = authenticated? ? current_user.studies.recent : []
     # A returning reader with a shelf of studies is a happy one — offer the
     # testimonial widget (the gem throttles: max 2 auto-prompts, 180 days apart).
-    testimonial_prompt! if authenticated? && @studies.size >= 2
+    testimonial_prompt! if authenticated? && @studies.size >= 2 && !precache
   end
 
   def create
