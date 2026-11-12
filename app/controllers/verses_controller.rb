@@ -1,5 +1,5 @@
 class VersesController < ApplicationController
-  allow_unauthenticated_access only: %i[ count check ]
+  allow_unauthenticated_access only: %i[ count check chapter ]
 
   # Parse a typed reference (preach-mode quick chase). The operator validates
   # what the preacher called out BEFORE the projected pane is touched, so a
@@ -15,6 +15,25 @@ class VersesController < ApplicationController
       verse_start: parsed.verse_start,
       chapter_reference: "#{parsed.book_name} #{parsed.chapter}",
       label: parsed.label
+    }
+  end
+
+  # The whole chapter a typed reference sits in, as JSON — the preach queue's
+  # Preview and EasyWorship-style verse list when the translation isn't
+  # downloaded to the device (they read the downloaded Bible first).
+  def chapter
+    parsed = ReferenceParser.call(params[:q].to_s)
+    book = parsed.valid? && Book.find_by_osis(parsed.osis)
+    return render(json: { ok: false }) unless book
+
+    translation = Translation.available.find_by(id: params[:translation].presence) || Translation.default
+    verses = Verse.where(translation:, book:, chapter: parsed.chapter).ordered.pluck(:chapter, :verse_number, :text)
+    render json: {
+      ok: true, osis: parsed.osis, chapter: parsed.chapter, label: parsed.label,
+      chapter_reference: "#{parsed.book_name} #{parsed.chapter}",
+      verse_start: parsed.verse_start, verse_end: parsed.verse_end,
+      translation: translation&.code,
+      verses: verses.map { |c, n, t| { chapter: c, num: n, text: t } }
     }
   end
 

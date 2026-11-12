@@ -14,6 +14,7 @@ class SetlistItem < ApplicationRecord
   PICTURE_LIMIT = 30
 
   validates :position, presence: true
+  validates :client_id, length: { maximum: 64 }, format: { with: /\A[\w-]+\z/ }, allow_nil: true
   validate :picture_limit, on: :create, if: :picture?
   validates :reference, presence: true, if: :scripture?
   validates :media_url, presence: true, if: :picture?
@@ -62,6 +63,46 @@ class SetlistItem < ApplicationRecord
   # Lyrics/thought body split into stanza slides on blank lines.
   def stanzas
     body.to_s.split(/\n{2,}/).map(&:strip).reject(&:empty?)
+  end
+
+  # The queue as the device-side controller holds it (setlist_controller.js).
+  def as_queue_json
+    {
+      id: id, client_id: client_id, kind: kind, reference: reference, label: label,
+      title: title, body: body, image: media_url, stanzas: (song? || thought?) ? stanzas.size : 0
+    }
+  end
+
+  # Find by server id ("42") or by the id the device gave it ("tmp-…").
+  def self.find_by_any_id!(key)
+    key.to_s.match?(/\A\d+\z/) ? find(key) : find_by!(client_id: key.to_s)
+  end
+
+  # Put the queue in the given order. `keys` are server ids or client ids
+  # (an item made offline may not know its server id yet); anything not named
+  # keeps its relative order after them. Positions are renumbered densely.
+  def self.arrange!(study, keys)
+    items = study.setlist_items.in_order.to_a
+    rank = {}
+    Array(keys).each_with_index { |k, i| rank[k.to_s] ||= i }
+    ordered = items.each_with_index.sort_by do |item, i|
+      r = rank[item.id.to_s] || (item.client_id && rank[item.client_id])
+      r ? [ 0, r, i ] : [ 1, 0, i ]
+    end.map(&:first)
+    renumber!(ordered)
+  end
+
+  # Move this item to index `position` (clamped) in its study's queue.
+  def place_at!(position)
+    items = study.setlist_items.in_order.to_a.reject { |s| s.id == id }
+    index = position.to_i.clamp(0, items.size)
+    self.class.renumber!(items.insert(index, self))
+  end
+
+  def self.renumber!(items)
+    transaction do
+      items.each_with_index { |s, i| s.update_column(:position, i) unless s.position == i }
+    end
   end
 
   # Swap with the neighbour above/below, renumbering the whole list so

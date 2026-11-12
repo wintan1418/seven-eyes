@@ -4,12 +4,27 @@
 # their session study (current_study resolves owner-or-guest). Pictures are
 # hosted on Cloudinary, so uploading one needs an account and is capped per
 # study (SetlistItem::PICTURE_LIMIT).
+#
+# The preach-mode queue is local-first: the device changes its own copy at once
+# and replays each change here as JSON through the offline outbox. Those
+# requests carry the device's id for the item (client_id, "tmp-…"), so a create
+# replayed after a dropped connection returns the row it made the first time,
+# and later updates / deletes / reorders can name an item whose server id the
+# device hasn't heard yet. The HTML (Turbo Frame) responses stay for pictures
+# and for a page without JavaScript.
 class SetlistItemsController < ApplicationController
   allow_unauthenticated_access
 
   before_action :set_study
 
+  # GET /studies/:study_id/setlist (JSON) — the queue as the server has it.
+  def index
+    render json: queue_json
+  end
+
   def create
+    return create_json if request.format.json?
+
     attrs = item_params
     return reject_kind(attrs) unless valid_kind?(attrs[:kind])
     return create_scriptures(attrs[:reference]) if attrs[:kind] == "scripture"
@@ -30,6 +45,11 @@ class SetlistItemsController < ApplicationController
 
   def update
     attrs = item_params
+    if request.format.json?
+      return render_json_error("Pick what kind of item this is") if attrs.key?(:kind) && !valid_kind?(attrs[:kind])
+      return render_json_error("Pictures can't be changed from here") if item.picture? || attrs[:kind] == "picture"
+      return item.update(attrs) ? render(json: item_json(item)) : render_json_error(item.errors.full_messages.to_sentence)
+    end
     return reject_kind(attrs) if attrs.key?(:kind) && !valid_kind?(attrs[:kind])
 
     was_picture = item.picture?
@@ -46,6 +66,7 @@ class SetlistItemsController < ApplicationController
   def destroy
     item.destroy
     PictureUpload.purge(item.media_public_id) if item.picture?
+    return render(json: queue_json) if request.format.json?
     render_setlist
   end
 
@@ -55,6 +76,13 @@ class SetlistItemsController < ApplicationController
     render_setlist
   end
 
+  # PATCH /studies/:study_id/setlist/order {order: [id or client_id, …]} —
+  # the whole order the device has, so replays and coalesced drags are safe.
+  def order
+    SetlistItem.arrange!(@study, params.require(:order))
+    render json: queue_json
+  end
+
   # GET /studies/:study_id/setlist/library — songs to drop in without retyping:
   # the public-domain hymnal plus songs this account has queued before.
   def library
@@ -62,6 +90,44 @@ class SetlistItemsController < ApplicationController
   end
 
   private
+
+  # A device-made item. Idempotent on client_id: the same create replayed (the
+  # outbox retries after a timeout) returns the first row, never a twin.
+  def create_json
+    attrs = item_params
+    client_id = params.dig(:setlist_item, :client_id).presence
+    return render_json_error("Pick what kind of item this is") unless valid_kind?(attrs[:kind])
+    return render_json_error("Add pictures from the queue form while online") if attrs[:kind] == "picture"
+
+    existing = client_id && @study.setlist_items.find_by(client_id: client_id)
+    return render(json: item_json(existing)) if existing
+
+    item = @study.setlist_items.new(attrs.merge(client_id: client_id))
+    begin
+      saved = item.save
+    rescue ActiveRecord::RecordNotUnique # a concurrent replay of the same create won
+      return render(json: item_json(@study.setlist_items.find_by!(client_id: client_id)))
+    end
+    return render_json_error(item.errors.full_messages.to_sentence) unless saved
+
+    position = params.dig(:setlist_item, :position)
+    item.place_at!(position) if position.to_s.match?(/\A\d+\z/)
+    render json: item_json(item.reload), status: :created
+  end
+
+  def item_json(item)
+    item.as_queue_json.merge(position: item.position, server_time: server_time)
+  end
+
+  def queue_json
+    { items: @study.setlist_items.in_order.map(&:as_queue_json), server_time: server_time }
+  end
+
+  def server_time = (Time.current.to_f * 1000).to_i
+
+  def render_json_error(message)
+    render json: { error: message }, status: :unprocessable_entity
+  end
 
   # Queue one or several scriptures at once. A fast minister can drop in a whole
   # block — "John 3:16, Rom 8:28, Ps 23" or one reference per line — and each
@@ -114,7 +180,7 @@ class SetlistItemsController < ApplicationController
   end
 
   def item
-    @item ||= @study.setlist_items.find(params[:id])
+    @item ||= @study.setlist_items.find_by_any_id!(params[:id])
   end
 
   def item_params

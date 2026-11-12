@@ -40,6 +40,22 @@ class ReferenceCheckTest < ActionDispatch::IntegrationTest
     refute JSON.parse(response.body)["ok"]
   end
 
+  test "verse_chapter returns the whole chapter of a reference for the queue's preview" do
+    kjv = Translation.create!(code: "KJV", name: "King James Version")
+    (27..29).each { |v| Verse.create!(translation: kjv, book: @rom, chapter: 8, verse_number: v, text: "Rom 8:#{v}") }
+    get verse_chapter_path(q: "rom 8:28", translation: kjv.id)
+    data = JSON.parse(response.body)
+    assert data["ok"]
+    assert_equal "Romans 8:28", data["label"]
+    assert_equal 28, data["verse_start"]
+    assert_equal "KJV", data["translation"]
+    assert_equal [ 27, 28, 29 ], data["verses"].map { |v| v["num"] }
+    assert_equal "Rom 8:28", data["verses"][1]["text"]
+
+    get verse_chapter_path(q: "blorbity 9")
+    refute JSON.parse(response.body)["ok"]
+  end
+
   test "a parseable book we have not seeded is refused" do
     get reference_check_path(q: "gen 1") # valid in the canon, absent from Books
     refute JSON.parse(response.body)["ok"]
