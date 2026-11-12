@@ -153,3 +153,9 @@ application.register("whats-new", WhatsNewController)
 
 import XrefController from "./xref_controller"
 application.register("xref", XrefController)
+
+import QuickPresentController from "./quick_present_controller"
+application.register("quick-present", QuickPresentController)
+
+import OfflineStudiesController from "./offline_studies_controller"
+application.register("offline-studies", OfflineStudiesController)

@@ -184,6 +184,16 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   marks the network "slow" for 3 min, shared with the service worker). AI quick find falls back to
   an on-device keyword search after 3 s ("Offline search (keywords)"). Entering preach auto-downloads
   the study's translations for signed-in users; `preach_offline` badge shows "Ready offline".
+- **Start presenting offline (Quick Present)** — each user has one `studies.quick_present` study
+  (`QuickPresent.ensure!`, `POST /offline/prepare`, unique per user). `lib/offline/ready.js`, on
+  any page load when online (once a day, meta `offlinePreparedAt`), makes it, saves its study /
+  `?output=1` / `?stage=1` pages, downloads its Bible and saves the 5 most recent studies (none on
+  Data Saver). "Present offline" (home, More sheet, /more, Offline Bibles — `quick_present`
+  controller) and offline "New study" open `/studies/:id?present=1&saved=1`: the service worker
+  serves the saved copy at once (`saved=1`), the presentation controller enters preach with the Go
+  box open. `offline_studies` marks lists "Available offline" / "Needs internet to open". Bible
+  search runs on the device offline (`search` controller + `keyword_search`). Precache requests
+  carry `X-Offline-Precache` so they don't touch `last_opened_at`.
 - **Live follow-along ("Go Live")** — congregants follow the pulpit on their phones in real time.
   Operator: "Go Live" in the preach bar (`live` Stimulus controller) creates a `LiveSession`
   (short join code + QR via `rqrcode`) and PATCHes preach state to `/studies/:id/live`; the server

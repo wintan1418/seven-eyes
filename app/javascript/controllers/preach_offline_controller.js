@@ -3,6 +3,7 @@ import { storedManifest, fetchManifest, downloadedBibles, downloadBible, request
 import { warmLocal } from "../lib/offline/local_pane"
 import { isNetworkSlow } from "../lib/offline/network"
 import { signedIn } from "../lib/offline/page"
+import { readyQuickPresent } from "../lib/offline/ready"
 
 const MANIFEST_TIMEOUT_MS = 5000
 const STALL_MS = 15_000 // no bytes for this long: give up (the badge says "Not ready")
@@ -112,8 +113,12 @@ export default class extends Controller {
   showReady(ready) {
     const what = ready.map(r => `${r.code}`).join(" + ")
     const books = ready.map(r => `Whole ${r.code} Bible saved on this device (${r.books} books)`).join(" · ")
-    this.set("ready", `✓ Ready offline · whole ${what} Bible${ready.length > 1 ? "s" : ""}`,
-      `${books} — Scripture goes on screen with no internet.`)
+    const title = `${books} — Scripture goes on screen with no internet.`
+    this.set("ready", `✓ Ready offline · whole ${what} Bible${ready.length > 1 ? "s" : ""}`, title)
+    // The first-run promise: say when Quick Present can start a service offline too.
+    readyQuickPresent().then((quick) => {
+      if (quick && this.element.dataset.state === "ready") this.element.title = `${title} Quick Present is ready offline.`
+    }).catch(() => {})
   }
 
   showMissing(missing) {

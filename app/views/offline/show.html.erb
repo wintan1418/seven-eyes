@@ -21,6 +21,15 @@
         preach mode keep working.
       </p>
       <p class="ui-offline-net" data-offline-downloads-target="network" role="status"></p>
+      <% if authenticated? %>
+        <%# First-run promise: once the device holds Quick Present, say so. %>
+        <div class="ui-offline-qp" data-controller="quick-present">
+          <p class="ui-offline-qp-status" data-quick-present-target="status" role="status">Getting Quick Present ready for offline&hellip;</p>
+          <button type="button" class="ui-btn is-sm is-accent" data-action="quick-present#open">
+            <%= icon(:presentation) %><span>Present offline</span>
+          </button>
+        </div>
+      <% end %>
     </section>
 
     <section class="ui-menu-section" aria-label="Bibles">
@@ -55,7 +64,9 @@
         <li>Reading any chapter, switching versions, the passage picker and typed references.</li>
         <li>Preach mode, the projector and stage screens (open them once online, or use <em>Get ready for Sunday</em> in the preach queue).</li>
         <li>Notes, highlights and reading-plan ticks &mdash; saved on this device and sent when you reconnect<%= " (sign in to save them)" unless authenticated? %>.</li>
-        <li>Needs internet: AI Rabbi and AI search, cross-references, commentary, Bible search, audio, live follow-along and the phone remote.</li>
+        <li>Present offline: <em>Quick Present</em> and your five most recent studies are kept on this device by themselves<%= " once you sign in" unless authenticated? %> &mdash; open BiblioRata once with internet and they're ready.</li>
+        <li>Bible search, in the Bibles you've downloaded.</li>
+        <li>Needs internet: AI Rabbi and AI search, cross-references, commentary, audio, live follow-along, the phone remote and share pictures.</li>
       </ul>
     </section>
   </main>

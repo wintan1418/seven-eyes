@@ -18,7 +18,8 @@ class ReadController < ApplicationController
   private
 
   def latest_or_new_user_study
-    current_user.studies.recent.first ||
+    # Quick Present is for the pulpit, not the Bible tab.
+    current_user.studies.where(quick_present: false).recent.first ||
       current_user.studies.create!(name: "My Bible", pane_count: 1).tap { |s| open_default_passage(s) }
   end
 

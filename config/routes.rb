@@ -95,6 +95,7 @@ Rails.application.routes.draw do
   get "/offline/bibles",       to: "offline#manifest",   as: :offline_bibles, defaults: { format: :json }
   get "/offline/bibles/:code", to: "offline#bible",      as: :offline_bible, defaults: { format: :json }
   get "/offline/highlights",   to: "offline#highlights", as: :offline_highlights, defaults: { format: :json }
+  post "/offline/prepare",     to: "offline#prepare",    as: :offline_prepare, defaults: { format: :json }
 
   get "/verse_count",      to: "verses#count" # JSON: verses in a book+chapter (for the browser)
   get "/reference_check",  to: "verses#check" # JSON: parse a typed reference (preach quick chase)

@@ -26,6 +26,12 @@
                 title="Get ready for Sunday — save the Bibles, passages and projector screens to preach without Wi-Fi">
           <%= icon(:download) %><span>Offline</span>
         </button>
+        <% if authenticated? %>
+          <button type="button" class="ui-tile" data-controller="quick-present" data-action="quick-present#open sheet#close"
+                  title="Present offline — your Quick Present study, kept ready on this device: projects with no internet">
+            <%= icon(:presentation) %><span>Present offline</span>
+          </button>
+        <% end %>
         <button type="button" class="ui-tile" data-action="live#toggle sheet#close"
                 title="Let the congregation follow along on their phones — live, no account needed">
           <%= icon(:radio) %><span>Go Live</span>

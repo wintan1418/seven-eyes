@@ -11,7 +11,7 @@
       <div class="ps-drawer-sub">Find any word or phrase across an entire translation.</div>
     </div>
 
-    <%= form_with url: search_study_path(study), method: :get, data: { turbo_frame: "verse_search_results" } do %>
+    <%= form_with url: search_study_path(study), method: :get, data: { turbo_frame: "verse_search_results", action: "submit->search#submit" } do %>
       <input type="text" name="q" class="ps-ai-input" data-search-target="input" autocomplete="off"
              placeholder="e.g. love your enemies">
       <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
@@ -20,7 +20,7 @@
       </div>
     <% end %>
 
-    <%= turbo_frame_tag "verse_search_results", class: "ps-ai-results" do %>
+    <%= turbo_frame_tag "verse_search_results", class: "ps-ai-results", data: { search_target: "results" } do %>
       <div class="ps-ai-hint">Type a word or phrase &mdash; results appear here, ranked by relevance.</div>
     <% end %>
   </aside>

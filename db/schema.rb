@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_11_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_12_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -408,9 +408,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_150000) do
     t.boolean "sync_scroll", default: false, null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id"
+    t.boolean "quick_present", default: false, null: false
     t.index ["share_token"], name: "index_studies_on_share_token", unique: true, where: "(share_token IS NOT NULL)"
     t.index ["user_id", "last_opened_at"], name: "index_studies_on_user_id_and_last_opened_at"
     t.index ["user_id"], name: "index_studies_on_user_id"
+    t.index ["user_id"], name: "index_studies_one_quick_present_per_user", unique: true, where: "quick_present"
   end
 
   create_table "testimonials_nps_responses", force: :cascade do |t|

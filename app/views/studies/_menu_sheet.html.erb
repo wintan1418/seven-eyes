@@ -33,10 +33,11 @@
         <% elsif studies.blank? %>
           <p class="ui-menu-note">No studies yet &mdash; start one above.</p>
         <% else %>
-          <ul class="ui-menu-list">
+          <ul class="ui-menu-list" data-controller="offline-studies">
             <% studies.each do |s| %>
               <li class="ui-study-row<%= ' is-active' if active_id == s.id %>">
-                <%= link_to study_path(s), class: "ui-study-link" do %>
+                <%= link_to study_path(s), class: "ui-study-link",
+                      data: { offline_studies_target: "study", action: "click->offline-studies#guard" } do %>
                   <span class="nm"><%= s.name %></span>
                   <span class="meta"><%= time_ago_in_words(s.last_opened_at || s.updated_at) %> ago</span>
                 <% end %>
