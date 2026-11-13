@@ -83,9 +83,14 @@
     <% if @testimonials.present? %>
       <section class="ld-voices" aria-labelledby="voices-title">
         <h2 id="voices-title">From fellow readers</h2>
-        <div class="ld-voices-grid">
-          <% @testimonials.each do |t| %>
-            <figure class="ld-voice">
+        <%# One card at a time on phones (2–3 across on wider screens); every
+            few seconds the card breaks like glass to reveal the next. %>
+        <div class="ld-voices-slider" data-controller="shatter-slider" data-shatter-slider-interval-value="6000">
+        <div class="ld-voices-grid" data-shatter-slider-target="track" tabindex="0"
+             aria-roledescription="carousel" aria-label="What readers say — swipe to see more">
+          <% @testimonials.each_with_index do |t, i| %>
+            <figure class="ld-voice" data-shatter-slider-target="slide"
+                    aria-roledescription="slide" aria-label="<%= i + 1 %> of <%= @testimonials.size %>">
               <blockquote>&ldquo;<%= t.best_line.presence || truncate(t.body, length: 160) %>&rdquo;</blockquote>
               <figcaption>
                 <span class="ld-voice-avatar" aria-hidden="true"><%= (t.name.presence || "A").strip[0].upcase %></span>
@@ -96,6 +101,15 @@
               </figcaption>
             </figure>
           <% end %>
+        </div>
+        <% if @testimonials.size > 1 %>
+          <div class="hm-glossary-dots" aria-hidden="true">
+            <% @testimonials.size.times do |i| %>
+              <button type="button" tabindex="-1" class="hm-gl-dot<%= ' is-on' if i.zero? %>"
+                      data-shatter-slider-target="dot" data-action="shatter-slider#go" data-index="<%= i %>"></button>
+            <% end %>
+          </div>
+        <% end %>
         </div>
         <p class="ld-voices-cta"><%= link_to "Share how BiblioRata helps you", "/testimonials/new" %></p>
       </section>
