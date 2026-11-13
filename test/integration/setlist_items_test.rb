@@ -24,7 +24,7 @@ class SetlistItemsTest < ActionDispatch::IntegrationTest
          params: { setlist_item: { kind: "song", title: "Amazing Grace", body: "v one\n\nv two" } }
     assert_response :success
     assert_select ".ps-setlist-item[data-kind='slide']"
-    assert_select ".ps-setlist-item .meta", text: "2 stanzas"
+    assert_select ".ps-setlist-item .meta", text: "2 slides"
   end
 
   test "several comma-separated scriptures are queued in one submit" do

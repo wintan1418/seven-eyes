@@ -153,6 +153,22 @@ export async function queuePlanDay(url, done, owner) {
   return upsert({ kind: "plan-day", key, owner, url, method: done ? "POST" : "DELETE", format: "form", body: {}, done })
 }
 
+// ---- the song bank ("Save to my songs") ----------------------------------------
+// Saved by title (POST /songs upserts), so a replay never makes a twin; saving
+// the same title again while offline just updates the waiting op.
+const songKey = (title) => `song:${String(title || "").trim().toLowerCase()}`
+
+export function queueSongSave(song, owner) {
+  const body = { song: { title: song.title, body: song.body ?? "", arrangement: song.arrangement ?? "", author: song.author ?? "" } }
+  return upsert({ kind: "song-save", key: songKey(song.title), owner, url: "/songs", method: "POST", format: "json", body })
+}
+
+export async function queueSongRemove(song, owner) {
+  await removeOps((o) => o.owner === owner && o.key === songKey(song.title))
+  const url = song.id ? `/songs/${song.id}` : `/songs/by-title?title=${encodeURIComponent(song.title)}`
+  return upsert({ kind: "song-remove", key: `${songKey(song.title)}:rm`, owner, url, method: "DELETE", format: "json" })
+}
+
 // ---- the preach queue (setlist) ---------------------------------------------
 // Every op carries `setlist` = { studyId, action, cid, … } so the queue can
 // replay what hasn't reached the server on top of what has (setlist_state.js).
@@ -161,7 +177,9 @@ export async function queuePlanDay(url, done, owner) {
 
 const setlistBase = (studyId) => `/studies/${studyId}/setlist`
 const itemUrl = (studyId, item) => `${setlistBase(studyId)}/${encodeURIComponent(item.id ?? item.cid)}`
-const itemBody = (item) => ({ kind: item.kind, reference: item.reference ?? "", title: item.title ?? "", body: item.body ?? "" })
+const itemBody = (item) => ({
+  kind: item.kind, reference: item.reference ?? "", title: item.title ?? "", body: item.body ?? "", arrangement: item.arrangement ?? ""
+})
 
 export function queueSetlistCreate(studyId, item, position, owner) {
   return upsert({

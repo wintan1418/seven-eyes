@@ -78,3 +78,39 @@
     </section>
   </aside>
 </div>
+
+<%# The song bank (song_bank controller on .ps-root): search the hymnal and the
+    account's songs, add to the queue or open in the song editor first. Outside
+    the panel so it can cover the operator screen; never on the projector. %>
+<div class="ps-song-bank" data-song-bank-target="dialog" hidden role="dialog" aria-modal="true" aria-label="Song bank"
+     data-action="click->song-bank#backdrop keydown->song-bank#key">
+  <div class="ps-song-bank-card">
+    <header class="bank-head">
+      <span class="ttl">&#9835; &nbsp;Song bank</span>
+      <span class="status" data-song-bank-target="status" aria-live="polite"></span>
+      <button type="button" class="close" data-action="song-bank#close" title="Close (Esc)">&#10005;</button>
+    </header>
+    <input type="search" class="bank-search" data-song-bank-target="search" data-action="input->song-bank#search"
+           autocomplete="off" spellcheck="false" aria-label="Search songs"
+           placeholder="Search titles and words — e.g. blessed assurance, “it is well”">
+    <div class="bank-body">
+      <nav class="bank-sources" data-song-bank-target="sources" aria-label="Collections">
+        <button type="button" data-source="" data-action="song-bank#pickSource" class="is-on">All songs <span class="n">0</span></button>
+        <button type="button" data-source="yours" data-action="song-bank#pickSource">My songs <span class="n">0</span></button>
+        <button type="button" data-source="hymnal" data-action="song-bank#pickSource">Hymnal <span class="n">0</span></button>
+        <p class="note">Hymnal songs are public domain &mdash; free to project. Songs you queue or save land in My songs.</p>
+      </nav>
+      <div class="bank-list">
+        <div class="bank-cols" aria-hidden="true"><span>Title</span><span>Author</span><span>Copyright</span><span></span></div>
+        <div class="bank-results" data-song-bank-target="results" role="listbox" aria-label="Songs"></div>
+      </div>
+      <aside class="bank-preview" data-song-bank-target="preview" aria-live="polite"></aside>
+    </div>
+    <footer class="bank-keys">
+      <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> pick</span>
+      <span><kbd>Enter</kbd> add to queue</span>
+      <span><kbd>Shift</kbd>+<kbd>Enter</kbd> edit first</span>
+      <span><kbd>Esc</kbd> close</span>
+    </footer>
+  </div>
+</div>

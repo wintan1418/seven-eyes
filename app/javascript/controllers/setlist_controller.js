@@ -10,6 +10,7 @@ import { isNetworkSlow, quickFetch } from "../lib/offline/network"
 import { owner } from "../lib/offline/page"
 import { splitReferences, mergeQueue, moveItem, queueKey, nextUp, serverKey } from "../lib/offline/setlist_state"
 import { startDrag } from "../lib/setlist_drag"
+import { songSlides } from "../lib/song_sheet"
 
 // The preach queue ("setlist"). Lives on .ps-root.
 //
@@ -32,8 +33,12 @@ import { startDrag } from "../lib/setlist_drag"
 //   out  setlist:changed {keys, live, next}                            — for the preview controller
 //   in   setlist:present (from anywhere: which queue item is live), setlist:add {kind, reference…},
 //        setlist:preview-next, setlist:focus, setlist:open, preview:changed {cid},
-//        preach:passage {reference} (auto-add what went on screen), preach:enter
-const LIBRARY_META = "songLibrary"
+//        preach:passage {reference} (auto-add what went on screen), preach:enter,
+//        setlist:edit-song {title, body, arrangement} (the song bank's "Edit first")
+//
+// Songs: the words may carry section labels and an order ("V1 C V2 C") — the
+// song editor (song_editor controller) helps write them; lib/song_sheet turns
+// them into slides. Finding a song to add is the song bank (song_bank controller).
 const AUTO_QUEUE_KEY = "ps-autoqueue"
 const DOCK_QUERY = "(min-width: 1100px)"
 const WAITING_AFTER_MS = 2500 // a change not saved by then is shown as waiting for the network
@@ -41,8 +46,8 @@ const RETRY_EVERY_MS = 10_000
 const UNDO_MS = 6000
 
 export default class extends Controller {
-  static targets = [ "host", "form", "list", "reference", "hint", "error", "title", "body", "submit", "cancel",
-    "libraryList", "nextUp", "autoQueue" ]
+  static targets = [ "host", "form", "list", "reference", "hint", "error", "title", "body", "arrangement", "submit", "cancel",
+    "nextUp", "autoQueue" ]
   static values = { libraryUrl: String }
 
   initialize() {
@@ -64,6 +69,7 @@ export default class extends Controller {
       "setlist:preview-next": () => this.previewNext(),
       "setlist:focus": () => this.focusQueue(),
       "setlist:open": () => this.open(),
+      "setlist:edit-song": (e) => this._editSong(e.detail),
       "preview:changed": (e) => { this._previewCid = e.detail?.cid || null; this._paintMarks() },
       "preach:passage": (e) => this._autoAdd(e.detail?.reference),
       "preach:enter": () => { if (window.matchMedia?.(DOCK_QUERY).matches) this.open() },
@@ -244,15 +250,40 @@ export default class extends Controller {
     const title = this.titleTarget.value.trim()
     const body = this.bodyTarget.value.trim()
     if (!title && !body) { this._showError("Give it a title or some words"); this.titleTarget.focus(); return }
-    this._insert(slideItem(kind, title, body))
-    this.titleTarget.value = ""
-    this.bodyTarget.value = ""
+    this._insert(slideItem(kind, title, body, this._arrangement(kind)))
+    this._setSongFields("", "", "")
     this._showError(null)
     this.titleTarget.focus()
   }
 
+  _arrangement(kind) {
+    return kind === "song" && this.hasArrangementTarget ? this.arrangementTarget.value.trim() : ""
+  }
+
+  // Fill (or clear) the song fields; the song editor repaints its hints on input.
+  _setSongFields(title, body, arrangement) {
+    this.titleTarget.value = title || ""
+    this.bodyTarget.value = body || ""
+    if (this.hasArrangementTarget) this.arrangementTarget.value = arrangement || ""
+    this.bodyTarget.dispatchEvent(new Event("input", { bubbles: true }))
+  }
+
+  // The song bank's "Edit first": the song lands in the add form to be changed
+  // before it is queued (Enter / "+ Add to queue" adds it).
+  _editSong(detail) {
+    if (!detail) return
+    if (this._editing) this._endEdit()
+    this.open()
+    this._setFormKind("song")
+    this._setSongFields(detail.title, detail.body, detail.arrangement)
+    this._showError(null)
+    this.bodyTarget.focus()
+    this.bodyTarget.setSelectionRange?.(0, 0)
+    this.bodyTarget.scrollTop = 0
+  }
+
   _insert(fields, at = this.items.length) {
-    const item = { cid: newTempId(), id: null, title: null, body: null, image: null, reference: null, stanzas: 0, ...fields }
+    const item = { cid: newTempId(), id: null, title: null, body: null, arrangement: null, image: null, reference: null, stanzas: 0, ...fields }
     const index = Math.max(0, Math.min(at, this.items.length))
     this.items.splice(index, 0, item)
     if (!this._hydrated) this._early?.add(item.cid)
@@ -270,9 +301,9 @@ export default class extends Controller {
   // "+ Queue" on the live/preview label, a verse in the chapter list, or auto-add.
   _addFromOutside(detail) {
     if (!detail) return null
-    const fields = detail.kind === "scripture" ? this._scriptureFields(detail.reference) : slideItem(detail.kind, detail.title, detail.body)
+    const fields = detail.kind === "scripture" ? this._scriptureFields(detail.reference) : slideItem(detail.kind, detail.title, detail.body, detail.arrangement)
     if (!fields) return null
-    const existing = this.items.find((i) => queueKey(i) === queueKey(fields))
+    const existing = !detail.duplicate && this.items.find((i) => queueKey(i) === queueKey(fields))
     if (existing) { if (!detail.quiet) this._toast(`${existing.label} is already in the queue`); return existing }
     const item = this._insert(fields, detail.at ?? this.items.length)
     if (!detail.quiet) this._toast(`Added ${item.label} to the queue`)
@@ -372,7 +403,7 @@ export default class extends Controller {
     this._setFormKind(item.kind)
     this.formTarget.classList.add("is-editing")
     if (item.kind === "scripture") this.referenceTarget.value = item.reference || item.label || ""
-    else { this.titleTarget.value = item.title || ""; this.bodyTarget.value = item.body || "" }
+    else this._setSongFields(item.title, item.body, item.arrangement)
     this.submitTarget.textContent = "Save changes"
     this.cancelTarget.hidden = false
     this._showError(null)
@@ -394,8 +425,7 @@ export default class extends Controller {
     this._editing = null
     this.formTarget.classList.remove("is-editing")
     this.referenceTarget.value = ""
-    this.titleTarget.value = ""
-    this.bodyTarget.value = ""
+    this._setSongFields("", "", "")
     this.submitTarget.innerHTML = "&#43; Add to queue"
     this.cancelTarget.hidden = true
     this._showError(null)
@@ -411,12 +441,12 @@ export default class extends Controller {
       const { items, errors } = splitReferences(this.referenceTarget.value, localState().parse, referenceLabel)
       if (errors.length) { this._showError(errors.map((e) => e.message).join(" · ")); return }
       if (items.length !== 1) { this._showError("One reference per item when editing"); return }
-      fields = { kind, reference: items[0].reference, label: items[0].label, title: null, body: null, stanzas: 0 }
+      fields = { kind, reference: items[0].reference, label: items[0].label, title: null, body: null, arrangement: null, stanzas: 0 }
     } else {
       const title = this.titleTarget.value.trim()
       const body = this.bodyTarget.value.trim()
       if (!title && !body) { this._showError("Give it a title or some words"); return }
-      fields = { ...slideItem(kind, title, body), reference: null }
+      fields = { ...slideItem(kind, title, body, this._arrangement(kind)), reference: null }
     }
     Object.assign(item, fields)
     delete this._failed[item.cid]
@@ -424,8 +454,7 @@ export default class extends Controller {
     this._endEdit()
     this._render()
     this._save()
-    const body = { kind: item.kind, reference: item.reference ?? "", title: item.title ?? "", body: item.body ?? "" }
-    this._enqueue(() => queueSetlistUpdate(this.studyId, item, body, owner()))
+    this._enqueue(() => queueSetlistUpdate(this.studyId, item, serverFields(item), owner()))
     this._focusItem(item.cid)
     this._toast(`Updated ${item.label}`)
   }
@@ -491,7 +520,7 @@ export default class extends Controller {
     const index = this.items.indexOf(item)
     this._enqueue(async () => {
       if (item.id == null) await queueSetlistCreate(this.studyId, item, index, owner())
-      else await queueSetlistUpdate(this.studyId, item, { kind: item.kind, reference: item.reference ?? "", title: item.title ?? "", body: item.body ?? "" }, owner())
+      else await queueSetlistUpdate(this.studyId, item, serverFields(item), owner())
     })
     this._kick({ force: true })
   }
@@ -566,7 +595,8 @@ export default class extends Controller {
     return {
       kind: item.kind === "scripture" ? "scripture" : "slide",
       itemKind: item.kind, cid: item.cid, label: item.label,
-      reference: item.reference || null, title: item.title || null, body: item.body || null, image: item.image || null
+      reference: item.reference || null, title: item.title || null, body: item.body || null,
+      arrangement: item.arrangement || null, image: item.image || null
     }
   }
 
@@ -700,7 +730,8 @@ export default class extends Controller {
     li.setAttribute("role", "option")
     Object.assign(li.dataset, {
       kind: item.kind === "scripture" ? "scripture" : "slide",
-      cid: item.cid, reference: item.reference || "", title: item.title || "", body: item.body || "", image: item.image || ""
+      cid: item.cid, reference: item.reference || "", title: item.title || "", body: item.body || "",
+      arrangement: item.arrangement || "", image: item.image || ""
     })
     const grip = el("span", "grip", "⠿")
     grip.dataset.action = "pointerdown->setlist#dragStart"
@@ -721,7 +752,7 @@ export default class extends Controller {
       present.append(el("span", "icon", item.kind === "scripture" ? "§" : (item.kind === "song" ? "♫" : "❦")))
     }
     present.append(el("span", "num", String(index + 1)), el("span", "lbl", item.label || item.reference || item.title || ""))
-    if ((item.kind === "song" || item.kind === "thought") && item.stanzas > 1) present.append(el("span", "meta", `${item.stanzas} stanzas`))
+    if ((item.kind === "song" || item.kind === "thought") && item.stanzas > 1) present.append(el("span", "meta", `${item.stanzas} slides`))
 
     const sync = el("span", "sync")
     sync.dataset.sync = ""
@@ -821,69 +852,20 @@ export default class extends Controller {
     const box = this.element.querySelector(".ps-queue-toast")
     if (box) box.hidden = true
   }
-
-  // ----- song library (reuse a past song / the public-domain hymnal) -----
-  // Kept on the device too, so songs can be picked with no signal.
-
-  toggleLibrary(event) {
-    event?.preventDefault?.()
-    if (!this.hasLibraryListTarget) return
-    if (!this.libraryListTarget.hidden) { this.libraryListTarget.hidden = true; return }
-    this.libraryListTarget.hidden = false
-    this._loadLibrary()
-  }
-
-  async _loadLibrary() {
-    if (!this.hasLibraryUrlValue) return
-    if (!this._songs) this._songs = await getMeta(LIBRARY_META).catch(() => null)
-    if (this._songs) this._renderLibrary(this._songs)
-    else this.libraryListTarget.innerHTML = "<div class=\"lib-empty\">Gathering songs&hellip;</div>"
-    let songs = null
-    if (navigator.onLine !== false && !isNetworkSlow()) {
-      try {
-        const { res, body } = await quickFetch(this.libraryUrlValue, { headers: { Accept: "application/json" } }, { timeoutMs: 4000, read: "json" })
-        if (res.ok && body?.songs) songs = body.songs
-      } catch { songs = null }
-    }
-    if (songs) { this._songs = songs; setMeta(LIBRARY_META, songs).catch(() => {}) }
-    if (!this.hasLibraryListTarget || this.libraryListTarget.hidden) return
-    this._renderLibrary(this._songs || [], { offline: !songs })
-  }
-
-  _renderLibrary(songs, { offline = false } = {}) {
-    if (!songs.length) {
-      this.libraryListTarget.innerHTML = offline
-        ? "<div class=\"lib-empty\">No songs saved on this device yet &mdash; open this list once while online.</div>"
-        : "<div class=\"lib-empty\">No saved songs yet &mdash; the ones you queue will show up here next time.</div>"
-      return
-    }
-    this.libraryListTarget.replaceChildren(...songs.map((s) => {
-      const btn = el("button", `lib-song${s.source === "hymnal" ? " is-hymn" : ""}`)
-      btn.type = "button"
-      btn.dataset.action = "setlist#pickSong"
-      btn.dataset.title = s.title
-      btn.dataset.body = s.body
-      btn.append(el("span", "t", s.title), el("span", "tag", s.source === "hymnal" ? "hymnal" : "yours"))
-      return btn
-    }))
-  }
-
-  pickSong(event) {
-    event?.preventDefault?.()
-    const d = event.currentTarget.dataset
-    if (this.hasTitleTarget) this.titleTarget.value = d.title || ""
-    if (this.hasBodyTarget) this.bodyTarget.value = d.body || ""
-    if (this.hasLibraryListTarget) this.libraryListTarget.hidden = true
-    if (this.hasBodyTarget) this.bodyTarget.focus()
-  }
 }
 
-function slideItem(kind, title, body) {
+function slideItem(kind, title, body, arrangement) {
   const t = (title || "").trim()
   const b = (body || "").trim()
-  const stanzas = b.split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean).length
-  const label = t || (b.split("\n")[0] || "").trim().slice(0, 60)
-  return { kind, title: t || null, body: b || null, label, stanzas }
+  const a = kind === "song" ? (arrangement || "").trim() : ""
+  const stanzas = songSlides(b, a).slides.length
+  const label = t || (b.split("\n").find((l) => l.trim() && !/^\[.*\]$/.test(l.trim())) || "").trim().slice(0, 60)
+  return { kind, title: t || null, body: b || null, arrangement: a || null, label, stanzas }
+}
+
+// What the server keeps for an item (the outbox sends it).
+function serverFields(item) {
+  return { kind: item.kind, reference: item.reference ?? "", title: item.title ?? "", body: item.body ?? "", arrangement: item.arrangement ?? "" }
 }
 
 function readAutoQueue() {

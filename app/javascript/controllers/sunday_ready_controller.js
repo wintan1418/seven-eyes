@@ -3,11 +3,13 @@ import { fetchManifest, downloadedBibles, downloadBible, requestPersistence, ref
 import { makeParser } from "../lib/offline/reference_parser"
 import { passageVerses } from "../lib/offline/pane_renderer"
 import { precachePages } from "../lib/offline/page"
+import { refreshSongs } from "../lib/song_library"
 
 // "Get ready for Sunday" (preach queue drawer, and the Preach section of the
 // More sheet via [data-sunday-prepare]): makes this study preachable with no
 // Wi-Fi. It downloads every Bible the study's panes use, checks every queued
-// scripture and pane passage against those downloads, saves the study page,
+// scripture and pane passage against those downloads, saves the song bank,
+// the study page,
 // the projector (?output=1) and stage (?stage=1) screens and their assets, and
 // shows a checklist — "Whole KJV Bible saved on this device (66 books) ✓",
 // then "✓ 12 of this study's passages checked — ready offline".
@@ -92,7 +94,13 @@ export default class extends Controller {
     if (missing.length) this.set(passages, "warn", `${ready} of the ${refs.length} passages in this study ready offline — not found: ${missing.join(", ")}`)
     else this.set(passages, "ok", `${ready} passage${ready === 1 ? "" : "s"} in this study checked — ready offline`)
 
-    // 3. The study, projector and stage screens (and their CSS/JS/fonts).
+    // 3. The song bank (hymnal + this account's songs), searchable offline.
+    const bank = this.item("busy", "Saving the song bank…")
+    const songs = await refreshSongs(`${this.studyUrlValue}/setlist/library`, { timeoutMs: 10_000 })
+    if (songs) this.set(bank, "ok", `Song bank saved on this device (${songs.length} songs) ✓`)
+    else this.set(bank, "warn", "Couldn't save the song bank — songs already in the queue still work offline")
+
+    // 4. The study, projector and stage screens (and their CSS/JS/fonts).
     const screens = this.item("busy", "Saving the study, projector and stage screens…")
     const url = this.studyUrlValue
     const result = await precachePages([ url, `${url}?output=1`, `${url}?stage=1`, "/read", "/offline" ])

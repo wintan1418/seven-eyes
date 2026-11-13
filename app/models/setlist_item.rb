@@ -1,7 +1,9 @@
 # One entry in a study's preach queue (the service "setlist"): the planned
 # order of what goes on the big screen. Four kinds:
 #   scripture — a reference, chased through the presented pane like the Go box
-#   song      — title + lyrics; blank lines split the body into stanza slides
+#   song      — title + lyrics; blank lines split the body into stanza slides,
+#               which may carry section labels ([Verse 1], [Chorus]…) and an
+#               arrangement ("V1 C V2 C") — see SongSheet
 #   thought   — a freeform note/announcement projected as a single slide
 #   picture   — a Cloudinary-hosted image (announcement slide, sermon graphic)
 class SetlistItem < ApplicationRecord
@@ -14,6 +16,7 @@ class SetlistItem < ApplicationRecord
   PICTURE_LIMIT = 30
 
   validates :position, presence: true
+  validates :arrangement, length: { maximum: 200 }
   validates :client_id, length: { maximum: 64 }, format: { with: /\A[\w-]+\z/ }, allow_nil: true
   validate :picture_limit, on: :create, if: :picture?
   validates :reference, presence: true, if: :scripture?
@@ -25,22 +28,27 @@ class SetlistItem < ApplicationRecord
 
   before_create :assign_position
 
-  # Songs the pastor can drop into the queue without retyping the lyrics: the
-  # ones this account has used before (most-recent first), then the public-domain
-  # hymnal starter set. A signed-in owner sees songs from all their studies; a
-  # guest only sees their own session study. Deduped by title (the operator's own
-  # version wins over the hymnal default, since they may have tweaked it).
-  PAST_SONG_LIMIT = 40
+  # The song bank: songs the pastor can drop into the queue without retyping the
+  # lyrics. First the account's saved songs ("Save to my songs"), then the ones
+  # it has queued before (most-recent first), then the public-domain hymnal. A
+  # signed-in owner sees songs from all their studies; a guest only sees their
+  # own session study. Deduped by title (the operator's own version wins over
+  # the hymnal default, since they may have tweaked it).
+  PAST_SONG_LIMIT = 300
 
   def self.song_library_for(study)
+    saved = study.user ? study.user.songs.recent_first.limit(Song::LIMIT).map(&:as_library_json) : []
     scope = study.user_id ? where(study: Study.where(user_id: study.user_id)) : where(study: study)
     used = scope.song.where.not(body: [ nil, "" ])
                 .order(updated_at: :desc).limit(PAST_SONG_LIMIT)
-                .map { |s| { title: s.title.to_s, body: s.body.to_s, source: "yours" } }
-    hymns = Hymnal::HYMNS.map { |h| { title: h[:title], body: h[:body], source: "hymnal" } }
+                .map { |s| { title: s.title.to_s, body: s.body.to_s, arrangement: s.arrangement.to_s, source: "yours" } }
+    hymns = Hymnal::HYMNS.map do |h|
+      { title: h[:title], body: h[:body], arrangement: "", author: h[:author], year: h[:year],
+        copyright: "Public domain", source: "hymnal" }.compact
+    end
 
     seen = {}
-    (used + hymns).each do |song|
+    (saved + used + hymns).each do |song|
       key = song[:title].downcase.strip
       next if key.blank?
       seen[key] ||= song
@@ -60,16 +68,22 @@ class SetlistItem < ApplicationRecord
     @parsed ||= ReferenceParser.call(reference)
   end
 
-  # Lyrics/thought body split into stanza slides on blank lines.
+  # The slides' words in projection order: the body split on blank lines, with
+  # section labels taken off and the arrangement (or a hymn's refrain) applied.
   def stanzas
-    body.to_s.split(/\n{2,}/).map(&:strip).reject(&:empty?)
+    song_sheet.slides.map(&:text)
+  end
+
+  def song_sheet
+    SongSheet.new(body, arrangement)
   end
 
   # The queue as the device-side controller holds it (setlist_controller.js).
   def as_queue_json
     {
       id: id, client_id: client_id, kind: kind, reference: reference, label: label,
-      title: title, body: body, image: media_url, stanzas: (song? || thought?) ? stanzas.size : 0
+      title: title, body: body, arrangement: arrangement, image: media_url,
+      stanzas: (song? || thought?) ? stanzas.size : 0
     }
   end
 

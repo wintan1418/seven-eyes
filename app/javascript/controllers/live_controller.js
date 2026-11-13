@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { projectedBody } from "../lib/song_sheet"
 import { createConsumer } from "@rails/actioncable"
 
 const PUSH_DEBOUNCE_MS = 120
@@ -234,7 +235,9 @@ export default class extends Controller {
         seq,
         kind: "slide",
         slide_title: state.slide.title,
-        slide_body: state.slide.body,
+        // The words in projection order without section labels, so the
+        // phones' stanza list lines up with slide_index.
+        slide_body: state.slide.image ? state.slide.body : projectedBody(state.slide.body, state.slide.arrangement),
         slide_image_url: state.slide.image,
         slide_index: state.slide.index
       }

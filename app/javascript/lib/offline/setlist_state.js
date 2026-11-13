@@ -4,7 +4,7 @@
 // The queue is local-first: the operator's copy changes at once and each
 // change is replayed to the server through the outbox (setlist-create /
 // -update / -destroy / -order ops, see outbox.js). An item is
-//   { cid, id, kind, reference, label, title, body, image, stanzas }
+//   { cid, id, kind, reference, label, title, body, arrangement, image, stanzas }
 // where `cid` is the id the device gave it ("tmp-…", or "srv-<id>" for an
 // item that was made on the server) and `id` the server's, once known.
 //
@@ -15,13 +15,14 @@
 //   queueKey(item)                "the same thing" for de-duplication
 //   nextUp(items, liveCid)        the one-glance "next" item
 
-export const ITEM_FIELDS = [ "kind", "reference", "label", "title", "body", "image", "stanzas" ]
+export const ITEM_FIELDS = [ "kind", "reference", "label", "title", "body", "arrangement", "image", "stanzas" ]
 
 export function fromServer(row) {
   return {
     cid: row.client_id || `srv-${row.id}`, id: row.id ?? null,
     kind: row.kind, reference: row.reference || null, label: row.label || row.reference || row.title || "",
-    title: row.title || null, body: row.body || null, image: row.image || null, stanzas: row.stanzas || 0
+    title: row.title || null, body: row.body || null, arrangement: row.arrangement || null,
+    image: row.image || null, stanzas: row.stanzas || 0
   }
 }
 
