@@ -225,6 +225,17 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   (`is-slide`, `[data-preach-slide]` layer, next/prev walk stanzas). Slides flow to the output
   window (BroadcastChannel `slide` field) and to live followers (`kind=slide` + `slide_*` columns
   on `live_sessions`; the follower page renders stanzas client-side).
+- **Song bank** (Nov 2026) — songs carry EasyWorship-style section labels (`[Verse 1]`, `[Chorus]`,
+  `Chorus:` …) and an optional `setlist_items.arrangement` ("V1 C V2 C B C"); `SongSheet`
+  (Ruby) and `lib/song_sheet.js` (device) turn words + order into slides with the same rules
+  (shared cases in `test/fixtures/files/song_sheet_cases.json`). No labels = stanza by stanza as
+  before; verses + one chorus = the chorus after every verse. Labels show to the operator/stage,
+  never on the projector; live followers get the projected words (`projectedBody`). The built-in
+  public-domain hymnal is `config/hymnal.yml` (`Hymnal::HYMNS`, copyright rule + `BLOCKLIST` in
+  `app/services/hymnal.rb`). `song_bank` controller = the searchable picker (on-device search over
+  the cached `GET /studies/:id/setlist/library`, also saved by "Get ready for Sunday");
+  `song_editor` controller = paste/.txt tidy (`lib/song_import.js`), flow line, "Save to my songs"
+  (`Song` model, `POST /songs` upsert by title, via the outbox so it works offline).
 - **Stage display** — `?stage=1` window (`⌗ Stage` button): NOW small / NEXT big / clock, painted
   by `_paintStage()` from the same BroadcastChannel state; hello role `"stage"` so it never flips
   the operator into console mode.
