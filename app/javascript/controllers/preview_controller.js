@@ -91,7 +91,8 @@ export default class extends Controller {
     this.previewCardTarget.dataset.state = this._isLive(preview) ? "live" : "ready"
     this.goLiveTarget.disabled = false
     this._paintQueueButtons()
-    window.dispatchEvent(new CustomEvent("preview:changed", { detail: { cid: preview.cid || null, label: preview.label } }))
+    // (rich: the console's Preview miniature draws a deck / set / seminar slide itself.)
+    window.dispatchEvent(new CustomEvent("preview:changed", { detail: { cid: preview.cid || null, label: preview.label, rich: preview.rich || null } }))
     // On a narrow screen the queue is a drawer: open it so the preview shows (it doesn't dim the screen).
     if (!this._visible()) window.dispatchEvent(new CustomEvent("setlist:open"))
 
@@ -303,9 +304,11 @@ export default class extends Controller {
   // The live passage moved to another chapter: the list follows it, unless the
   // operator is in the middle of picking something else.
   async _followLive(reference) {
-    if (this._listPinnedAt && performance.now() - this._listPinnedAt < 8000) return
+    const pinned = () => this._listPinnedAt && performance.now() - this._listPinnedAt < 8000
+    if (pinned()) return
     const chapter = await this._chapter(reference)
-    if (chapter) this._showList(chapter, { pinned: false })
+    // The operator may have typed a reference while the chapter loaded.
+    if (chapter && !pinned()) this._showList(chapter, { pinned: false })
   }
 
   // ---- the chapter verse list -------------------------------------------------------

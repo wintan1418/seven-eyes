@@ -176,6 +176,7 @@ class SongBankTest < ApplicationSystemTestCase
     visit study_path(@study)
     wait_for_service_worker
     wait_for_reader_js
+    prefer_focus_view # these tests drive the full-screen slide (Focus view)
     find(".ui-appbar button[data-action~='presentation#start']").click
     assert_selector ".ps-root.is-preaching"
     assert_selector ".ps-preach-offline[data-state='ready']", wait: 20

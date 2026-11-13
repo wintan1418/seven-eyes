@@ -25,7 +25,8 @@ import { owner } from "../lib/offline/page"
 // collection each time), so they work offline. Accounts only.
 //
 // Window events: out setlist:add {kind: "song", …, duplicate}, setlist:edit-song;
-// in song-bank:open, song-bank:saved {song} (the editor saved one).
+// in song-bank:open, song-bank:saved {song} (the editor saved one); out
+// song-bank:picked {song} on a click (the console puts it in Preview).
 const SOURCES = { "": "All songs", yours: "My songs", hymnal: "Hymnal" }
 const MAX_ROWS = 200
 
@@ -241,6 +242,9 @@ export default class extends Controller {
     if (Number.isNaN(i)) return
     this._picked = i
     this._paintPicked()
+    // The operator console previews a picked song (console_library).
+    const song = this._results[i]?.song
+    if (song) window.dispatchEvent(new CustomEvent("song-bank:picked", { detail: { song } }))
   }
 
   addPicked(event) {

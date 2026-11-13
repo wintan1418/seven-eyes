@@ -22,6 +22,21 @@ application.register("chapter-swipe", ChapterSwipeController)
 import CommentaryController from "./commentary_controller"
 application.register("commentary", CommentaryController)
 
+import ConsoleController from "./console_controller"
+application.register("console", ConsoleController)
+
+import ConsoleLibraryController from "./console_library_controller"
+application.register("console-library", ConsoleLibraryController)
+
+import ConsoleLiveController from "./console_live_controller"
+application.register("console-live", ConsoleLiveController)
+
+import ConsolePreviewController from "./console_preview_controller"
+application.register("console-preview", ConsolePreviewController)
+
+import ConsoleTourController from "./console_tour_controller"
+application.register("console-tour", ConsoleTourController)
+
 import DiffController from "./diff_controller"
 application.register("diff", DiffController)
 

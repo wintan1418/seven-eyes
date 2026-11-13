@@ -87,6 +87,7 @@ class VerseActionsTest < ApplicationSystemTestCase
 
   test "tapping a verse while preaching does nothing" do
     open_john3
+    prefer_focus_view # these tests drive the full-screen slide (Focus view)
     find(".ui-appbar button[data-action~='presentation#start']").click
     assert_selector ".ps-root.is-preaching"
     page.execute_script("document.querySelector(\".ps-pane .ps-verse[data-verse-num='16'] .ps-verse-text\").click()")
