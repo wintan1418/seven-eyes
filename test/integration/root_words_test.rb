@@ -134,6 +134,11 @@ class RootWordsTest < ActionDispatch::IntegrationTest
     assert item.word?
     assert_equal "Word study: agapáō — John 3:16", item.label
     assert_equal "G25", item.word_study["s"]
+    # Alongside the slide kinds of #47 (scripture_set / presentation / seminar).
+    assert_equal SetlistItem.kinds.values.uniq.size, SetlistItem.kinds.size
+    assert_includes SetlistItem::SLIDE_KINDS, "word"
+    assert_equal({}, item.data)
+    assert_equal "word", item.as_queue_json[:kind]
 
     post study_setlist_items_path(study), params: { setlist_item: { kind: "word", title: "x", body: "not json" } }, as: :json
     assert_response :unprocessable_entity
