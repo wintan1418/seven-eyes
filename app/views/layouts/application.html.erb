@@ -51,8 +51,13 @@
     <% end %>
 
     <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
-    <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
+    <%# In the apps, a new deploy must not make Turbo reload the page: the app's
+        offline copy (old code) and a fresh visit (new code) differ, and the
+        apps answer a reload by reopening the tab's start page (/read), which
+        loops on slow data. The apps load the new code on their next launch. %>
+    <% track = ("reload" unless hotwire_native_app?) %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": track %>
+    <%= javascript_include_tag "application", "data-turbo-track": track, type: "module" %>
   </head>
 
   <%# Theme comes from the ps_reader_theme cookie (written by the theme controller) so

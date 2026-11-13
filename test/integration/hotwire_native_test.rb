@@ -54,6 +54,19 @@ class HotwireNativeTest < ActionDispatch::IntegrationTest
     assert_select "body.hotwire-native[data-native-signed-in=true]"
   end
 
+  # After a deploy the app's offline copy of a page has the old code and a
+  # fresh visit the new code. Asset tracking made Turbo reload, the app reopened
+  # /read, and the Bible tab looped on slow data (Nov 2026). Browsers keep it.
+  test "the apps don't reload a page over a new deploy; browsers still do" do
+    get root_path, headers: BROWSER
+    assert_select "script[src*=application][data-turbo-track=reload]"
+    assert_select "link[rel=stylesheet][href*=application][data-turbo-track=reload]"
+
+    get root_path, headers: ANDROID
+    assert_select "script[src*=application][data-turbo-track]", count: 0
+    assert_select "link[rel=stylesheet][href*=application][data-turbo-track]", count: 0
+  end
+
   test "browsers never get the native class" do
     get root_path, headers: BROWSER
     assert_select "body.hotwire-native", count: 0
