@@ -1,15 +1,27 @@
 # One entry in a study's preach queue (the service "setlist"): the planned
-# order of what goes on the big screen. Four kinds:
+# order of what goes on the big screen. Six kinds:
 #   scripture — a reference, chased through the presented pane like the Go box
 #   song      — title + lyrics; blank lines split the body into stanza slides,
 #               which may carry section labels ([Verse 1], [Chorus]…) and an
 #               arrangement ("V1 C V2 C") — see SongSheet
 #   thought   — a freeform note/announcement projected as a single slide
 #   picture   — a Cloudinary-hosted image (announcement slide, sermon graphic)
+#   scripture_set — several references on one slide, each in its own
+#               translation (Col 2:2 KJV + Matt 28:19 BSB): the verse words are
+#               kept in `data` (so it projects with no signal, on any device)
+#               and `body` holds the same slides as plain text — see ScriptureSet
+#   presentation — an imported PDF or a run of pictures, stepped page by page.
+#               The pages live on the device that imported them (IndexedDB);
+#               the server only keeps the deck key and page count in `data`
+#   seminar   — slides built in the app (title, bullets, picture, quote,
+#               section divider) with speaker notes, kept in `data`
 class SetlistItem < ApplicationRecord
   belongs_to :study
 
-  enum :kind, { scripture: 0, song: 1, thought: 2, picture: 3 }
+  enum :kind, { scripture: 0, song: 1, thought: 2, picture: 3, scripture_set: 4, presentation: 5, seminar: 6 }
+
+  # Kinds that project as content slides (not chased through the pane).
+  SLIDE_KINDS = %w[ song thought picture scripture_set presentation seminar ].freeze
 
   # Cloudinary-hosted pictures are capped per study so one queue can't be used
   # to park unlimited images on our hosting account.
@@ -23,6 +35,12 @@ class SetlistItem < ApplicationRecord
   validates :media_url, presence: true, if: :picture?
   validate :reference_must_parse, if: :scripture?
   validate :slide_must_have_content, if: -> { song? || thought? }
+  validate :scripture_set_must_have_passages, if: :scripture_set?
+  validate :presentation_must_have_pages, if: :presentation?
+  validate :seminar_must_have_slides, if: :seminar?
+  validates :body, length: { maximum: 40_000 }
+
+  before_validation { self.data = SlideData.clean(kind, data) if will_save_change_to_data? || will_save_change_to_kind? }
 
   scope :in_order, -> { order(:position, :id) }
 
@@ -60,6 +78,9 @@ class SetlistItem < ApplicationRecord
   def label
     return parsed&.label || reference if scripture?
     return title.presence || "Picture" if picture?
+    return title.presence || SlideData.set_label(data) if scripture_set?
+    return title.presence || "Presentation" if presentation?
+    return title.presence || SlideData.seminar_label(data) if seminar?
     title.presence || body.to_s.strip.lines.first.to_s.strip.truncate(60)
   end
 
@@ -74,6 +95,14 @@ class SetlistItem < ApplicationRecord
     song_sheet.slides.map(&:text)
   end
 
+  # How many slides it projects as (the queue's "3 slides" / "12 pages").
+  def slide_count
+    return data["pages"].to_i if presentation?
+    return Array(data["slides"]).size if seminar?
+    return stanzas.size if song? || thought? || scripture_set?
+    0
+  end
+
   def song_sheet
     SongSheet.new(body, arrangement)
   end
@@ -83,7 +112,7 @@ class SetlistItem < ApplicationRecord
     {
       id: id, client_id: client_id, kind: kind, reference: reference, label: label,
       title: title, body: body, arrangement: arrangement, image: media_url,
-      stanzas: (song? || thought?) ? stanzas.size : 0
+      stanzas: slide_count, data: data.presence
     }
   end
 
@@ -153,5 +182,22 @@ class SetlistItem < ApplicationRecord
 
   def slide_must_have_content
     errors.add(:base, "Give it a title or some words") if title.blank? && body.blank?
+  end
+
+  def scripture_set_must_have_passages
+    refs = Array(data["refs"])
+    if refs.empty? || refs.any? { |r| r["verses"].blank? }
+      errors.add(:base, "Add at least one scripture with its words")
+    elsif body.blank?
+      errors.add(:base, "The slide has no words")
+    end
+  end
+
+  def seminar_must_have_slides
+    errors.add(:base, "Add at least one slide") if Array(data["slides"]).empty?
+  end
+
+  def presentation_must_have_pages
+    errors.add(:base, "A presentation needs its pages") if data["deck"].blank? || data["pages"].to_i < 1
   end
 end

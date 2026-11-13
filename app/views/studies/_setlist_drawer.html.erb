@@ -82,6 +82,8 @@
 <%# The song bank (song_bank controller on .ps-root): search the hymnal and the
     account's songs, add to the queue or open in the song editor first. Outside
     the panel so it can cover the operator screen; never on the projector. %>
+<%= render "studies/slide_tools", study: study %>
+
 <div class="ps-song-bank" data-song-bank-target="dialog" hidden role="dialog" aria-modal="true" aria-label="Song bank"
      data-action="click->song-bank#backdrop keydown->song-bank#key">
   <div class="ps-song-bank-card">
@@ -98,6 +100,16 @@
         <button type="button" data-source="" data-action="song-bank#pickSource" class="is-on">All songs <span class="n">0</span></button>
         <button type="button" data-source="yours" data-action="song-bank#pickSource">My songs <span class="n">0</span></button>
         <button type="button" data-source="hymnal" data-action="song-bank#pickSource">Hymnal <span class="n">0</span></button>
+        <div class="bank-collections">
+          <div class="coll-head">Collections</div>
+          <div class="coll-list" data-song-bank-target="collections"></div>
+          <div class="coll-new">
+            <input type="text" maxlength="60" placeholder="New collection…" aria-label="New collection name"
+                   data-song-bank-target="newCollection" data-action="keydown->song-bank#newCollectionKey">
+            <button type="button" data-action="song-bank#createCollection" title="Make the collection">&#43;</button>
+          </div>
+          <p class="coll-guest">Sign in to make collections &mdash; Communion, Christmas, Choir&hellip;</p>
+        </div>
         <p class="note">Hymnal songs are public domain &mdash; free to project. Songs you queue or save land in My songs.</p>
       </nav>
       <div class="bank-list">

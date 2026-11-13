@@ -20,6 +20,8 @@
     <% end %>
   </ol>
 
+  <%= render "studies/queue_tools" %>
+
   <% selected_kind = errored&.kind || "scripture" %>
   <%= form_with url: study_setlist_items_path(study), method: :post,
         class: "ps-setlist-form kind-#{selected_kind}",

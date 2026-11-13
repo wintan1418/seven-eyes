@@ -4,6 +4,7 @@ import { quickFetch, isNetworkSlow } from "../lib/offline/network"
 import { allBookTexts } from "../lib/offline/store"
 import { searchVerses } from "../lib/offline/keyword_search"
 import { songSlides } from "../lib/song_sheet"
+import { richSlides, paintRichSlide, paintPresenter, sameRich } from "../lib/slides/rich_slides"
 
 // Drives focus-pane presentation mode plus the EasyWorship-style preach sub-mode.
 //
@@ -1093,7 +1094,7 @@ export default class extends Controller {
     }
     if (detail.kind === "slide") {
       if (this.element.classList.contains("is-preaching")) {
-        this._presentSlide({ title: detail.title, body: detail.body, arrangement: detail.arrangement, image: detail.image, index: detail.index || 0 })
+        this._presentSlide({ title: detail.title, body: detail.body, arrangement: detail.arrangement, image: detail.image, index: detail.index || 0, rich: detail.rich })
       } else {
         // The setlist doesn't mark it live either — nothing went on a screen.
         this._toast("Enter Preach mode first, then pick the song or slide to put it on the screen")
@@ -1106,8 +1107,10 @@ export default class extends Controller {
   // order (lib/song_sheet — a chorus typed once can project after every verse);
   // next/prev walk the slides until scripture returns. A picture is a single
   // full-screen slide. Labels show to the operator and stage, never projected.
-  _presentSlide({ title, body, arrangement, image, index }) {
-    const slides = songSlides(body, arrangement).slides.filter(s => s.text)
+  // A scripture set / presentation / seminar deck (`rich`, lib/slides) lays
+  // out its own steps but rides the same layer, state and broadcast.
+  _presentSlide({ title, body, arrangement, image, index, rich }) {
+    const slides = rich ? (richSlides(rich) || []) : songSlides(body, arrangement).slides.filter(s => s.text)
     if (slides.length === 0 && !title && !image) return
     this._remember()
     this._slide = {
@@ -1115,6 +1118,7 @@ export default class extends Controller {
       body: body || "",
       arrangement: arrangement || "",
       image: image || null,
+      rich: rich || null,
       stanzas: slides.length ? slides.map(s => s.text) : [title || ""],
       labels: slides.map(s => s.label || null),
       index: Math.max(0, Math.min(index || 0, Math.max(slides.length - 1, 0)))
@@ -1134,15 +1138,20 @@ export default class extends Controller {
     const layer = this.element.querySelector("[data-preach-slide]")
     if (!layer || !this._slide) return
     const render = () => {
-      const { title, image, stanzas, index } = this._slide
+      const { title, image, stanzas, index, rich } = this._slide
       layer.innerHTML = ""
-      if (title && !image) {
+      if (rich) {
+        const fit = paintRichSlide(layer, rich, index)
+        if (fit) this._fitSlide(layer, fit)
+      } else if (title && !image) {
         const t = document.createElement("div")
         t.className = "slide-title"
         t.textContent = title
         layer.appendChild(t)
       }
-      if (image) {
+      if (rich) {
+        // drawn above
+      } else if (image) {
         const wrap = document.createElement("div")
         wrap.className = "slide-img"
         const img = document.createElement("img")
@@ -1235,7 +1244,7 @@ export default class extends Controller {
   _snapshot() {
     if (this._slide) {
       return { kind: "slide", title: this._slide.title, body: this._slide.body, arrangement: this._slide.arrangement,
-               image: this._slide.image, index: this._slide.index }
+               image: this._slide.image, index: this._slide.index, rich: this._slide.rich }
     }
     const pane = this.element.querySelector(".ps-pane.is-presented")
     const reference = pane?.querySelector("input[name='pane[reference]']")?.value?.trim()
@@ -1289,7 +1298,7 @@ export default class extends Controller {
     this._restoring = true
     try {
       if (entry.kind === "slide") {
-        this._presentSlide({ title: entry.title, body: entry.body, arrangement: entry.arrangement, image: entry.image, index: entry.index })
+        this._presentSlide({ title: entry.title, body: entry.body, arrangement: entry.arrangement, image: entry.image, index: entry.index, rich: entry.rich })
         return
       }
       const pane = this.element.querySelector(".ps-pane.is-presented")
@@ -1737,6 +1746,7 @@ export default class extends Controller {
     const next = this.element.querySelector("[data-stage-next]")
     const ref = this.element.querySelector("[data-stage-ref]")
     if (!now || !next) return
+    paintPresenter(this.element, this._slide) // seminar / presentation: notes + timer
 
     if (this._slide) {
       const { title, image, stanzas, index } = this._slide
@@ -1974,7 +1984,7 @@ export default class extends Controller {
   _applySlide(slide) {
     if (this._slide && this._slide.body === slide.body && this._slide.title === slide.title &&
         (this._slide.arrangement || "") === (slide.arrangement || "") &&
-        (this._slide.image || null) === (slide.image || null)) {
+        (this._slide.image || null) === (slide.image || null) && sameRich(this._slide.rich, slide.rich)) {
       if (this._slide.index !== slide.index) {
         this._slide.index = slide.index
         this._paintSlide(true)
@@ -2055,7 +2065,7 @@ export default class extends Controller {
       verseStart: this._range?.first ?? null,
       verseEnd: this._range?.last ?? null,
       slide: this._slide
-        ? { title: this._slide.title, body: this._slide.body, arrangement: this._slide.arrangement, image: this._slide.image, index: this._slide.index }
+        ? { title: this._slide.title, body: this._slide.body, arrangement: this._slide.arrangement, image: this._slide.image, index: this._slide.index, rich: this._slide.rich }
         : null
     }
   }

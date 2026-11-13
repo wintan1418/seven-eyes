@@ -168,3 +168,20 @@ application.register("quick-present", QuickPresentController)
 
 import OfflineStudiesController from "./offline_studies_controller"
 application.register("offline-studies", OfflineStudiesController)
+
+// Slide tools (phase 2B): scripture slides, presentations, seminar slides,
+// service templates, order of service — each owns its dialog (studies/_slide_tools).
+import ScriptureSetController from "./scripture_set_controller"
+application.register("scripture-set", ScriptureSetController)
+
+import PresentationImportController from "./presentation_import_controller"
+application.register("presentation-import", PresentationImportController)
+
+import SeminarBuilderController from "./seminar_builder_controller"
+application.register("seminar-builder", SeminarBuilderController)
+
+import ServiceTemplatesController from "./service_templates_controller"
+application.register("service-templates", ServiceTemplatesController)
+
+import OrderOfServiceController from "./order_of_service_controller"
+application.register("order-of-service", OrderOfServiceController)

@@ -6,6 +6,7 @@ import { chapterVerses } from "../lib/offline/pane_renderer"
 import { quickFetch } from "../lib/offline/network"
 import { queueKey } from "../lib/offline/setlist_state"
 import { songSlides } from "../lib/song_sheet"
+import { richPreviewNodes } from "../lib/slides/rich_slides"
 
 // Preview → Live, EasyWorship-style, on the operator screen only (never on the
 // ?output=1 projector or the ?stage=1 pulpit screen). Lives on .ps-root.
@@ -92,6 +93,7 @@ export default class extends Controller {
     // On a narrow screen the queue is a drawer: open it so the preview shows (it doesn't dim the screen).
     if (!this._visible()) window.dispatchEvent(new CustomEvent("setlist:open"))
 
+    this.previewTextTarget.classList.remove("is-deck")
     if (preview.kind === "scripture") this._paintScripture(preview, this._previewSeq)
     else this._paintSlide(preview)
   }
@@ -124,6 +126,7 @@ export default class extends Controller {
   // list), its section label small. Clicking a slide puts the song on screen at
   // that slide; while the song is live, the slide on screen is marked.
   _paintSlide(preview) {
+    if (preview.rich) { this._paintRich(preview); return }
     const nodes = []
     if (preview.image) {
       const img = el("img", "thumb")
@@ -146,6 +149,26 @@ export default class extends Controller {
       })
     }
     this.previewTextTarget.replaceChildren(...nodes)
+    this._paintLiveSlide()
+  }
+
+  // A scripture set, presentation or seminar deck: its slides (a deck's as
+  // thumbnails), each one click from the screen.
+  _paintRich(preview) {
+    const nodes = richPreviewNodes(preview.rich, (i, label, content) => {
+      const btn = el("button", "slide")
+      btn.type = "button"
+      btn.dataset.index = String(i)
+      btn.dataset.action = "preview#slideLive"
+      btn.title = "Put this slide on the screen"
+      const txt = el("span", "txt")
+      txt.append(content)
+      btn.append(el("span", "lbl", label), txt)
+      return btn
+    })
+    this.previewTextTarget.classList.toggle("is-slides", nodes.length > 0)
+    this.previewTextTarget.classList.toggle("is-deck", preview.rich.type === "deck")
+    this.previewTextTarget.replaceChildren(...(nodes.length ? nodes : [ el("span", "muted", "No slides yet") ]))
     this._paintLiveSlide()
   }
 

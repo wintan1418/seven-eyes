@@ -236,6 +236,25 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   the cached `GET /studies/:id/setlist/library`, also saved by "Get ready for Sunday");
   `song_editor` controller = paste/.txt tidy (`lib/song_import.js`), flow line, "Save to my songs"
   (`Song` model, `POST /songs` upsert by title, via the outbox so it works offline).
+- **Slide tools** (Nov 2026, phase 2B) — a tool strip in the queue (`studies/_queue_tools`) opens
+  self-contained dialogs (`studies/_slide_tools`, one Stimulus controller each, window event
+  `queue-tool:open {tool, item?}`; meant to become library tabs later). New `SetlistItem` kinds
+  carry structured `data` (jsonb, cleaned by `SlideData`): **scripture_set** (`scripture_set`
+  controller — "Col 2:2; Matt 28:19 BSB" → several references, each in its own Bible, on one slide;
+  words from the downloaded Bible or `GET /verse_passage`, stored in the item so it projects
+  offline; `lib/slides/scripture_set.js` lays out / auto-splits), **presentation**
+  (`presentation_import` — PDF via vendored pdf.js `public/vendor/pdfjs-4.10.38/`, or pictures;
+  pages are JPEGs in the device's own IndexedDB `ps-slides` (`lib/slides/deck_store.js`), never
+  uploaded; the item only holds the deck key + page count) and **seminar** (`seminar_builder` —
+  title / points / picture / quote / section layouts, speaker notes, reveal points one by one;
+  "Seminar mode" hides the verse-only preach tools and makes the stage a presenter view with notes
+  + timer). All three project through the normal slide path as `rich = {type, data}`
+  (`lib/slides/rich_slides.js`), so screen looks apply. **Song collections** (`SongCollection`,
+  titles by name, `PUT /song_collections/:client_id`) live in the song bank sidebar; **service
+  templates** (`ServiceTemplate`, `PUT /service_templates/:client_id`, `POST …/start` makes a new
+  study) and the **order of service** (copy for WhatsApp / share / print, built on the device).
+  Collections and templates are cached on the device and saved through the outbox
+  (`queueRecordSave`), so they work offline. Pure logic is node-tested (`test/javascript/slides_test.mjs`).
 - **Stage display** — `?stage=1` window (`⌗ Stage` button): NOW small / NEXT big / clock, painted
   by `_paintStage()` from the same BroadcastChannel state; hello role `"stage"` so it never flips
   the operator into console mode.

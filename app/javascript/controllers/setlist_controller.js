@@ -11,6 +11,8 @@ import { owner } from "../lib/offline/page"
 import { splitReferences, mergeQueue, moveItem, queueKey, nextUp, serverKey } from "../lib/offline/setlist_state"
 import { startDrag } from "../lib/setlist_drag"
 import { songSlides } from "../lib/song_sheet"
+import { richFor } from "../lib/slides/rich_slides"
+import { pageUrl } from "../lib/slides/deck_store"
 
 // The preach queue ("setlist"). Lives on .ps-root.
 //
@@ -70,6 +72,12 @@ export default class extends Controller {
       "setlist:focus": () => this.focusQueue(),
       "setlist:open": () => this.open(),
       "setlist:edit-song": (e) => this._editSong(e.detail),
+      // The slide tools (scripture set composer, presentation import, seminar
+      // builder, service templates, order of service) — lib/slides, *_controller.
+      "setlist:add-item": (e) => { const item = this._insert(e.detail.fields, e.detail.at ?? this.items.length); e.detail.done?.(item); this._toast(`Added ${item.label} to the queue`) },
+      "setlist:add-items": (e) => this._addMany(e.detail?.items || []),
+      "setlist:replace-item": (e) => this._replace(e.detail?.cid, e.detail?.fields),
+      "setlist:request-items": (e) => e.detail?.reply?.(this.items.map((i) => ({ ...i }))),
       "preview:changed": (e) => { this._previewCid = e.detail?.cid || null; this._paintMarks() },
       "preach:passage": (e) => this._autoAdd(e.detail?.reference),
       "preach:enter": () => { if (window.matchMedia?.(DOCK_QUERY).matches) this.open() },
@@ -398,6 +406,8 @@ export default class extends Controller {
 
   _startEdit(item) {
     if (item.kind === "picture") return
+    const tool = { scripture_set: "scripture-set", presentation: "presentation", seminar: "seminar" }[item.kind]
+    if (tool) { window.dispatchEvent(new CustomEvent("queue-tool:open", { detail: { tool, item: { ...item } } })); return }
     this.open()
     this._editing = item.cid
     this._setFormKind(item.kind)
@@ -457,6 +467,34 @@ export default class extends Controller {
     this._enqueue(() => queueSetlistUpdate(this.studyId, item, serverFields(item), owner()))
     this._focusItem(item.cid)
     this._toast(`Updated ${item.label}`)
+  }
+
+  // A tool saved its item again (the composer / builder's "Save changes").
+  _replace(cid, fields) {
+    const item = this.items.find((i) => i.cid === cid)
+    if (!item || !fields) return
+    Object.assign(item, fields)
+    delete this._failed[item.cid]
+    this._pending.set(item.cid, Date.now())
+    this._render()
+    this._save()
+    this._enqueue(() => queueSetlistUpdate(this.studyId, item, serverFields(item), owner()))
+    this._focusItem(item.cid)
+    this._toast(`Updated ${item.label}`)
+  }
+
+  // A service template's order, added to the end of this queue.
+  _addMany(list) {
+    if (!list.length) return
+    list.forEach((fields) => this._insert({ ...fields, label: fields.label || fields.reference || fields.title || "" }))
+    this._toast(`Added ${list.length} item${list.length === 1 ? "" : "s"} to the queue`)
+  }
+
+  // A tool button in the queue (data-tool="…"): its dialog opens.
+  openTool(event) {
+    event?.preventDefault?.()
+    const tool = event?.currentTarget?.dataset.tool
+    if (tool) window.dispatchEvent(new CustomEvent("queue-tool:open", { detail: { tool } }))
   }
 
   // ---- removing (with undo) ---------------------------------------------------------
@@ -596,7 +634,7 @@ export default class extends Controller {
       kind: item.kind === "scripture" ? "scripture" : "slide",
       itemKind: item.kind, cid: item.cid, label: item.label,
       reference: item.reference || null, title: item.title || null, body: item.body || null,
-      arrangement: item.arrangement || null, image: item.image || null
+      arrangement: item.arrangement || null, image: item.image || null, rich: richFor(item)
     }
   }
 
@@ -748,11 +786,19 @@ export default class extends Controller {
       img.alt = ""
       img.loading = "lazy"
       present.append(img)
+    } else if (item.kind === "presentation" && item.data?.deck) {
+      const img = el("img", "thumb")
+      img.alt = ""
+      pageUrl(item.data.deck, 1, { thumb: true }).then((url) => { if (url) img.src = url; else img.classList.add("is-missing") })
+      present.append(img)
     } else {
-      present.append(el("span", "icon", item.kind === "scripture" ? "§" : (item.kind === "song" ? "♫" : "❦")))
+      present.append(el("span", "icon", KIND_ICONS[item.kind] || "❦"))
     }
     present.append(el("span", "num", String(index + 1)), el("span", "lbl", item.label || item.reference || item.title || ""))
-    if ((item.kind === "song" || item.kind === "thought") && item.stanzas > 1) present.append(el("span", "meta", `${item.stanzas} slides`))
+    const count = item.kind === "presentation" ? Number(item.data?.pages || 0) : item.stanzas
+    if (item.kind !== "scripture" && item.kind !== "picture" && count > 1) {
+      present.append(el("span", "meta", `${count} ${item.kind === "presentation" ? "pages" : "slides"}`))
+    }
 
     const sync = el("span", "sync")
     sync.dataset.sync = ""
@@ -865,8 +911,12 @@ function slideItem(kind, title, body, arrangement) {
 
 // What the server keeps for an item (the outbox sends it).
 function serverFields(item) {
-  return { kind: item.kind, reference: item.reference ?? "", title: item.title ?? "", body: item.body ?? "", arrangement: item.arrangement ?? "" }
+  const fields = { kind: item.kind, reference: item.reference ?? "", title: item.title ?? "", body: item.body ?? "", arrangement: item.arrangement ?? "" }
+  if (item.data) fields.data = item.data
+  return fields
 }
+
+const KIND_ICONS = { scripture: "§", song: "♫", thought: "❦", scripture_set: "⧉", presentation: "▤", seminar: "▦" }
 
 function readAutoQueue() {
   try { return localStorage.getItem(AUTO_QUEUE_KEY) !== "0" } catch { return true }

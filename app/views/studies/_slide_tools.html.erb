@@ -1,0 +1,259 @@
+<%# locals: study — the queue's slide tools, each its own dialog and Stimulus
+    controller (opened by queue-tool:open from studies/_queue_tools or Edit on
+    an item). Outside the queue panel so they can cover the operator screen;
+    never shown on the projector or stage windows (.is-output). %>
+
+<%# ---- Scripture slide composer (scripture_set controller) ---- %>
+<div class="ps-tool-dialog" hidden role="dialog" aria-modal="true" aria-label="Scripture slide"
+     data-controller="scripture-set" data-action="click->scripture-set#backdrop keydown->scripture-set#key">
+  <div class="ps-tool-card set-card">
+    <header class="tool-head">
+      <span class="ttl">&#10697; &nbsp;Scripture slide</span>
+      <span class="sub">Several scriptures on one slide &mdash; each in its own Bible</span>
+      <button type="button" class="close" data-action="scripture-set#close" title="Close (Esc)">&#10005;</button>
+    </header>
+    <div class="tool-body set-body">
+      <section class="set-compose">
+        <label class="fld-lbl" for="set-input">Scriptures</label>
+        <div class="set-input-row">
+          <input id="set-input" type="text" class="set-input" autocomplete="off" spellcheck="false" autocapitalize="none"
+                 placeholder="Col 2:2; Matt 28:19 BSB"
+                 data-scripture-set-target="input" data-action="input->scripture-set#typed keydown->scripture-set#inputKey">
+          <button type="button" class="btn" data-action="scripture-set#addTyped">Add</button>
+        </div>
+        <div class="set-hint" data-scripture-set-target="hint">Separate references with ; &mdash; end one with a Bible's code to use it (Matt 28:19 BSB)</div>
+        <div class="err" data-scripture-set-target="error" hidden></div>
+        <label class="fld-inline">Bible for the rest
+          <select data-scripture-set-target="fallback" data-action="change->scripture-set#fallbackChanged"></select>
+        </label>
+        <ol class="set-refs" data-scripture-set-target="refs"></ol>
+
+        <div class="set-options">
+          <div class="opt">
+            <span class="opt-lbl">Reference</span>
+            <div class="seg">
+              <button type="button" data-option="ref_position" data-value="top" data-action="scripture-set#setOption">Above</button>
+              <button type="button" data-option="ref_position" data-value="bottom" data-action="scripture-set#setOption">Below</button>
+              <button type="button" data-option="ref_position" data-value="inline" data-action="scripture-set#setOption">After the words</button>
+            </div>
+          </div>
+          <div class="opt">
+            <span class="opt-lbl">Reference colour</span>
+            <div class="seg">
+              <button type="button" data-option="ref_style" data-value="gold" data-action="scripture-set#setOption">Gold</button>
+              <button type="button" data-option="ref_style" data-value="plain" data-action="scripture-set#setOption">Same as words</button>
+            </div>
+          </div>
+          <div class="opt">
+            <span class="opt-lbl">Verse numbers</span>
+            <div class="seg">
+              <button type="button" data-option="verse_numbers" data-value="true" data-action="scripture-set#setOption">Show</button>
+              <button type="button" data-option="verse_numbers" data-value="false" data-action="scripture-set#setOption">Hide</button>
+            </div>
+          </div>
+          <div class="opt">
+            <span class="opt-lbl">Slides</span>
+            <div class="seg">
+              <button type="button" data-option="split" data-value="auto" data-action="scripture-set#setOption">Together (split if long)</button>
+              <button type="button" data-option="split" data-value="each" data-action="scripture-set#setOption">One each</button>
+            </div>
+          </div>
+        </div>
+        <label class="fld-lbl" for="set-title">Name in the queue <span class="opt-note">(optional)</span></label>
+        <input id="set-title" type="text" class="set-title" maxlength="120" autocomplete="off"
+               placeholder="e.g. The Great Commission" data-scripture-set-target="title">
+      </section>
+      <section class="set-side">
+        <div class="set-preview-head">On the screen</div>
+        <div class="set-preview" data-scripture-set-target="preview"></div>
+        <div class="set-pager" data-scripture-set-target="pager">
+          <button type="button" data-delta="-1" data-action="scripture-set#page" aria-label="Previous slide">&#8249;</button>
+          <span class="n"></span>
+          <button type="button" data-delta="1" data-action="scripture-set#page" aria-label="Next slide">&#8250;</button>
+        </div>
+      </section>
+    </div>
+    <footer class="tool-foot">
+      <span class="keys"><kbd>Enter</kbd> adds the scriptures &middot; <kbd>Ctrl</kbd>+<kbd>Enter</kbd> adds the slide to the queue</span>
+      <button type="button" class="btn ghost" data-action="scripture-set#close">Cancel</button>
+      <button type="button" class="btn primary" data-scripture-set-target="submit" data-action="scripture-set#submit">Add to queue</button>
+    </footer>
+  </div>
+</div>
+
+<%# ---- Presentation import (presentation_import controller) ---- %>
+<div class="ps-tool-dialog" hidden role="dialog" aria-modal="true" aria-label="Presentation"
+     data-controller="presentation-import"
+     data-action="click->presentation-import#backdrop keydown->presentation-import#key dragover->presentation-import#dragOver dragleave->presentation-import#dragLeave drop->presentation-import#drop">
+  <div class="ps-tool-card pres-card">
+    <header class="tool-head">
+      <span class="ttl">&#9636; &nbsp;Presentation</span>
+      <span class="sub">Step through a PDF or pictures page by page &mdash; it stays on this computer and works offline</span>
+      <button type="button" class="close" data-action="presentation-import#close" title="Close (Esc)">&#10005;</button>
+    </header>
+    <div class="tool-body pres-body">
+      <div class="err" data-presentation-import-target="error" hidden></div>
+      <div class="pres-picker" data-presentation-import-target="picker">
+        <button type="button" class="pres-choice" data-action="presentation-import#choosePdf">
+          <span class="big">&#128462;</span>
+          <span class="t">Import a PDF</span>
+          <span class="d">Each page becomes a slide</span>
+        </button>
+        <button type="button" class="pres-choice" data-action="presentation-import#chooseImages">
+          <span class="big">&#128444;</span>
+          <span class="t">Pictures as a slideshow</span>
+          <span class="d">Pick several &mdash; they show in name order</span>
+        </button>
+        <p class="pres-tip">
+          <b>PowerPoint, Keynote or Google Slides?</b> Save it as a PDF first &mdash;
+          PowerPoint: <i>File &rarr; Save As &rarr; PDF</i> &middot; Keynote: <i>File &rarr; Export To &rarr; PDF</i> &middot;
+          Google Slides: <i>File &rarr; Download &rarr; PDF</i>. Or drop the file here.
+        </p>
+        <input type="file" accept="application/pdf,.pdf" hidden data-presentation-import-target="pdf" data-action="change->presentation-import#pdfChosen">
+        <input type="file" accept="image/*" multiple hidden data-presentation-import-target="images" data-action="change->presentation-import#imagesChosen">
+      </div>
+      <div class="pres-progress" data-presentation-import-target="progress" hidden>
+        <span class="msg">Opening&hellip;</span>
+        <progress max="100" value="0" data-presentation-import-target="bar"></progress>
+      </div>
+      <div class="pres-result" data-presentation-import-target="result" hidden>
+        <div class="pres-name">
+          <label class="fld-lbl" for="pres-title">Name in the queue</label>
+          <input id="pres-title" type="text" maxlength="120" autocomplete="off" data-presentation-import-target="title">
+          <span class="count"></span>
+          <button type="button" class="btn ghost" data-action="presentation-import#reimport">Import the file again</button>
+        </div>
+        <div class="pres-thumbs" data-presentation-import-target="thumbs"></div>
+      </div>
+      <p class="pres-status" data-presentation-import-target="status" aria-live="polite"></p>
+      <div class="pres-library" data-presentation-import-target="library" hidden>
+        <div class="head"></div>
+        <ul></ul>
+      </div>
+    </div>
+    <footer class="tool-foot">
+      <span class="keys">Nothing is uploaded &mdash; no data used, no limit from the queue's 30 pictures.</span>
+      <button type="button" class="btn ghost" data-action="presentation-import#close">Cancel</button>
+      <button type="button" class="btn primary" data-presentation-import-target="submit" data-action="presentation-import#submit" disabled>Add to queue</button>
+    </footer>
+  </div>
+</div>
+
+<%# ---- Seminar slide builder (seminar_builder controller) ---- %>
+<div class="ps-tool-dialog" hidden role="dialog" aria-modal="true" aria-label="Seminar slides"
+     data-controller="seminar-builder" data-action="click->seminar-builder#backdrop keydown->seminar-builder#key">
+  <div class="ps-tool-card sem-card">
+    <header class="tool-head">
+      <span class="ttl">&#9638; &nbsp;Seminar slides</span>
+      <input type="text" class="deck-title" maxlength="120" autocomplete="off" placeholder="Name — e.g. Leadership seminar, session 1"
+             aria-label="Name of the slides" data-seminar-builder-target="deckTitle">
+      <button type="button" class="btn mode-toggle" data-tool="seminar-mode" data-action="seminar-builder#toggleMode" aria-pressed="false"
+              title="Seminar mode: hide the verse-only preach tools; the stage screen shows your notes and a timer">Seminar mode</button>
+      <button type="button" class="close" data-action="seminar-builder#close" title="Close (Esc)">&#10005;</button>
+    </header>
+    <div class="tool-body sem-body">
+      <aside class="sem-slides">
+        <ol class="sem-list" data-seminar-builder-target="list"></ol>
+        <div class="sem-list-ops">
+          <button type="button" class="btn" data-layout="bullets" data-action="seminar-builder#addSlide">&#43; Slide</button>
+          <button type="button" class="op" data-delta="-1" data-action="seminar-builder#move" title="Move up">&#8593;</button>
+          <button type="button" class="op" data-delta="1" data-action="seminar-builder#move" title="Move down">&#8595;</button>
+          <button type="button" class="op" data-action="seminar-builder#duplicate" title="Duplicate">&#10697;</button>
+          <button type="button" class="op danger" data-action="seminar-builder#remove" title="Delete this slide">&#10005;</button>
+        </div>
+        <label class="sem-reveal">
+          <input type="checkbox" data-seminar-builder-target="reveal" data-action="seminar-builder#revealChanged">
+          Reveal points one at a time
+        </label>
+      </aside>
+      <section class="sem-editor" data-layout="bullets">
+        <div class="seg sem-layouts" data-seminar-builder-target="layouts" role="group" aria-label="Layout">
+          <button type="button" data-layout="title" data-action="seminar-builder#setLayout">Title</button>
+          <button type="button" data-layout="bullets" data-action="seminar-builder#setLayout">Title + points</button>
+          <button type="button" data-layout="image" data-action="seminar-builder#setLayout">Title + picture</button>
+          <button type="button" data-layout="quote" data-action="seminar-builder#setLayout" title="A big quote or scripture">Quote</button>
+          <button type="button" data-layout="section" data-action="seminar-builder#setLayout">Section</button>
+        </div>
+        <label class="fld-lbl sem-title-lbl" for="sem-title">Title</label>
+        <input id="sem-title" type="text" maxlength="300" autocomplete="off" data-seminar-builder-target="title" data-action="input->seminar-builder#edited">
+        <label class="fld-lbl" for="sem-text" data-seminar-builder-target="textLabel">Points — one per line</label>
+        <textarea id="sem-text" rows="6" data-seminar-builder-target="text" data-action="input->seminar-builder#edited"></textarea>
+        <div class="sem-cite-row">
+          <label class="fld-lbl" for="sem-cite">Who said it / reference</label>
+          <input id="sem-cite" type="text" maxlength="200" autocomplete="off" data-seminar-builder-target="cite" data-action="input->seminar-builder#edited">
+        </div>
+        <div class="sem-picture-row">
+          <button type="button" class="btn" data-action="seminar-builder#choosePicture">Choose picture&hellip;</button>
+          <span class="m" data-seminar-builder-target="pictureName">No picture yet</span>
+          <input type="file" accept="image/*" hidden data-seminar-builder-target="picture" data-action="change->seminar-builder#pictureChosen">
+        </div>
+        <label class="fld-lbl" for="sem-notes">Speaker notes <span class="opt-note">(only on the stage screen)</span></label>
+        <textarea id="sem-notes" rows="3" data-seminar-builder-target="notes" data-action="input->seminar-builder#edited"></textarea>
+        <div class="err" data-seminar-builder-target="error" hidden></div>
+      </section>
+      <section class="set-side">
+        <div class="set-preview-head">On the screen</div>
+        <div class="set-preview" data-seminar-builder-target="preview"></div>
+      </section>
+    </div>
+    <footer class="tool-foot">
+      <span class="keys"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> adds to the queue &middot; Next / Prev step through the slides</span>
+      <button type="button" class="btn ghost" data-action="seminar-builder#close">Cancel</button>
+      <button type="button" class="btn primary" data-seminar-builder-target="submit" data-action="seminar-builder#submit">Add to queue</button>
+    </footer>
+  </div>
+</div>
+
+<%# ---- Service templates (service_templates controller) ---- %>
+<div class="ps-tool-dialog" hidden role="dialog" aria-modal="true" aria-label="Service templates"
+     data-controller="service-templates" data-action="click->service-templates#backdrop keydown->service-templates#key">
+  <div class="ps-tool-card tpl-card">
+    <header class="tool-head">
+      <span class="ttl">&#9776; &nbsp;Service templates</span>
+      <span class="sub">Keep a whole service order and reuse it</span>
+      <button type="button" class="close" data-action="service-templates#close" title="Close (Esc)">&#10005;</button>
+    </header>
+    <div class="tool-body tpl-body">
+      <div class="tpl-save">
+        <label class="fld-lbl" for="tpl-name">Save this queue as</label>
+        <div class="set-input-row">
+          <input id="tpl-name" type="text" maxlength="80" autocomplete="off" placeholder="Sunday Service"
+                 data-service-templates-target="name" data-action="keydown->service-templates#nameKey">
+          <button type="button" class="btn primary" data-service-templates-target="save" data-action="service-templates#saveCurrent">Save template</button>
+        </div>
+      </div>
+      <p class="tpl-status" data-service-templates-target="status" aria-live="polite"></p>
+      <div class="fld-lbl">Your templates</div>
+      <ul class="tpl-list" data-service-templates-target="list"></ul>
+    </div>
+  </div>
+</div>
+
+<%# ---- Order of service (order_of_service controller) ---- %>
+<div class="ps-tool-dialog ps-order-dialog" hidden role="dialog" aria-modal="true" aria-label="Order of service"
+     data-controller="order-of-service" data-order-of-service-name-value="<%= study.name %>"
+     data-action="click->order-of-service#backdrop keydown->order-of-service#key">
+  <div class="ps-tool-card order-card">
+    <header class="tool-head">
+      <span class="ttl">&#9113; &nbsp;Order of service</span>
+      <span class="sub">Share it with the choir, ushers and sound desk</span>
+      <button type="button" class="close" data-action="order-of-service#close" title="Close (Esc)">&#10005;</button>
+    </header>
+    <div class="tool-body order-body">
+      <div class="order-fields">
+        <label class="fld-lbl" for="order-title">Heading</label>
+        <input id="order-title" type="text" maxlength="120" autocomplete="off" data-order-of-service-target="title" data-action="input->order-of-service#paint">
+        <label class="fld-lbl" for="order-date">Date</label>
+        <input id="order-date" type="text" maxlength="80" autocomplete="off" data-order-of-service-target="date" data-action="input->order-of-service#paint">
+        <label class="sem-reveal"><input type="checkbox" data-order-of-service-target="words" data-action="order-of-service#paint"> Include scripture-slide and thought words</label>
+        <div class="order-actions">
+          <button type="button" class="btn primary" data-action="order-of-service#copy">Copy for WhatsApp</button>
+          <button type="button" class="btn" data-action="order-of-service#share">Share&hellip;</button>
+          <button type="button" class="btn" data-action="order-of-service#print">Print</button>
+        </div>
+        <p class="tpl-status" data-order-of-service-target="status" aria-live="polite"></p>
+      </div>
+      <article class="order-sheet" data-order-of-service-target="sheet"></article>
+    </div>
+  </div>
+</div>

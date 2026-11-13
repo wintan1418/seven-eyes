@@ -86,7 +86,8 @@ class SetlistItemsController < ApplicationController
   # GET /studies/:study_id/setlist/library — songs to drop in without retyping:
   # the public-domain hymnal plus songs this account has queued before.
   def library
-    render json: { songs: SetlistItem.song_library_for(@study) }
+    collections = @study.user ? @study.user.song_collections.in_order.map(&:as_device_json) : []
+    render json: { songs: SetlistItem.song_library_for(@study), collections: collections }
   end
 
   private
@@ -183,8 +184,13 @@ class SetlistItemsController < ApplicationController
     @item ||= @study.setlist_items.find_by_any_id!(params[:id])
   end
 
+  # `data` is the structured part of a scripture set / presentation / seminar
+  # (free-form JSON from the device); the model cleans it to a known shape.
   def item_params
-    params.require(:setlist_item).permit(:kind, :reference, :title, :body, :arrangement)
+    attrs = params.require(:setlist_item).permit(:kind, :reference, :title, :body, :arrangement)
+    raw = params[:setlist_item][:data]
+    attrs[:data] = SlideData.hashify(raw) if raw.present?
+    attrs
   end
 
   def render_setlist(status: :ok)

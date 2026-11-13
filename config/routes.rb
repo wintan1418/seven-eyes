@@ -29,6 +29,11 @@ Rails.application.routes.draw do
   end
 
   resources :songs, only: %i[ create destroy ]
+  # Song bank collections and saved service orders, keyed by the device's id.
+  resources :song_collections, only: %i[ update destroy ]
+  resources :service_templates, only: %i[ index update destroy ] do
+    post :start, on: :member
+  end
 
   # Public "follow along" pages — congregants follow the pulpit live, no login.
   get "/live/:code",         to: "live_sessions#show",    as: :live_session
@@ -102,6 +107,7 @@ Rails.application.routes.draw do
 
   get "/verse_count",      to: "verses#count" # JSON: verses in a book+chapter (for the browser)
   get "/verse_chapter",    to: "verses#chapter" # JSON: a reference's whole chapter (queue preview)
+  get "/verse_passage",    to: "verses#passage" # JSON: a reference's words in one translation (scripture slide composer)
   get "/reference_check",  to: "verses#check" # JSON: parse a typed reference (preach quick chase)
 
   root "studies#index"
