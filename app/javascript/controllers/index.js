@@ -218,3 +218,6 @@ application.register("order-of-service", OrderOfServiceController)
 
 import RevealController from "./reveal_controller"
 application.register("reveal", RevealController)
+
+import FaithRewriterController from "./faith_rewriter_controller"
+application.register("faith-rewriter", FaithRewriterController)

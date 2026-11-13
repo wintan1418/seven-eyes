@@ -1,0 +1,96 @@
+<%# The AI's suggestion beside the current text (POST /admin/faith/:slug/rewrite).
+    Nothing here is saved: "Use this" / "Use all" copy into the edit form below
+    (faith-rewriter controller); the reviewer still presses Save. %>
+<%= turbo_frame_tag "faith_rewrite" do %>
+  <% if result.ok? %>
+    <% s = result.suggestion %>
+    <div class="fr-result" data-faith-rewriter-target="result">
+      <div class="fr-result-head">
+        <p class="fr-ai-note">Suggested by AI from your words &mdash; read it before you save. Nothing changes until you press <strong>Save</strong>.</p>
+        <button type="button" class="dw-admin-btn is-primary fr-use-all" data-action="faith-rewriter#useAll">Use all</button>
+      </div>
+
+      <% [
+           [ :short_definition, "Short definition" ],
+           [ :new_believer, "For a new believer" ],
+           [ :explanation, "Explanation" ],
+           [ :key_references, "Key verses" ]
+         ].each do |field, label| %>
+        <% suggested = s[field] %>
+        <% value = field == :key_references ? Array(suggested).join("\n") : suggested.to_s %>
+        <section class="fr-field" data-field="<%= field %>">
+          <div class="fr-field-head">
+            <h3><%= label %></h3>
+            <% if value.present? %>
+              <button type="button" class="dw-admin-btn fr-use" data-faith-rewriter-target="use"
+                      data-field="<%= field %>" data-value="<%= value %>"
+                      data-action="faith-rewriter#use">Use this</button>
+            <% end %>
+          </div>
+          <div class="fr-compare">
+            <div class="fr-now">
+              <div class="fr-tag">Now</div>
+              <% now = current[field] %>
+              <% if field == :key_references %>
+                <%= Array(now).any? ? tag.ul(safe_join(Array(now).map { |r| tag.li(r) })) : tag.p("(none)", class: "fr-empty") %>
+              <% elsif now.present? %>
+                <%= simple_format(now) %>
+              <% else %>
+                <p class="fr-empty">(empty)</p>
+              <% end %>
+            </div>
+            <div class="fr-new">
+              <div class="fr-tag">Suggested</div>
+              <% if field == :key_references %>
+                <%= Array(suggested).any? ? tag.ul(safe_join(Array(suggested).map { |r| tag.li(r) })) : tag.p("(none found in our KJV)", class: "fr-empty") %>
+              <% elsif suggested.present? %>
+                <%= simple_format(suggested) %>
+              <% else %>
+                <p class="fr-empty">(nothing suggested)</p>
+              <% end %>
+            </div>
+          </div>
+          <% if field == :key_references && result.dropped_references.present? %>
+            <p class="fr-warn">Left out &mdash; not found in our KJV: <%= result.dropped_references.join("; ") %></p>
+          <% end %>
+          <% if field == :explanation %>
+            <% bad = result.unchecked_quotes %>
+            <% if bad.any? %>
+              <div class="fr-warn" role="note">
+                <strong>Check the quotes.</strong> These don&rsquo;t match the KJV words of the verse given:
+                <ul>
+                  <% bad.each do |check| %>
+                    <li>&ldquo;<%= check[:quote] %>&rdquo; <%= check[:reference] ? "(#{check[:reference]})" : "(no reference given)" %></li>
+                  <% end %>
+                </ul>
+              </div>
+            <% elsif result.quote_checks.any? %>
+              <p class="fr-ok">&#10003; <%= pluralize(result.quote_checks.size, "quotation") %> checked against our KJV.</p>
+            <% end %>
+          <% end %>
+        </section>
+      <% end %>
+
+      <p class="fr-status" data-faith-rewriter-target="status" role="status" aria-live="polite"></p>
+    </div>
+  <% else %>
+    <% message = {
+         no_key: "The AI isn’t set up on this server yet (no OpenAI, Gemini or RouteLLM key). Your text is unchanged.",
+         blank: "Explain the term in your own words first, then press Rewrite.",
+         rate: "That’s a lot of rewrites in a minute — wait a moment and try again.",
+         daily: "Today’s AI allowance is used up. Try again tomorrow; your text is unchanged.",
+         budget: "Today’s AI allowance is used up. Try again tomorrow; your text is unchanged."
+       }.fetch(result.error, "Couldn’t reach the AI just now. Please try again — your text is unchanged.") %>
+    <p class="fr-error" role="alert"><%= message %></p>
+  <% end %>
+
+  <% if result.ok? || history["last"].present? %>
+    <div class="fr-followup">
+      <label for="fr-follow-up">Ask for changes</label>
+      <textarea id="fr-follow-up" name="follow_up" form="faith-rewrite-form" rows="2" maxlength="500"
+                placeholder="e.g. make it shorter · add Romans 8:2 · say more about faith working"></textarea>
+      <button type="submit" form="faith-rewrite-form" class="dw-admin-btn" data-turbo-submits-with="Rewriting…">Ask for changes</button>
+    </div>
+  <% end %>
+  <%= hidden_field_tag :history, history.to_json, form: "faith-rewrite-form", id: "fr-history" %>
+<% end %>

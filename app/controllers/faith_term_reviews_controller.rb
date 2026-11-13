@@ -9,6 +9,12 @@ class FaithTermReviewsController < ApplicationController
   before_action :require_reviewer
   before_action :set_term, except: :index
 
+  # "Rewrite with AI" calls a paid provider: a burst limit per reviewer and the
+  # per-user daily allowance, like every other AI endpoint (AiChat adds the
+  # global daily backstop).
+  rate_limit to: 10, within: 1.minute, only: :rewrite, name: "ai-burst",
+             by: -> { Current.user&.id || request.remote_ip }, with: -> { rewrite_refused(:rate) }
+
   REVIEWED_TEXT = %w[ name short_definition new_believer explanation root_strongs key_references aliases ].freeze
 
   def index
@@ -47,7 +53,31 @@ class FaithTermReviewsController < ApplicationController
     redirect_to admin_faith_terms_path(anchor: @term.slug), notice: "“#{@term.name}” is back in draft and hidden from the public."
   end
 
+  # POST /admin/faith/:slug/rewrite — the AI's suggestion beside the current
+  # text, in the "faith_rewrite" Turbo Frame. Saves nothing: the reviewer copies
+  # fields into the edit form and presses Save.
+  def rewrite
+    return rewrite_refused(:daily) unless AiBudget.charge_user(current_user.id)
+
+    rewriter = FaithTermRewriter.new(term: @term, words: params[:words], chips: params[:chips],
+                                     request: params[:follow_up], current: params[:current] || {},
+                                     history: params[:history])
+    result = rewriter.call
+    history = result.ok? ? rewriter.next_history(result.suggestion) : FaithTermRewriter.clean_history(params[:history])
+    Rails.logger.info("[FaithTermRewriter] term=#{@term.slug} user=#{current_user.id} ok=#{result.ok?} " \
+                      "provider=#{result.provider} error=#{result.error}")
+    render partial: "faith_term_reviews/rewrite_result",
+           locals: { term: @term, result:, current: FaithTermRewriter.normalize_fields(params[:current] || {}), history: }
+  end
+
   private
+
+  def rewrite_refused(reason)
+    result = FaithTermRewriter::Result.new(ok: false, error: reason)
+    render partial: "faith_term_reviews/rewrite_result", status: :too_many_requests,
+           locals: { term: @term, result:, current: {}, history: FaithTermRewriter.clean_history(params[:history]) }
+  end
+
 
   def require_reviewer
     return if authenticated? && current_user.faith_reviewer?
