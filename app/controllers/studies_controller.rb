@@ -39,6 +39,8 @@ class StudiesController < ApplicationController
       set_faith_term_of_the_day
     else
       # Visitors get the landing page; the workspace welcome is for keepers.
+      # They see the glossary slider too (reviewed words only).
+      set_faith_term_of_the_day
       render :landing
     end
   end

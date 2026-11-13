@@ -28,6 +28,26 @@ class FaithTermsTest < ActionDispatch::IntegrationTest
     assert_select ".ft-draft", count: 0
   end
 
+  test "signed-out visitors get the glossary slider on the landing page: reviewed words, each linking to its page" do
+    get root_path
+    assert_response :success
+    assert_select ".ld-glossary .hm-glossary.is-everywhere"
+    assert_select ".hm-gl-slide[href=?]", faith_term_path(@grace)
+    assert_select ".hm-gl-slide[href=?]", faith_term_path(@mercy)
+    assert_select ".hm-gl-slide[href=?]", faith_term_path(@faith), count: 0
+    assert_select ".hm-gl-slide.is-more[href=?]", faith_terms_path
+    assert_select ".hm-gl-root", text: /χάρις/
+    assert_select ".ld-foot-links a[href=?]", faith_terms_path
+  end
+
+  test "no reviewed words: no slider or link on the landing page" do
+    FaithTerm.update_all(status: FaithTerm.statuses[:draft])
+    get root_path
+    assert_response :success
+    assert_select ".hm-glossary", count: 0
+    assert_select ".ld-foot-links a[href=?]", faith_terms_path, count: 0
+  end
+
   test "a term page: definition, root word from the lexicon, verse text linking into the reader, visible related terms" do
     get faith_term_path(@grace)
     assert_response :success

@@ -1,8 +1,10 @@
 <%# Phones: the Glossary of the Faith as a row of picture cards you swipe
     through (today's word first). Each card opens its word. Laptops keep the
     single "Word of the day" card instead (CSS). locals: terms, roots
-    ({term.id => LexiconEntry}), total (all visible words). %>
-<section class="hm-glossary" aria-labelledby="hm-glossary-title"
+    ({term.id => LexiconEntry}), total (all visible words), everywhere (the
+    signed-out landing page: shown at every width, with no card to replace). %>
+<% everywhere = local_assigns.fetch(:everywhere, false) %>
+<section class="hm-glossary<%= " is-everywhere" if everywhere %>" aria-labelledby="hm-glossary-title"
          data-controller="glossary-slider" data-glossary-slider-interval-value="5000">
   <div class="hm-glossary-head">
     <h2 class="ui-label" id="hm-glossary-title">Glossary of the Faith</h2>

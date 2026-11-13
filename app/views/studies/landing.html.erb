@@ -50,6 +50,12 @@
       <%= render "daily_words/card", word: @daily_word, compact: true, heading_id: "vod-title" %>
     </div>
 
+    <% if @faith_term %>
+      <div class="ld-glossary">
+        <%= render "faith_terms/slider", terms: @faith_slides, roots: @faith_slide_roots, total: @faith_total, everywhere: true %>
+      </div>
+    <% end %>
+
     <section class="ld-features" aria-label="What you can do">
       <article class="ld-feature">
         <div class="ld-feature-icon"><%= icon(:book) %></div>
@@ -113,6 +119,7 @@
     </div>
     <nav class="ld-foot-links" aria-label="Footer">
       <%= link_to "Guide", guide_path %>
+      <%= link_to "Glossary of the Faith", faith_terms_path if @faith_term %>
       <%= link_to "What's new", whats_new_path %>
       <%= link_to "Sign in", new_session_path %>
       <%= link_to "Create account", new_registration_path %>
