@@ -175,8 +175,10 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   `ai_search` Stimulus controller + `studies/_ai_search` / `_ai_results`; endpoint `GET
   /studies/:id/suggest`. Missing key degrades gracefully to a "configure your key" notice.
   The same service powers the preach-mode **AI quick search**: `GET /studies/:id/quick_find`
-  (JSON) — the Go box falls back to it when the reference can't be parsed, and offers
-  the results as one-tap chips (`_quickFind` in `presentation_controller`).
+  (JSON) — the Go box falls back to it when the reference can't be parsed, and lists
+  the results (`_quickFind` in `presentation_controller`). **Results (AI and offline keyword)
+  always go to Preview** — the row click / Enter previews; only the row's Go live,
+  double-click, Shift+Enter, or L / Go live on Preview change the projector.
 - **Offline-first preach** — preach mode parses references on the device (`lib/offline/local_pane`,
   JS port of `ReferenceParser`) and renders passages in a downloaded Bible straight from IndexedDB
   into the pane frame (operator *and* projector/stage), saving the reference in the background
