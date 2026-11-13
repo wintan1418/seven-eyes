@@ -363,12 +363,14 @@
 
 /* The church's own picture / looping video, darkened (or lightened, on the
    light looks) so the words stay readable. */
-.ps-look-bg .media, .ps-look-preview .lp-bg .media {
+.ps-look-bg .media, .ps-look-preview .lp-bg .media, .ps-look-tile .lt-bg .media, .cx-mini-bg .media {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
 }
 .ps-root[data-look-bg="image"] .ps-look-bg::after,
 .ps-root[data-look-bg="video"] .ps-look-bg::after,
-.ps-look-preview .lp-bg:has(.media)::after {
+.ps-look-preview .lp-bg:has(.media)::after,
+.ps-look-tile .lt-bg:has(.media)::after,
+.cx-mini-bg:has(.media)::after {
   content: ""; position: absolute; inset: 0;
   background: rgba(var(--look-wash), var(--look-dim, 0.35));
   mix-blend-mode: normal; -webkit-mask-image: none; mask-image: none;
@@ -871,6 +873,14 @@
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 10px 26px rgba(0, 0, 0, 0.5);
 }
 .ps-look-preview .lp-bg { position: absolute; inset: 0; z-index: 0; }
+.ps-look-tile .lt-bg { position: absolute; inset: 0; z-index: 0; }
+.ps-look-tile .lt-bg:empty, .ps-look-preview .lp-bg:empty { display: none; }
+/* With the church's own background the look's texture and frame step aside,
+   the way they do on the projector. */
+.ps-look-tile .lt-screen:has(.lt-bg .media)::before,
+.ps-look-tile .lt-screen:has(.lt-bg .media)::after,
+.ps-look-preview:has(.lp-bg .media)::before,
+.ps-look-preview:has(.lp-bg .media)::after { display: none; }
 .ps-look-preview .lp-text { font-size: 16px; }
 .ps-look-preview .lp-ref { font-size: 9px; }
 .ps-look-preview .lp-name {

@@ -163,6 +163,36 @@ class PreachConsoleTest < ApplicationSystemTestCase
     assert_selector ".ps-root[data-cx-tab='scripture']"
   end
 
+  test "the church's own picture shows in the Preview miniature and on every look thumbnail" do
+    resize_to(1366, 768)
+    start_preaching
+
+    find(".cx-find-input").fill_in(with: "ps 23:2")
+    find(".cx-find-input").send_keys(:enter)
+    assert_selector ".cx-mini[data-kind='scripture'] .cx-mini-words", text: "green pastures"
+    assert_no_selector ".cx-mini-bg .media", visible: :all
+
+    find(".cx-tab[data-tab='looks']").click
+    picture = Rails.root.join("public/icon.png")
+    find("input[type='file'][data-slot='image']", visible: :all).attach_file(picture, make_visible: true)
+
+    assert_selector ".ps-root[data-look-bg='image']", wait: 5
+    assert_selector ".cx-mini-bg img.media", visible: :all, wait: 5
+    assert_selector ".ps-look-preview .lp-bg img.media", visible: :all
+    assert_selector ".ps-look-tile .lt-bg img.media", visible: :all, minimum: 2
+    # The words stay above the picture.
+    on_top = find(".cx-mini-words").evaluate_script(<<~JS)
+      (el => { const r = el.getBoundingClientRect(); const hit = document.elementFromPoint(r.left + r.width / 2, r.top + 4); return el.contains(hit) || hit === el })(this)
+    JS
+    assert on_top, "the Preview words sit above the background"
+    shot "1366-own-picture"
+
+    # Back to the look's own background: the picture leaves every miniature.
+    find("[data-screen-look-target='bgButton'][data-bg='look']").click
+    assert_no_selector ".cx-mini-bg .media", visible: :all, wait: 5
+    assert_no_selector ".ps-look-tile .lt-bg .media", visible: :all
+  end
+
   test "Focus is the full-screen slide, remembered, and F switches back" do
     resize_to(1366, 768)
     start_preaching
