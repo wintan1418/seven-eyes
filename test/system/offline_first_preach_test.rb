@@ -37,6 +37,7 @@ class OfflineFirstPreachTest < ApplicationSystemTestCase
     wait_for_reader_js
 
     # Entering preach downloads the study's Bible (whole translation) for offline.
+    prefer_focus_view # these tests drive the full-screen slide (Focus view)
     find(".ui-appbar button[data-action~='presentation#start']").click
     assert_selector ".ps-root.is-preaching"
     assert_selector ".ps-preach-offline[data-state='ready']", text: /ready offline.*whole KJV/i, wait: 20

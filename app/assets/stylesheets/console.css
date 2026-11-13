@@ -1,0 +1,777 @@
+/* ====== Operator console — preach mode's default layout on a laptop/desktop ======
+   console_controller puts .is-console on .ps-root while preaching on a screen
+   ≥1100×560 in console view. The regions are drawn by studies/_console; the
+   working pieces (the presented pane = Live, the queue, Preview, the verse
+   list, the song bank, the screen panel, the toolbar) keep their own markup
+   and are laid over their region's slot: --cx-<slot>-x/y/w/h, measured by the
+   controller. Without .is-console nothing here applies — Focus view and small
+   screens are exactly the preach mode of before.
+
+   Stacking inside the console:
+     auto region panels (.cx)            20  pieces laid over slots
+     24  Live veil (Black/Clear/Logo)    30  toolbar
+     40  add card, search results        50  tour
+   Modals (keys card, live/remote panels, toasts) keep their own, higher, z.  */
+
+/* ---------- outside the console ---------- */
+.cx { display: none; }
+.cx-console-only { display: none !important; }
+.ps-bar-group { display: contents; }
+.ps-bar-group > * { flex: none; }
+.ps-bar-group.is-golive { display: none; }
+.ps-preach-tool .ic { margin-right: 0.45em; }
+.ps-preach-tool.primary .ic { margin: 0 0 0 0.45em; }
+.ps-preach-tool kbd { display: none; }
+.ps-preach-bar .cx-state { display: none; }
+/* Console ⇄ Focus only where the console fits. */
+.cx-view-toggle { display: none; }
+@media (min-width: 1100px) and (min-height: 560px) {
+  .ps-root.is-preaching:not(.is-output) .cx-view-toggle { display: inline-flex; align-items: center; }
+}
+.ps-root.is-output .cx-view-toggle { display: none !important; }
+
+/* ---------- the console ---------- */
+.ps-root.is-console {
+  --cx-bar-h: 58px;
+  --cx-gap: 8px;
+  --cx-service-size: clamp(250px, 21vw, 340px);
+  --cx-library-size: clamp(180px, 32vh, 380px);
+  --cx-stage-h: calc(100vh - var(--cx-bar-h) - var(--cx-library-size) - 6px - var(--cx-gap) * 2);
+  --cx-mini-w: min(100% - 20px, (var(--cx-stage-h) - 205px) * 16 / 9);
+  --cx-bg: #140f0a;
+  --cx-panel: #1e1710;
+  --cx-panel-2: #281f16;
+  --cx-raise: #31261a;
+  --cx-line: rgba(201, 168, 92, 0.2);
+  --cx-line-2: rgba(201, 168, 92, 0.38);
+  --cx-text: #f1e7cf;
+  --cx-mute: rgba(241, 231, 207, 0.62);
+  --cx-faint: rgba(241, 231, 207, 0.4);
+  --cx-gold: #d6b25e;
+  --cx-ui: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cx-serif: "EB Garamond", "Source Serif 4", Georgia, serif;
+  background: var(--cx-bg);
+  min-height: 100vh;
+}
+.ps-root.is-console.cx-resizing { cursor: grabbing; user-select: none; }
+
+/* Absolute, not fixed, and no z-index: a fixed box would trap the veil, the
+   add card and the tour (its children) under the pieces laid over the slots. */
+.ps-root.is-console .cx {
+  display: grid; position: absolute; box-sizing: border-box; z-index: auto !important;
+  top: var(--cx-bar-h); left: 0; width: 100vw; height: calc(100vh - var(--cx-bar-h)); padding: var(--cx-gap);
+  grid-template-columns: var(--cx-service-size) 6px minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) 6px var(--cx-library-size);
+  grid-template-areas:
+    "service gs preview live"
+    "service gs gl gl"
+    "service gs library library";
+  column-gap: 0; row-gap: 0;
+  background: var(--cx-bg); color: var(--cx-text); font-family: var(--cx-ui);
+}
+.cx-service { grid-area: service; }
+.cx-preview { grid-area: preview; margin-right: calc(var(--cx-gap) / 2); }
+.cx-live { grid-area: live; margin-left: calc(var(--cx-gap) / 2); }
+.cx-library { grid-area: library; }
+.cx-gutter.is-service { grid-area: gs; cursor: col-resize; }
+.cx-gutter.is-library { grid-area: gl; cursor: row-resize; }
+.cx-gutter { position: relative; touch-action: none; }
+.cx-gutter::after {
+  content: ""; position: absolute; border-radius: 2px; background: var(--cx-line); transition: background 0.15s;
+}
+.cx-gutter.is-service::after { left: 2px; width: 2px; top: 40%; height: 20%; }
+.cx-gutter.is-library::after { top: 2px; height: 2px; left: 45%; width: 10%; }
+.cx-gutter:hover::after, .ps-root.cx-resizing .cx-gutter::after { background: var(--cx-gold); }
+
+.cx-region {
+  display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden;
+  background: var(--cx-panel); border: 1px solid var(--cx-line); border-radius: 8px;
+}
+.cx-head {
+  flex: none; display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 30px;
+  padding: 8px 12px 6px;
+}
+.cx-slot-head { flex: 1 1 auto; align-self: stretch; min-height: 30px; }
+.cx-title {
+  flex: none; font: 700 11px/1.4 var(--cx-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--cx-gold);
+}
+.cx-title.is-preview, .cx-title.is-live {
+  padding: 2px 8px; border-radius: 4px; letter-spacing: 0.16em;
+}
+.cx-title.is-preview { background: var(--ps-preview); color: #1c140c; }
+.cx-title.is-live { background: var(--ps-live); color: #fff; }
+.cx-title.is-live::before { content: "● "; }
+.cx-sub {
+  min-width: 0; font: 400 12px/1.4 var(--cx-ui); color: var(--cx-mute);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cx-slot { min-width: 0; min-height: 0; }
+
+/* ---------- toolbar: the preach bar, along the top ---------- */
+.ps-root.is-console .ps-preach-bar {
+  top: 0; bottom: auto; height: var(--cx-bar-h); z-index: 30;
+  padding: 0 116px 0 10px; gap: 6px; justify-content: flex-start;
+  background: #0e0a06; border-top: 0; border-bottom: 1px solid var(--cx-line-2); box-shadow: none;
+  font-family: var(--cx-ui);
+}
+/* One row, in this order: what's on screen · Prev Next · Go live · Back · Looks ·
+   Black Clear Logo Timer Alert (screen_live, from the bar's right end) · other
+   screens · help. The bar's three boxes dissolve so the groups can be ordered. */
+.ps-root.is-console .ps-preach-bar-left { order: 0; min-width: 0; gap: 8px; flex: none; }
+.ps-root.is-console :is(.ps-preach-bar-right, .ps-preach-bar-center) { display: contents; }
+.ps-root.is-console .ps-preach-bar-right > .ps-preach-tool { order: 1; }
+.ps-root.is-console .ps-bar-group.is-golive { order: 2; }
+.ps-root.is-console .ps-bar-group.is-move { order: 3; }
+.ps-root.is-console .ps-bar-group.is-screen { order: 4; }
+.ps-root.is-console .ps-preach-bar .ps-live-toolbar { order: 5; padding-left: 6px; margin-left: 2px; border-left: 1px solid var(--cx-line); }
+.ps-root.is-console .ps-bar-group.is-outputs { order: 6; }
+.ps-root.is-console .ps-bar-group.is-help { order: 7; }
+.ps-root.is-console .ps-bar-group {
+  display: inline-flex; align-items: center; gap: 2px; flex: none;
+  padding-left: 8px; margin-left: 4px; border-left: 1px solid var(--cx-line);
+}
+.ps-root.is-console .ps-bar-group.is-golive { border-left: 0; margin-left: 2px; padding-left: 4px; }
+.ps-root.is-console .ps-bar-group.is-help { margin-left: auto; }
+.ps-root.is-console .ps-preach-bar .ps-preach-tool {
+  flex: none; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-width: 52px; min-height: 0; height: 46px; padding: 4px 8px;
+  border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--cx-text);
+  font: 600 10.5px/1.15 var(--cx-ui); letter-spacing: 0.02em; text-transform: none;
+}
+.ps-root.is-console .ps-preach-bar .ps-preach-tool .ic {
+  margin: 0; font-size: 16px; line-height: 1; color: var(--cx-gold); font-family: "Noto Sans Symbols 2", "Segoe UI Symbol", var(--cx-ui);
+}
+.ps-root.is-console .ps-preach-bar .ps-preach-tool:hover:not(:disabled) { background: rgba(214, 178, 94, 0.12); border-color: var(--cx-line-2); }
+.ps-root.is-console .ps-preach-bar .ps-preach-tool:disabled { opacity: 0.38; cursor: default; }
+.ps-root.is-console .ps-preach-bar .ps-preach-tool.is-on { background: var(--cx-gold); color: #1c140c; border-color: var(--cx-gold); }
+.ps-root.is-console .ps-preach-bar .ps-preach-tool.is-on .ic { color: #1c140c; }
+.ps-root.is-console .ps-preach-bar .ps-preach-tool:focus-visible { outline: 2px solid var(--cx-gold); outline-offset: 1px; }
+/* Prev / Next: the two buttons used most, big and side by side. */
+.ps-root.is-console .ps-preach-bar-right .ps-preach-tool { flex-direction: row; gap: 6px; height: 40px; min-width: 64px; padding: 0 12px; font-size: 13px; border-color: var(--cx-line-2); }
+.ps-root.is-console .ps-preach-bar-right .ps-preach-tool .ic { font-size: 20px; color: inherit; }
+.ps-root.is-console .ps-preach-bar-right .ps-preach-tool.primary { background: var(--rubric); border-color: var(--rubric-deep); color: #fff7e8; }
+.ps-root.is-console .ps-preach-bar-right .ps-preach-tool.primary:hover { background: var(--rubric-deep); }
+/* Go live — the one button that changes the big screen. */
+.ps-root.is-console .ps-preach-bar .cx-golive {
+  flex-direction: row; gap: 7px; height: 40px; padding: 0 14px; font-size: 13px; letter-spacing: 0.03em;
+  background: #3a2a1b; color: rgba(255, 255, 255, 0.55); border-color: transparent;
+}
+.ps-root.is-console .ps-preach-bar .cx-golive .ic { font-size: 12px; color: inherit; }
+.ps-root.is-console .ps-preach-bar .cx-golive kbd {
+  display: inline-block; padding: 0 5px; border: 1px solid currentColor; border-radius: 3px; font: 600 10px var(--cx-ui); opacity: 0.8;
+}
+.ps-root.is-console .ps-preach-bar .cx-golive:not(:disabled) { background: var(--ps-live); color: #fff; }
+.ps-root.is-console .ps-preach-bar .cx-golive:not(:disabled):hover { background: #e3443a; border-color: transparent; }
+.ps-root.is-console .ps-preach-bar .cx-golive:disabled { opacity: 1; }
+/* Console-only and focus-only pieces of the bar. */
+.ps-root.is-console .cx-console-only { display: revert !important; }
+.ps-root.is-console .ps-preach-bar .ps-preach-tool.cx-console-only { display: inline-flex !important; }
+.ps-root.is-console .cx-focus-only { display: none !important; }
+.ps-root.is-console .ps-preach-counter,
+.ps-root.is-console .ps-preach-live { display: none !important; }
+.ps-root.is-console .ps-preach-offline { font-family: var(--cx-ui); font-size: 10px; letter-spacing: 0.08em; max-width: 9.5rem; }
+.ps-root.is-console .ps-live-chip { font-family: var(--cx-ui); }
+
+/* What the room sees, in one word. */
+.ps-root.is-console .ps-preach-bar .cx-state {
+  display: inline-flex; align-items: center; gap: 9px; min-width: 0; max-width: 260px; height: 40px;
+  padding: 0 12px 0 6px; border-radius: 6px; border: 1px solid var(--ps-live); background: var(--ps-live-soft);
+}
+.cx-state-word {
+  flex: none; padding: 3px 8px; border-radius: 4px; background: var(--ps-live); color: #fff;
+  font: 800 11px/1.3 var(--cx-ui); letter-spacing: 0.14em; text-transform: uppercase;
+}
+.cx-state[data-cx-state="live"] .cx-state-word::before { content: "● "; }
+.cx-state-what {
+  min-width: 0; font: 600 14px/1.2 var(--cx-serif); color: var(--cx-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ps-root.is-console .ps-preach-bar .cx-state:not([data-cx-state="live"]) { border-color: #8f8f8f; background: rgba(0, 0, 0, 0.5); }
+.cx-state:not([data-cx-state="live"]) .cx-state-word { background: #000; color: #fff; box-shadow: inset 0 0 0 1px #8f8f8f; }
+.cx-state[data-cx-state="logo"] .cx-state-word, .cx-state[data-cx-state="countdown"] .cx-state-word { background: var(--cx-gold); color: #1c140c; box-shadow: none; }
+
+/* Leave preach: the far right of the toolbar. */
+.ps-root.is-console .ps-exit-presentation {
+  top: calc((var(--cx-bar-h) - 36px) / 2) !important; right: 10px !important; z-index: 31; height: 36px; padding: 0 12px; gap: 8px;
+  background: transparent; border-color: var(--cx-line-2); border-radius: 6px; box-shadow: none;
+  font: 600 11px var(--cx-ui); letter-spacing: 0.06em; text-transform: none; color: var(--cx-mute);
+}
+.ps-root.is-console .ps-exit-presentation:hover { color: var(--cx-text); border-color: var(--cx-gold); }
+
+/* In the console the column headers say PREVIEW / LIVE; the rows under the
+   miniatures are captions: what it is, + Queue. */
+.ps-root.is-console :is(.ps-console-row.is-live, .ps-console-preview .ps-console-row.is-preview) .tag { display: none; }
+.ps-root.is-console [data-action~="presentation#toggleScreenPanel"]:not(.done) { display: none !important; }
+/* The offline badge, short: its full words stay in the tooltip-free label for screen readers. */
+.ps-root.is-console .ps-preach-bar .ps-preach-offline { position: relative; max-width: none; padding: 5px 9px; }
+.ps-root.is-console .ps-preach-bar .ps-preach-offline > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.ps-root.is-console .ps-preach-bar .ps-preach-offline::before { content: "Offline …"; }
+.ps-root.is-console .ps-preach-bar .ps-preach-offline[data-state="ready"]::before { content: "✓ Offline"; }
+.ps-root.is-console .ps-preach-bar .ps-preach-offline[data-state="missing"]::before { content: "⚠ Offline"; }
+.ps-root.is-console .ps-preach-bar .ps-preach-offline[data-state="downloading"]::before { content: "↓ Offline"; }
+
+/* Things the console replaces. */
+.ps-root.is-console :is(.ps-preach-zone, .ps-preach-nav, .ps-preach-next, .ps-preach-enter) { display: none !important; }
+
+/* ---------- LIVE: the presented pane, a true 16:9 miniature ---------- */
+.cx-screen {
+  flex: none; width: var(--cx-mini-w); aspect-ratio: 16 / 9; margin: 0 auto;
+  border-radius: 3px; background: #000; box-shadow: 0 0 0 2px var(--ps-live), 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+.ps-root.is-console .ps-shell {
+  position: fixed; z-index: 20; min-height: 0 !important; overflow: hidden;
+  left: var(--cx-screen-x, 0); top: var(--cx-screen-y, 0); width: var(--cx-screen-w, 0); height: var(--cx-screen-h, 0);
+  border-radius: 3px;
+}
+.ps-root.is-console .ps-workspace {
+  position: absolute !important; inset: 0 !important; width: auto !important; height: auto !important;
+  min-height: 0 !important; max-width: none !important; margin: 0 !important; padding: 0 !important;
+  container-type: size;
+}
+.ps-root.is-console.is-parallel .ps-workspace,
+.ps-root.is-console.is-split .ps-workspace { gap: 1.5cqw !important; padding: 1.5cqw !important; }
+.ps-root.is-console .ps-pane:is(.is-presented, .is-paired) {
+  border-radius: 0 !important; box-shadow: none !important; min-height: 0 !important; height: 100% !important;
+}
+.ps-root.is-console .ps-pane:is(.is-presented, .is-paired)::before { inset: 1.6cqh !important; }
+.ps-root.is-console.is-preaching .ps-pane:is(.is-presented, .is-paired) .ps-verses {
+  padding: var(--ps-ref-band, 13cqh) var(--safe-x, 0px) var(--safe-y, 2cqh) !important; height: 100% !important;
+}
+.ps-root.is-console.is-preaching[data-look-ref="bottom"] .ps-pane:is(.is-presented, .is-paired) .ps-verses {
+  padding: var(--safe-y) var(--safe-x) var(--ps-ref-band) !important;
+}
+.ps-root.is-console.is-preaching.is-split .ps-pane:is(.is-presented, .is-paired) .ps-verses { padding-top: 4cqh !important; }
+.ps-root.is-console.is-preaching .ps-pane:is(.is-presented, .is-paired) .ps-verse.is-preach-current {
+  font-size: 4.8cqw; padding: 1.5cqh 5cqw; line-height: 1.32;
+  font-weight: var(--ps-out-weight, 600); letter-spacing: 0.005em;
+}
+.ps-root.is-console.is-preaching:not(.out-theme-ink, .out-theme-paper) .ps-pane:is(.is-presented, .is-paired) .ps-verse.is-preach-current { color: #1a1007; }
+.ps-root.is-console.is-preaching .ps-pane:is(.is-presented, .is-paired) .ps-verse.is-preach-current .ps-vnum {
+  font-family: var(--cx-ui); font-weight: 800; font-size: 0.6em; line-height: 1.1; margin-bottom: 0.15em; color: var(--rubric-deep);
+}
+/* The reference banner across the top of the miniature. */
+.ps-root.is-console.is-preaching {
+  --ps-ref-size: calc(var(--cx-screen-w, 400px) * 0.026 * min(var(--ps-out-scale, 1), 1.3)) !important;
+}
+.ps-root.is-console.is-preaching .ps-preach-ref {
+  left: var(--cx-screen-x) !important; top: var(--cx-screen-y) !important; bottom: auto !important;
+  width: var(--cx-screen-w); right: auto !important; z-index: 22; box-sizing: border-box;
+  padding: calc(var(--cx-screen-h) * 0.03) 8px calc(var(--cx-screen-h) * 0.02);
+  font: 800 var(--ps-ref-size)/1.15 var(--cx-ui); letter-spacing: 0.06em;
+  color: var(--rubric-deep); background: linear-gradient(180deg, rgba(251, 245, 230, 0.95) 60%, rgba(251, 245, 230, 0));
+  border-radius: 3px 3px 0 0;
+}
+.ps-root.is-console.is-emphasising .ps-preach-ref::after { font-size: 10px; margin-left: 10px; }
+/* A song, thought or picture on the screen. */
+.ps-root.is-console.is-preaching.is-slide .ps-preach-slide {
+  inset: auto; left: var(--cx-screen-x); top: var(--cx-screen-y); width: var(--cx-screen-w); height: var(--cx-screen-h);
+  z-index: 21; gap: 3cqh; padding: 5cqh 6cqw; border-radius: 3px; container-type: size;
+}
+.ps-root.is-console.is-slide .ps-preach-slide .slide-title { font-size: 1.6cqw; }
+.ps-root.is-console.is-slide .ps-preach-slide .slide-stanza { font-size: 4.1cqw; max-width: 90cqw; }
+.ps-root.is-console.is-slide .ps-preach-slide .slide-img { max-width: 96cqw; }
+.ps-root.is-console.is-slide .ps-preach-slide .slide-img img { max-width: 94cqw; max-height: 86cqh; box-shadow: none; }
+
+/* Black / Cleared / Logo: the miniature says so in words. */
+.cx-screen-veil[hidden] { display: none; }
+.ps-root.is-console .cx-screen-veil {
+  position: fixed; z-index: 24; left: var(--cx-screen-x); top: var(--cx-screen-y); width: var(--cx-screen-w); height: var(--cx-screen-h);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 0 6%;
+  text-align: center; border-radius: 3px; background: rgba(0, 0, 0, 0.86); color: #fff; pointer-events: none;
+}
+.cx-screen-veil .word { font: 800 clamp(14px, calc(var(--cx-screen-w) * 0.05), 30px) var(--cx-ui); letter-spacing: 0.24em; text-transform: uppercase; }
+.cx-screen-veil .note { font: 400 12px/1.45 var(--cx-ui); color: rgba(255, 255, 255, 0.7); }
+.cx-screen-veil[data-mode="clear"], .cx-screen-veil[data-mode="logo"], .cx-screen-veil[data-mode="countdown"] { background: rgba(20, 14, 8, 0.72); }
+
+/* The LIVE / PREVIEW captions (what it is, + Queue) sit in the column headers. */
+.cx-slot-livetools { flex: none; height: 38px; margin: 8px 10px 0; }
+.ps-root.is-console .ps-console-row.is-live,
+.ps-root.is-console .ps-console-preview .ps-console-row.is-preview {
+  position: fixed; z-index: 20; box-sizing: border-box; padding: 0 !important; gap: 8px;
+  border: 0 !important; background: transparent !important; opacity: 1 !important; color: var(--cx-text); font-family: var(--cx-ui);
+}
+.ps-root.is-console .ps-console-row.is-live { left: var(--cx-livehead-x); top: var(--cx-livehead-y); width: var(--cx-livehead-w); height: var(--cx-livehead-h); }
+.ps-root.is-console .ps-console-preview .ps-console-row.is-preview { left: var(--cx-previewhead-x); top: var(--cx-previewhead-y); width: var(--cx-previewhead-w); height: var(--cx-previewhead-h); }
+.ps-root.is-console .ps-console-row .what { font: 600 16px/1.2 var(--cx-serif); }
+.ps-root.is-console .ps-console-preview[data-state="empty"] .ps-console-row .what { font: italic 400 13px var(--cx-ui); color: var(--cx-mute); }
+.ps-root.is-console .ps-console .mini { padding: 3px 9px; border-radius: 5px; border-color: var(--cx-line-2); }
+.ps-root.is-console .ps-bar-group.is-show {
+  position: fixed; z-index: 20; left: var(--cx-livetools-x); top: var(--cx-livetools-y); width: var(--cx-livetools-w); height: var(--cx-livetools-h);
+  margin: 0; padding: 0; border: 0; gap: 6px; justify-content: flex-start; overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+}
+.ps-root.is-console .ps-bar-group.is-show .ps-preach-group {
+  height: 34px; padding: 0 6px; gap: 3px; border-color: var(--cx-line); border-radius: 6px; background: transparent;
+}
+.ps-root.is-console .ps-bar-group.is-show .ps-preach-group .lbl { font: 600 10px var(--cx-ui); letter-spacing: 0.08em; margin-right: 3px; color: var(--cx-mute); }
+.ps-root.is-console .ps-bar-group.is-show .ps-preach-group button { width: 26px; height: 26px; font: 600 12px var(--cx-ui); border-radius: 4px; }
+.ps-root.is-console .ps-bar-group.is-show .ps-preach-tool {
+  flex-direction: row; height: 34px; min-width: 0; gap: 5px; padding: 0 9px; border-color: var(--cx-line); font-size: 11px;
+}
+.ps-root.is-console .ps-bar-group.is-show .ps-preach-tool .ic { font-size: 13px; }
+
+.cx-live-list-head { flex: none; display: flex; align-items: baseline; gap: 8px; padding: 10px 12px 4px; }
+.cx-live-list-head .cx-title { color: var(--cx-mute); }
+.cx-live-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; list-style: none; margin: 0 10px 10px; padding: 0; border: 1px solid var(--cx-line); border-radius: 5px; background: rgba(0, 0, 0, 0.18); }
+.cx-live-list .cx-line { border-bottom: 1px solid rgba(201, 168, 92, 0.1); border-left: 4px solid transparent; }
+.cx-live-list .cx-line .pick {
+  display: grid; grid-template-columns: minmax(2.2em, max-content) minmax(0, 1fr); gap: 10px; width: 100%; padding: 6px 8px; text-align: left;
+  background: transparent; border: 0; color: var(--cx-text); cursor: pointer;
+}
+.cx-live-list .cx-line .pick:hover { background: rgba(255, 255, 255, 0.06); }
+.cx-live-list .cx-line .tag { font: 700 10px/1.9 var(--cx-ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--cx-gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cx-live-list .cx-line .txt {
+  font: 13.5px/1.4 var(--cx-serif); white-space: pre-line;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.cx-live-list .cx-line.is-live { border-left-color: var(--ps-live); background: var(--ps-live-soft); }
+.cx-live-list .cx-line.is-live .tag { color: #ff9a90; }
+.cx-live-list .cx-empty { padding: 12px; font: italic 13px var(--cx-serif); color: var(--cx-faint); }
+
+/* ---------- PREVIEW ---------- */
+.cx-mini {
+  position: relative; flex: none; width: var(--cx-mini-w); aspect-ratio: 16 / 9; margin: 0 auto; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border-radius: 3px; text-align: center; container-type: size;
+  /* The projection's Look (slide_themes.css tokens on the root), vellum without one. */
+  background: var(--look-bg, var(--vellum-0, #fbf5e6)); background-color: var(--look-base, #fbf5e6); background-size: var(--look-bg-size, auto);
+  color: var(--look-fg, #1a1007);
+  box-shadow: 0 0 0 2px var(--ps-preview), 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+.cx-mini-title { font: 600 1.6cqw "Cinzel", serif; letter-spacing: 0.26em; text-transform: uppercase; color: var(--look-accent, var(--rubric)); margin-bottom: 2cqh; }
+.cx-mini-title:empty, .cx-mini-ref:empty { display: none; }
+.cx-mini-words {
+  display: flex; flex-direction: column; justify-content: center; gap: 1cqh; max-width: 90%; max-height: 72%; overflow: hidden;
+  font: 500 4cqw/1.38 var(--look-font, var(--cx-serif)); white-space: pre-line; text-shadow: var(--look-shadow, none);
+}
+.cx-mini[data-kind="scripture"] .cx-mini-words { font-weight: var(--look-weight, var(--ps-out-weight, 600)); line-height: var(--look-line, 1.32); margin-top: 8cqh; }
+.cx-mini-vnum { display: block; font: 800 0.6em/1.1 var(--cx-ui); color: var(--look-num, var(--rubric-deep)); }
+.cx-mini-ref {
+  position: absolute; top: 0; left: 0; right: 0; padding: 3cqh 8px 2cqh;
+  font: 800 2.6cqw/1.15 var(--cx-ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--look-accent, var(--rubric-deep));
+}
+.cx-mini[data-kind="pending"] .cx-mini-words { font: italic 2.4cqw/1.45 var(--cx-ui); color: rgba(26, 16, 7, 0.55); }
+.cx-mini[data-kind="picture"] { background: #000; }
+.cx-mini-img { max-width: 94%; max-height: 86%; object-fit: contain; }
+.cx-mini-empty {
+  display: block; padding: 0 12%; font: 400 13px/1.55 var(--cx-ui); color: var(--cx-mute);
+}
+.cx-mini-empty[hidden] { display: none; }
+.cx-mini[data-kind="empty"] { background: repeating-linear-gradient(135deg, #241b12 0 14px, #211810 14px 28px); box-shadow: 0 0 0 1px var(--cx-line-2); }
+.cx-mini[data-kind="empty"] .cx-mini-empty b { color: var(--cx-text); }
+
+.cx-slot-preview { flex: 1 1 auto; margin: 8px 10px 10px; }
+.ps-root.is-console .ps-console-preview {
+  position: fixed; z-index: 20; box-sizing: border-box;
+  left: var(--cx-preview-x); top: var(--cx-preview-y); width: var(--cx-preview-w); height: var(--cx-preview-h);
+  padding: 0; gap: 6px; border: 0; border-radius: 0; background: transparent; opacity: 1; color: var(--cx-text); font-family: var(--cx-ui);
+}
+.ps-root.is-console .ps-console-preview .ps-preview-text {
+  flex: 1 1 auto; height: auto !important; min-height: 0; max-height: none;
+  padding: 2px; border: 1px solid var(--cx-line); border-radius: 5px; background: rgba(0, 0, 0, 0.18); overflow-y: auto;
+}
+.ps-root.is-console .ps-console-preview .ps-preview-text:empty { display: block; }
+.ps-root.is-console .ps-console-preview .ps-preview-text:empty::before {
+  content: "The slides of what you preview list here."; display: block; padding: 10px; font: italic 13px var(--cx-serif); color: var(--cx-faint);
+}
+.ps-root.is-console .ps-console-preview .ps-preview-text .v { display: block; padding: 3px 6px; font-size: 13.5px; }
+.ps-root.is-console .ps-console-preview .ps-golive-btn { flex: none; height: 40px; font-size: 14px; }
+.ps-root.is-console .ps-console-preview .ps-golive-btn:disabled { background: #3a2a1b; }
+.ps-root.is-console .ps-console-preview[data-state="live"] .ps-golive-btn { background: #3a2a1b; color: rgba(255, 255, 255, 0.6); }
+.ps-root.is-console .ps-console-preview[data-state="live"] .ps-golive-btn::after { content: "· on screen now"; font-weight: 500; font-size: 12px; }
+
+/* ---------- SERVICE: the queue ---------- */
+.cx-slot-next { flex: none; height: 36px; margin: 0 10px 6px; }
+.cx-slot-service { flex: 1 1 auto; }
+/* !important: the Focus-view dock (preach_console.css) positions the open queue too. */
+.ps-root.is-console .ps-setlist-host {
+  inset: auto !important; left: var(--cx-service-x) !important; top: var(--cx-service-y) !important;
+  width: var(--cx-service-w) !important; height: var(--cx-service-h) !important;
+  z-index: 20 !important; visibility: visible; pointer-events: auto;
+}
+.ps-root.is-console .ps-setlist-host .ps-book-backdrop { display: none; }
+.ps-root.is-console .ps-setlist-panel {
+  position: absolute; inset: 0; width: 100%; max-width: none; height: 100%;
+  transform: none !important; transition: none; box-shadow: none; border: 0; background: transparent; overflow: hidden !important;
+}
+.ps-root.is-console .ps-setlist-panel .ps-drawer-head,
+.ps-root.is-console .ps-setlist-panel .ui-sunday { display: none; }
+.ps-root.is-console .ps-console {
+  position: static !important; padding: 0 !important; background: none !important; border: 0 !important; display: contents !important;
+}
+/* "Next" is the badge on the row in the list (and N); no separate strip. */
+.ps-root.is-console .ps-console-row.is-next { display: none !important; }
+.ps-root.is-console .ps-setlist-panel turbo-frame { flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; }
+.ps-root.is-console .ps-setlist-items {
+  flex: 1 1 auto; max-height: none !important; min-height: 0 !important; overflow-y: auto; padding: 0 10px 10px;
+}
+.ps-root.is-console.is-preaching .ps-setlist-host .ps-autoqueue {
+  flex: none; padding: 7px 12px; color: rgba(241, 231, 207, 0.78); border-top: 1px solid var(--cx-line); font-size: 11.5px;
+}
+.ps-root.is-console .ps-setlist-host.is-order-waiting ~ .cx .cx-service .cx-sub::after,
+.ps-root.is-console:has(.ps-setlist-host.is-order-waiting) .cx-service .cx-head .cx-sub::after {
+  content: " · order will sync when online"; color: #e8b24a; font-style: italic;
+}
+.ps-root.is-console .ps-setlist-empty { color: var(--cx-mute); font: italic 14px/1.5 var(--cx-serif); padding: 22px 12px; }
+.ps-root.is-console .ps-setlist-item {
+  margin-bottom: 5px; border: 1px solid var(--cx-line); border-left: 4px solid transparent; border-radius: 6px;
+  background: var(--cx-panel-2); color: var(--cx-text);
+}
+.ps-root.is-console .ps-setlist-item:hover { background: var(--cx-raise); }
+.ps-root.is-console .ps-setlist-item .present { padding: 8px 8px 8px 2px; align-items: center; gap: 7px; }
+.ps-root.is-console .ps-setlist-item .present .lbl { color: var(--cx-text); font: 600 15px/1.25 var(--cx-serif); }
+.ps-root.is-console .ps-setlist-item .present:hover .lbl { color: #fff; }
+.ps-root.is-console .ps-setlist-item .present .num { min-width: 1.3em; text-align: right; color: var(--cx-faint); font-size: 10.5px; }
+.ps-root.is-console .ps-setlist-item .present .icon {
+  order: -1; flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 5px;
+  font-size: 13px; background: rgba(214, 51, 42, 0.18); color: #ff9a90;
+}
+.ps-root.is-console .ps-setlist-item .present .num { order: -2; }
+.ps-root.is-console .ps-setlist-item.kind-song .present .icon { background: rgba(214, 178, 94, 0.2); color: var(--cx-gold); }
+.ps-root.is-console .ps-setlist-item.kind-thought .present .icon { background: rgba(132, 170, 120, 0.2); color: #a9cf98; }
+.ps-root.is-console .ps-setlist-item .present .meta { color: var(--cx-faint); font-family: var(--cx-ui); letter-spacing: 0.06em; }
+.ps-root.is-console .ps-setlist-item .grip { color: var(--cx-faint); }
+.ps-root.is-console .ps-setlist-item .op { color: var(--cx-mute); border-color: var(--cx-line); }
+.ps-root.is-console .ps-setlist-item .op:hover { color: #fff; border-color: var(--cx-gold); }
+.ps-root.is-console .ps-setlist-item.is-selected { background: var(--cx-raise); }
+.ps-root.is-console .ps-setlist-item.is-preview { border-left-color: var(--ps-preview); background: rgba(240, 165, 0, 0.12); }
+.ps-root.is-console .ps-setlist-item.is-live { border-color: var(--ps-live); border-left-color: var(--ps-live); background: rgba(214, 51, 42, 0.14); }
+.ps-root.is-console .ps-setlist-item.is-next:not(.is-live, .is-preview) .present::after { border-color: var(--cx-line-2); color: var(--cx-mute); }
+.ps-root.is-console .ps-setlist-items.is-sorting .ps-setlist-item.is-dragging { background: var(--cx-raise); }
+.ps-root.is-console .ps-setlist-item .sync { padding-left: 64px; color: #e8b24a; }
+@keyframes cx-queue-in { from { background: rgba(240, 165, 0, 0.35); } to { background: var(--cx-panel-2); } }
+.ps-root.is-console .ps-setlist-item.is-new { animation: cx-queue-in 0.7s ease; }
+
+/* Add buttons under the queue. */
+.cx-add {
+  flex: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; align-items: center;
+  padding: 8px 10px 10px; border-top: 1px solid var(--cx-line);
+}
+.cx-add-lbl { grid-column: 1 / -1; font: 700 10px var(--cx-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--cx-mute); }
+.cx-add-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; cursor: pointer; min-width: 0;
+  background: var(--cx-panel-2); color: var(--cx-text); border: 1px solid var(--cx-line); border-radius: 6px;
+  font: 600 11px var(--cx-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cx-add-btn .ic { font-size: 15px; color: var(--cx-gold); }
+.cx-add-btn.is-scripture .ic { color: #ff9a90; }
+.cx-add-btn.is-thought .ic { color: #a9cf98; }
+.cx-add-btn:hover { border-color: var(--cx-gold); background: var(--cx-raise); }
+
+/* The add / edit form, floating in a card over Preview. */
+.cx-addcard { display: none; }
+.ps-root.is-console .ps-setlist-form { display: none !important; }
+.ps-root.is-console.cx-adding .cx-addcard {
+  display: block; position: fixed; z-index: 40;
+  left: calc(var(--cx-service-size) + var(--cx-gap) + 12px); top: calc(var(--cx-bar-h) + var(--cx-gap) + 6px); width: 480px;
+}
+.cx-addcard-head {
+  display: flex; align-items: center; justify-content: space-between; height: 42px; padding: 0 8px 0 14px;
+  background: #2b2117; border: 1px solid var(--cx-gold); border-bottom: 0; border-radius: 8px 8px 0 0;
+}
+.cx-addcard-head .cx-title { color: var(--cx-text); letter-spacing: 0.08em; }
+.cx-close { width: 30px; height: 30px; border-radius: 6px; cursor: pointer; background: transparent; border: 0; color: var(--cx-mute); font-size: 15px; }
+.cx-close:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+.ps-root.is-console.cx-adding .ps-setlist-form {
+  display: flex !important; position: fixed; z-index: 40;
+  left: calc(var(--cx-service-size) + var(--cx-gap) + 12px); top: calc(var(--cx-bar-h) + var(--cx-gap) + 48px); width: 480px;
+  max-height: calc(100vh - var(--cx-bar-h) - 72px); overflow-y: auto; box-sizing: border-box;
+  padding: 12px 14px 14px; border: 1px solid var(--cx-gold); border-top: 1px solid var(--cx-line); border-radius: 0 0 8px 8px;
+  background: #efe4c7; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+.ps-root.is-console.cx-adding .ps-setlist-form .ref-hint:not([data-tone="ok"], [data-tone="error"]) { display: block; }
+
+/* ---------- LIBRARY ---------- */
+.cx-tabs {
+  flex: none; display: flex; align-items: flex-end; gap: 2px; padding: 5px 10px 0; border-bottom: 1px solid var(--cx-line);
+}
+.cx-tab {
+  display: inline-flex; align-items: center; gap: 7px; padding: 6px 14px 7px; cursor: pointer;
+  background: transparent; color: var(--cx-mute); border: 1px solid transparent; border-bottom: 0; border-radius: 6px 6px 0 0;
+  font: 600 12.5px var(--cx-ui); margin-bottom: -1px;
+}
+.cx-tab[hidden] { display: none; }
+.cx-tab .ic { color: var(--cx-gold); font-size: 13px; }
+.cx-tab:hover { color: var(--cx-text); }
+.cx-tab.is-on { color: var(--cx-text); background: var(--cx-panel-2); border-color: var(--cx-line); border-bottom: 1px solid var(--cx-panel-2); }
+.cx-panel { display: none; flex: 1 1 auto; min-height: 0; flex-direction: column; background: var(--cx-panel-2); }
+.ps-root.is-console[data-cx-tab="scripture"] .cx-panel[data-tab="scripture"],
+.ps-root.is-console[data-cx-tab="songs"] .cx-panel[data-tab="songs"],
+.ps-root.is-console[data-cx-tab="presentations"] .cx-panel[data-tab="presentations"],
+.ps-root.is-console[data-cx-tab="media"] .cx-panel[data-tab="media"],
+.ps-root.is-console[data-cx-tab="words"] .cx-panel[data-tab="words"],
+.ps-root.is-console[data-cx-tab="looks"] .cx-panel[data-tab="looks"] { display: flex; }
+.cx-panel > .cx-slot { flex: 1 1 auto; }
+.cx-mount { overflow: auto; padding: 10px 12px; }
+
+.cx-findbar { flex: none; display: flex; align-items: center; gap: 6px; padding: 8px 10px 6px; }
+.cx-find {
+  flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 10px;
+  background: #fbf3df; border: 1px solid var(--cx-line-2); border-radius: 6px; color: #1a1007;
+}
+.cx-find:focus-within { border-color: var(--ps-preview); box-shadow: 0 0 0 3px rgba(240, 165, 0, 0.25); }
+.cx-find .ic { color: var(--rubric); font-size: 15px; }
+.cx-find-input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; font: 500 16px var(--cx-serif); color: #1a1007; }
+.cx-find-input::placeholder { color: rgba(26, 16, 7, 0.45); font-style: italic; }
+.cx-btn {
+  flex: none; height: 38px; padding: 0 12px; border-radius: 6px; cursor: pointer; white-space: nowrap;
+  font: 600 12px var(--cx-ui); background: transparent; color: var(--cx-text); border: 1px solid var(--cx-line-2);
+}
+.cx-btn.is-preview { border-color: var(--ps-preview); color: var(--ps-preview); }
+.cx-btn.is-preview:hover { background: var(--ps-preview-soft); }
+.cx-btn:hover { border-color: var(--cx-gold); }
+.cx-translation { flex: none; display: flex; align-items: center; gap: 6px; font: 600 10px var(--cx-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--cx-mute); }
+.cx-translation select {
+  height: 38px; padding: 0 8px; border-radius: 6px; cursor: pointer;
+  background: var(--cx-panel); color: var(--cx-text); border: 1px solid var(--cx-line-2); font: 600 13px var(--cx-ui); letter-spacing: 0;
+}
+.cx-findhint:not([data-tone="ok"], [data-tone="search"], [data-tone="wait"]) { display: none; }
+.cx-findhint { flex: none; padding: 0 12px 6px; font: 12px/1.4 var(--cx-ui); color: var(--cx-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cx-findhint[data-tone="ok"] { color: var(--cx-text); }
+.cx-findhint[data-tone="search"] { color: var(--cx-gold); font-style: italic; }
+.cx-findhint kbd { padding: 0 4px; border: 1px solid var(--cx-line-2); border-radius: 3px; font: 600 10.5px var(--cx-ui); color: var(--cx-mute); }
+.cx-slot-verses { flex: 1 1 auto; margin: 0 10px 10px; }
+
+/* The chapter's verses (preview controller's list). */
+.ps-root.is-console .ps-verse-list { display: none !important; }
+.ps-root.is-console[data-cx-tab="scripture"] .ps-verse-list {
+  display: flex !important; position: fixed; z-index: 20; box-sizing: border-box;
+  left: var(--cx-verses-x); top: var(--cx-verses-y); width: var(--cx-verses-w); height: var(--cx-verses-h);
+}
+.ps-root.is-console .ps-verse-list .head { padding: 0 2px 4px; }
+.ps-root.is-console .ps-verse-list .rows { flex: 1 1 auto; height: auto !important; max-height: none !important; min-height: 0; border-color: var(--cx-line); border-radius: 5px; }
+.ps-root.is-console .ps-verse-list .vrow .pick { grid-template-columns: 3.6em minmax(0, 1fr); font-size: 14px; padding: 5px 8px; }
+.ps-root.is-console .ps-verse-list .rows .empty { font-size: 13px; padding: 14px; }
+.ps-root.is-console .ps-verse-list .rows .empty b { color: var(--cx-text); font-style: normal; }
+
+/* Search results for words that aren't a reference: over the library. */
+.ps-root.is-console.is-preaching .ps-preach-finds:not([hidden]) {
+  top: var(--cx-verses-y, 50vh); left: var(--cx-verses-x, 50%); width: var(--cx-verses-w, 600px); max-height: var(--cx-verses-h, 40vh);
+  transform: none; z-index: 40; box-sizing: border-box; border-radius: 6px;
+}
+.ps-root.is-console[data-cx-tab]:not([data-cx-tab="scripture"]) .ps-preach-finds { display: none !important; }
+
+/* Songs: the song bank, inline instead of a dialog. */
+.ps-root.is-console .ps-song-bank { display: none !important; }
+.ps-root.is-console[data-cx-tab="songs"] .ps-song-bank {
+  display: block !important; position: fixed; inset: auto; z-index: 20; padding: 0; background: transparent;
+  left: var(--cx-songs-x); top: var(--cx-songs-y); width: var(--cx-songs-w); height: var(--cx-songs-h);
+}
+.ps-root.is-console[data-cx-tab="songs"] .ps-song-bank-card {
+  width: 100%; height: 100%; border: 0; border-radius: 0 0 8px 8px; box-shadow: none;
+  background: var(--cx-panel-2); color: var(--cx-text);
+}
+.ps-root.is-console .ps-song-bank .bank-head { display: none; }
+.ps-root.is-console .ps-song-bank .bank-search {
+  margin: 10px 10px 6px; padding: 8px 12px; background: #fbf3df; border-color: var(--cx-line-2); border-radius: 6px; font-size: 16px;
+}
+.ps-root.is-console .ps-song-bank .bank-body { border-top: 1px solid var(--cx-line); grid-template-columns: 170px minmax(0, 1.5fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.ps-root.is-console .ps-song-bank .bank-sources { border-color: var(--cx-line); overflow-y: auto; padding: 8px; }
+.ps-root.is-console .ps-song-bank .bank-sources .note { display: none; }
+.ps-root.is-console .ps-song-bank .bank-sources button { color: var(--cx-mute); }
+.ps-root.is-console .ps-song-bank .bank-sources button.is-on { background: var(--cx-raise); color: var(--cx-text); border-color: var(--cx-line-2); }
+.ps-root.is-console .ps-song-bank .bank-sources .note { color: var(--cx-faint); }
+.ps-root.is-console .ps-song-bank .bank-list { border-color: var(--cx-line); }
+.ps-root.is-console .ps-song-bank .bank-cols { color: var(--cx-faint); border-color: var(--cx-line); }
+.ps-root.is-console .ps-song-bank .bank-row { border-color: rgba(201, 168, 92, 0.1); }
+.ps-root.is-console .ps-song-bank .bank-row:hover { background: rgba(255, 255, 255, 0.05); }
+.ps-root.is-console .ps-song-bank .bank-row.is-picked { background: rgba(240, 165, 0, 0.14); box-shadow: inset 3px 0 0 var(--ps-preview); }
+.ps-root.is-console .ps-song-bank .bank-row .line,
+.ps-root.is-console .ps-song-bank .bank-row .author { color: var(--cx-mute); }
+.ps-root.is-console .ps-song-bank .bank-row .rights { color: var(--cx-faint); }
+.ps-root.is-console .ps-song-bank .bank-row.is-hymn .rights { color: #a9cf98; }
+.ps-root.is-console .ps-song-bank button.edit,
+.ps-root.is-console .ps-song-bank button.remove { color: var(--cx-mute); border-color: var(--cx-line-2); }
+.ps-root.is-console .ps-song-bank .bank-preview .head { background: var(--cx-panel-2); border-color: var(--cx-line); }
+.ps-root.is-console .ps-song-bank .bank-preview .head .meta { color: var(--cx-mute); }
+.ps-root.is-console .ps-song-bank .bank-preview .head .flow,
+.ps-root.is-console .ps-song-bank .bank-preview .sec .lbl { color: var(--cx-gold); }
+.ps-root.is-console .ps-song-bank .bank-empty { color: var(--cx-mute); }
+.ps-root.is-console .ps-song-bank .bank-keys { display: none; }
+.ps-root.is-console .ps-song-bank kbd { background: var(--cx-panel); border-color: var(--cx-line-2); color: var(--cx-mute); }
+.ps-root.is-console .ps-song-bank .bank-cols > span:first-child::after { content: " · click to preview"; text-transform: none; letter-spacing: 0; font-weight: 400; }
+
+/* Looks: the projection screen panel, inline. */
+.ps-root.is-console .ps-screen-panel { display: none !important; }
+.ps-root.is-console[data-cx-tab="looks"] .ps-screen-panel {
+  display: flex !important; position: fixed; inset: auto; z-index: 20; box-sizing: border-box; overflow: auto;
+  left: var(--cx-looks-x); top: var(--cx-looks-y); width: var(--cx-looks-w); height: var(--cx-looks-h);
+  padding: 14px 16px; border: 0; border-radius: 0 0 8px 8px; box-shadow: none; background: var(--cx-panel-2);
+}
+.ps-root.is-console[data-cx-tab="looks"] .ps-screen-panel .row { max-width: 420px; }
+.ps-root.is-console[data-cx-tab="looks"] .ps-screen-panel .done { display: none; }
+
+/* Toasts and the Go box sit over the stage, not the old bottom bar. */
+.ps-root.is-console .ps-queue-toast { left: calc(var(--cx-gap) + 10px); bottom: calc(var(--cx-gap) + 76px); }
+.ps-root.is-console .ps-preach-toast { bottom: calc(var(--cx-library-size) + 24px); left: calc(50% + var(--cx-service-size) / 2); }
+.ps-root.is-console .ps-preach-jump:not([hidden]) { z-index: 45; }
+
+/* ---------- first-run tour ---------- */
+.cx-tour[hidden] { display: none; }
+.ps-root.is-console .cx-tour { position: fixed; inset: 0; z-index: 50; }
+.cx-tour-spot {
+  position: fixed; border-radius: 10px; border: 2px solid var(--cx-gold);
+  box-shadow: 0 0 0 9999px rgba(8, 5, 2, 0.72); transition: all 0.25s ease; pointer-events: none;
+}
+.cx-tour-card {
+  position: fixed; width: 340px; padding: 16px 18px 14px; border-radius: 10px;
+  background: #fbf3df; color: #1a1007; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55); font-family: var(--cx-ui);
+  transition: left 0.25s ease, top 0.25s ease;
+}
+.cx-tour-step { font: 700 10.5px var(--cx-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--rubric); }
+.cx-tour-title { margin: 4px 0 6px; font: 600 21px/1.2 var(--cx-serif); color: #1a1007; }
+.cx-tour-text { margin: 0 0 14px; font: 14px/1.55 var(--cx-ui); color: #3b2c1b; }
+.cx-tour-actions { display: flex; align-items: center; gap: 8px; }
+.cx-tour-actions button { height: 34px; padding: 0 14px; border-radius: 6px; cursor: pointer; font: 600 13px var(--cx-ui); }
+.cx-tour-skip { margin-right: auto; background: transparent; border: 0; color: #6b5a40; padding: 0 4px !important; }
+.cx-tour-back { background: transparent; border: 1px solid rgba(26, 16, 7, 0.25); color: #1a1007; }
+.cx-tour-back[hidden] { display: none; }
+.cx-tour-next { background: var(--rubric); border: 1px solid var(--rubric-deep); color: #fff7e8; }
+
+/* ---------- smaller laptops: keep the toolbar on one row ---------- */
+@media (max-width: 1499px) {
+  .ps-root.is-console .ps-bar-group.is-outputs .ps-preach-tool,
+  .ps-root.is-console .ps-bar-group.is-help .ps-preach-tool { min-width: 44px; padding: 4px 5px; }
+  .ps-root.is-console .ps-preach-bar :is(.ps-preach-tool, .ps-live-btn) { min-width: 42px; padding: 4px 4px; font-size: 10px; }
+  .ps-root.is-console .ps-preach-bar .ps-preach-bar-right > .ps-preach-tool { min-width: 56px; padding: 0 9px; font-size: 12.5px; }
+  .ps-root.is-console .ps-preach-bar .cx-golive { padding: 0 10px; }
+  .ps-root.is-console .ps-preach-bar .cx-state { max-width: 210px; }
+}
+/* The Live column's tools: icons with their tooltips until there is room for words. */
+@media (max-width: 1599px) {
+  .ps-root.is-console .ps-bar-group.is-show .ps-preach-tool .lbl { display: none; }
+  .ps-root.is-console .ps-bar-group.is-show .ps-preach-tool { padding: 0 10px; }
+  .ps-root.is-console .ps-bar-group.is-show .ps-preach-tool .ic { font-size: 15px; }
+}
+@media (max-width: 1299px) {
+  .ps-root.is-console .ps-preach-bar .ps-preach-offline { display: none !important; }
+}
+
+/* ---------- slide tools (studies/_slide_tools) at home in the console ---------- */
+/* The queue's tool strip moves out: Templates / Order to the Service header,
+   Presentation / Seminar to the Presentations tab, the multi-verse composer to Scriptures. */
+.ps-root.is-console .ps-queue-tools { display: none !important; }
+.cx-head-tools { margin-left: auto; display: inline-flex; gap: 4px; flex: none; }
+.cx-mini-btn {
+  height: 24px; padding: 0 8px; border-radius: 5px; cursor: pointer; white-space: nowrap;
+  background: transparent; color: var(--cx-mute); border: 1px solid var(--cx-line); font: 600 11px var(--cx-ui);
+}
+.cx-mini-btn:hover { color: var(--cx-text); border-color: var(--cx-gold); }
+.cx-service .cx-head { flex-wrap: wrap; row-gap: 2px; }
+.cx-service .cx-head .cx-sub { order: 3; flex-basis: 100%; }
+.cx-btn.is-compose { color: var(--cx-mute); }
+
+.cx-launch { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; padding: 12px; overflow: auto; }
+.cx-launch-card {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 10px; row-gap: 3px; align-content: start;
+  padding: 12px 14px; text-align: left; cursor: pointer; border-radius: 8px;
+  background: var(--cx-panel); color: var(--cx-text); border: 1px solid var(--cx-line-2);
+}
+.cx-launch-card:hover { border-color: var(--cx-gold); background: var(--cx-raise); }
+.cx-launch-card .ic { grid-row: 1 / 3; font-size: 24px; color: var(--cx-gold); line-height: 1.1; }
+.cx-launch-card .t { font: 600 14px var(--cx-ui); }
+.cx-launch-card .d { font: 12px/1.45 var(--cx-ui); color: var(--cx-mute); }
+.cx-launch-list { grid-column: span 2; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.cx-kind-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; overflow: auto; }
+.cx-kind-list .cx-empty { font: italic 13px/1.5 var(--cx-serif); color: var(--cx-faint); }
+.cx-kind-row .pick {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; text-align: left; cursor: pointer;
+  background: var(--cx-panel); color: var(--cx-text); border: 1px solid var(--cx-line); border-left: 4px solid transparent; border-radius: 6px;
+}
+.cx-kind-row .pick:hover { background: var(--cx-raise); }
+.cx-kind-row.is-preview .pick { border-left-color: var(--ps-preview); }
+.cx-kind-row.is-live .pick { border-left-color: var(--ps-live); }
+.cx-kind-row .lbl { flex: 1; min-width: 0; font: 600 14px var(--cx-serif); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cx-kind-row .meta { flex: none; font: 600 10px var(--cx-ui); color: var(--cx-faint); text-transform: uppercase; letter-spacing: 0.08em; }
+.cx-kind-row .icon { color: var(--cx-gold); }
+.cx-kind-row .thumb { width: 40px; height: 24px; object-fit: cover; border-radius: 2px; }
+
+/* A deck / set / seminar slide in the Preview miniature (lib/slides painter). */
+.cx-mini-rich {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 5cqh 6cqw; font: 500 4cqw/1.38 var(--look-font, var(--cx-serif)); color: var(--look-fg, #1a1007);
+}
+.cx-mini-rich .slide-img { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.cx-mini-rich .slide-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.cx-mini[data-kind="rich"]:has(.slide-img) { background: #000; }
+
+/* Song collections in the inline song bank. */
+.ps-root.is-console .ps-song-bank .bank-collections { border-color: var(--cx-line); }
+.ps-root.is-console .ps-song-bank .bank-collections .coll-head,
+.ps-root.is-console .ps-song-bank .bank-collections .coll-guest { color: var(--cx-faint); }
+.ps-root.is-console .ps-song-bank .bank-collections .coll .pick { color: var(--cx-mute); }
+.ps-root.is-console .ps-song-bank .bank-collections .coll.is-on .pick { background: var(--cx-raise); color: var(--cx-text); }
+.ps-root.is-console .ps-song-bank .bank-collections .coll-new input { background: var(--cx-panel); color: var(--cx-text); border-color: var(--cx-line-2); }
+
+/* The reader's "verses … aren't in this Bible" notice is not part of a slide —
+   on the projector it sat beside the verse as giant text. Reading mode keeps it. */
+.ps-root.is-preaching .ps-pane:is(.is-presented, .is-paired) .ps-pane-notice { display: none; }
+
+/* Queue rows keep their whole label: the row buttons float over the right end
+   while the row is pointed at (keys do the rest: E, Alt+↑↓, Delete). */
+.ps-root.is-console .ps-setlist-item { position: relative; }
+.ps-root.is-console .ps-setlist-item .ops {
+  position: absolute; right: 5px; top: 50%; transform: translateY(-50%); z-index: 1;
+  padding: 3px; gap: 3px; border-radius: 7px; background: var(--cx-raise); box-shadow: -10px 0 12px var(--cx-raise);
+}
+.ps-root.is-console .ps-setlist-item.is-selected:not(:hover, :focus-within) .ops { display: none; }
+.ps-root.is-console .ps-setlist-item.is-selected:not(:hover, :focus-within) .present .meta { display: inline; }
+.ps-root.is-console .ps-verse-list .head .hint { display: none; }
+
+/* The offline badge / "All changes saved" pill: a corner, not over the toolbar. */
+html body:has(.ps-root.is-console) .ps-offline-host { top: auto; bottom: 14px; left: auto; right: 18px; transform: none; z-index: 41; }
+
+/* Word study: the root-word card (root_words.css) in its library tab. */
+.cx-words-slot { position: relative; }
+.cx-words-empty { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px; }
+.cx-words-empty p { flex-basis: 100%; margin: 0 0 4px; font: 14px/1.5 var(--cx-serif); color: var(--cx-mute); }
+.cx-words-empty kbd { margin-left: 6px; padding: 0 4px; border: 1px solid var(--cx-line-2); border-radius: 3px; font: 600 10px var(--cx-ui); }
+.ps-root.is-console .rw-card:not([hidden]) {
+  left: var(--cx-words-x) !important; top: var(--cx-words-y); width: var(--cx-words-w) !important; max-height: var(--cx-words-h); height: var(--cx-words-h);
+  bottom: auto; transform: none; z-index: 20; box-sizing: border-box; border-radius: 0 0 8px 8px; border: 0; box-shadow: none;
+  background: var(--cx-panel-2);
+}
+.ps-root.is-console[data-cx-tab]:not([data-cx-tab="words"]) .rw-card { display: none !important; }
+
+/* ---------- ready for the screen controls (slide-themes: Black / Clear / Logo /
+   Timer / Alert, Looks, backgrounds) ----------
+   Their screen layers belong on the Live miniature, their buttons in the toolbar's
+   "screen" group, their state badge is the toolbar's state pill (which reads root
+   data-screen-mode). Selectors for markup that isn't on main yet do nothing. */
+.ps-root.is-console :is(.ps-look-bg, .ps-screen-logo, .ps-screen-countdown, .ps-screen-alert) {
+  inset: auto !important; left: var(--cx-screen-x) !important; top: var(--cx-screen-y) !important;
+  width: var(--cx-screen-w) !important; height: var(--cx-screen-h) !important; border-radius: 3px; container-type: size;
+}
+.ps-root.is-console .ps-screen-alert { height: auto !important; top: auto !important; bottom: calc(100vh - var(--cx-screen-y) - var(--cx-screen-h)) !important; }
+.ps-root.is-console .ps-screen-state { display: none !important; }
+.ps-root.is-console .ps-live-toolbar { display: inline-flex; align-items: center; gap: 2px; }
+.ps-root.is-console .ps-live-controls { display: inline-flex; gap: 2px; }
+.ps-root.is-console .ps-live-btn {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-width: 50px; height: 46px; padding: 4px 6px; border-radius: 6px; font: 600 10.5px/1.15 var(--cx-ui); cursor: pointer;
+}
+/* Off: like the other tools. On: screen_live's own colours (slide_themes.css). */
+.ps-root.is-console .ps-live-btn:not(.is-on) { border: 1px solid transparent; background: transparent; color: var(--cx-text); }
+.ps-root.is-console .ps-live-btn:not(.is-on) .ic { color: var(--cx-gold); }
+.ps-root.is-console .ps-live-btn .ic { font-size: 16px; line-height: 1; }
+.ps-root.is-console .ps-live-btn kbd { display: none; }
+.ps-root.is-console .ps-live-btn:not(.is-on):hover { background: rgba(214, 178, 94, 0.12); border-color: var(--cx-line-2); }
+.ps-root.is-console .ps-live-panel-pop { top: calc(var(--cx-bar-h) + 6px) !important; bottom: auto !important; z-index: 42; }
+
+
+/* ---------- Looks (slide_themes.css) on the Live miniature ----------
+   The look sizes everything from a few tokens; in the console they come from
+   the miniature, not the window, and there is no bar to keep clear of — so
+   Live is the projector, small (also while a projector is connected). */
+.ps-root.ps-root.ps-root.is-console.is-preaching[data-look]:not(.is-output, .is-stage) {
+  --ps-bottom-chrome: 0px;
+  --safe-x: calc(var(--cx-screen-w, 400px) * 0.06);
+  --safe-y: calc(var(--cx-screen-h, 225px) * 0.06);
+  --look-ref-size: calc(var(--cx-screen-w, 400px) * 0.027 * min(var(--ps-out-scale, 1), 1.3));
+  --ps-ref-band: calc(var(--look-ref-size) * 2.3);
+}
+.ps-root.is-console.is-preaching[data-look] .ps-preach-ref { height: var(--ps-ref-band) !important; padding: 0 var(--safe-x); }
+.ps-root.is-console.is-preaching[data-look][data-look-ref="bottom"] .ps-preach-ref {
+  top: calc(var(--cx-screen-y) + var(--cx-screen-h) - var(--ps-ref-band)) !important;
+}
+.ps-root.is-console.is-preaching.is-slide[data-look] .ps-preach-slide { padding: var(--ps-ref-band) var(--safe-x) var(--safe-y) !important; }
+.ps-root.is-console.is-preaching .ps-look-bg { z-index: 19 !important; overflow: hidden; }

@@ -21,4 +21,20 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   def wait_for_reader_js
     assert_selector "[data-theme-choice-param][aria-pressed='true']", visible: :all
   end
+
+  # Preach mode opens in the operator console on a wide window. Tests written
+  # for the full-screen slide (the queue as a drawer/dock, the bottom bar, the
+  # Go box) choose Focus view first — on the study page, before preaching.
+  def prefer_focus_view
+    page.execute_script(<<~JS)
+      localStorage.setItem("ps-preach-view:" + (document.body.dataset.offlineOwner || "guest"), "focus")
+    JS
+  end
+
+  # The console's first-run tour, as already seen.
+  def mark_console_tour_seen
+    page.execute_script(<<~JS)
+      localStorage.setItem("ps-console-tour:" + (document.body.dataset.offlineOwner || "guest"), "1")
+    JS
+  end
 end

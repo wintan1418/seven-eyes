@@ -267,6 +267,26 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   `GET /root_words/:osis/:ch/:v`; offline = `RootWordPack` (`/root_words/pack`, ~2.3 MB gz, KJV
   tokens + lexicon) in IndexedDB (`lib/offline/word_pack.js`, books store code `~strongs`),
   saved on entering preach. Fonts: bundled OFL subsets in `app/assets/fonts/root_words/`.
+- **Operator console** (Nov 2026) — preach mode's default layout ≥1100×560: toolbar on top (the
+  same `.ps-preach-bar`, grouped: state pill LIVE/BLACK/CLEARED/LOGO · Prev/Next · Go live · Back ·
+  screen · other screens · help), Service (the queue) left, Preview and Live as true 16:9
+  miniatures with their slide lists, a tabbed library below (Scriptures · Songs · Presentations ·
+  Pictures · Word study · Looks; a `[data-cx-mount]` panel shows its tab only once something renders
+  into it). `studies/_console` draws the regions; **the working pieces keep their markup
+  where it was** — `console` controller (on `.ps-root`) measures each `[data-cx-slot]` into
+  `--cx-<slot>-x/y/w/h` and `console.css` lays the presented pane, the queue, Preview, the verse
+  list, the song bank, the screen panel over them, so Focus view (the full-screen slide, `F` or
+  the ⤢ button, remembered per account on the device: `ps-preach-view:<owner>`) is the old DOM
+  untouched. Small controllers: `console-live` (state pill, veil, live list → `preach:command`
+  `verse`/`slide`), `console-preview` (the Preview miniature; rich slides via `lib/slides`),
+  `console-library` (reference box: Enter Preview, Shift+Enter live; translation; Songs click →
+  Preview; slide-tool lists), `console-tour` (first run, `ps-console-tour:<owner>`). The add/edit
+  form floats in a card (`cx-adding`). Looks: Live is the presented pane under the root's
+  `data-look`, its `--safe-x/-y`, `--look-ref-size`, `--ps-bottom-chrome` set from the miniature
+  (`console.css`, imported after `slide_themes.css`); the Preview miniature paints with the
+  `--look-*` tokens; screen_live's Black / Clear / Logo / Timer / Alert sit in the toolbar and the
+  state pill reads `data-screen-mode`. System tests written for the full-screen layout call
+  `prefer_focus_view` before entering preach.
 - **Stage display** — `?stage=1` window (`⌗ Stage` button): NOW small / NEXT big / clock, painted
   by `_paintStage()` from the same BroadcastChannel state; hello role `"stage"` so it never flips
   the operator into console mode.

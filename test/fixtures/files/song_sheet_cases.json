@@ -54,5 +54,12 @@
     "slides": [ [null, "Chorus of angels singing\nglory"], [null, "Verse after verse"] ] },
   { "name": "label with a repeat mark",
     "body": "[Verse 1]\na\n\nChorus (x2)\nc",
-    "flow": "V1 C" }
+    "flow": "V1 C" },
+  { "name": "VP is a Vamp: only a Vamp heading makes one (the HIDDEN MANNA order); unlabelled stanzas count on as verses",
+    "body": "Verse 1\nhidden manna\n\nChorus\nbread of heaven\n\nsecond stanza\n\nVAMP:\nmanna, manna\n\nlast stanza",
+    "slides": [ ["Verse 1", "hidden manna"], ["Chorus", "bread of heaven"], ["Verse 2", "second stanza"], ["Vamp", "manna, manna"], ["Verse 3", "last stanza"] ],
+    "flow": "V1 C V2 VP V3" },
+  { "name": "a lyric that only mentions a vamp is not a label",
+    "body": "Vamp it up, the band plays on\nsing along\n\nVamp - one more time",
+    "slides": [ [null, "Vamp it up, the band plays on\nsing along"], [null, "Vamp - one more time"] ] }
 ]

@@ -2,8 +2,8 @@
     Every hook in this file is part of the preach contract
     (test/integration/preach_contract_test.rb): pastors drive it live. %>
   <button type="button" class="ps-exit-presentation" data-action="presentation#exit"
-          title="Exit focus mode (Esc)">
-    <span>&#10005;</span> Exit Focus <span class="kbd">Esc</span>
+          title="Leave (Esc)">
+    <span>&#10005;</span> Exit <span class="kbd">Esc</span>
   </button>
   <button type="button" class="ps-preach-enter" data-action="presentation#enterPreach"
           title="Preach mode — verse by verse, tap/swipe to advance">
@@ -19,8 +19,19 @@
   <button type="button" class="ps-preach-nav next"
           data-action="presentation#next" aria-label="Next verse">&#8250;</button>
 
+  <%# The preach toolbar. Focus view: one bar along the bottom, as always.
+      Console view (console.css): the same bar runs along the top, in groups —
+      what's on the screen · moving through it · the screen itself · other
+      screens · help — and the "show" group (verses per slide, teaching text,
+      parallel, split, emphasise) sits under the Live miniature. Every hook,
+      action and target here is part of the preach contract. %>
   <div class="ps-preach-bar">
     <div class="ps-preach-bar-left">
+      <%# Console: what the room sees, in one word (console_live_controller). %>
+      <div class="cx-state" data-cx-state="live" role="status" aria-live="polite">
+        <span class="cx-state-word" data-cx-state-word>Live</span>
+        <span class="cx-state-what" data-cx-state-label>Nothing on the screen yet</span>
+      </div>
       <div class="ps-preach-counter" data-preach-counter>
         <span class="num">verse 1</span>
       </div>
@@ -38,71 +49,96 @@
       </button>
     </div>
     <div class="ps-preach-bar-center">
-      <div class="ps-preach-group">
-        <span class="lbl">Group</span>
-        <% (1..3).each do |n| %>
-          <button type="button"
-                  class="<%= 'is-on' if n == 1 %>"
-                  data-action="presentation#setGroup"
-                  data-preach-group="<%= n %>"
-                  data-presentation-size-param="<%= n %>"
-                  title="<%= n %> verse#{'s' if n > 1} per slide"><%= n %></button>
-        <% end %>
+      <%# Console: Preview → Live, the one button that changes the big screen. %>
+      <div class="ps-bar-group is-golive" data-bar-group="golive">
+        <button type="button" class="ps-preach-tool cx-golive" data-cx-golive disabled
+                data-action="preview#goLive"
+                title="Put what's in Preview on the big screen (L)"><span class="ic">&#9654;</span><span class="lbl">Go live</span><kbd>L</kbd></button>
       </div>
-      <div class="ps-preach-group ps-preach-anchor">
-        <span class="lbl">Text</span>
-        <button type="button" data-preach-anchor-pin
-                data-action="presentation#pinAnchor"
-                title="Anchor the passage on screen as your main teaching text">&#9875;</button>
-        <button type="button" data-preach-anchor-home disabled
-                data-action="presentation#goAnchor"
-                title="Pin a passage as your teaching text first">&#8962;</button>
+      <div class="ps-bar-group is-show" data-bar-group="show" role="group" aria-label="How the scripture shows">
+        <div class="ps-preach-group">
+          <span class="lbl">Group</span>
+          <% (1..3).each do |n| %>
+            <button type="button"
+                    class="<%= 'is-on' if n == 1 %>"
+                    data-action="presentation#setGroup"
+                    data-preach-group="<%= n %>"
+                    data-presentation-size-param="<%= n %>"
+                    title="<%= n %> verse#{'s' if n > 1} per slide"><%= n %></button>
+          <% end %>
+        </div>
+        <div class="ps-preach-group ps-preach-anchor">
+          <span class="lbl">Text</span>
+          <button type="button" data-preach-anchor-pin
+                  data-action="presentation#pinAnchor"
+                  title="Anchor the passage on screen as your main teaching text">&#9875;</button>
+          <button type="button" data-preach-anchor-home disabled
+                  data-action="presentation#goAnchor"
+                  title="Pin a passage as your teaching text first">&#8962;</button>
+        </div>
+        <button type="button" class="ps-preach-tool"
+                data-preach-parallel
+                data-action="presentation#toggleParallel"
+                title="Show two translations side-by-side (P)"><span class="ic">&#9783;</span><span class="lbl">Parallel</span></button>
+        <button type="button" class="ps-preach-tool"
+                data-preach-split
+                data-action="presentation#toggleSplit"
+                title="Divide the screen and show different scriptures side-by-side — click a region (or press 1–4) to make it active, then Go/Next move that side"><span class="ic">&#9707;</span><span class="lbl">Split</span></button>
+        <button type="button" class="ps-preach-tool"
+                data-preach-emph
+                data-action="presentation#toggleEmphasis"
+                title="Emphasise the minister's key word — tap words on the verse to make them glow on screen"><span class="ic">&#10038;</span><span class="lbl">Emphasise</span></button>
+        <button type="button" class="ps-preach-tool" data-root-words-open="live"
+                title="Root word — the Hebrew or Greek behind a word of this verse, on the screen (W)"><span class="ic">&#8501;</span><span class="lbl">Root word</span></button>
       </div>
-      <button type="button" class="ps-preach-tool" disabled
-              data-preach-back
-              data-action="presentation#goBack"
-              title="Back to where you were — the previous scripture or song (B)">&#10558; Back</button>
-      <button type="button" class="ps-preach-tool"
-              data-action="setlist#toggle"
-              title="The preach queue — scriptures, songs and thoughts lined up for the service, with Preview (Q)">&#9835; Queue</button>
-      <button type="button" class="ps-preach-tool"
-              data-action="presentation#openJump"
-              title="Go to a verse, chase any reference the preacher calls (rom 8:28), or describe a thought for AI search (G or /)">&#10148; Go to verse</button>
-      <button type="button" class="ps-preach-tool"
-              data-preach-parallel
-              data-action="presentation#toggleParallel"
-              title="Show two translations side-by-side (P)">&#9783; Parallel</button>
-      <button type="button" class="ps-preach-tool"
-              data-preach-split
-              data-action="presentation#toggleSplit"
-              title="Divide the screen and show different scriptures side-by-side — click a region (or press 1–4) to make it active, then Go/Next move that side">&#9707; Split</button>
-      <button type="button" class="ps-preach-tool"
-              data-preach-emph
-              data-action="presentation#toggleEmphasis"
-              title="Emphasise the minister's key word — tap words on the verse to make them glow on screen">&#10038; Emphasise</button>
-      <button type="button" class="ps-preach-tool" data-root-words-open="live"
-              title="Root word — the Hebrew or Greek behind a word of this verse, on the screen (W)">&#8501; Root word</button>
-      <button type="button" class="ps-preach-tool"
-              data-preach-project
-              data-action="presentation#openOutput"
-              title="Open the output window — drag it onto the projector screen, then click Fullscreen">&#10697; Project</button>
-      <button type="button" class="ps-preach-tool"
-              data-action="presentation#openStage"
-              title="Stage display for the pulpit — current verse, NEXT verse big, and a clock">&#8983; Stage</button>
-      <button type="button" class="ps-preach-tool"
-              data-action="presentation#toggleScreenPanel"
-              title="Looks — slide templates, background, Fade or Cut, logo and text size">&#10022; Looks</button>
-      <button type="button" class="ps-preach-tool ps-golive"
-              data-live-target="button"
-              data-action="live#toggle"
-              title="Let the congregation follow along on their phones — live, no account needed">&#9737; Go Live</button>
-      <button type="button" class="ps-preach-tool"
-              data-remote-target="button"
-              data-action="remote#toggle"
-              title="Pair a phone as a remote clicker — next, previous, chase">&#9742; Remote</button>
-      <button type="button" class="ps-preach-tool"
-              data-action="presentation#toggleKeys"
-              title="Keyboard shortcuts (?)">&#9000; Keys</button>
+      <div class="ps-bar-group is-move" data-bar-group="move">
+        <button type="button" class="ps-preach-tool" disabled
+                data-preach-back
+                data-action="presentation#goBack"
+                title="Back to where you were — the previous scripture or song (B)"><span class="ic">&#10558;</span><span class="lbl">Back</span></button>
+        <button type="button" class="ps-preach-tool cx-focus-only"
+                data-action="setlist#toggle"
+                title="The preach queue — scriptures, songs and thoughts lined up for the service, with Preview (Q)"><span class="ic">&#9835;</span><span class="lbl">Queue</span></button>
+        <button type="button" class="ps-preach-tool cx-focus-only"
+                data-action="presentation#openJump"
+                title="Go to a verse, chase any reference the preacher calls (rom 8:28), or describe a thought for AI search (G or /)"><span class="ic">&#10148;</span><span class="lbl">Go to verse</span></button>
+      </div>
+      <%# Black / Clear / Logo / Timer / Alert are the live toolbar (screen_live) at
+          the right of the bar; the console lines them up after this group. %>
+      <div class="ps-bar-group is-screen" data-bar-group="screen" role="group" aria-label="The big screen">
+        <button type="button" class="ps-preach-tool"
+                data-action="presentation#toggleScreenPanel"
+                title="Looks — slide templates, background, Fade or Cut, logo and text size"><span class="ic">&#10022;</span><span class="lbl">Looks</span></button>
+      </div>
+      <div class="ps-bar-group is-outputs" data-bar-group="outputs" role="group" aria-label="Other screens">
+        <button type="button" class="ps-preach-tool"
+                data-preach-project
+                data-action="presentation#openOutput"
+                title="Open the output window — drag it onto the projector screen, then click Fullscreen"><span class="ic">&#10697;</span><span class="lbl">Project</span></button>
+        <button type="button" class="ps-preach-tool"
+                data-action="presentation#openStage"
+                title="Stage display for the pulpit — current verse, NEXT verse big, and a clock"><span class="ic">&#8983;</span><span class="lbl">Stage</span></button>
+        <button type="button" class="ps-preach-tool ps-golive"
+                data-live-target="button"
+                data-action="live#toggle"
+                title="Go Live on phones — the congregation follows along, no account needed"><span class="ic">&#9737;</span><span class="lbl"><span class="cx-focus-only">Go Live</span><span class="cx-console-only">Phones</span></span></button>
+        <button type="button" class="ps-preach-tool"
+                data-remote-target="button"
+                data-action="remote#toggle"
+                title="Pair a phone as a remote clicker — next, previous, chase"><span class="ic">&#9742;</span><span class="lbl">Remote</span></button>
+      </div>
+      <div class="ps-bar-group is-help" data-bar-group="help">
+        <button type="button" class="ps-preach-tool"
+                data-action="presentation#toggleKeys"
+                title="Keyboard shortcuts (?)"><span class="ic">&#9000;</span><span class="lbl">Keys</span></button>
+        <button type="button" class="ps-preach-tool cx-console-only"
+                data-action="console#tour"
+                title="A one-minute tour of the console"><span class="ic">?</span><span class="lbl">Tour</span></button>
+        <%# Console ⇄ Focus (the full-screen slide), remembered on this device (F). %>
+        <button type="button" class="ps-preach-tool cx-view-toggle" data-cx-view-toggle
+                data-action="console#toggleView" aria-pressed="false"
+                title="Switch between the console and the full-screen slide (F)"><span class="ic">&#10530;</span><span class="lbl" data-cx-view-label>Focus</span></button>
+      </div>
     </div>
     <div class="ps-preach-bar-right">
       <%# Live screen controls — one self-contained toolbar component
@@ -171,9 +207,9 @@
         </div>
       </div>
       <button type="button" class="ps-preach-tool"
-              data-action="presentation#prev" title="Previous verse (←)">&#8249; Prev</button>
+              data-action="presentation#prev" title="Previous verse (←)"><span class="ic">&#8249;</span><span class="lbl">Prev</span></button>
       <button type="button" class="ps-preach-tool primary"
-              data-action="presentation#next" title="Next verse (→ or Space)">Next &#8250;</button>
+              data-action="presentation#next" title="Next verse (→ or Space)"><span class="lbl">Next</span><span class="ic">&#8250;</span></button>
     </div>
   </div>
 
@@ -310,7 +346,8 @@
         <dt>On screen</dt>
         <div><dd><kbd>&rarr;</kbd> <kbd>Space</kbd></dd><dd>Next verse</dd></div>
         <div><dd><kbd>&larr;</kbd></dd><dd>Previous verse</dd></div>
-        <div><dd><kbd>G</kbd> <kbd>/</kbd></dd><dd>Go to a verse / reference (<kbd>Enter</kbd> live, <kbd>Shift</kbd>+<kbd>Enter</kbd> Preview). Words search the Scriptures.</dd></div>
+        <div><dd><kbd>G</kbd> <kbd>/</kbd></dd><dd>Go to a verse / reference (<kbd>Enter</kbd> live, <kbd>Shift</kbd>+<kbd>Enter</kbd> Preview). Words search the Scriptures. In the console: the library&rsquo;s box (<kbd>Enter</kbd> Preview, <kbd>Shift</kbd>+<kbd>Enter</kbd> live).</dd></div>
+        <div><dd><kbd>F</kbd></dd><dd>Console &#8644; Focus (the full-screen slide)</dd></div>
         <div><dd><kbd>1</kbd>&ndash;<kbd>3</kbd></dd><dd>Verses per slide</dd></div>
         <div><dd><kbd>B</kbd></dd><dd>Back to where you were</dd></div>
         <div><dd><kbd>H</kbd></dd><dd>Home to the teaching text</dd></div>

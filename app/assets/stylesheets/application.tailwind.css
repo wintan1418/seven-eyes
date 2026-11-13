@@ -17,6 +17,7 @@
 @import "./whats_new_mocks.css";
 @import "./legacy/audio.css";
 @import "./slide_themes.css"; /* projection Looks + live controls (after the preach layer) */
+@import "./console.css"; /* the operator console lays the preach pieces out (after Looks) */
 
 /* The modern reader (YouVersion-style). Imported after the legacy layer so
    it wins ties; reading-mode rules are scoped to

@@ -213,6 +213,7 @@ class SlideLooksTest < ApplicationSystemTestCase
     fill_in "reference", with: reference
     click_on "Read"
     assert_selector ".ps-pane .ps-verse"
+    prefer_focus_view # these tests drive the full-screen slide (Focus view)
     find(".ui-appbar button[data-action~='presentation#start']").click
     assert_selector ".ps-root.is-preaching[data-look]"
     assert_selector "[data-preach-counter]", text: /of 17/i # the whole chapter is in

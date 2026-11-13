@@ -1,0 +1,225 @@
+<%# locals: study — the operator console: preach mode's default layout on a
+    laptop or desktop (≥1100px wide). Never rendered for the projector or stage.
+
+      ┌──────────────────────── toolbar (.ps-preach-bar) ────────────────────────┐
+      │ SERVICE        │ PREVIEW                    │ LIVE                        │
+      │ the queue      │ 16:9 miniature + slides    │ 16:9 miniature + slides     │
+      │                ├──────────────── LIBRARY (tabs) ──────────────────────────┤
+      │ + add buttons  │ Scriptures · Songs · Presentations · Media · Looks       │
+      └────────────────┴──────────────────────────────────────────────────────────┘
+
+    This partial draws the regions only. The working pieces keep their markup,
+    controllers, targets and ids where they always were (_preach_chrome,
+    _setlist_drawer, _setlist, the panes): console_controller measures each
+    [data-cx-slot] below and console.css places those pieces over their slot
+    (--cx-<slot>-x/y/w/h), so Focus view — the full-screen slide of before —
+    is the same DOM, unchanged. Other features mount into the library through
+    [data-cx-mount] panels; a tab whose panel is empty stays hidden. %>
+<div class="cx" aria-label="Operator console">
+  <section class="cx-region cx-service" data-cx-region="service" aria-label="Service">
+    <header class="cx-head">
+      <span class="cx-title">Service</span>
+      <span class="cx-sub">click to preview &middot; double-click to go live</span>
+      <span class="cx-head-tools">
+        <button type="button" class="cx-mini-btn" data-tool="templates" data-action="setlist#openTool"
+                title="Service templates — save this order, or start from one (Sunday Service, Midweek…)">&#9776; Templates</button>
+        <button type="button" class="cx-mini-btn" data-tool="order" data-action="setlist#openTool"
+                title="Order of service — copy it for WhatsApp, share or print">&#9113; Order</button>
+      </span>
+    </header>
+    <div class="cx-slot cx-slot-service" data-cx-slot="service"></div>
+    <footer class="cx-add" aria-label="Add to the service">
+      <span class="cx-add-lbl">Add</span>
+      <button type="button" class="cx-add-btn is-scripture" data-action="console#openAdd" data-console-kind-param="scripture"
+              title="Add scriptures — several at once, separated by commas">
+        <span class="ic" aria-hidden="true">&#167;</span>Scripture</button>
+      <button type="button" class="cx-add-btn is-song" data-action="console#openAdd" data-console-kind-param="song"
+              title="Paste a song's words, or pick one from Songs below">
+        <span class="ic" aria-hidden="true">&#9835;</span>Song</button>
+      <button type="button" class="cx-add-btn is-thought" data-action="console#openAdd" data-console-kind-param="thought"
+              title="A point, announcement or quote to put on the screen">
+        <span class="ic" aria-hidden="true">&#10086;</span>Thought</button>
+      <button type="button" class="cx-add-btn is-picture" data-action="console#openAdd" data-console-kind-param="picture"
+              title="A picture to show full screen">
+        <span class="ic" aria-hidden="true">&#9670;</span>Picture</button>
+    </footer>
+  </section>
+
+  <div class="cx-gutter is-service" data-action="pointerdown->console#resize" data-console-edge-param="service"
+       role="separator" aria-orientation="vertical" aria-label="Resize the service list" title="Drag to resize"></div>
+
+  <section class="cx-region cx-preview" data-cx-region="preview" aria-label="Preview" data-controller="console-preview">
+    <header class="cx-head" title="Preview — only you see this. Go live (L) puts it on the big screen.">
+      <span class="cx-title is-preview">Preview</span>
+      <div class="cx-slot cx-slot-head" data-cx-slot="previewhead"></div>
+    </header>
+    <div class="cx-mini" data-console-preview-target="screen" data-kind="empty" aria-hidden="true">
+      <span class="cx-mini-title" data-console-preview-target="title"></span>
+      <span class="cx-mini-words" data-console-preview-target="words"></span>
+      <span class="cx-mini-ref" data-console-preview-target="ref"></span>
+      <span class="cx-mini-empty" data-console-preview-target="empty"><b>Preview</b> &mdash; only you see this.<br>
+        Click an item in the Service, or type a reference like <b>John 3:16</b> in Scriptures below.
+        Nothing changes on the big screen until you press <b>Go live</b>.</span>
+    </div>
+    <div class="cx-slot cx-slot-preview" data-cx-slot="preview"></div>
+  </section>
+
+  <section class="cx-region cx-live" data-cx-region="live" aria-label="Live" data-controller="console-live">
+    <header class="cx-head" title="Live — what the room sees on the big screen right now">
+      <span class="cx-title is-live">Live</span>
+      <div class="cx-slot cx-slot-head" data-cx-slot="livehead"></div>
+    </header>
+    <div class="cx-screen" data-cx-slot="screen"></div>
+    <div class="cx-slot cx-slot-livetools" data-cx-slot="livetools"></div>
+    <div class="cx-live-list-head">
+      <span class="cx-title" data-console-live-target="listTitle">On the screen</span>
+      <span class="cx-sub">click a line to put it up</span>
+    </div>
+    <ol class="cx-live-list" data-console-live-target="list" aria-label="Slides of what is live"></ol>
+    <%# Over the live miniature: what the room sees when it isn't the words. %>
+    <div class="cx-screen-veil" data-console-live-target="veil" hidden>
+      <span class="word" data-console-live-target="veilWord">Black</span>
+      <span class="note" data-console-live-target="veilNote">The screen is dark &mdash; press <kbd>.</kbd> to bring the words back</span>
+    </div>
+  </section>
+
+  <div class="cx-gutter is-library" data-action="pointerdown->console#resize" data-console-edge-param="library"
+       role="separator" aria-orientation="horizontal" aria-label="Resize the library" title="Drag to resize"></div>
+
+  <section class="cx-region cx-library" data-cx-region="library" aria-label="Library" data-controller="console-library">
+    <nav class="cx-tabs" role="tablist" aria-label="Library">
+      <button type="button" role="tab" class="cx-tab" data-tab="scripture" data-action="console#selectTab" data-console-tab-param="scripture">
+        <span class="ic" aria-hidden="true">&#167;</span>Scriptures</button>
+      <button type="button" role="tab" class="cx-tab" data-tab="songs" data-action="console#selectTab" data-console-tab-param="songs">
+        <span class="ic" aria-hidden="true">&#9835;</span>Songs</button>
+      <button type="button" role="tab" class="cx-tab" data-tab="presentations" data-action="console#selectTab" data-console-tab-param="presentations">
+        <span class="ic" aria-hidden="true">&#9638;</span>Presentations</button>
+      <button type="button" role="tab" class="cx-tab" data-tab="media" data-action="console#selectTab" data-console-tab-param="media">
+        <span class="ic" aria-hidden="true">&#9670;</span>Pictures</button>
+      <button type="button" role="tab" class="cx-tab" data-tab="words" data-action="console#selectTab" data-console-tab-param="words"
+              title="The Hebrew or Greek behind a word of the verse on screen (W)">
+        <span class="ic" aria-hidden="true">&#8501;</span>Word study</button>
+      <button type="button" role="tab" class="cx-tab" data-tab="looks" data-action="console#selectTab" data-console-tab-param="looks">
+        <span class="ic" aria-hidden="true">&#10022;</span>Looks</button>
+    </nav>
+
+    <div class="cx-panel" data-tab="scripture" role="tabpanel" aria-label="Scriptures">
+      <div class="cx-findbar">
+        <label class="cx-find">
+          <span class="ui-sr-only">Find a scripture</span>
+          <span class="ic" aria-hidden="true">&#8981;</span>
+          <input type="text" class="cx-find-input" inputmode="search" autocomplete="off" spellcheck="false" autocapitalize="none"
+                 placeholder="Type a reference like John 3:16 — Enter puts it in Preview"
+                 data-console-library-target="input"
+                 data-action="input->console-library#typed keydown->console-library#key">
+        </label>
+        <button type="button" class="cx-btn is-preview" data-action="console-library#preview"
+                title="Put it in Preview — the screen doesn't change yet (Enter)">Preview</button>
+        <button type="button" class="cx-btn is-queue" data-action="console-library#queue"
+                title="Add it to the service list (Ctrl+Enter)">&#43; Service</button>
+        <button type="button" class="cx-btn is-compose" data-action="console-library#composer"
+                title="Scripture slide — several scriptures on one slide, each in its own Bible (Col 2:2; Matt 28:19 BSB)">&#10697; Several on one slide</button>
+        <label class="cx-translation" title="The translation scriptures are shown in">
+          <span>Translation</span>
+          <select data-console-library-target="translation" data-action="change->console-library#translation">
+            <%= translation_options(study.panes.first&.effective_translation&.id) %>
+          </select>
+        </label>
+      </div>
+      <div class="cx-findhint" data-console-library-target="hint" aria-live="polite">
+        <kbd>Enter</kbd> preview &middot; <kbd>Shift</kbd>+<kbd>Enter</kbd> straight to the screen &middot;
+        in the list: click preview, double-click live, <b>+</b> adds to the service
+      </div>
+      <div class="cx-slot cx-slot-verses" data-cx-slot="verses"></div>
+    </div>
+
+    <div class="cx-panel" data-tab="songs" role="tabpanel" aria-label="Songs">
+      <div class="cx-slot" data-cx-slot="songs"></div>
+    </div>
+
+    <%# Presentations: the slide tools (_slide_tools dialogs, queue-tool:open)
+        and what of that kind is already in the service. %>
+    <div class="cx-panel" data-tab="presentations" role="tabpanel" aria-label="Presentations">
+      <div class="cx-launch">
+        <button type="button" class="cx-launch-card" data-tool="presentation" data-action="setlist#openTool">
+          <span class="ic" aria-hidden="true">&#9636;</span>
+          <span class="t">Import a presentation</span>
+          <span class="d">A PDF (PowerPoint, Keynote or Google Slides &rarr; Save as PDF) or pictures, page by page</span>
+        </button>
+        <button type="button" class="cx-launch-card" data-tool="seminar" data-action="setlist#openTool">
+          <span class="ic" aria-hidden="true">&#9638;</span>
+          <span class="t">Build seminar slides</span>
+          <span class="d">Title, points, picture, quote &mdash; with speaker notes on the stage screen</span>
+        </button>
+        <div class="cx-launch-list">
+          <div class="cx-title">In this service</div>
+          <ol class="cx-kind-list" data-console-library-target="decks" data-kinds="presentation seminar scripture_set"
+              data-empty="Nothing yet — imported presentations and seminar slides join the service and show here."></ol>
+        </div>
+      </div>
+    </div>
+    <div class="cx-panel" data-tab="media" role="tabpanel" aria-label="Pictures">
+      <div class="cx-launch">
+        <button type="button" class="cx-launch-card" data-action="console#openAdd" data-console-kind-param="picture">
+          <span class="ic" aria-hidden="true">&#9670;</span>
+          <span class="t">Add a picture</span>
+          <span class="d">A photo, flyer or announcement &mdash; shown full screen</span>
+        </button>
+        <div class="cx-launch-list">
+          <div class="cx-title">In this service</div>
+          <ol class="cx-kind-list" data-console-library-target="pictures" data-kinds="picture"
+              data-empty="No pictures in this service yet."></ol>
+        </div>
+      </div>
+    </div>
+    <%# Word study: the root-word card (_root_words, root_words controller) sits here. %>
+    <div class="cx-panel" data-tab="words" role="tabpanel" aria-label="Word study">
+      <div class="cx-slot cx-words-slot" data-cx-slot="words">
+        <div class="cx-words-empty">
+          <p>The Hebrew or Greek behind a word of the verse on the screen &mdash; and put it up as a word-study slide.</p>
+          <button type="button" class="cx-btn" data-root-words-open="live">&#8501; Words of the live verse <kbd>W</kbd></button>
+          <button type="button" class="cx-btn" data-root-words-open="preview">&#8501; Words of the verse in Preview <kbd>Shift</kbd>+<kbd>W</kbd></button>
+        </div>
+      </div>
+    </div>
+    <%# Mount points: a panel rendered with data-cx-mount="name" and a tab
+        data-tab="name" shows once something renders inside it. %>
+
+    <div class="cx-panel" data-tab="looks" role="tabpanel" aria-label="Looks">
+      <div class="cx-slot" data-cx-slot="looks"></div>
+    </div>
+  </section>
+
+  <%# The add / edit form (the queue's own, in _setlist) floats in this card. %>
+  <div class="cx-addcard" aria-hidden="true">
+    <div class="cx-addcard-head">
+      <span class="cx-title" data-cx-add-title>Add to the service</span>
+      <button type="button" class="cx-close" data-action="console#closeAdd" title="Close (Esc)" aria-label="Close">&#10005;</button>
+    </div>
+  </div>
+
+  <%# First run: Service → Preview → Live → Library. %>
+  <div class="cx-tour" data-controller="console-tour" data-console-tour-target="layer" hidden role="dialog" aria-modal="true" aria-label="How the console works">
+    <div class="cx-tour-spot" data-console-tour-target="spot"></div>
+    <div class="cx-tour-card" data-console-tour-target="card">
+      <div class="cx-tour-step" data-console-tour-target="count"></div>
+      <h2 class="cx-tour-title" data-console-tour-target="title"></h2>
+      <p class="cx-tour-text" data-console-tour-target="text"></p>
+      <div class="cx-tour-actions">
+        <button type="button" class="cx-tour-skip" data-action="console-tour#finish">Skip</button>
+        <button type="button" class="cx-tour-back" data-console-tour-target="back" data-action="console-tour#back">Back</button>
+        <button type="button" class="cx-tour-next" data-console-tour-target="next" data-action="console-tour#next">Next</button>
+      </div>
+    </div>
+    <template data-console-tour-target="steps">
+      <div data-region="service" data-title="1 · The service"
+           data-text="Everything for today, in order — scriptures, songs, thoughts, pictures. Click an item to look at it in Preview. Add more with the buttons at the bottom; drag the ⠿ grip to reorder."></div>
+      <div data-region="preview" data-title="2 · Preview — only you see this"
+           data-text="Check what you picked here first. Nothing changes on the big screen until you press Go live (or L)."></div>
+      <div data-region="live" data-title="3 · Live — what the room sees"
+           data-text="This is the big screen right now. Use Next and Prev (or the arrow keys), or click a line below it. Black hides everything for a moment."></div>
+      <div data-region="library" data-title="4 · The library"
+           data-text="Find things here. Type a reference like John 3:16 — the whole chapter lists: click to preview, double-click to go live, + to add to the service. Songs has the song bank."></div>
+    </template>
+  </div>
+</div>

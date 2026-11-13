@@ -143,6 +143,7 @@ class OfflineStartPresentTest < ApplicationSystemTestCase
 
   # Tap (the block) → preach mode with the Go box → Project → "john 3 16" ↵.
   def present_john_316
+    prefer_focus_view # these timings are for the full-screen slide (Focus view)
     t0 = now
     yield
     assert_selector ".ps-root.is-preaching .ps-preach-jump input:focus", wait: 5

@@ -123,7 +123,9 @@ export default class extends Controller {
       this._onResize = () => {
         clearTimeout(this._resizeTimer)
         this._resizeTimer = setTimeout(() => {
-          if (this.element.classList.contains("is-preaching")) this._autoFit()
+          if (!this.element.classList.contains("is-preaching")) return
+          this._autoFit()
+          if (this._slide) this._paintSlide() // the console ⇄ focus switch resizes the slide too
         }, 120)
       }
       window.addEventListener("resize", this._onResize)
@@ -1254,7 +1256,8 @@ export default class extends Controller {
     if (this._slideGrows()) {
       // The projector: the stanza as big as the screen allows (lib/fit_text).
       const scale = parseFloat(getComputedStyle(this.element).getPropertyValue("--ps-out-scale")) || this._screen?.scale || 1
-      const fit = { min: AUTOFIT_MIN_PX, max: screenCap(window.innerWidth, window.innerHeight, scale, 0.1) }
+      const { width, height } = this._screenSize()
+      const fit = { min: this._minFontPx(), max: screenCap(width, height, scale, 0.1) }
       // Scripture sets and seminar slides wrap as prose.
       if (this._slide?.rich) { fitElement(layer, [ stanza ], fit); return }
       // One lyric line per screen line, unless wrapping makes it much bigger.
@@ -1680,6 +1683,25 @@ export default class extends Controller {
     else if (detail.action === "home") this.goAnchor()
     else if (detail.action === "blank") this.toggleBlank()
     else if (detail.action === "chase" && detail.value) this._chase(detail.value, { silent: true })
+    else if (detail.action === "verse") this._goToVerse(Number(detail.value))
+    else if (detail.action === "slide") this._goToSlide(Number(detail.value))
+  }
+
+  // The console's live list: a verse of the chapter on screen, or a slide of
+  // the song on screen, straight up (no reload, no history entry).
+  _goToVerse(num) {
+    if (this._slide || !Number.isFinite(num)) return
+    const pane = this.element.querySelector(".ps-pane.is-presented")
+    const verses = this._isSplit() ? Array.from(pane?.querySelectorAll(".ps-verse") || []) : this._primaryVerses()
+    const idx = verses.findIndex(v => parseInt(v.dataset.verseNum, 10) === num)
+    if (idx >= 0) this._transition(() => this._setCurrentIndex(idx))
+  }
+
+  _goToSlide(index) {
+    if (!this._slide || !Number.isFinite(index)) return
+    if (index < 0 || index >= this._slide.stanzas.length || index === this._slide.index) return
+    this._slide.index = index
+    this._paintSlide(true)
   }
 
   // ----- output screen preferences (theme + text scale) -----
@@ -2362,14 +2384,32 @@ export default class extends Controller {
   _fitGrows() {
     const c = this.element.classList
     if (!c.contains("is-preaching") || c.contains("is-stage") || this._slide) return false
-    return c.contains("is-output") || !c.contains("is-projecting")
+    // The console's Live miniature is a true small copy of the projection.
+    return c.contains("is-output") || c.contains("is-console") || !c.contains("is-projecting")
+  }
+
+  // The size the projection is fitted to: this window, or in the operator
+  // console the Live miniature (so a short verse fills it the way it fills
+  // the projector, not more).
+  _screenSize() {
+    if (this.element.classList.contains("is-console")) {
+      const box = this.element.querySelector(".ps-workspace")?.getBoundingClientRect()
+      if (box?.width) return { width: box.width, height: box.height }
+    }
+    return { width: window.innerWidth, height: window.innerHeight }
+  }
+
+  // The smallest the words may get: a long verse still fits the console's
+  // miniature, which is a quarter of a projector's size.
+  _minFontPx() {
+    return this.element.classList.contains("is-console") ? 7 : AUTOFIT_MIN_PX
   }
 
   // Songs and thoughts grow the same way, on the same screens.
   _slideGrows() {
     const c = this.element.classList
     if (c.contains("is-stage")) return false
-    return c.contains("is-output") || !c.contains("is-projecting")
+    return c.contains("is-output") || c.contains("is-console") || !c.contains("is-projecting")
   }
 
   _fitToScreen(container, currents) {
@@ -2378,8 +2418,9 @@ export default class extends Controller {
     const scale = this.element.classList.contains("is-output")
       ? parseFloat(getComputedStyle(this.element).getPropertyValue("--ps-out-scale")) || 1
       : this._screen?.scale || 1
-    const cap = Math.min(window.innerHeight * 0.11, window.innerWidth * 0.07) * scale
-    let lo = AUTOFIT_MIN_PX
+    const { width, height } = this._screenSize()
+    const cap = Math.min(height * 0.11, width * 0.07) * scale
+    let lo = this._minFontPx()
     let hi = Math.max(lo, cap)
     set(hi)
     if (fits()) return

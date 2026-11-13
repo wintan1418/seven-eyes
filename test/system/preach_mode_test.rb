@@ -112,6 +112,7 @@ class PreachModeTest < ApplicationSystemTestCase
     find(".ui-more-sheet button[title='Focus this pane (presentation mode)']").click
     assert_selector ".ps-root.is-presenting .ps-pane.is-presented"
     assert_no_selector ".ui-appbar", visible: true
+    prefer_focus_view
     find(".ps-preach-enter").click
     assert_selector ".ps-root.is-preaching"
     assert_selector "[data-preach-counter]", text: /verse 16/i
@@ -126,6 +127,7 @@ class PreachModeTest < ApplicationSystemTestCase
     click_on "Read"
     assert_selector ".ps-pane .ps-verse"
     # The app bar's Preach button goes straight from reading to preaching.
+    prefer_focus_view # these tests drive the full-screen slide (Focus view)
     find(".ui-appbar button[data-action~='presentation#start']").click
     assert_selector ".ps-root.is-preaching"
   end
