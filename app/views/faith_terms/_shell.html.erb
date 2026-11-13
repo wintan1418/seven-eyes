@@ -1,0 +1,23 @@
+<%# The glossary's two panes. From 1024px: the side pane (search, A–Z, every
+    term) on the left, sticky with its own scroll, and the term beside it in the
+    "ft-content" Turbo Frame — choosing a term swaps only the frame, so the side
+    pane keeps its place. On a phone the side pane is the /faith list and the
+    term page shows the term alone (CSS, keyed on what the frame holds).
+    A frame request (Turbo fetching just the frame) skips the chrome.
+    locals: letters (nil on a frame request), current (the open term or nil) %>
+<div class="ps-root ui-more-page ft-page" data-controller="faith-pane"
+     data-action="turbo:frame-load->faith-pane#loaded">
+  <% unless turbo_frame_request? %>
+    <%= render "studies/app_bar", title: "Glossary" %>
+    <%= render "studies/menu_sheet" %>
+  <% end %>
+
+  <div class="ft-shell">
+    <% if letters %>
+      <%= render "faith_terms/side", letters:, current: %>
+    <% end %>
+    <turbo-frame id="ft-content" class="ft-content" target="_top" data-turbo-action="advance">
+      <%= yield %>
+    </turbo-frame>
+  </div>
+</div>

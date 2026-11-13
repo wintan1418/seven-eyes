@@ -148,6 +148,9 @@ application.register("faith-card", FaithCardController)
 import GlossaryFilterController from "./glossary_filter_controller"
 application.register("glossary-filter", GlossaryFilterController)
 
+import FaithPaneController from "./faith_pane_controller"
+application.register("faith-pane", FaithPaneController)
+
 import ShareController from "./share_controller"
 application.register("share", ShareController)
 

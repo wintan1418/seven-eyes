@@ -1,42 +1,43 @@
-<% content_for :title, "Glossary of the Faith · BiblioRata" %>
+<% title = "Glossary of the Faith · BiblioRata" %>
+<% content_for :title, title %>
 <% content_for :head do %>
   <meta name="description" content="Plain-English definitions of the great words of the Christian faith — grace, faith, salvation, redemption and more — with their Greek and Hebrew roots and key verses.">
 <% end %>
-<%# The Glossary of the Faith: every visible term A–Z, filtered as you type (glossary-filter). %>
-<div class="ps-root ui-more-page ft-page" data-controller="glossary-filter">
-  <%= render "studies/app_bar", title: "Glossary" %>
-  <%= render "studies/menu_sheet" %>
+<%# /faith: the side pane lists every term; beside it, a welcome with art,
+    today's word and a few places to begin. On a phone: the welcome, then the list. %>
+<%= render layout: "faith_terms/shell", locals: { letters: @letters, current: nil } do %>
+  <div class="ft-view ft-intro" data-title="<%= title %>" data-path="<%= faith_terms_path %>">
+    <% art = FaithArt.intro %>
+    <section class="ft-welcome" aria-labelledby="ft-welcome-title">
+      <%= faith_art_picture(art, sizes: "(min-width: 1024px) 60vw, 100vw", img_class: "ft-welcome-img", loading: "eager") %>
+      <div class="ft-welcome-text">
+        <span class="ft-kicker">Glossary of the Faith</span>
+        <h1 id="ft-welcome-title">The words of the faith, in plain English</h1>
+        <p>Grace, faith, redemption, righteousness &mdash; what they mean, where they come from in the Greek and Hebrew, and where to read them in the Bible.</p>
+      </div>
+      <%= link_to art.credit, credits_path(anchor: "art"), class: "ft-art-credit" %>
+    </section>
 
-  <main class="ft-main">
-    <header class="ft-head">
-      <span class="ui-label">Glossary of the Faith</span>
-      <h1>The words of the faith, in plain English</h1>
-      <p>Grace, faith, redemption, righteousness &mdash; what they mean, where they come from in the Greek and Hebrew, and where to read them in the Bible.</p>
-    </header>
+    <% if @word %>
+      <section class="ft-today" aria-labelledby="ft-today-title">
+        <span class="ui-label">Word of the day</span>
+        <h2 id="ft-today-title"><%= link_to @word.name, faith_term_path(@word), data: { turbo_frame: "ft-content" } %></h2>
+        <%= render "faith_terms/draft_badge", term: @word %>
+        <% if @word_root %><p class="ft-today-root"><%= render "faith_terms/root_line", entry: @word_root %></p><% end %>
+        <p class="ft-today-def"><%= @word.short_definition %></p>
+        <%= link_to faith_term_path(@word), class: "ui-btn is-sm is-accent", data: { turbo_frame: "ft-content" } do %>Go deeper <%= icon(:chevron_right) %><% end %>
+      </section>
+    <% end %>
 
-    <div class="ft-search">
-      <label for="ft-search-input" class="sr-only">Search the glossary</label>
-      <%= icon(:search) %>
-      <input type="search" id="ft-search-input" class="ft-search-input" placeholder="Search — grace, born again, covenant…"
-             autocomplete="off" spellcheck="false" enterkeyhint="search"
-             data-glossary-filter-target="input" data-action="input->glossary-filter#filter">
-    </div>
-
-    <nav class="ft-az" aria-label="Jump to a letter">
-      <% @letters.each_key do |letter| %>
-        <a href="#ft-letter-<%= letter %>" data-glossary-filter-target="jump" data-letter="<%= letter %>"><%= letter %></a>
-      <% end %>
-    </nav>
-
-    <% @letters.each do |letter, terms| %>
-      <section class="ft-letter" id="ft-letter-<%= letter %>" data-glossary-filter-target="group" data-letter="<%= letter %>">
-        <h2 class="ft-letter-head"><%= letter %></h2>
-        <ul class="ft-list">
-          <% terms.each do |term| %>
-            <li data-glossary-filter-target="item" data-search="<%= term.search_text %>">
-              <%= link_to faith_term_path(term), class: "ft-item" do %>
-                <span class="ft-item-name"><%= term.name %><%= render "faith_terms/draft_badge", term: term %></span>
-                <span class="ft-item-def"><%= term.short_definition %></span>
+    <% if @starters.any? %>
+      <section class="ft-starters" aria-labelledby="ft-starters-title">
+        <h2 id="ft-starters-title">Where to begin</h2>
+        <ul>
+          <% @starters.each do |term| %>
+            <li>
+              <%= link_to faith_term_path(term), class: "ft-starter", data: { turbo_frame: "ft-content" } do %>
+                <span class="ft-starter-name"><%= term.name %></span>
+                <span class="ft-starter-def"><%= term.short_definition.truncate(90, separator: " ") %></span>
               <% end %>
             </li>
           <% end %>
@@ -44,11 +45,9 @@
       </section>
     <% end %>
 
-    <p class="ft-empty" hidden data-glossary-filter-target="empty">No term matches that yet. Try another word.</p>
-
     <footer class="ft-foot">
       Definitions are written for this app and reviewed by a pastor. Scripture is quoted from the King James Version;
-      root words from Strong&rsquo;s concordance. <%= link_to "Sources & credits", credits_path %>
+      root words from Strong&rsquo;s concordance; art from public-domain engravings. <%= link_to "Sources & credits", credits_path %>
     </footer>
-  </main>
-</div>
+  </div>
+<% end %>

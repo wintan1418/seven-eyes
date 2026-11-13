@@ -69,6 +69,22 @@
         </p>
       </section>
 
+      <section class="mb-6" id="art">
+        <h2 class="mb-2 font-display text-xs uppercase tracking-[0.22em] text-rubric">Bible art</h2>
+        <p class="mb-3 text-sm text-sepia">
+          The pictures in the Glossary of the Faith are public-domain engravings, served from our own site.
+          Each is marked public domain on its Wikimedia Commons page.
+        </p>
+        <ul class="space-y-2 text-sm">
+          <% FaithArt.all.each do |art| %>
+            <li>
+              <strong><%= art.title %></strong> &mdash; <%= art.artist %>, <%= art.year %>.
+              <%= art.licence %>. <a href="<%= art.commons_url %>" rel="noopener">Wikimedia Commons</a>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+
       <section class="mb-2">
         <h2 class="mb-2 font-display text-xs uppercase tracking-[0.22em] text-rubric">Commentary</h2>
         <p class="text-sm">

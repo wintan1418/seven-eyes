@@ -1,9 +1,13 @@
 <%# Home: today's word from the Glossary of the Faith. locals: term, passages
     (KeyPassages, 2–3), root (LexiconEntry or nil), date. Rendered only when a
     term is visible, so the public never sees an empty or draft card.
-    "Not today" hides it until tomorrow on this device (faith-card controller). %>
+    "Not today" hides it until tomorrow on this device (faith-card controller).
+    The term's Bible art sits faintly behind the words, fading out to the left. %>
 <section class="hm-card ft-card" aria-labelledby="ft-card-title"
          data-controller="faith-card" data-faith-card-date-value="<%= date.iso8601 %>">
+  <div class="ft-card-art" aria-hidden="true">
+    <%= faith_art_picture(FaithArt.for(term), sizes: "(min-width: 768px) 560px, 70vw") %>
+  </div>
   <header class="ft-card-head">
     <span class="ui-label">Word of the day<span class="ft-card-label-more"> &middot; Glossary of the Faith</span></span>
     <button type="button" class="ui-iconbtn is-sm ft-card-dismiss" data-action="faith-card#dismiss"
