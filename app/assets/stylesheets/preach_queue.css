@@ -114,7 +114,7 @@
 .ps-root.is-preaching .ps-setlist-form .song-flow[data-tone="hint"] { display: none; }
 .ps-setlist-form .song-flow .chip {
   display: inline-block; min-width: 1.9em; padding: 0 5px; text-align: center; border-radius: 3px;
-  background: var(--vellum-2); color: var(--ink); font: 700 10.5px/1.7 Inter, system-ui, sans-serif;
+  background: rgba(138, 116, 68, 0.16); color: var(--ink); font: 700 10.5px/1.7 Inter, system-ui, sans-serif;
 }
 .ps-setlist-form .song-flow .chip[title^="Chorus"] { background: rgba(138, 36, 24, 0.14); color: var(--rubric-deep); }
 .ps-setlist-form.kind-song .song-note:not([hidden]) { display: block; font: 12px Inter, system-ui, sans-serif; color: #2f6b2f; }

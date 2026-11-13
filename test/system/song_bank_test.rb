@@ -104,6 +104,7 @@ class SongBankTest < ApplicationSystemTestCase
     find(".ps-setlist-form .order-field").set("V1 C V9")
     assert_selector ".ps-setlist-form .song-flow[data-tone='error']", text: "not in this song: v9"
     find(".ps-setlist-form .order-field").set("V1 C V2 C B C")
+    find(".ps-setlist-panel").execute_script("this.scrollTop = this.scrollHeight")
     shot "song-editor"
 
     click_on "Save to my songs"
