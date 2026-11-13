@@ -224,3 +224,6 @@ application.register("reveal", RevealController)
 
 import FaithRewriterController from "./faith_rewriter_controller"
 application.register("faith-rewriter", FaithRewriterController)
+
+import GlossarySliderController from "./glossary_slider_controller"
+application.register("glossary-slider", GlossarySliderController)

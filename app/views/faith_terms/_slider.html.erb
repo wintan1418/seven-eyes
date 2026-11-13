@@ -1,0 +1,50 @@
+<%# Phones: the Glossary of the Faith as a row of picture cards you swipe
+    through (today's word first). Each card opens its word. Laptops keep the
+    single "Word of the day" card instead (CSS). locals: terms, roots
+    ({term.id => LexiconEntry}), total (all visible words). %>
+<section class="hm-glossary" aria-labelledby="hm-glossary-title"
+         data-controller="glossary-slider" data-glossary-slider-interval-value="5000">
+  <div class="hm-glossary-head">
+    <h2 class="ui-label" id="hm-glossary-title">Glossary of the Faith</h2>
+    <%= link_to "All #{total}", faith_terms_path, class: "hm-glossary-all" %>
+  </div>
+  <div class="hm-glossary-track" data-glossary-slider-target="track" tabindex="0"
+       aria-roledescription="carousel" aria-label="Words of the faith — swipe to see more">
+    <% terms.each_with_index do |term, i| %>
+      <% root = roots[term.id] %>
+      <%= link_to faith_term_path(term), class: "hm-gl-slide", data: { glossary_slider_target: "slide" },
+            aria: { roledescription: "slide", label: "#{i + 1} of #{terms.size}: #{term.name}" } do %>
+        <span class="hm-gl-art" aria-hidden="true">
+          <%= faith_art_picture(FaithArt.for(term), sizes: "85vw", loading: i.zero? ? "eager" : "lazy") %>
+        </span>
+        <span class="hm-gl-text">
+          <span class="hm-gl-label"><%= i.zero? ? "Word of the day" : "Glossary of the Faith" %></span>
+          <% if term.draft? %><span class="hm-gl-draft">Draft</span><% end %>
+          <span class="hm-gl-term"><%= term.name %></span>
+          <% if root %>
+            <span class="hm-gl-root">
+              <span lang="<%= root.language == "hebrew" ? "he" : "grc" %>"><%= root.lemma.presence || root.strongs %></span>
+              <% if root.translit.present? %><i><%= root.translit %></i><% end %>
+            </span>
+          <% end %>
+          <span class="hm-gl-def"><%= term.short_definition %></span>
+          <span class="hm-gl-open">Open <%= icon(:chevron_right) %></span>
+        </span>
+      <% end %>
+    <% end %>
+    <%= link_to faith_terms_path, class: "hm-gl-slide is-more", data: { glossary_slider_target: "slide" } do %>
+      <span class="hm-gl-text">
+        <span class="hm-gl-label">Glossary of the Faith</span>
+        <span class="hm-gl-term">See all <%= total %> words</span>
+        <span class="hm-gl-def">What each word means, where it comes from in the Greek and Hebrew, and where to read it in the Bible.</span>
+        <span class="hm-gl-open">Open the glossary <%= icon(:chevron_right) %></span>
+      </span>
+    <% end %>
+  </div>
+  <div class="hm-glossary-dots" aria-hidden="true">
+    <% (terms.size + 1).times do |i| %>
+      <button type="button" tabindex="-1" class="hm-gl-dot<%= ' is-on' if i.zero? %>"
+              data-glossary-slider-target="dot" data-action="glossary-slider#go" data-index="<%= i %>"></button>
+    <% end %>
+  </div>
+</section>

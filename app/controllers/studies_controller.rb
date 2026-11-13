@@ -274,6 +274,21 @@ class StudiesController < ApplicationController
 
     @faith_passages = KeyPassages.call(@faith_term.key_references.first(FAITH_CARD_VERSES))
     @faith_root = @faith_term.root_entries.first
+    set_faith_slides
+  end
+
+  # Phones: a slider of glossary words on the home page, starting with
+  # today's word and carrying on in the same order the daily word walks.
+  FAITH_SLIDES = 12
+
+  def set_faith_slides
+    terms = FaithTerm.visible_to(current_user).in_order.to_a
+    start = terms.index(@faith_term) || 0
+    @faith_slides = terms.rotate(start).first(FAITH_SLIDES)
+    strongs = @faith_slides.filter_map { |t| t.root_strongs.first }
+    lexicon = LexiconEntry.where(strongs:).index_by(&:strongs)
+    @faith_slide_roots = @faith_slides.to_h { |t| [ t.id, lexicon[t.root_strongs.first] ] }
+    @faith_total = terms.size
   end
 
   # The highlight popover sends every verse the selection touched (verse_ids),
