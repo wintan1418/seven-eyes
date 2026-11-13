@@ -22,6 +22,7 @@
       <div class="hm-grid">
         <% if @faith_term %>
           <%= render "faith_terms/card", term: @faith_term, passages: @faith_passages, root: @faith_root, date: @faith_date %>
+          <%= render "faith_terms/slider", terms: @faith_slides, roots: @faith_slide_roots, total: @faith_total %>
         <% end %>
 
         <%# One tap to project, internet or not: Quick Present is kept ready on this device (lib/offline/ready.js). %>

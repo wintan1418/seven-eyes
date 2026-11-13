@@ -396,3 +396,56 @@
 .ft-review-grid > div { display: flex; flex-direction: column; gap: 6px; }
 .ft-review-submit { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
 .ft-review-errors { margin: 0 0 6px; padding: 10px 14px 10px 28px; border: 1px solid var(--rubric); color: var(--rubric); }
+
+/* ---- Home: the glossary slider (phones) ----
+   Replaces the single Word of the day card under 640px; laptops keep the card. */
+.hm-glossary { display: none; }
+@media (max-width: 639px) {
+  .hm-grid > .ft-card { display: none; }
+  .hm-glossary { display: grid; gap: 10px; grid-column: 1 / -1; min-width: 0; }
+}
+.hm-glossary-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.hm-glossary-head .ui-label { margin: 0; }
+.hm-glossary-all { font: 600 13px var(--ui-font); color: var(--ui-accent); text-decoration: none; }
+.hm-glossary-track {
+  position: relative; display: flex; gap: 12px; overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scrollbar-width: none;
+  margin: 0 -20px; padding: 2px 20px 4px; scroll-padding-inline: 20px;
+}
+.hm-glossary-track::-webkit-scrollbar { display: none; }
+.hm-glossary-track:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; border-radius: 22px; }
+.hm-gl-slide {
+  position: relative; flex: 0 0 86%; min-height: 300px; display: flex; align-items: flex-end;
+  scroll-snap-align: start; border-radius: 22px; overflow: hidden; isolation: isolate; text-decoration: none;
+  color: #fff8ea; background: #2b1f15; box-shadow: 0 6px 18px rgba(30, 20, 10, 0.18);
+}
+.hm-gl-slide:focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 2px; }
+.hm-gl-art { position: absolute; inset: 0; z-index: -2; }
+.hm-gl-art .ft-art, .hm-gl-art img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.hm-gl-slide::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(180deg, rgba(20, 13, 7, 0.15) 0%, rgba(20, 13, 7, 0.55) 45%, rgba(20, 13, 7, 0.92) 100%);
+}
+.hm-gl-text { display: grid; gap: 6px; padding: 20px 18px 18px; width: 100%; }
+.hm-gl-label { font: 600 11px/1.2 var(--ui-font); letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255, 238, 205, 0.85); }
+.hm-gl-draft { justify-self: start; font: 600 10px/1 var(--ui-font); letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 4px 7px; border-radius: 999px; background: rgba(255, 210, 120, 0.25); color: #ffe2a8; }
+.hm-gl-term { font: 600 32px/1.05 var(--reader-font); letter-spacing: -0.01em; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45); }
+.hm-gl-root { display: flex; gap: 8px; align-items: baseline; font: 400 17px/1.2 var(--reader-font); color: #ffe7bd; }
+.hm-gl-root i { font-style: italic; opacity: 0.9; }
+.hm-gl-def {
+  font: 400 14.5px/1.45 var(--ui-font); color: rgba(255, 248, 234, 0.92);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.hm-gl-open { display: inline-flex; align-items: center; gap: 2px; font: 600 13px var(--ui-font); color: #ffd58a; margin-top: 2px; }
+.hm-gl-open svg { width: 16px; height: 16px; }
+.hm-gl-slide.is-more { background: var(--ui-surface-2, #efe4cf); color: var(--ui-fg); border: 1px solid var(--ui-border); box-shadow: none; }
+.hm-gl-slide.is-more::before { display: none; }
+.hm-gl-slide.is-more .hm-gl-label { color: var(--ui-fg-subtle); }
+.hm-gl-slide.is-more .hm-gl-term { font-size: 28px; text-shadow: none; }
+.hm-gl-slide.is-more .hm-gl-def { color: var(--ui-fg-muted); }
+.hm-gl-slide.is-more .hm-gl-open { color: var(--ui-accent); }
+.hm-glossary-dots { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.hm-gl-dot { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 999px; background: var(--ui-border); cursor: pointer; transition: width 0.2s, background 0.2s; }
+.hm-gl-dot.is-on { width: 20px; background: var(--ui-accent); }
+@media (prefers-reduced-motion: reduce) { .hm-gl-dot { transition: none; } }
