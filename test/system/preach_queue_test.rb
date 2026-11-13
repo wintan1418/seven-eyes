@@ -205,7 +205,11 @@ class PreachQueueTest < ApplicationSystemTestCase
     page.send_keys(:right)
     within_window(projector) { assert_selector ".ps-verse.is-preach-current", text: "KJV John 11:36", wait: 3 }
 
-    # Mid-service edits — the projector must not move.
+    # Mid-service edits — the projector must not move. (Count from when the
+    # verse's fade has finished: its last class change lands after the new
+    # verse is already marked current.)
+    within_window(projector) { assert_no_selector ".ps-verse-body.is-changing" }
+    sleep 0.3
     changes = projector_changes(projector)
     page.send_keys("q", :down) # the next item: Romans 8:28
     assert_selector ".ps-setlist-item.is-selected", text: "Romans 8:28"
