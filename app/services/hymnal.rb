@@ -1,125 +1,39 @@
-# A small starter set of clearly PUBLIC-DOMAIN hymns the pastor can drop into
-# the preach queue without typing the lyrics out each Sunday.
+# The built-in hymnal: clearly PUBLIC-DOMAIN hymns the pastor can drop into the
+# preach queue without typing the lyrics out each Sunday. The words live in
+# config/hymnal.yml (title, author, year, body); this module loads them once.
 #
 # Copyright caution (same rule as our translations): only public-domain texts
-# ship here. Every hymn below has a pre-1900 text. Never add hymns still under
-# copyright — e.g. "How Great Thou Art" or "Great Is Thy Faithfulness" (1923,
-# renewed). When in doubt, leave it out and let the pastor paste it themselves.
+# ship here. Every hymn's text — and, for a translated hymn, its English
+# translation — was first published before 1929 by an author who died more than
+# 70 years ago, so it is free to project in Nigeria as well as the US and UK.
+# Never add hymns still under copyright — e.g. "How Great Thou Art" (Hine's
+# translation), "Great Is Thy Faithfulness" (1923, renewed), "In Christ Alone",
+# "The Old Rugged Cross" (Bennard d. 1958) or any modern worship song. When in
+# doubt, leave it out and let the pastor paste it themselves.
+# test/services/hymnal_test.rb checks every entry against BLOCKLIST.
 #
-# Blank lines separate stanzas, matching how SetlistItem splits a song body into
-# stanza slides.
+# Bodies use the song sheet format (SongSheet): "[Verse 1]" / "[Chorus]" labels,
+# blank lines between stanzas, a refrain written once (it repeats after every
+# verse when projected).
 module Hymnal
-  HYMNS = [
-    {
-      title: "Amazing Grace",
-      body: <<~LYRICS.strip
-        Amazing grace! how sweet the sound,
-        That saved a wretch like me!
-        I once was lost, but now am found,
-        Was blind, but now I see.
+  SOURCE = Rails.root.join("config/hymnal.yml")
 
-        'Twas grace that taught my heart to fear,
-        And grace my fears relieved;
-        How precious did that grace appear
-        The hour I first believed!
-
-        Through many dangers, toils and snares,
-        I have already come;
-        'Tis grace hath brought me safe thus far,
-        And grace will lead me home.
-      LYRICS
-    },
-    {
-      title: "Holy, Holy, Holy",
-      body: <<~LYRICS.strip
-        Holy, holy, holy! Lord God Almighty!
-        Early in the morning our song shall rise to thee;
-        Holy, holy, holy! merciful and mighty,
-        God in three Persons, blessed Trinity!
-
-        Holy, holy, holy! all the saints adore thee,
-        Casting down their golden crowns around the glassy sea;
-        Cherubim and seraphim falling down before thee,
-        Which wert, and art, and evermore shalt be.
-      LYRICS
-    },
-    {
-      title: "It Is Well with My Soul",
-      body: <<~LYRICS.strip
-        When peace, like a river, attendeth my way,
-        When sorrows like sea billows roll;
-        Whatever my lot, thou hast taught me to say,
-        It is well, it is well with my soul.
-
-        It is well with my soul,
-        It is well, it is well with my soul.
-
-        Though Satan should buffet, though trials should come,
-        Let this blest assurance control,
-        That Christ has regarded my helpless estate,
-        And hath shed his own blood for my soul.
-      LYRICS
-    },
-    {
-      title: "Come, Thou Fount of Every Blessing",
-      body: <<~LYRICS.strip
-        Come, thou Fount of every blessing,
-        Tune my heart to sing thy grace;
-        Streams of mercy, never ceasing,
-        Call for songs of loudest praise.
-
-        Here I raise mine Ebenezer;
-        Hither by thy help I'm come;
-        And I hope, by thy good pleasure,
-        Safely to arrive at home.
-      LYRICS
-    },
-    {
-      title: "Crown Him with Many Crowns",
-      body: <<~LYRICS.strip
-        Crown him with many crowns,
-        The Lamb upon his throne;
-        Hark! how the heavenly anthem drowns
-        All music but its own:
-        Awake, my soul, and sing
-        Of him who died for thee,
-        And hail him as thy matchless King
-        Through all eternity.
-      LYRICS
-    },
-    {
-      title: "Rock of Ages",
-      body: <<~LYRICS.strip
-        Rock of Ages, cleft for me,
-        Let me hide myself in thee;
-        Let the water and the blood,
-        From thy wounded side which flowed,
-        Be of sin the double cure,
-        Save from wrath and make me pure.
-      LYRICS
-    },
-    {
-      title: "Great Is the Lord",
-      body: <<~LYRICS.strip
-        O worship the King, all glorious above,
-        O gratefully sing his power and his love;
-        Our Shield and Defender, the Ancient of Days,
-        Pavilioned in splendour, and girded with praise.
-      LYRICS
-    },
-    {
-      title: "Be Thou My Vision",
-      body: <<~LYRICS.strip
-        Be thou my vision, O Lord of my heart;
-        Naught be all else to me, save that thou art;
-        Thou my best thought, by day or by night,
-        Waking or sleeping, thy presence my light.
-
-        Riches I heed not, nor man's empty praise,
-        Thou mine inheritance, now and always;
-        Thou and thou only, first in my heart,
-        High King of heaven, my treasure thou art.
-      LYRICS
-    }
+  # Known copyrighted songs that must never be bundled (lower-case titles).
+  BLOCKLIST = [
+    "how great thou art", "great is thy faithfulness", "in christ alone", "the old rugged cross",
+    "because he lives", "amazing grace (my chains are gone)", "10,000 reasons", "10,000 reasons (bless the lord)",
+    "turn your eyes upon jesus", "i'd rather have jesus", "victory in jesus", "he lives",
+    "wonderful grace of jesus", "living for jesus", "way maker", "oceans", "oceans (where feet may fail)",
+    "shout to the lord", "blessed be your name", "here i am to worship", "majesty", "morning has broken",
+    "give thanks", "lord i lift your name on high", "how deep the father's love for us", "mighty to save",
+    "cornerstone", "what a beautiful name", "goodness of god", "build my life", "reckless love",
+    "how great is our god", "open the eyes of my heart", "the heart of worship", "jesus, lover of my soul (it's all about you)",
+    "shine, jesus, shine", "as the deer", "draw me close", "you raise me up",
+    "great are you lord", "this is amazing grace", "o praise the name (anástasis)",
+    "king of kings", "graves into gardens", "battle belongs", "the blessing", "holy forever", "firm foundation"
   ].freeze
+
+  HYMNS = YAML.safe_load_file(SOURCE).map do |h|
+    { title: h.fetch("title"), body: h.fetch("body").strip, author: h["author"], year: h["year"] }.compact.freeze
+  end.freeze
 end
