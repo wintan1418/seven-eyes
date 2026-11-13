@@ -14,7 +14,7 @@
     <% if item.picture? %>
       <img class="thumb" src="<%= item.media_url %>" alt="" loading="lazy">
     <% else %>
-      <span class="icon"><%= { "scripture" => "§", "song" => "♫", "scripture_set" => "⧉", "presentation" => "▤", "seminar" => "▦" }.fetch(item.kind, "❦") %></span>
+      <span class="icon"><%= { "scripture" => "§", "song" => "♫", "scripture_set" => "⧉", "presentation" => "▤", "seminar" => "▦", "word" => "ℵ" }.fetch(item.kind, "❦") %></span>
     <% end %>
     <span class="lbl"><%= item.label %></span>
     <% unless item.scripture? || item.picture? || item.slide_count <= 1 %>
@@ -23,7 +23,7 @@
   </button>
   <span class="sync" data-sync hidden></span>
   <span class="ops">
-    <% unless item.picture? %>
+    <% unless item.picture? || item.word? %>
       <button type="button" class="op" data-action="setlist#edit" title="Edit (E)">&#9998;</button>
     <% end %>
     <button type="button" class="op" data-action="setlist#moveUp" title="Move up (Alt+↑)">&#8593;</button>

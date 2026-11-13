@@ -88,6 +88,21 @@ class LiveSession < ApplicationRecord
   # A non-scripture moment: a song stanza or a projected thought/announcement.
   def slide? = kind == "slide"
 
+  # A root-word study pushed from preach mode, kept to known string fields of
+  # sane length (it is shown on every follower's phone). nil when not one.
+  WORD_FIELDS = { "s" => 12, "lemma" => 60, "translit" => 60, "say" => 80, "gloss" => 200, "english" => 60,
+                  "reference" => 60, "verse" => 1200, "translation" => 12, "note" => 400 }.freeze
+
+  def self.clean_word(raw)
+    raw = raw.to_unsafe_h if raw.respond_to?(:to_unsafe_h)
+    return nil unless raw.is_a?(Hash) && raw["s"].to_s.match?(/\A[GH]\d{1,5}[a-z]?\z/i)
+    WORD_FIELDS.each_with_object({}) { |(k, max), out| out[k] = raw[k].to_s[0, max] }.tap do |w|
+      w["s"] = w["s"].upcase
+      w["lang"] = w["s"].start_with?("H") ? "hebrew" : "greek"
+      w["n"] = raw["n"].to_i.clamp(0, 1_000_000)
+    end
+  end
+
   def slide_stanzas
     slide_body.to_s.split(/\n{2,}/).map(&:strip).reject(&:empty?)
   end
@@ -138,6 +153,7 @@ class LiveSession < ApplicationRecord
       { type: "state", kind: "slide",
         slide_title: slide_title, slide_body: slide_body,
         slide_image_url: slide_image_url, slide_index: slide_index.to_i,
+        slide_word: slide_word.presence,
         reference: slide_title.presence || "—" }
     else
       { type: "state", kind: "scripture",

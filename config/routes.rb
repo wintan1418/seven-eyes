@@ -105,6 +105,13 @@ Rails.application.routes.draw do
   get "/offline/highlights",   to: "offline#highlights", as: :offline_highlights, defaults: { format: :json }
   post "/offline/prepare",     to: "offline#prepare",    as: :offline_prepare, defaults: { format: :json }
 
+  # Root word projection (preach mode): Strong's words for a verse, the offline word pack, Ask Rabbi.
+  get "/root_words/pack",                   to: "root_words#pack",      as: :root_words_pack, defaults: { format: :json }
+  get "/root_words/pack/info",              to: "root_words#pack_info", as: :root_words_pack_info, defaults: { format: :json }
+  post "/root_words/explain",               to: "root_words#explain",   as: :root_words_explain, defaults: { format: :json }
+  get "/root_words/:osis/:chapter/:verse",  to: "root_words#verse",     as: :root_words_verse, defaults: { format: :json },
+                                            constraints: { osis: /[1-3]?[A-Za-z]+/, chapter: /\d+/, verse: /\d+/ }
+
   get "/verse_count",      to: "verses#count" # JSON: verses in a book+chapter (for the browser)
   get "/verse_chapter",    to: "verses#chapter" # JSON: a reference's whole chapter (queue preview)
   get "/verse_passage",    to: "verses#passage" # JSON: a reference's words in one translation (scripture slide composer)

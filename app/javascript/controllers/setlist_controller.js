@@ -405,7 +405,7 @@ export default class extends Controller {
   }
 
   _startEdit(item) {
-    if (item.kind === "picture") return
+    if (item.kind === "picture" || item.kind === "word") return // a word study is re-made from its root-word card
     const tool = { scripture_set: "scripture-set", presentation: "presentation", seminar: "seminar" }[item.kind]
     if (tool) { window.dispatchEvent(new CustomEvent("queue-tool:open", { detail: { tool, item: { ...item } } })); return }
     this.open()
@@ -805,7 +805,7 @@ export default class extends Controller {
     sync.hidden = true
 
     const ops = el("span", "ops")
-    if (item.kind !== "picture") ops.append(op("✎", "setlist#edit", "Edit (E)"))
+    if (item.kind !== "picture" && item.kind !== "word") ops.append(op("✎", "setlist#edit", "Edit (E)"))
     const up = op("↑", "setlist#moveUp", "Move up (Alt+↑)")
     up.disabled = index === 0
     const down = op("↓", "setlist#moveDown", "Move down (Alt+↓)")
@@ -916,7 +916,7 @@ function serverFields(item) {
   return fields
 }
 
-const KIND_ICONS = { scripture: "§", song: "♫", thought: "❦", scripture_set: "⧉", presentation: "▤", seminar: "▦" }
+const KIND_ICONS = { scripture: "§", song: "♫", thought: "❦", scripture_set: "⧉", presentation: "▤", seminar: "▦", word: "ℵ" }
 
 function readAutoQueue() {
   try { return localStorage.getItem(AUTO_QUEUE_KEY) !== "0" } catch { return true }

@@ -1,4 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
+import { normalizeWordStudy } from "../lib/root_words"
+import { renderPhoneWord } from "../lib/root_word_slide"
 import { createConsumer } from "@rails/actioncable"
 
 // The congregation's "follow along" page (/live/CODE). Subscribes to the live
@@ -66,6 +68,13 @@ export default class extends Controller {
   // A song stanza or projected thought: build the slide client-side from the
   // broadcast itself (no fetch). Same slide → just move the highlighted stanza.
   _renderSlide(data) {
+    const word = data.slide_word && normalizeWordStudy(data.slide_word)
+    if (word) {
+      const current = this.bodyTarget.querySelector(".rw-phone")
+      const key = JSON.stringify(word)
+      if (!current || current.dataset.key !== key) renderPhoneWord(this.bodyTarget, word, data.slide_title || "").dataset.key = key
+      return
+    }
     const title = data.slide_title || ""
     const body = data.slide_body || ""
     const image = data.slide_image_url || ""

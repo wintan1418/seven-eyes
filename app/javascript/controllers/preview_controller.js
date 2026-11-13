@@ -7,6 +7,8 @@ import { quickFetch } from "../lib/offline/network"
 import { queueKey } from "../lib/offline/setlist_state"
 import { songSlides } from "../lib/song_sheet"
 import { richPreviewNodes } from "../lib/slides/rich_slides"
+import { wordFromDetail } from "../lib/root_words"
+import { renderPreviewWord } from "../lib/root_word_slide"
 
 // Preview → Live, EasyWorship-style, on the operator screen only (never on the
 // ?output=1 projector or the ?stage=1 pulpit screen). Lives on .ps-root.
@@ -126,6 +128,12 @@ export default class extends Controller {
   // list), its section label small. Clicking a slide puts the song on screen at
   // that slide; while the song is live, the slide on screen is marked.
   _paintSlide(preview) {
+    const word = wordFromDetail(preview)
+    if (word) {
+      this.previewTextTarget.classList.remove("is-slides")
+      renderPreviewWord(this.previewTextTarget, word)
+      return
+    }
     if (preview.rich) { this._paintRich(preview); return }
     const nodes = []
     if (preview.image) {
@@ -255,7 +263,7 @@ export default class extends Controller {
     if (!state || !this.hasLiveLabelTarget) return
     if (state.slide) {
       this._live = { slide: true, label: state.slide.title || "Slide", index: state.slide.index || 0, body: state.slide.body }
-      this.liveLabelTarget.textContent = `♫ ${this._live.label}`
+      this.liveLabelTarget.textContent = `${state.slide.word ? "ℵ" : "♫"} ${this._live.label}`
     } else {
       const ref = (state.reference || "").trim()
       const p = localState().parse?.(ref)
