@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_13_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_13_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -124,6 +124,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_160000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["date"], name: "index_daily_words_on_date", unique: true
+  end
+
+  create_table "faith_terms", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.string "aliases", default: [], null: false, array: true
+    t.text "short_definition", null: false
+    t.text "new_believer"
+    t.text "explanation"
+    t.string "root_strongs", default: [], null: false, array: true
+    t.string "key_references", default: [], null: false, array: true
+    t.string "related_slugs", default: [], null: false, array: true
+    t.integer "position", default: 0, null: false
+    t.integer "status", default: 0, null: false
+    t.string "reviewed_by"
+    t.datetime "reviewed_at"
+    t.datetime "edited_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_faith_terms_on_slug", unique: true
+    t.index ["status", "position"], name: "index_faith_terms_on_status_and_position"
   end
 
   create_table "highlights", force: :cascade do |t|
@@ -527,6 +548,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_160000) do
     t.string "password_digest", null: false
     t.datetime "tour_completed_at"
     t.datetime "updated_at", null: false
+    t.boolean "reviewer", default: false, null: false
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 

@@ -15,4 +15,8 @@ class User < ApplicationRecord
             format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email" }
   validates :password, length: { minimum: 8 }, allow_nil: true
   validates :font_size, inclusion: { in: 0..4 }
+
+  # May read draft glossary terms and review them (/admin/faith): admins, and
+  # pastors flagged with `bin/rails reviewer:grant EMAIL=...`.
+  def faith_reviewer? = admin? || reviewer?
 end

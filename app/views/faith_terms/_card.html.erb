@@ -1,0 +1,32 @@
+<%# Home: today's word from the Glossary of the Faith. locals: term, passages
+    (KeyPassages, 2–3), root (LexiconEntry or nil), date. Rendered only when a
+    term is visible, so the public never sees an empty or draft card.
+    "Not today" hides it until tomorrow on this device (faith-card controller). %>
+<section class="hm-card ft-card" aria-labelledby="ft-card-title"
+         data-controller="faith-card" data-faith-card-date-value="<%= date.iso8601 %>">
+  <header class="ft-card-head">
+    <span class="ui-label">Word of the day<span class="ft-card-label-more"> &middot; Glossary of the Faith</span></span>
+    <button type="button" class="ui-iconbtn is-sm ft-card-dismiss" data-action="faith-card#dismiss"
+            aria-label="Hide until tomorrow" title="Hide until tomorrow"><%= icon(:x) %></button>
+  </header>
+  <%= render "faith_terms/draft_badge", term: term %>
+  <h2 class="ft-card-term" id="ft-card-title"><%= link_to term.name, faith_term_path(term) %></h2>
+  <% if root %><p class="ft-card-root"><%= render "faith_terms/root_line", entry: root %></p><% end %>
+  <p class="ft-card-def"><%= term.short_definition %></p>
+  <% if passages.any? %>
+    <ul class="ft-card-verses">
+      <% passages.each do |passage| %>
+        <li>
+          <%= link_to open_passage_path(passage.slug, t: passage.translation_code), class: "ft-verse-link" do %>
+            <span class="ft-verse-text"><%= truncate(passage.text, length: 150, separator: " ") %></span>
+            <span class="ft-verse-ref"><%= passage.label %></span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+  <div class="ft-card-actions">
+    <%= link_to faith_term_path(term), class: "ui-btn is-sm is-accent" do %>Go deeper <%= icon(:chevron_right) %><% end %>
+    <%= link_to "Glossary of the Faith", faith_terms_path, class: "ui-btn is-sm" %>
+  </div>
+</section>

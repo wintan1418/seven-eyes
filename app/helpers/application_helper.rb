@@ -10,6 +10,17 @@ module ApplicationHelper
   THEME_COOKIE = :ps_reader_theme
   LEGACY_COOKIE = :ps_theme
 
+  # Whether the Glossary of the Faith has anything this viewer may read: the
+  # menu links appear only then (no reviewed terms = no glossary for the public).
+  def faith_glossary_visible?
+    return @faith_glossary_visible if defined?(@faith_glossary_visible)
+    @faith_glossary_visible = FaithTerm.visible_to(authenticated? ? current_user : nil).exists?
+  end
+
+  def faith_reviewer?
+    authenticated? && current_user.faith_reviewer?
+  end
+
   # Who the data the device keeps for offline use belongs to (saved pages,
   # cached highlights, queued writes): an opaque per-user tag, or "guest".
   # When it changes the page wipes the previous reader's saved pages.

@@ -1,0 +1,185 @@
+/* Glossary of the Faith ----------------------------------------------------
+   The home card ("Word of the day"), /faith (A–Z + search) and /faith/:slug.
+   Reader tokens throughout, so it follows Vellum / Paper / Candlelight. */
+
+.ft-draft {
+  display: inline-flex; align-items: center; align-self: flex-start; gap: 6px; margin: 0 0 2px;
+  padding: 3px 10px; border: 1px dashed var(--ui-accent); border-radius: 999px;
+  background: var(--ui-accent-soft); color: var(--ui-accent); font: 600 12px var(--ui-font); white-space: nowrap;
+}
+
+/* Root word line: lemma (Greek / Hebrew) · transliteration · language + Strong's */
+.ft-root-line { display: inline-flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+.ft-lemma { font: 500 22px/1.2 "SBL Greek", "Noto Serif Hebrew", "Noto Serif", var(--reader-font); color: var(--ui-fg); }
+.ft-translit { font: italic 500 17px var(--reader-font); color: var(--ui-accent); }
+.ft-root-meta { font: 600 11px var(--ui-font); letter-spacing: .06em; text-transform: uppercase; color: var(--ui-fg-subtle); }
+
+/* Verse links (card + term page): words, then the reference */
+.ft-verse-link {
+  display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 12px;
+  color: var(--ui-fg); text-decoration: none;
+}
+.ft-verse-link:hover, .ft-verse-link:focus-visible { background: var(--ui-surface-2); }
+.ft-verse-text { font: 400 17px/1.55 var(--reader-font); }
+.ft-verse-ref { display: inline-flex; align-items: center; gap: 4px; font: 600 13px var(--ui-font); color: var(--ui-accent); }
+.ft-verse-ref svg { width: 14px; height: 14px; }
+
+/* Home card ----------------------------------------------------------------- */
+.hm-grid > .ft-card { grid-column: 1 / -1; }
+.ft-card { gap: 8px; padding: 24px 24px 20px; border-radius: 22px; border: 1px solid var(--ui-border); }
+@media (min-width: 768px) { .ft-card { padding: 28px 32px 24px; } }
+.ft-card.is-dismissed { display: none; }
+.ft-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ft-card-dismiss { margin: -6px -8px -6px 0; color: var(--ui-fg-subtle); }
+.ft-card-term { margin: 2px 0 0; font: 600 34px/1.1 var(--reader-font); letter-spacing: -0.01em; }
+@media (min-width: 768px) { .ft-card-term { font-size: 40px; } }
+.ft-card-term a { color: inherit; text-decoration: none; }
+.ft-card-term a:hover { color: var(--ui-accent); }
+.ft-card-root { margin: 0; }
+.ft-card-def { margin: 4px 0 0; max-width: 44rem; font: 400 17px/1.6 var(--ui-font); color: var(--ui-fg-muted); }
+.ft-card-verses {
+  display: grid; gap: 4px; margin: 6px -12px 0; padding: 0; list-style: none;
+}
+@media (min-width: 900px) { .ft-card-verses { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* Phones: two verses and a shorter label keep the card above the fold. */
+@media (max-width: 899px) { .ft-card-verses li:nth-child(n + 3) { display: none; } }
+@media (max-width: 559px) { .ft-card-label-more { display: none; } }
+.ft-card-verses .ft-verse-text { font-size: 16px; }
+.ft-card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.ft-card-actions .ui-btn { gap: 4px; text-decoration: none; }
+.ft-card-actions .ui-btn svg { width: 16px; height: 16px; }
+
+/* Pages (/faith, /faith/:slug) ------------------------------------------------ */
+.ft-main {
+  max-width: 44rem; margin: 0 auto; font-family: var(--ui-font); color: var(--ui-fg);
+  padding: 24px max(16px, env(safe-area-inset-right)) calc(48px + var(--tabbar-h, 0px)) max(16px, env(safe-area-inset-left));
+}
+.ft-head { margin: 12px 0 20px; text-align: center; }
+.ft-head h1 { margin: 6px 0 0; font: 600 34px/1.15 var(--reader-font); letter-spacing: -0.01em; }
+@media (min-width: 768px) { .ft-head h1 { font-size: 42px; } }
+.ft-head p { margin: 10px auto 0; max-width: 34rem; font: 400 16px/1.6 var(--ui-font); color: var(--ui-fg-muted); }
+
+.ft-search {
+  position: sticky; top: calc(var(--appbar-h) + 8px); z-index: 2;
+  display: flex; align-items: center; gap: 10px; padding: 0 16px; height: 48px;
+  border: 1px solid var(--ui-border-strong); border-radius: 999px; background: var(--ui-elevated);
+  box-shadow: var(--ui-shadow-sm); color: var(--ui-fg-subtle);
+}
+.ft-search svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.ft-search-input {
+  flex: 1 1 auto; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent;
+  font: 400 16px var(--ui-font); color: var(--ui-fg);
+}
+.ft-search:focus-within { border-color: var(--ui-accent); }
+
+.ft-az { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; margin: 16px 0 8px; }
+.ft-az a {
+  min-width: 32px; padding: 6px 4px; border-radius: 8px; text-align: center;
+  font: 600 14px var(--ui-font); color: var(--ui-accent); text-decoration: none;
+}
+.ft-az a:hover { background: var(--ui-surface); }
+.ft-az a[hidden] { display: none; }
+
+.ft-letter { scroll-margin-top: calc(var(--appbar-h) + 72px); }
+.ft-letter[hidden] { display: none; }
+.ft-letter-head {
+  margin: 22px 0 6px; padding-bottom: 4px; border-bottom: 1px solid var(--ui-border);
+  font: 600 22px var(--reader-font); color: var(--ui-accent);
+}
+.ft-list { margin: 0; padding: 0; list-style: none; }
+.ft-list li[hidden] { display: none; }
+.ft-item {
+  display: flex; flex-direction: column; gap: 4px; padding: 12px 10px; margin: 0 -10px;
+  border-radius: 12px; color: var(--ui-fg); text-decoration: none;
+}
+.ft-item:hover, .ft-item:focus-visible { background: var(--ui-surface); }
+.ft-item-name { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; font: 600 19px var(--reader-font); }
+.ft-item-name .ft-draft { margin: 0; font-size: 11px; }
+.ft-item-def { font: 400 15px/1.5 var(--ui-font); color: var(--ui-fg-muted); }
+.ft-empty { margin: 28px 0; text-align: center; color: var(--ui-fg-muted); }
+.ft-foot {
+  margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--ui-border);
+  font: 400 13px/1.7 var(--ui-font); color: var(--ui-fg-subtle); text-align: center;
+}
+.ft-foot a { color: var(--ui-accent); }
+
+/* Term page */
+.ft-crumb a {
+  display: inline-flex; align-items: center; gap: 2px; font: 600 14px var(--ui-font);
+  color: var(--ui-fg-muted); text-decoration: none;
+}
+.ft-crumb a:hover { color: var(--ui-accent); }
+.ft-crumb svg { width: 16px; height: 16px; }
+.ft-term-head { display: flex; flex-direction: column; margin: 18px 0 6px; }
+.ft-term-head h1 { margin: 4px 0 0; font: 600 44px/1.05 var(--reader-font); letter-spacing: -0.02em; }
+@media (min-width: 768px) { .ft-term-head h1 { font-size: 56px; } }
+.ft-aliases { margin: 6px 0 0; font: 400 14px var(--ui-font); color: var(--ui-fg-subtle); }
+.ft-term-def { margin: 14px 0 0; font: 400 21px/1.55 var(--reader-font); color: var(--ui-fg); }
+.ft-newbeliever {
+  margin: 22px 0 0; padding: 16px 18px; border-radius: 16px;
+  background: var(--ui-surface); border-left: 4px solid var(--ui-accent);
+}
+.ft-newbeliever p { margin: 6px 0 0; font: 400 17px/1.6 var(--ui-font); color: var(--ui-fg); }
+.ft-section { margin-top: 32px; }
+.ft-section h2 { margin: 0 0 12px; font: 700 18px var(--ui-font); letter-spacing: -0.01em; }
+.ft-explanation { margin: 0; font: 400 17px/1.75 var(--ui-font); color: var(--ui-fg-muted); }
+.ft-roots { display: grid; gap: 12px; }
+@media (min-width: 640px) { .ft-roots { grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); } }
+.ft-root {
+  display: flex; flex-direction: column; gap: 6px; padding: 16px 18px;
+  border: 1px solid var(--ui-border); border-radius: 16px; background: var(--ui-elevated);
+}
+.ft-root .ft-lemma { font-size: 28px; }
+.ft-root-say { font: 400 13px var(--ui-font); color: var(--ui-fg-subtle); }
+.ft-root-def, .ft-root-kjv, .ft-root-count { margin: 0; font: 400 14px/1.55 var(--ui-font); color: var(--ui-fg-muted); }
+.ft-root-kjv b { font-weight: 600; color: var(--ui-fg); }
+.ft-root-samples { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.ft-root-samples a {
+  display: inline-block; padding: 4px 10px; border-radius: 999px; background: var(--ui-surface);
+  font: 600 13px var(--ui-font); color: var(--ui-accent); text-decoration: none;
+}
+.ft-root-samples a:hover { background: var(--ui-surface-2); }
+.ft-hint { margin: 10px 0 0; font: 400 13px var(--ui-font); color: var(--ui-fg-subtle); }
+.ft-verses { display: grid; gap: 4px; margin: 0 -12px; padding: 0; list-style: none; }
+.ft-verses .ft-verse-link { padding: 12px; }
+.ft-related { display: flex; flex-wrap: wrap; gap: 8px; }
+.ft-related .ui-btn { text-decoration: none; }
+
+/* Review desk (/admin/faith) — on the Overseer's parchment page ---------------- */
+.ft-review .head { flex-wrap: wrap; }
+.ft-review-links { display: inline-flex; flex-wrap: wrap; gap: 16px; }
+.ft-review-flash { margin: 0 0 16px; font-style: italic; color: var(--rubric); }
+.ft-review-term { scroll-margin-top: 16px; }
+.ft-review-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.ps-admin .ft-review-top h2 { margin: 0; }
+.ft-review-top h2 a { color: inherit; text-decoration: none; }
+.ft-status {
+  padding: 2px 8px; border-radius: 999px; font: 600 9.5px "Cinzel", serif; letter-spacing: .14em;
+}
+.ft-status.is-draft { border: 1px dashed var(--rubric); color: var(--rubric); }
+.ft-status.is-reviewed { background: #3e5f2c; color: #fff8ea; }
+.ft-review-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ft-inline-form { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; }
+.ps-admin a.dw-admin-btn { display: inline-block; text-decoration: none; }
+.ps-admin .dw-admin-btn.is-primary { background: var(--rubric); color: var(--vellum-0); border-color: var(--rubric); }
+.ps-admin .dw-admin-btn.is-primary:hover { background: var(--rubric-deep, #5e1a12); }
+.ft-review-name {
+  width: 13rem; max-width: 100%; margin-top: 4px; padding: 6px 8px; border: 1px solid rgba(138, 116, 68, 0.55);
+  border-radius: 3px; background: var(--vellum-0); font: 400 15px "EB Garamond", serif; color: var(--ink);
+}
+.ft-review-meta { margin: 6px 0 0; font-size: 14px; font-style: italic; color: var(--sepia); }
+.ft-review-text { display: grid; grid-template-columns: 11rem 1fr; gap: 6px 14px; margin: 12px 0 0; font-size: 16px; line-height: 1.5; }
+.ft-review-text dt { font: 600 9.5px "Cinzel", serif; letter-spacing: .14em; text-transform: uppercase; color: var(--sepia-mute); padding-top: 4px; }
+.ft-review-text dd { margin: 0; color: var(--ink-soft); }
+@media (max-width: 640px) { .ft-review-text { grid-template-columns: 1fr; } .ft-review-text dd { margin-bottom: 6px; } }
+.ft-review-form { display: flex; flex-direction: column; gap: 6px; max-width: 54rem; }
+.ft-review-form label { margin-top: 10px; font: 600 10px "Cinzel", serif; letter-spacing: .14em; text-transform: uppercase; color: var(--sepia); }
+.ft-review-form input[type="text"], .ft-review-form textarea {
+  width: 100%; padding: 8px 10px; border: 1px solid rgba(138, 116, 68, 0.55); border-radius: 3px;
+  background: #fffaf0; font: 400 17px/1.5 "EB Garamond", serif; color: var(--ink);
+}
+.ft-review-grid { display: grid; gap: 4px 18px; }
+@media (min-width: 760px) { .ft-review-grid { grid-template-columns: 1fr 1fr; } }
+.ft-review-grid > div { display: flex; flex-direction: column; gap: 6px; }
+.ft-review-submit { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+.ft-review-errors { margin: 0 0 6px; padding: 10px 14px 10px 28px; border: 1px solid var(--rubric); color: var(--rubric); }

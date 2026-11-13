@@ -1,0 +1,641 @@
+# Glossary of the Faith — the seed text for FaithTerm (bin/rails faith_terms:seed).
+#
+# Every term is loaded as a DRAFT. Nothing here is shown to the public until a
+# pastor has read it on /admin/faith and pressed "Mark reviewed". Re-running the
+# seed never overwrites a term that has been reviewed or edited on the site; it
+# only adds missing terms and refreshes untouched drafts.
+#
+# Fields:
+#   name          the term as it is shown
+#   slug          URL (/faith/:slug); never change once published
+#   aliases       other words people search for ("born again")
+#   short         1–2 plain-English sentences (the home card)
+#   new_believer  one sentence for someone who has just come to faith
+#   explanation   a short paragraph
+#   roots         Strong's numbers (G = Greek, H = Hebrew), shown from the lexicon
+#                 (lexicon_entries); each one is tagged in at least one of the key
+#                 verses in the KJV. A number the lexicon lacks is simply not shown.
+#   verses        3–5 references, read from our own Bible text
+#   related       slugs of related terms
+#
+# Writing rules: mainstream, historic Christian belief in plain words. Where
+# Christian traditions differ (baptism, the Lord's Supper, election, the order
+# of last things) say what the Bible text says and note that believers differ.
+
+- name: Salvation
+  slug: salvation
+  aliases: [saved, save, deliverance]
+  short: God rescuing people from sin and its consequences and bringing them into new life with him. It is his gift, received by trusting in Jesus Christ.
+  new_believer: If you have put your trust in Jesus, God has rescued you — your salvation rests on what he has done, not on how well you perform.
+  explanation: >-
+    In the Old Testament the Hebrew word yeshuah means deliverance — God rescuing his people from enemies, danger and slavery.
+    The New Testament word sōtēria carries the same idea to its fullest: God saves us from sin, from its guilt and power,
+    and finally from its very presence. Salvation is not earned; it is a gift of grace received through faith in Christ,
+    who died and rose again. The Bible speaks of it as something that has happened (we have been saved), is happening
+    (we are being made new) and will be completed (we shall be saved when Christ returns).
+  roots: [G4991, H3444]
+  verses: ["Ephesians 2:8-9", "Acts 4:12", "Romans 10:9", "Titus 3:5", "Exodus 15:2"]
+  related: [grace, faith, redemption, justification]
+
+- name: Redemption
+  slug: redemption
+  aliases: [redeem, redeemer, ransom]
+  short: Being bought back and set free at a price. Jesus paid the price for our freedom with his own life.
+  new_believer: You were not cheap to God — he bought you back with the life of his own Son.
+  explanation: >-
+    To redeem is to buy back. In Israel a close relative, the kinsman-redeemer (Hebrew gā'al), could pay to free a
+    family member from debt or slavery, as Boaz did for Ruth. The New Testament uses the language of ransom and release
+    (apolytrōsis): we were slaves to sin, and Jesus gave his life as the ransom that sets us free. Redemption brings
+    forgiveness now, and the Bible looks forward to the day when even our bodies and all creation are redeemed.
+  roots: [G629, G3083, H1350]
+  verses: ["Ephesians 1:7", "Mark 10:45", "1 Peter 1:18-19", "Galatians 3:13", "Job 19:25"]
+  related: [salvation, forgiveness, atonement, adoption]
+
+- name: Grace
+  slug: grace
+  aliases: [gracious, favour, favor, unmerited favour]
+  short: God's kindness and favour given freely to people who do not deserve it. We cannot earn it — we can only receive it.
+  new_believer: God did not wait for you to clean yourself up; his grace met you as you were, and it will keep carrying you.
+  explanation: >-
+    The Greek word charis means a free gift, a favour freely given. Grace is the heart of the gospel: God saves us not
+    because of anything we have done, but because of his own generous love shown in Jesus Christ. Grace does not stop at
+    forgiveness; it is also God's strength at work in us, enabling us to live for him and to endure weakness and trial.
+    Everything a Christian has — forgiveness, new life, gifts for serving others — is a gift of grace.
+  roots: [G5485, H2580]
+  verses: ["Ephesians 2:8-9", "Romans 3:24", "2 Corinthians 12:9", "Titus 2:11", "Proverbs 3:34"]
+  related: [mercy, faith, salvation, justification]
+
+- name: Faith
+  slug: faith
+  aliases: [believe, belief, trust, faithful]
+  short: Trusting God and taking him at his word — above all, relying on Jesus Christ for salvation. It is the hand that receives God's gift.
+  new_believer: Faith is not a feeling you have to manufacture; it is leaning your whole weight on Jesus and what he has promised.
+  explanation: >-
+    The Greek word pistis and the Hebrew 'emunah both carry the sense of firm trust and faithfulness. Biblical faith is
+    more than agreeing that facts are true; it is personal reliance on God, who is faithful. We are saved through faith,
+    not because faith earns anything, but because it receives what Christ has done. Faith grows by hearing God's word,
+    and it shows itself in obedience, love and perseverance, as the heroes of Hebrews 11 show.
+  roots: [G4102, H530]
+  verses: ["Hebrews 11:1", "Hebrews 11:6", "Romans 10:17", "Habakkuk 2:4", "Romans 5:1"]
+  related: [grace, salvation, justification, hope]
+
+- name: Righteousness
+  slug: righteousness
+  aliases: [righteous, just, upright]
+  short: Being right with God and living rightly before him. God gives his righteousness to everyone who believes in Jesus.
+  new_believer: When God looks at you in Christ, he sees you clothed in Jesus' own righteousness, not in your failures.
+  explanation: >-
+    Righteousness (Hebrew tsedaqah, Greek dikaiosynē) means rightness — matching God's own perfect standard. God himself
+    is righteous: always just, faithful and good. No one is righteous on their own, but the gospel announces that God
+    credits his righteousness to all who trust in Christ, as he counted Abraham's faith as righteousness. Those made
+    right with God are then called to live righteously, doing justice and loving what is good.
+  roots: [G1343, H6666]
+  verses: ["Genesis 15:6", "Romans 3:22", "2 Corinthians 5:21", "Philippians 3:9", "Matthew 5:6"]
+  related: [justification, faith, holiness, sanctification]
+
+- name: Justification
+  slug: justification
+  aliases: [justified, justify, declared righteous]
+  short: God declaring a guilty sinner "not guilty" and right with him, because of what Jesus has done. It is received by faith.
+  new_believer: In God's courtroom your case is settled — because of Jesus you are declared right with God, once and for all.
+  explanation: >-
+    Justification is a courtroom word. The Greek verb dikaioō means to declare someone righteous. Paul teaches that all
+    have sinned, yet God justifies freely by his grace, through the redemption that is in Christ Jesus. Our sins were
+    counted against Christ on the cross, and his righteousness is counted to us. Because of this we have peace with God.
+    Justification is God's verdict; the change of life that follows is sanctification.
+  roots: [G1344, G1347]
+  verses: ["Romans 3:24", "Romans 5:1", "Galatians 2:16", "Romans 4:25"]
+  related: [righteousness, faith, grace, sanctification]
+
+- name: Sanctification
+  slug: sanctification
+  aliases: [sanctify, sanctified, set apart, growing in holiness]
+  short: God setting a person apart for himself and making them more like Jesus over time. It is the lifelong work of the Holy Spirit in a believer.
+  new_believer: God is not finished with you — day by day his Spirit is shaping you to look more like Jesus.
+  explanation: >-
+    To sanctify (Greek hagiazō) is to make holy, to set apart for God. In one sense every believer is already set apart
+    for God through Christ's sacrifice. In another sense sanctification is a process: the Holy Spirit works through God's
+    word, prayer, the church and even hardship to put sin to death and grow Christlike character. We cooperate with this
+    work, but it is God's doing, and he promises to complete it.
+  roots: [G38, G37]
+  verses: ["1 Thessalonians 4:3", "1 Thessalonians 5:23", "John 17:17", "Hebrews 10:10"]
+  related: [holiness, holy-spirit, justification, glorification]
+
+- name: Atonement
+  slug: atonement
+  aliases: [atone, sacrifice, at-one-ment]
+  short: The way God deals with sin so that sinners can be brought back to him. Jesus' death on the cross is the full and final atonement.
+  new_believer: Everything needed to take away your sin was done by Jesus on the cross — nothing is left for you to pay.
+  explanation: >-
+    In the Old Testament the Hebrew word kāphar, to make atonement, is used for the sacrifices God gave Israel: the life
+    of an animal given so that sin could be covered and the worshipper accepted. These sacrifices pointed forward to
+    Jesus, the Lamb of God, who bore our sins in his body. In English, "atonement" means being made at one again, and the
+    King James Version uses it in Romans 5:11 for our reconciliation to God through Christ.
+  roots: [H3722, G2643]
+  verses: ["Leviticus 17:11", "Isaiah 53:5", "Romans 5:11", "1 John 2:2"]
+  related: [propitiation, reconciliation, redemption, forgiveness]
+
+- name: Covenant
+  slug: covenant
+  aliases: [testament, new covenant, promise]
+  short: A binding promise-relationship that God makes with his people. In Jesus, God has made a new covenant sealed with his blood.
+  new_believer: Your relationship with God rests on his covenant promise, and God never breaks his word.
+  explanation: >-
+    The Hebrew berith and the Greek diathēkē describe a solemn, binding agreement. The Bible's story unfolds through God's
+    covenants — with Noah, Abraham, Israel at Sinai and David. The prophets promised a new covenant in which God would
+    write his law on hearts and remember sin no more. At the Last Supper Jesus said his blood was the new covenant (the
+    King James Version says "new testament"). Our Old and New Testaments take their names from this word.
+  roots: [H1285, G1242]
+  verses: ["Genesis 17:7", "Jeremiah 31:33", "Luke 22:20", "Hebrews 8:6"]
+  related: [grace, lords-supper, redemption, faith]
+
+- name: Repentance
+  slug: repentance
+  aliases: [repent, turning, turn to god]
+  short: A change of mind and heart that turns away from sin and toward God. It is not just feeling sorry, but turning around.
+  new_believer: Repentance is turning to face God; whenever you fall, you can turn back to him and find him ready to forgive.
+  explanation: >-
+    The Greek word metanoia means a change of mind; the Hebrew shûv means to turn or return. Repentance includes honest
+    sorrow for sin, but it goes further: a real turning from sin to God, trusting his mercy. It is the first response to
+    the gospel together with faith, and it continues through the Christian life. Heaven rejoices over one sinner who
+    repents, and God is patient, not willing that any should perish.
+  roots: [G3341, G3340, H7725]
+  verses: ["Acts 3:19", "Luke 15:7", "2 Corinthians 7:10", "2 Peter 3:9", "Ezekiel 18:30"]
+  related: [forgiveness, faith, sin, salvation]
+
+- name: Mercy
+  slug: mercy
+  aliases: [merciful, lovingkindness, compassion, steadfast love]
+  short: God's compassion toward people in their misery and guilt — holding back the punishment we deserve and helping us in our need.
+  new_believer: God's mercies are new every morning, so yesterday's failures do not decide how he treats you today.
+  explanation: >-
+    Grace gives us what we do not deserve; mercy withholds what we do deserve. The Hebrew chesed, often translated mercy
+    or lovingkindness, is God's loyal, covenant love that will not let go. The Greek eleos is pity that moves to act.
+    God is rich in mercy, and he saved us according to his mercy, not our works. Because we have received mercy, we are
+    called to show mercy to others.
+  roots: [G1656, H2617]
+  verses: ["Lamentations 3:22-23", "Ephesians 2:4-5", "Hebrews 4:16", "Micah 6:8"]
+  related: [grace, forgiveness, love, salvation]
+
+- name: Forgiveness
+  slug: forgiveness
+  aliases: [forgive, forgiven, pardon, remission]
+  short: God cancelling the debt of our sin and no longer holding it against us. Those who are forgiven are called to forgive others.
+  new_believer: When you confess your sin, God forgives it fully — you do not need to keep carrying what he has taken away.
+  explanation: >-
+    The Greek word aphesis means release, as when a debt is cancelled; the Hebrew sālach is used only of God forgiving.
+    Forgiveness is possible because Christ shed his blood for sinners: in him we have redemption, the forgiveness of
+    sins. God promises to forgive all who confess their sins. Forgiveness restores fellowship with God, and it reshapes
+    how we treat others — we forgive as God in Christ forgave us.
+  roots: [G859, H5545]
+  verses: ["1 John 1:9", "Ephesians 1:7", "Ephesians 4:32", "Isaiah 55:7", "Matthew 6:14"]
+  related: [repentance, mercy, redemption, reconciliation]
+
+- name: Reconciliation
+  slug: reconciliation
+  aliases: [reconcile, reconciled, peace with god]
+  short: Two parties who were enemies being made friends again. Through Jesus, God has made peace between himself and sinners.
+  new_believer: You are no longer God's enemy — through Jesus you have been brought home as his friend.
+  explanation: >-
+    The Greek words katallassō and katallagē mean to change a relationship from hostility to peace. Sin made us enemies
+    of God, but God took the initiative: while we were still enemies, he reconciled us to himself through the death of
+    his Son. Reconciliation with God then flows outward — God gives his people the ministry of reconciliation, calling
+    others to be reconciled to him and to one another.
+  roots: [G2643, G2644]
+  verses: ["2 Corinthians 5:18-19", "Romans 5:10", "Colossians 1:20"]
+  related: [atonement, peace, forgiveness, propitiation]
+
+- name: Propitiation
+  slug: propitiation
+  aliases: [propitiate, mercy seat, atoning sacrifice]
+  short: A sacrifice that turns away God's just anger against sin. Jesus himself is the propitiation for our sins.
+  new_believer: God's holy judgment against your sin has been fully satisfied in Jesus, so you can come to God without fear.
+  explanation: >-
+    Propitiation (Greek hilasmos, hilastērion) is an old word for a big truth. God is holy, and his anger against evil is
+    right. Yet God himself provided the answer: he sent his Son to be the propitiation for our sins. The word hilastērion
+    is also used for the mercy seat, the lid of the ark of the covenant, where the blood of atonement was sprinkled.
+    The cross shows both God's justice and his love — sin is judged, and sinners are welcomed.
+  roots: [G2434, G2435]
+  verses: ["1 John 2:2", "1 John 4:10", "Romans 3:25"]
+  related: [atonement, reconciliation, mercy, love]
+
+- name: Adoption
+  slug: adoption
+  aliases: [adopted, children of god, sons of god]
+  short: God taking believers into his family as his own children, with all the rights and love of sons and daughters.
+  new_believer: You are not just forgiven; you are God's child, and you can call him Father.
+  explanation: >-
+    The Greek word huiothesia means placing someone as a son. In the Roman world an adopted son received the family name
+    and the full inheritance. Paul uses this picture for what God does in Christ: those who receive Jesus are given the
+    right to become children of God. The Holy Spirit assures us of this, so that we cry "Abba, Father", and we are heirs
+    of God with Christ.
+  roots: [G5206]
+  verses: ["Galatians 4:4-5", "Romans 8:15", "Ephesians 1:5", "John 1:12"]
+  related: [redemption, holy-spirit, grace, glorification]
+
+- name: Regeneration
+  slug: regeneration
+  aliases: [born again, new birth, new creation, reborn]
+  short: The new birth — God giving spiritual life to a person who was spiritually dead, so that they become a new creation in Christ.
+  new_believer: Being born again means God has given you a new heart and a new life, and that life comes from him.
+  explanation: >-
+    Jesus told Nicodemus, "Except a man be born again, he cannot see the kingdom of God." The word translated "again"
+    (anōthen) also means "from above": this birth is God's work, not ours. Titus speaks of the washing of regeneration
+    (palingenesia) and renewing of the Holy Spirit, and Peter of being born again (anagennaō) by the word of God.
+    Regeneration is the start of the Christian life; its fruit is faith, repentance and a changed life.
+  roots: [G3824, G313, G509]
+  verses: ["John 3:3", "Titus 3:5", "1 Peter 1:23", "2 Corinthians 5:17"]
+  related: [holy-spirit, salvation, faith, repentance]
+
+- name: Holiness
+  slug: holiness
+  aliases: [holy, sacred, set apart]
+  short: Being set apart, pure and wholly devoted to God. God is perfectly holy, and he calls his people to be holy too.
+  new_believer: God's holiness is not a reason to run from him — in Christ he makes you his own and teaches you to live like him.
+  explanation: >-
+    The Hebrew qōdesh and the Greek hagios describe what is set apart, different and pure. God's holiness is his utter
+    perfection and moral beauty; the angels cry "Holy, holy, holy". Because God is holy, sin cannot stand in his
+    presence — yet he makes sinners holy through Christ. Believers are called saints (holy ones) and are commanded to be
+    holy in all their conduct, a lifelong pursuit worked out through the Spirit.
+  roots: [G40, H6944]
+  verses: ["Isaiah 6:3", "Exodus 15:11", "1 Peter 1:15-16", "Hebrews 12:14"]
+  related: [sanctification, glory, righteousness, worship]
+
+- name: Glory
+  slug: glory
+  aliases: [glorious, glorify, majesty, splendour]
+  short: The shining greatness and beauty of God — the weight of who he is, made visible. We were made to see it and reflect it.
+  new_believer: Your life now has a great purpose — to see God's glory in Jesus and to live in a way that honours him.
+  explanation: >-
+    The Hebrew kāvōd literally means weight or heaviness: God's glory is the weightiness of his presence. The Greek doxa
+    speaks of radiance, honour and praise. The heavens declare God's glory, and his glory filled the tabernacle and
+    temple. Above all, God's glory is seen in the face of Jesus Christ. All have sinned and fall short of it, but in
+    Christ believers are being changed from glory to glory.
+  roots: [H3519, G1391]
+  verses: ["Psalm 19:1", "Habakkuk 2:14", "John 1:14", "2 Corinthians 4:6", "Romans 3:23"]
+  related: [holiness, worship, glorification, joy]
+
+- name: Gospel
+  slug: gospel
+  aliases: [good news, evangel, evangelism]
+  short: The good news that Jesus Christ died for our sins, was buried and rose again, and that everyone who trusts in him is saved.
+  new_believer: The gospel is not just how you started — it is good news you can come back to every single day.
+  explanation: >-
+    "Gospel" translates the Greek euangelion, good news, a word used for the announcement of a victory or a new king.
+    The gospel announces what God has done in Jesus: his life, his death for sins, his burial and his resurrection on
+    the third day, according to the Scriptures. It is the power of God for salvation to everyone who believes, and it
+    calls all people to repent and believe.
+  roots: [G2098]
+  verses: ["1 Corinthians 15:3-4", "Romans 1:16", "Mark 1:15"]
+  related: [salvation, faith, resurrection, kingdom-of-god]
+
+- name: Sin
+  slug: sin
+  aliases: [sins, sinner, transgression, iniquity, trespass]
+  short: Anything we think, say or do (or fail to do) that falls short of God's good and holy will. Sin separates us from God, and only he can deal with it.
+  new_believer: Being honest about sin is the way to freedom, because Jesus came for sinners and his forgiveness is bigger than your sin.
+  explanation: >-
+    The Greek hamartia and the Hebrew chaṭṭā'āh both carry the idea of missing the mark. Sin is more than breaking
+    rules; it is rebellion against God and turning from him to ourselves. Since Adam, all people are sinners by nature
+    and by choice, and the wages of sin is death. But God's answer to sin is Jesus, who died for sinners; the gift of God
+    is eternal life.
+  roots: [G266, H2403]
+  verses: ["Romans 3:23", "Romans 6:23", "1 John 1:8-9", "Psalm 51:2-3"]
+  related: [repentance, forgiveness, atonement, judgment]
+
+- name: Eternal life
+  slug: eternal-life
+  aliases: [everlasting life, life eternal, immortality]
+  short: The life of God given to those who trust in Jesus — beginning now in knowing God, and lasting for ever.
+  new_believer: Eternal life is not only for after you die; it has already begun in you, because you now know God.
+  explanation: >-
+    The Greek phrase zōē aiōnios means the life of the age to come. Jesus said, "This is life eternal, that they might
+    know thee the only true God, and Jesus Christ, whom thou hast sent." Eternal life is a gift, received by believing in
+    the Son. It begins the moment we are joined to Christ, it cannot be lost to death, and it will be enjoyed in full at
+    the resurrection.
+  roots: [G2222, G166]
+  verses: ["John 3:16", "John 17:3", "Romans 6:23", "1 John 5:11-12"]
+  related: [salvation, resurrection, heaven, hope]
+
+- name: Kingdom of God
+  slug: kingdom-of-god
+  aliases: [kingdom of heaven, reign of god, kingdom]
+  short: God's rule as King, brought near in Jesus. It is present now in the lives of those who follow him and will come in fullness when he returns.
+  new_believer: You now belong to a new kingdom with a good King, and his ways shape how you live.
+  explanation: >-
+    The Greek basileia means kingship or reign. Jesus began his ministry announcing that the kingdom of God was at
+    hand, and his miracles and teaching showed what God's rule looks like. Matthew usually says "kingdom of heaven" for
+    the same reality. The kingdom is already present wherever Jesus is obeyed as King, yet we still pray "Thy kingdom
+    come", waiting for its full arrival.
+  roots: [G932]
+  verses: ["Mark 1:15", "Matthew 6:33", "Romans 14:17", "John 3:3"]
+  related: [gospel, church, second-coming, discipleship]
+
+- name: Holy Spirit
+  slug: holy-spirit
+  aliases: [holy ghost, spirit of god, comforter, helper, paraclete]
+  short: The third person of the Trinity — God himself, living in believers to give new life, guide, comfort and empower them.
+  new_believer: You are not alone in following Jesus — God the Holy Spirit lives in you to help you.
+  explanation: >-
+    The Hebrew rûach and Greek pneuma mean breath, wind or spirit. The Spirit of God was present at creation, spoke
+    through the prophets, and was poured out on the church at Pentecost. Jesus promised the Spirit as the Comforter, who
+    teaches us and reminds us of his words. The Spirit makes us born again, assures us we are God's children, gives gifts
+    for serving others and grows his fruit in us: love, joy, peace and more.
+  roots: [G4151, H7307]
+  verses: ["John 14:26", "Acts 1:8", "Romans 8:16", "Galatians 5:22-23", "Genesis 1:2"]
+  related: [trinity, regeneration, sanctification, adoption]
+
+- name: Trinity
+  slug: trinity
+  aliases: [triune god, three in one, godhead, father son and holy spirit]
+  short: The one true God existing eternally as three persons — Father, Son and Holy Spirit — each fully God, yet one God.
+  new_believer: The God who saved you is the Father who loves you, the Son who died for you and the Spirit who lives in you — one God.
+  explanation: >-
+    The word "Trinity" is not found in the Bible, but it sums up what the Bible teaches. Scripture insists there is only
+    one God, yet it speaks of the Father as God, the Son as God and the Holy Spirit as God, distinct from one another.
+    Jesus commanded baptism in the one name of the Father, the Son and the Holy Spirit. This truth, confessed by the
+    church since its earliest creeds, is beyond full understanding, but it shows that God is love within himself.
+  roots: []
+  verses: ["Deuteronomy 6:4", "Matthew 28:19", "John 1:1", "2 Corinthians 13:14"]
+  related: [holy-spirit, incarnation, worship, glory]
+
+- name: Incarnation
+  slug: incarnation
+  aliases: [became flesh, god made man, emmanuel, immanuel]
+  short: God the Son becoming a real human being in Jesus of Nazareth, without ceasing to be God.
+  new_believer: Jesus knows what it is to be human — he became one of us so that he could save us.
+  explanation: >-
+    "Incarnation" means "in flesh". John writes that the Word, who was with God and was God, became flesh (sarx) and
+    dwelt among us — literally "pitched his tent" (skēnoō). Jesus was born of the virgin Mary, grew, ate, wept and
+    suffered as a true man, and was at the same time truly God. He humbled himself to take the form of a servant, so
+    that he could live the life we could not live and die the death we deserved.
+  roots: [G4561, G4637]
+  verses: ["John 1:14", "Galatians 4:4", "Philippians 2:6-7", "1 Timothy 3:16"]
+  related: [trinity, gospel, resurrection, redemption]
+
+- name: Resurrection
+  slug: resurrection
+  aliases: [risen, rose again, raised from the dead, easter]
+  short: Jesus rising bodily from the dead on the third day, and the promise that all who belong to him will be raised too.
+  new_believer: Because Jesus is alive, death does not have the last word over your life.
+  explanation: >-
+    The Greek anastasis means standing up again. The resurrection of Jesus is the centre of Christian faith: he died,
+    was buried and rose bodily on the third day, seen by many witnesses. It proves that his sacrifice was accepted and
+    that he is the Son of God with power. His resurrection is the firstfruits — the first part of a harvest still to
+    come — the promise that believers will also be raised with new, imperishable bodies.
+  roots: [G386]
+  verses: ["John 11:25", "1 Corinthians 15:20", "1 Peter 1:3", "Romans 6:4"]
+  related: [gospel, eternal-life, ascension, glorification]
+
+- name: Ascension
+  slug: ascension
+  aliases: [ascended, taken up, exaltation]
+  short: Jesus, forty days after his resurrection, being taken up bodily into heaven, where he reigns and prays for his people.
+  new_believer: The Jesus who saved you is now in heaven at the Father's right hand, and he has not forgotten you.
+  explanation: >-
+    After appearing to his disciples for forty days, Jesus was taken up (analambanō) into heaven while they watched, and
+    a cloud received him out of their sight. The ascension marks his exaltation as Lord. From there he poured out the
+    Holy Spirit, he intercedes for believers as their great high priest, and from there he will come again in the same
+    way he went.
+  roots: [G353, G305]
+  verses: ["Acts 1:9-11", "Luke 24:51", "John 20:17", "Hebrews 4:14"]
+  related: [resurrection, second-coming, intercession, glory]
+
+- name: Second Coming
+  slug: second-coming
+  aliases: [return of christ, parousia, coming of the lord, rapture]
+  short: Jesus' promised personal return in glory to raise the dead, judge the world and make all things new.
+  new_believer: The story is going somewhere — Jesus will come back, and you can live each day with that hope.
+  explanation: >-
+    The Greek parousia means arrival or presence, a word used for the visit of a king. Jesus promised, "I will come
+    again", and the angels said he would return in the same way he went up. Christians hold different views about the
+    order of events around his coming, but all agree that Jesus will return visibly and personally, the dead will be
+    raised, and he will judge the world in righteousness. Believers are called to watch, to hope and to live faithfully.
+  roots: [G3952]
+  verses: ["John 14:3", "Acts 1:11", "1 Thessalonians 4:16-17", "Titus 2:13", "James 5:8"]
+  related: [ascension, judgment, hope, resurrection]
+
+- name: Church
+  slug: church
+  aliases: [ekklesia, assembly, body of christ, congregation]
+  short: The people of God called out of the world and gathered around Jesus — not a building, but believers joined to Christ and to one another.
+  new_believer: Following Jesus is not meant to be done alone — you belong to his family, the church.
+  explanation: >-
+    The Greek ekklēsia means an assembly of people called out. Jesus said, "I will build my church." The New Testament
+    pictures the church as the body of Christ, with each member gifted and needed; as a family; as a temple of the Holy
+    Spirit; and as the bride whom Christ loved and gave himself for. The church gathers locally to worship, hear God's
+    word, pray, share the Lord's Supper and care for one another.
+  roots: [G1577]
+  verses: ["Matthew 16:18", "Acts 2:42", "1 Corinthians 12:27", "Ephesians 5:25"]
+  related: [fellowship, baptism, lords-supper, worship]
+
+- name: Baptism
+  slug: baptism
+  aliases: [baptise, baptize, baptized, baptised]
+  short: The washing with water that Jesus commanded, done in the name of the Father, the Son and the Holy Spirit, marking a person's union with Christ.
+  new_believer: Baptism is Jesus' own sign that you belong to him — talk with your pastor about being baptised.
+  explanation: >-
+    The Greek baptizō means to dip or immerse. Jesus commanded his followers to make disciples and baptise them in the
+    name of the Father, the Son and the Holy Spirit. Paul teaches that baptism pictures our union with Christ in his
+    death and resurrection. Christian traditions differ on who should be baptised and how, and on exactly what baptism
+    accomplishes, but all hold it as Christ's command for his church and a sign of belonging to him.
+  roots: [G907, G908]
+  verses: ["Matthew 28:19", "Romans 6:3-4", "Galatians 3:27", "Acts 2:41"]
+  related: [church, discipleship, regeneration, lords-supper]
+
+- name: Lord's Supper
+  slug: lords-supper
+  aliases: [communion, holy communion, eucharist, breaking of bread, last supper]
+  short: The meal of bread and cup that Jesus gave his church, to remember his death and to share in him until he comes.
+  new_believer: When the church shares the bread and the cup, you are remembering that Jesus' body was given and his blood shed for you.
+  explanation: >-
+    On the night he was betrayed, Jesus took bread and the cup and said, "This do in remembrance of me." Paul calls it
+    the Lord's supper (deipnon) and speaks of the bread and cup as a communion (koinōnia), a sharing, in the body and
+    blood of Christ. Christian traditions understand Christ's presence in the meal in different ways, but all receive it
+    as his gift: a remembering of his death, a proclaiming of it until he comes, and a sign of the unity of his people.
+  roots: [G1173, G2842]
+  verses: ["Luke 22:19-20", "1 Corinthians 11:20", "1 Corinthians 11:23-26", "1 Corinthians 10:16"]
+  related: [covenant, church, fellowship, baptism]
+
+- name: Prayer
+  slug: prayer
+  aliases: [pray, praying, supplication, petition]
+  short: Talking with God — praising him, thanking him, confessing sin and asking for what we and others need — trusting that he hears.
+  new_believer: You do not need special words to pray; you can talk to God simply and honestly, as a child talks to a loving Father.
+  explanation: >-
+    The Greek proseuchē and the Hebrew tephillāh both describe speaking to God in worship and request. Jesus taught his
+    disciples to pray to "Our Father", and he prayed often himself. We pray through Jesus, helped by the Holy Spirit.
+    The Bible invites us to bring every care to God, to pray without ceasing and to pray for one another, and it
+    promises God's peace to those who do.
+  roots: [G4335, H8605]
+  verses: ["Matthew 6:9", "Philippians 4:6", "1 Thessalonians 5:17", "James 5:16", "Psalm 65:2"]
+  related: [worship, intercession, faith, fellowship]
+
+- name: Worship
+  slug: worship
+  aliases: [praise, adoration, bow down]
+  short: Honouring God for who he is and what he has done — with our songs and words, but also with our whole lives.
+  new_believer: Worship is more than singing on Sunday; it is giving your whole life to God because he is worthy.
+  explanation: >-
+    The Hebrew shāchāh and the Greek proskyneō both picture bowing down before someone greater. True worship is
+    directed to God alone. Jesus said the Father seeks those who worship in spirit and in truth. Worship includes
+    gathering with God's people to praise, pray and hear his word, and it extends to every part of life, as we offer
+    ourselves as living sacrifices.
+  roots: [G4352, H7812]
+  verses: ["Psalm 95:6", "John 4:24", "Matthew 4:10", "Romans 12:1"]
+  related: [glory, prayer, holiness, church]
+
+- name: Hope
+  slug: hope
+  aliases: [hopeful, expectation, confident expectation]
+  short: Confident expectation of what God has promised. Christian hope is not wishful thinking but certainty resting on God's faithfulness.
+  new_believer: Whatever you face today, your future is secure in Christ, and that hope can anchor your soul.
+  explanation: >-
+    In everyday speech, hope often means "I wish". The Greek elpis means confident expectation. Christian hope rests on
+    the resurrection of Jesus and looks forward to his return, the resurrection of the body and the new creation. The
+    Bible calls this hope an anchor of the soul, sure and steadfast. The God of hope fills believers with joy and peace
+    as they trust him.
+  roots: [G1680]
+  verses: ["Romans 15:13", "Hebrews 6:19", "1 Peter 1:3", "Romans 5:5"]
+  related: [faith, love, second-coming, eternal-life]
+
+- name: Love (agapē)
+  slug: love
+  aliases: [agape, charity, loving, beloved]
+  short: Self-giving care that seeks another's good, whatever the cost. God is love, and he showed it supremely in sending Jesus to die for us.
+  new_believer: You are deeply loved by God — not because you earned it, but because love is who he is.
+  explanation: >-
+    The New Testament often uses agapē (the King James Version sometimes says "charity") for the love that gives itself
+    for others. God's love is shown in that Christ died for us while we were still sinners. Jesus commands his followers
+    to love one another as he has loved them, and Paul's great chapter, 1 Corinthians 13, describes what such love looks
+    like. Love is the greatest of faith, hope and love.
+  roots: [G26, G25]
+  verses: ["1 John 4:8", "Romans 5:8", "John 13:34", "1 Corinthians 13:4-7"]
+  related: [grace, mercy, hope, fellowship]
+
+- name: Peace
+  slug: peace
+  aliases: [shalom, rest, peace with god, peace of god]
+  short: Wholeness and rest — first peace with God through Jesus, and then the calm of heart that comes from trusting him.
+  new_believer: Because you have peace with God, you can bring your worries to him and receive his peace in return.
+  explanation: >-
+    The Hebrew shālōm means far more than the absence of conflict: it is wholeness, well-being and everything as it
+    should be. The Greek eirēnē carries this meaning into the New Testament. Being justified by faith, we have peace with
+    God through Jesus Christ. Jesus gives his own peace, not as the world gives, and the peace of God guards the hearts of
+    those who pray. Believers are also called to be peacemakers.
+  roots: [G1515, H7965]
+  verses: ["John 14:27", "Romans 5:1", "Philippians 4:7", "Isaiah 26:3"]
+  related: [reconciliation, joy, hope, prayer]
+
+- name: Joy
+  slug: joy
+  aliases: [rejoice, gladness, joyful]
+  short: Deep gladness in God that does not depend on circumstances. It is a fruit of the Holy Spirit.
+  new_believer: Joy is not pretending everything is fine; it is gladness in God that can live alongside tears.
+  explanation: >-
+    The Greek chara is a deep, settled gladness. Joy is part of the fruit of the Spirit, and Jesus spoke so that his joy
+    might be in his disciples and their joy might be full. Christian joy is rooted in God himself — his salvation, his
+    presence and his promises — which is why believers can rejoice even in trials. "The joy of the Lord is your
+    strength."
+  roots: [G5479]
+  verses: ["Nehemiah 8:10", "Psalm 16:11", "John 15:11", "Galatians 5:22-23"]
+  related: [peace, hope, holy-spirit, worship]
+
+- name: Discipleship
+  slug: discipleship
+  aliases: [disciple, disciples, follower, following jesus]
+  short: Following Jesus as his learner — trusting him, learning from him, obeying him and helping others to follow him too.
+  new_believer: A disciple is simply a learner of Jesus — keep reading his words, and keep following him one step at a time.
+  explanation: >-
+    The Greek mathētēs means a learner or pupil. Jesus called people to follow him, to deny themselves, take up their
+    cross daily and walk in his ways. Disciples continue in his word, love one another and bear fruit. Before his
+    ascension Jesus commissioned his followers to make disciples of all nations, teaching them to observe all he
+    commanded, with the promise that he is with us always.
+  roots: [G3101]
+  verses: ["Luke 9:23", "John 8:31", "John 13:35", "Matthew 28:19-20"]
+  related: [church, baptism, kingdom-of-god, sanctification]
+
+- name: Election
+  slug: election
+  aliases: [elect, chosen, chosen people, predestination]
+  short: God's choosing of a people to belong to him and to be holy and blameless before him in Christ.
+  new_believer: Your faith did not start with you — God set his love on you, and that is a reason for comfort and humility, not pride.
+  explanation: >-
+    The Greek eklogē means choosing, and eklektos means chosen or elect. In the Old Testament God chose Israel, not
+    because they were great, but because he loved them. The New Testament says believers were chosen in Christ before
+    the foundation of the world and are a chosen generation. Christians have long discussed how God's choosing relates
+    to human response, and hold different views, but the Bible presents election as a cause for praise, assurance and
+    holy living, never for boasting.
+  roots: [G1589, G1588]
+  verses: ["Ephesians 1:4", "1 Peter 2:9", "Romans 8:33", "2 Peter 1:10"]
+  related: [grace, adoption, salvation, glorification]
+
+- name: Judgment
+  slug: judgment
+  aliases: [judgement, judge, last judgment, day of judgment]
+  short: God, the righteous Judge, holding every person accountable. In the end he will put every wrong right.
+  new_believer: For those in Christ there is no condemnation — the judgment you deserved fell on Jesus.
+  explanation: >-
+    The Hebrew mishpāṭ and the Greek krisis speak of a just verdict. Because God is good, he will not ignore evil; the
+    Bible teaches a final judgment in which all people will give account to him, and Jesus himself will be the Judge.
+    This is sobering, but it is also good news: injustice will not have the last word. And everyone who believes in
+    Christ has passed from death to life and will not come into condemnation.
+  roots: [G2920, H4941]
+  verses: ["Ecclesiastes 12:14", "John 5:24", "2 Corinthians 5:10", "Hebrews 9:27"]
+  related: [second-coming, righteousness, sin, heaven]
+
+- name: Heaven
+  slug: heaven
+  aliases: [heavens, paradise, new heavens and new earth, new jerusalem]
+  short: Where God's presence and rule are fully known — the home of God, and the eternal hope of his people in a renewed creation.
+  new_believer: Jesus has prepared a place for you, and the best thing about heaven is that God himself will be there with his people.
+  explanation: >-
+    The Hebrew shāmayim and the Greek ouranos can mean the sky, but especially the dwelling place of God. Jesus taught us
+    to pray to "Our Father which art in heaven" and promised to prepare a place for his people. Believers who die are
+    with Christ, which is far better. The Bible's final picture is of a new heaven and a new earth, where God dwells with
+    his people and wipes away every tear.
+  roots: [G3772, H8064]
+  verses: ["John 14:2", "Philippians 3:20", "Revelation 21:3-4", "Matthew 6:9", "1 Kings 8:30"]
+  related: [eternal-life, glorification, hope, kingdom-of-god]
+
+- name: Glorification
+  slug: glorification
+  aliases: [glorified, glorify, made like christ]
+  short: The final step of salvation, when God makes believers completely free from sin and gives them resurrection bodies like Christ's.
+  new_believer: One day you will be fully like Jesus — your struggle with sin will be over for good.
+  explanation: >-
+    The Greek verb doxazō means to glorify, to give glory. Romans 8 traces God's saving work from beginning to end: whom
+    he justified, them he also glorified. Glorification is God completing what he began: at Christ's return believers
+    will be raised with glorious, imperishable bodies, fully free from sin. "We shall be like him; for we shall see him
+    as he is." This future glory far outweighs present sufferings.
+  roots: [G1392]
+  verses: ["Romans 8:30", "Romans 8:18", "Philippians 3:21", "1 John 3:2"]
+  related: [sanctification, resurrection, glory, heaven]
+
+- name: Intercession
+  slug: intercession
+  aliases: [intercede, interceding, pray for others, advocate]
+  short: Praying or pleading on behalf of someone else. Jesus and the Holy Spirit intercede for believers, and we are called to pray for others.
+  new_believer: Even when you do not know how to pray, Jesus and the Holy Spirit are praying for you.
+  explanation: >-
+    The Greek entynchanō means to approach someone on another's behalf. Jesus, our great high priest, ever lives to make
+    intercession for those who come to God through him, and the Holy Spirit intercedes for us with groanings that cannot
+    be uttered. Following their example, believers are urged to make supplications, prayers and intercessions for all
+    people, including those in authority.
+  roots: [G1793, G5241]
+  verses: ["Hebrews 7:25", "Romans 8:26", "Romans 8:34", "1 Timothy 2:1"]
+  related: [prayer, ascension, holy-spirit, fellowship]
+
+- name: Fellowship
+  slug: fellowship
+  aliases: [koinonia, communion, sharing, partnership]
+  short: Sharing life together — first with God the Father and his Son Jesus, and then with other believers.
+  new_believer: You were saved into a family; sharing life with other Christians will strengthen your faith.
+  explanation: >-
+    The Greek koinōnia means sharing, partnership or communion. The first Christians continued steadfastly in the
+    apostles' teaching and fellowship, in breaking of bread and in prayers. John writes that our fellowship is with the
+    Father and with his Son Jesus Christ, and that walking in the light gives us fellowship with one another. Fellowship
+    includes shared worship, practical care and partnership in spreading the gospel.
+  roots: [G2842]
+  verses: ["1 John 1:3", "1 John 1:7", "Acts 2:42", "1 Corinthians 1:9"]
+  related: [church, lords-supper, love, prayer]
