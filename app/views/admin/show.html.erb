@@ -63,6 +63,15 @@
           data: { turbo_confirm: "Ask the AI to write today's reflection and prayer again?" } %>
   </section>
 
+  <section class="panel dw-admin">
+    <h2>Glossary of the Faith</h2>
+    <p class="dw-admin-ref">
+      <%= @faith_reviewed %> of <%= @faith_total %> terms reviewed and public.
+      Drafts stay hidden until a pastor marks them reviewed.
+    </p>
+    <%= link_to "Open the review desk", admin_faith_terms_path, class: "dw-admin-btn" %>
+  </section>
+
   <section class="panel">
     <h2>Reported AI answers</h2>
     <table>

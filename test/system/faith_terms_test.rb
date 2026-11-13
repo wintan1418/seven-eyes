@@ -1,0 +1,59 @@
+require "application_system_test_case"
+
+# Browser smoke of the Glossary of the Faith: the home "Word of the day" card
+# leads to the term page and the glossary, whose search filters as you type.
+class FaithTermsSystemTest < ApplicationSystemTestCase
+  setup do
+    kjv = Translation.create!(code: "KJV", name: "King James Version")
+    eph = Book.create!(osis_code: "Eph", name: "Ephesians", testament: :new, position: 49, chapter_count: 6)
+    Verse.create!(translation: kjv, book: eph, chapter: 2, verse_number: 8, text: "For by grace are ye saved through faith")
+    %w[ Grace Covenant Regeneration ].each_with_index do |name, i|
+      FaithTerm.create!(name:, short_definition: "#{name} in plain words.", position: i, status: :reviewed,
+                        aliases: (name == "Regeneration" ? [ "Born again" ] : []),
+                        key_references: [ "Ephesians 2:8" ])
+    end
+    FaithTerm.create!(name: "Election", short_definition: "A draft nobody may see yet.", position: 9)
+  end
+
+  def sign_in
+    visit new_session_path
+    fill_in "email_address", with: users(:one).email_address
+    fill_in "password", with: "password"
+    click_on "Sign In"
+  end
+
+  test "the home card leads to the term and the glossary, and the glossary search filters" do
+    sign_in
+    today = FaithTerm.of_the_day
+    within(".hm-grid .ft-card") do
+      assert_selector ".ft-card-term", text: today.name
+      assert_text "For by grace are ye saved"
+      click_on "Go deeper"
+    end
+    assert_selector "h1", text: today.name
+
+    visit faith_terms_path
+    assert_selector ".ft-item", count: 3
+    assert_no_text "Election"
+
+    fill_in "Search the glossary", with: "born again"
+    assert_selector ".ft-item", count: 1
+    assert_selector ".ft-item", text: "Regeneration"
+    assert_no_selector ".ft-letter[data-letter='G']"
+
+    fill_in "Search the glossary", with: "zzz"
+    assert_text "No term matches that yet"
+
+    fill_in "Search the glossary", with: ""
+    assert_selector ".ft-item", count: 3
+  end
+
+  test "the card can be hidden until tomorrow" do
+    sign_in
+    find(".ft-card-dismiss").click
+    assert_no_selector ".ft-card", visible: true
+    visit root_path
+    assert_selector ".hm-head"
+    assert_no_selector ".ft-card", visible: true
+  end
+end

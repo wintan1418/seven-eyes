@@ -46,6 +46,18 @@ Rails.application.routes.draw do
   get "/admin", to: "admin#show", as: :admin
   post "/admin/daily_word/regenerate", to: "admin#regenerate_daily_word", as: :admin_regenerate_daily_word
 
+  # Glossary of the Faith: public pages show reviewed terms only; the review
+  # desk (admins + reviewers) edits drafts and marks them reviewed.
+  get "/faith",       to: "faith_terms#index", as: :faith_terms
+  get "/faith/:slug", to: "faith_terms#show",  as: :faith_term
+  scope "/admin/faith", controller: "faith_term_reviews" do
+    get    "/",             action: :index,    as: :admin_faith_terms
+    get    "/:slug/edit",   action: :edit,     as: :edit_admin_faith_term
+    patch  "/:slug",        action: :update,   as: :admin_faith_term
+    post   "/:slug/review", action: :review,   as: :review_admin_faith_term
+    delete "/:slug/review", action: :unreview
+  end
+
   get "/s/:token", to: "shared_studies#show", as: :shared_study
 
   # Public, no-login share pages for a passage + an optional chapter prayer.

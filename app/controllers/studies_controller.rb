@@ -36,6 +36,7 @@ class StudiesController < ApplicationController
     if authenticated?
       @active_plan = current_user.reading_plans.recent.first
       @plan_today = @active_plan&.todays_day
+      set_faith_term_of_the_day
     else
       # Visitors get the landing page; the workspace welcome is for keepers.
       render :landing
@@ -260,6 +261,20 @@ class StudiesController < ApplicationController
   end
 
   private
+
+  # Home's "Word of the day" from the Glossary of the Faith: the same term for
+  # everyone on a date (reviewers' rotation includes drafts). No card when no
+  # term is visible.
+  FAITH_CARD_VERSES = 3
+
+  def set_faith_term_of_the_day
+    @faith_date = DailyWord.today_date
+    @faith_term = FaithTerm.of_the_day(@faith_date, scope: FaithTerm.visible_to(current_user))
+    return unless @faith_term
+
+    @faith_passages = KeyPassages.call(@faith_term.key_references.first(FAITH_CARD_VERSES))
+    @faith_root = @faith_term.root_entries.first
+  end
 
   # The highlight popover sends every verse the selection touched (verse_ids),
   # falling back to a single verse_id. Load them all, ordered, same chapter.

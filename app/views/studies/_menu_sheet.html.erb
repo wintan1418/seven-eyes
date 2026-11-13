@@ -55,6 +55,12 @@
         <% if authenticated? %>
           <%= link_to reading_plans_path, class: "ui-menu-item" do %><%= icon(:calendar) %> Reading plans<% end %>
         <% end %>
+        <% if faith_glossary_visible? %>
+          <%= link_to faith_terms_path, class: "ui-menu-item" do %><%= icon(:word) %> Glossary of the Faith<% end %>
+        <% end %>
+        <% if faith_reviewer? %>
+          <%= link_to admin_faith_terms_path, class: "ui-menu-item" do %><%= icon(:check) %> Glossary review<% end %>
+        <% end %>
         <%= link_to offline_path, class: "ui-menu-item" do %><%= icon(:download) %> Offline Bibles<% end %>
         <%= link_to guide_path, class: "ui-menu-item", data: { tour: "guide" } do %><%= icon(:compass) %> Field guide<% end %>
         <% if local_assigns[:study] %>

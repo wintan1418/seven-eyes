@@ -1,0 +1,62 @@
+<% content_for :title, "Glossary review · BiblioRata" %>
+<%# The review desk: every glossary term with its status. Nothing is public until "Mark reviewed". %>
+<div class="ps-admin ft-review">
+  <header class="head">
+    <div>
+      <div class="eyebrow">Overseer &middot; Glossary of the Faith</div>
+      <h1>Pastor review</h1>
+      <p class="sub">
+        <%= @reviewed_count %> of <%= @terms.size %> terms reviewed and public.
+        Drafts are seen only by admins and reviewers.
+      </p>
+    </div>
+    <span class="ft-review-links">
+      <% if @terms.any? %><%= link_to "Open the glossary", faith_terms_path, class: "back" %><% end %>
+      <% if current_user.admin? %><%= link_to "&larr; Overseer".html_safe, admin_path, class: "back" %><% end %>
+    </span>
+  </header>
+
+  <% if (msg = flash[:notice] || flash[:alert]) %>
+    <p class="ft-review-flash" role="status"><%= msg %></p>
+  <% end %>
+
+  <% if @terms.empty? %>
+    <section class="panel"><p class="dw-admin-text">No terms yet. Run <code>bin/rails faith_terms:seed</code> to load them.</p></section>
+  <% end %>
+
+  <% @terms.each do |term| %>
+    <section class="panel ft-review-term" id="<%= term.slug %>">
+      <div class="ft-review-top">
+        <h2>
+          <%= link_to term.name, faith_term_path(term) %>
+          <span class="ft-status is-<%= term.status %>"><%= term.reviewed? ? "Reviewed" : "Draft" %></span>
+        </h2>
+        <div class="ft-review-actions">
+          <%= link_to "Edit", edit_admin_faith_term_path(term), class: "dw-admin-btn" %>
+          <% if term.reviewed? %>
+            <%= button_to "Send back to draft", review_admin_faith_term_path(term), method: :delete, class: "dw-admin-btn",
+                  form: { class: "ft-inline-form" }, data: { turbo_confirm: "Hide “#{term.name}” from the public until it is reviewed again?" } %>
+          <% else %>
+            <%= form_with url: review_admin_faith_term_path(term), method: :post, class: "ft-inline-form" do %>
+              <%= text_field_tag :reviewed_by, reviewer_name_default, id: "reviewed_by_#{term.slug}", class: "ft-review-name",
+                    "aria-label": "Reviewed by", maxlength: 80 %>
+              <button type="submit" class="dw-admin-btn is-primary">Mark reviewed</button>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+      <% if term.reviewed? %>
+        <p class="ft-review-meta">Reviewed by <%= term.reviewed_by.presence || "—" %> on <%= term.reviewed_at&.strftime("%-d %b %Y, %H:%M") %></p>
+      <% elsif term.edited_at %>
+        <p class="ft-review-meta">Edited <%= time_ago_in_words(term.edited_at) %> ago</p>
+      <% end %>
+      <dl class="ft-review-text">
+        <dt>Short definition</dt><dd><%= term.short_definition %></dd>
+        <dt>For a new believer</dt><dd><%= term.new_believer.presence || "—" %></dd>
+        <dt>Explanation</dt><dd><%= term.explanation.presence || "—" %></dd>
+        <dt>Root words</dt><dd><%= term.root_strongs.join(", ").presence || "—" %></dd>
+        <dt>Key verses</dt><dd><%= term.key_references.join("; ").presence || "—" %></dd>
+      </dl>
+    </section>
+  <% end %>
+</div>

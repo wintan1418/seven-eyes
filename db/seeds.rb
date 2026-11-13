@@ -9,3 +9,7 @@ if Rails.env.local?
     u.password = ENV.fetch("PASTOR_PASSWORD", "password")
   end
 end
+
+# The Glossary of the Faith (config/faith_terms.yml). Idempotent: new terms
+# arrive as drafts; reviewed or site-edited terms are never overwritten.
+FaithTermSeeder.call

@@ -1,0 +1,4 @@
+<%# locals: term. Shown to admins/reviewers only — the public never sees drafts. %>
+<% if term.draft? %>
+  <span class="ft-draft" title="Only admins and reviewers can see this term">Draft &mdash; awaiting pastor review</span>
+<% end %>

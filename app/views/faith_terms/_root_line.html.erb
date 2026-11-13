@@ -1,0 +1,6 @@
+<%# locals: entry (LexiconEntry). "χάρις · cháris · Greek · G5485" %>
+<span class="ft-root-line">
+  <span class="ft-lemma" lang="<%= entry.language == "hebrew" ? "he" : "grc" %>"><%= entry.lemma.presence || entry.strongs %></span>
+  <% if entry.translit.present? %><span class="ft-translit"><%= entry.translit %></span><% end %>
+  <span class="ft-root-meta"><%= entry.language.to_s.titleize %> &middot; <%= entry.strongs %></span>
+</span>

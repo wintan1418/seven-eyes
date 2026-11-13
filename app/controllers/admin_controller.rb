@@ -26,6 +26,8 @@ class AdminController < ApplicationController
     @signups_this_week = User.where(created_at: 1.week.ago..).count
     @studies_this_week = Study.where(created_at: 1.week.ago..).count
     @daily_word = DailyWord.find_by(date: DailyWord.today_date)
+    @faith_total = FaithTerm.count
+    @faith_reviewed = FaithTerm.reviewed.count
   end
 
   # Ask the AI to write today's reflection and prayer again (e.g. after a

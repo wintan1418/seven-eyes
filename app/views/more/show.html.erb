@@ -40,6 +40,17 @@
       <%= link_to offline_path, class: "ui-menu-item" do %><%= icon(:download) %> Offline Bibles &mdash; read with no signal<% end %>
     </nav>
 
+    <% if faith_glossary_visible? || faith_reviewer? %>
+      <nav class="ui-menu-section ui-menu-links" aria-label="Learn">
+        <% if faith_glossary_visible? %>
+          <%= link_to faith_terms_path, class: "ui-menu-item" do %><%= icon(:word) %> Glossary of the Faith &mdash; grace, faith, redemption&hellip;<% end %>
+        <% end %>
+        <% if faith_reviewer? %>
+          <%= link_to admin_faith_terms_path, class: "ui-menu-item" do %><%= icon(:check) %> Glossary review<% end %>
+        <% end %>
+      </nav>
+    <% end %>
+
     <nav class="ui-menu-section ui-menu-links" aria-label="Help">
       <%= link_to guide_path, class: "ui-menu-item" do %><%= icon(:compass) %> Field guide<% end %>
       <%= link_to whats_new_path, class: "ui-menu-item" do %><%= icon(:gift) %> What&rsquo;s new<% end %>

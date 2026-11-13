@@ -1,0 +1,61 @@
+<% content_for :title, "Edit #{@term.name} · Glossary review" %>
+<div class="ps-admin ft-review">
+  <header class="head">
+    <div>
+      <div class="eyebrow">Glossary of the Faith &middot; <%= @term.reviewed? ? "Reviewed" : "Draft" %></div>
+      <h1><%= @term.name_was.presence || @term.name %></h1>
+      <p class="sub">
+        <% if @term.reviewed? %>Changing the words sends this term back to draft until it is reviewed again.
+        <% else %>This term is hidden from the public until it is marked reviewed.<% end %>
+      </p>
+    </div>
+    <%= link_to "&larr; All terms".html_safe, admin_faith_terms_path(anchor: @term.slug), class: "back" %>
+  </header>
+
+  <section class="panel">
+    <%= form_with model: @term, url: admin_faith_term_path(@term), method: :patch, class: "ft-review-form" do |f| %>
+      <% if @term.errors.any? %>
+        <ul class="ft-review-errors" role="alert">
+          <% @term.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+        </ul>
+      <% end %>
+
+      <%= f.label :name %>
+      <%= f.text_field :name, required: true %>
+
+      <%= f.label :short_definition, "Short definition (1–2 plain sentences — shown on the home card)" %>
+      <%= f.text_area :short_definition, rows: 3, required: true %>
+
+      <%= f.label :new_believer, "For a new believer (one sentence)" %>
+      <%= f.text_area :new_believer, rows: 2 %>
+
+      <%= f.label :explanation, "Explanation (a short paragraph)" %>
+      <%= f.text_area :explanation, rows: 7 %>
+
+      <div class="ft-review-grid">
+        <div>
+          <%= f.label :root_strongs, "Root words — Strong's numbers (G = Greek, H = Hebrew)" %>
+          <%= f.text_field :root_strongs, value: @term.root_strongs.join(" "), placeholder: "G5485 H2580" %>
+        </div>
+        <div>
+          <%= f.label :related_slugs, "Related terms (one per line)" %>
+          <%= f.text_area :related_slugs, value: @term.related_slugs.join("\n"), rows: 4 %>
+        </div>
+        <div>
+          <%= f.label :key_references, "Key verses (one per line)" %>
+          <%= f.text_area :key_references, value: @term.key_references.join("\n"), rows: 5 %>
+        </div>
+        <div>
+          <%= f.label :aliases, "Other words people search for (one per line)" %>
+          <%= f.text_area :aliases, value: @term.aliases.join("\n"), rows: 5 %>
+        </div>
+      </div>
+
+      <div class="ft-review-submit">
+        <%= f.submit "Save", class: "dw-admin-btn" %>
+        <%= text_field_tag :reviewed_by, reviewer_name_default, class: "ft-review-name", "aria-label": "Reviewed by", maxlength: 80 %>
+        <button type="submit" name="mark_reviewed" value="1" class="dw-admin-btn is-primary">Save and mark reviewed</button>
+      </div>
+    <% end %>
+  </section>
+</div>
