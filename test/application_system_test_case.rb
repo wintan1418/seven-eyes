@@ -4,6 +4,13 @@ require_relative "test_helpers/offline_test_helper"
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1000 ]
 
+  # One browser at a time. The offline tests flip a process-wide network switch
+  # (NetworkUnplug) and clear the origin's storage and service worker, so
+  # parallel workers trip over each other (sign-ins bounce, saved pages vanish).
+  # Past 50 system tests Rails would fork one worker per CPU; keep it serial
+  # unless PARALLEL_WORKERS asks otherwise.
+  ActiveSupport::TestCase.parallelize(workers: 1) unless ENV["PARALLEL_WORKERS"]
+
   # Lets offline tests cut the test server off (see OfflineTestHelper).
   Capybara.app = NetworkUnplug.new(Capybara.app) unless Capybara.app.is_a?(NetworkUnplug)
   teardown { NetworkUnplug.unplugged = false; NetworkUnplug.hanging = false }
