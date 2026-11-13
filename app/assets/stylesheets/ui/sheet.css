@@ -53,6 +53,13 @@
   .ui-sheet--dialog.is-open .ui-sheet-panel { transform: translate(-50%, -50%); opacity: 1; }
   .ui-passage-sheet .ui-sheet-panel { width: min(640px, calc(100vw - 48px)); height: min(720px, calc(100dvh - 96px)); }
 }
+/* A short window (a 1366×600 laptop under the browser's bars): the card takes
+   more of the height; its body is the scroller (wheel, scrollbar and — it holds
+   focus while open — ↑/↓, Page Down, End). */
+@media (min-width: 768px) and (max-height: 760px) {
+  .ui-sheet--dialog .ui-sheet-panel { max-height: calc(100dvh - 32px); }
+}
+.ui-sheet-body:focus { outline: none; }
 
 .ui-sheet-head {
   flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px;
