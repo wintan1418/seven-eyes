@@ -5,13 +5,20 @@ import { createConsumer } from "@rails/actioncable"
 // controller. "Remote" mints a secret pairing code (+ QR + signed console
 // token) from the server, subscribes to its stream, and turns incoming pad
 // commands into the presentation controller's window event:
-//   preach:command {action: "next" | "prev" | "chase", value}
+//   preach:command {action: "next" | "prev" | "back" | "blank" | "clear" | "logo" | "chase", value}
 // It also answers the pad's presence pings so the phone shows "Connected".
 export default class extends Controller {
   static targets = ["panel", "qr", "code", "url", "button"]
   static values = { url: String }
 
+  connect() {
+    // Black / Clear / Logo changed on the console: tell the pad at once.
+    this._onMode = () => this._here()
+    window.addEventListener("screen:mode", this._onMode)
+  }
+
   disconnect() {
+    window.removeEventListener("screen:mode", this._onMode)
     this._sub?.unsubscribe()
     this._consumer?.disconnect()
   }
@@ -91,12 +98,17 @@ export default class extends Controller {
   _received(data) {
     if (!data || !data.type) return
     if (data.type === "ping") {
-      this._sub?.perform("relay", { type: "here" })
+      this._here()
     } else if (data.type === "command") {
       window.dispatchEvent(new CustomEvent("preach:command", {
         detail: { action: data.action, value: data.value }
       }))
     }
+  }
+
+  // Presence, carrying what the big screen shows (screen_live sets it).
+  _here() {
+    this._sub?.perform("relay", { type: "here", value: this.element.dataset.screenMode || "live" })
   }
 
   api(method, url) {

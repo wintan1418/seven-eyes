@@ -10,7 +10,7 @@ const PRESENCE_TIMEOUT_MS = PING_MS * 2 + 1000
 // next/prev/chase commands over the pairing stream; the operator console
 // answers a presence ping so the pad can show whether anyone is listening.
 export default class extends Controller {
-  static targets = ["status", "dot", "input"]
+  static targets = ["status", "dot", "input", "screen"]
   static values = { code: String, token: String }
 
   connect() {
@@ -27,6 +27,7 @@ export default class extends Controller {
           if (data.type !== "here") return
           this._lastHere = Date.now()
           this._setConnected(true)
+          this._showScreen(data.value)
         }
       }
     )
@@ -57,6 +58,23 @@ export default class extends Controller {
   back(event) {
     event?.preventDefault?.()
     this._command("back")
+  }
+
+  // Black / Clear / Logo — the same live controls as the console's bar.
+  screen(event) {
+    event?.preventDefault?.()
+    const command = event.currentTarget.dataset.screenCommand
+    if ([ "blank", "clear", "logo" ].includes(command)) this._command(command)
+  }
+
+  // Light the button for what the big screen shows now.
+  _showScreen(mode) {
+    const lit = mode === "black" ? "blank" : mode
+    this.screenTargets.forEach((b) => {
+      const on = b.dataset.screenCommand === lit
+      b.classList.toggle("is-on", on)
+      b.setAttribute("aria-pressed", String(on))
+    })
   }
 
   chase(event) {

@@ -13,6 +13,7 @@ class PreachContractTest < ActionDispatch::IntegrationTest
     data-preach-back data-preach-parallel data-preach-split data-preach-emph data-preach-project
     data-preach-blank data-preach-next data-preach-ref data-preach-slide data-preach-hold
     data-preach-join data-preach-finds data-preach-offline data-preach-keys data-preview-first data-stage-ref data-stage-clock data-stage-now data-stage-next
+    data-look-bg data-screen-logo data-screen-countdown data-screen-alert data-screen-state
   ].freeze
 
   # Root classes the presentation/live/diff/interlinear controllers toggle and
@@ -75,6 +76,12 @@ class PreachContractTest < ActionDispatch::IntegrationTest
     assert_select "[data-live-target='button'][data-action~='live#toggle']"
     assert_select "[data-live-target='chip'] [data-live-target='count']"
     assert_select "[data-remote-target='button'][data-action~='remote#toggle']"
+    # Looks + live controls: self-contained components (screen_look / screen_live).
+    assert_select ".ps-screen-panel[data-controller~='screen-look'] [data-screen-look-target='grid']"
+    assert_select "[data-controller~='screen-live'] [data-preach-blank][data-action~='presentation#toggleBlank']"
+    %w[clear logo toggleTimer toggleAlert].each do |action|
+      assert_select "[data-controller~='screen-live'] [data-action~='screen-live##{action}']"
+    end
   end
 
   test "a way into preach mode is always on the page" do

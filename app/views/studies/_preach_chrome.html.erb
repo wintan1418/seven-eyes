@@ -91,11 +91,7 @@
               title="Stage display for the pulpit — current verse, NEXT verse big, and a clock">&#8983; Stage</button>
       <button type="button" class="ps-preach-tool"
               data-action="presentation#toggleScreenPanel"
-              title="Projection screen look — theme and text size">&#10022; Screen</button>
-      <button type="button" class="ps-preach-tool"
-              data-preach-blank
-              data-action="presentation#toggleBlank"
-              title="Blank the projector — a calm holding screen for before the service and between segments (. key)">&#9634; Blank</button>
+              title="Looks — slide templates, background, Fade or Cut, logo and text size">&#10022; Looks</button>
       <button type="button" class="ps-preach-tool ps-golive"
               data-live-target="button"
               data-action="live#toggle"
@@ -109,6 +105,71 @@
               title="Keyboard shortcuts (?)">&#9000; Keys</button>
     </div>
     <div class="ps-preach-bar-right">
+      <%# Live screen controls — one self-contained toolbar component
+          (screen_live_controller): the buttons, the "what the room sees"
+          badge and the Timer / Alert popovers travel together. %>
+      <div class="ps-live-toolbar" data-controller="screen-live">
+        <div class="ps-live-controls" role="group" aria-label="Big screen">
+          <button type="button" class="ps-live-btn is-black" data-preach-blank aria-pressed="false"
+                  data-action="presentation#toggleBlank"
+                  title="Black — the screen goes fully black; press again to bring it back (. key)">
+            <span class="ic" aria-hidden="true">&#9632;</span><span class="lbl">Black</span><kbd>.</kbd></button>
+          <button type="button" class="ps-live-btn is-clear" aria-pressed="false"
+                  data-screen-live-target="clearButton" data-action="screen-live#clear"
+                  title="Clear — hide the words, keep the background, until the next slide (C)">
+            <span class="ic" aria-hidden="true">&#9675;</span><span class="lbl">Clear</span><kbd>C</kbd></button>
+          <button type="button" class="ps-live-btn is-logo" aria-pressed="false"
+                  data-screen-live-target="logoButton" data-action="screen-live#logo"
+                  title="Logo — your church logo or name on the background; press again to go back (O)">
+            <span class="ic" aria-hidden="true">&#10022;</span><span class="lbl">Logo</span><kbd>O</kbd></button>
+          <button type="button" class="ps-live-btn is-timer" aria-pressed="false"
+                  data-screen-live-target="timerButton" data-action="screen-live#toggleTimer"
+                  title="Countdown — &ldquo;Service starts in 04:59&rdquo; on the screen, then the logo (T)">
+            <span class="ic" aria-hidden="true">&#9201;</span><span class="lbl">Timer</span><kbd>T</kbd></button>
+          <button type="button" class="ps-live-btn is-alert" aria-pressed="false"
+                  data-screen-live-target="alertButton" data-action="screen-live#toggleAlert"
+                  title="Alert — a message across the bottom of the screen, over whatever is showing (A)">
+            <span class="ic" aria-hidden="true">&#9888;</span><span class="lbl">Alert</span><kbd>A</kbd></button>
+        </div>
+        <%# What the room sees, in words — operator only (screen_live). %>
+        <div class="ps-screen-state" data-screen-state hidden role="status" aria-live="polite"></div>
+
+        <div class="ps-live-panel-pop" data-screen-live-target="timerPanel" hidden role="dialog" aria-label="Countdown">
+          <div class="pp-head"><span>Countdown</span>
+            <button type="button" class="close" data-action="screen-live#closePanels" aria-label="Close">&#10005;</button></div>
+          <label>Heading <input type="text" maxlength="60" value="Service starts in" data-screen-live-target="heading"
+                 data-action="keydown->screen-live#panelKey"></label>
+          <div class="pp-row">
+            <label>Minutes <input type="number" min="1" max="600" step="1" value="5" inputmode="numeric"
+                   data-screen-live-target="minutes" data-action="keydown->screen-live#panelKey"></label>
+            <span class="or">or until</span>
+            <label>Time <input type="time" data-screen-live-target="until" data-action="keydown->screen-live#panelKey"></label>
+          </div>
+          <p class="pp-hint">Shows on the screen in your look. At 00:00 the logo comes up.</p>
+          <button type="button" class="pp-go" data-action="screen-live#startCountdown">Start countdown</button>
+        </div>
+
+        <div class="ps-live-panel-pop" data-screen-live-target="alertPanel" hidden role="dialog" aria-label="Alert">
+          <div class="pp-head"><span>Alert</span>
+            <button type="button" class="close" data-action="screen-live#closePanels" aria-label="Close">&#10005;</button></div>
+          <label>Message <input type="text" maxlength="160" placeholder="Parent of child 12, please come to the nursery"
+                 data-screen-live-target="alertText" data-action="keydown->screen-live#panelKey"></label>
+          <label>Hide it
+            <select data-screen-live-target="alertSeconds">
+              <option value="0">when I dismiss it</option>
+              <option value="15">after 15 seconds</option>
+              <option value="30" selected>after 30 seconds</option>
+              <option value="60">after 1 minute</option>
+              <option value="120">after 2 minutes</option>
+            </select>
+          </label>
+          <p class="pp-hint">Runs across the bottom of the screen, over whatever is showing.</p>
+          <div class="pp-row">
+            <button type="button" class="pp-go" data-action="screen-live#showAlert">Show alert</button>
+            <button type="button" class="pp-quiet" data-action="screen-live#dismissAlert">Dismiss</button>
+          </div>
+        </div>
+      </div>
       <button type="button" class="ps-preach-tool"
               data-action="presentation#prev" title="Previous verse (←)">&#8249; Prev</button>
       <button type="button" class="ps-preach-tool primary"
@@ -132,31 +193,100 @@
     <span class="orn">&#10022;</span>
   </div>
 
+  <%# The look's background (custom picture / video inside) and the full-screen
+      logo, countdown and alert layers (screen_look / screen_live; slide_themes.css). %>
+  <div class="ps-look-bg" data-look-bg aria-hidden="true"></div>
+  <div class="ps-screen-logo" data-screen-logo aria-hidden="true"></div>
+  <div class="ps-screen-countdown" data-screen-countdown aria-hidden="true">
+    <div class="cd-head"></div>
+    <div class="cd-digits"></div>
+  </div>
+  <div class="ps-screen-alert" data-screen-alert hidden>
+    <span class="al-text"></span>
+  </div>
+
   <%# Go-Live join card on the projector — QR + code for the whole room to scan %>
   <div class="ps-preach-join" data-preach-join hidden></div>
 
   <%# AI quick-search results for the Go box ("the walls of jericho" → chips) %>
   <div class="ps-preach-finds" data-preach-finds hidden></div>
 
-  <%# Projection screen prefs (theme + text scale), broadcast to the output window %>
-  <div class="ps-screen-panel" hidden>
-    <div class="lbl">Projection screen</div>
-    <div class="row themes">
+  <%# Looks — the projection's slide template, background, Fade/Cut, logo slide
+      and text size (screen_look_controller + lib/slide_themes; drawn by
+      slide_themes.css). Scale/weight stay with presentation#bumpScale/setWeight. %>
+  <div class="ps-screen-panel ps-looks" hidden data-controller="screen-look" role="dialog" aria-label="Looks">
+    <div class="lk-head">
+      <div>
+        <div class="lbl">Looks</div>
+        <div class="sub">How the big screen looks &mdash; kept for this study and as your default.</div>
+      </div>
+      <button type="button" class="done" data-action="presentation#toggleScreenPanel">Done</button>
+    </div>
+    <div class="lk-body">
+      <div class="lk-grid" data-screen-look-target="grid" role="radiogroup" aria-label="Slide looks"></div>
+      <div class="lk-side">
+        <div class="ps-look-preview" data-screen-look-target="preview" aria-hidden="true">
+          <span class="lp-bg"></span>
+          <span class="lp-text">For God so loved the world, that he gave his only begotten Son</span>
+          <span class="lp-ref">John 3:16</span>
+          <span class="lp-name"></span>
+        </div>
+
+        <div class="lk-label">Background</div>
+        <div class="row seg">
+          <button type="button" data-bg="look" data-screen-look-target="bgButton" data-action="screen-look#setBg">The look&rsquo;s</button>
+          <button type="button" data-bg="image" data-screen-look-target="bgButton" data-action="screen-look#setBg">My picture</button>
+          <button type="button" data-bg="video" data-screen-look-target="bgButton" data-action="screen-look#setBg">My video</button>
+        </div>
+        <div class="row files">
+          <label class="file">Choose picture&hellip;
+            <input type="file" accept="image/*" data-slot="image" data-action="change->screen-look#upload"></label>
+          <label class="file">Choose video&hellip;
+            <input type="file" accept="video/mp4,video/webm,video/*" data-slot="video" data-action="change->screen-look#upload"></label>
+        </div>
+        <label class="row dim">Darken it
+          <input type="range" min="0" max="0.8" step="0.05" value="0.35" data-screen-look-target="dim"
+                 data-action="input->screen-look#setDim"></label>
+        <p class="lk-note" data-screen-look-target="note" aria-live="polite"></p>
+
+        <div class="lk-label">Changing slides</div>
+        <div class="row seg">
+          <button type="button" data-transition="fade" data-screen-look-target="transitionButton" data-action="screen-look#setTransition">Fade</button>
+          <button type="button" data-transition="cut" data-screen-look-target="transitionButton" data-action="screen-look#setTransition">Cut</button>
+        </div>
+
+        <div class="lk-label">Text</div>
+        <div class="row scale">
+          <button type="button" data-screen-scale-delta="-0.1" data-action="presentation#bumpScale">A&minus;</button>
+          <span class="val" data-screen-scale>100%</span>
+          <button type="button" data-screen-scale-delta="0.1" data-action="presentation#bumpScale">A&#43;</button>
+        </div>
+        <div class="row weights">
+          <button type="button" data-screen-weight="regular" data-action="presentation#setWeight">Regular</button>
+          <button type="button" data-screen-weight="bold" data-action="presentation#setWeight"><b>Bold</b></button>
+        </div>
+
+        <div class="lk-label">Logo slide</div>
+        <div class="row brand">
+          <span class="logo-thumb" data-screen-look-target="logoThumb"></span>
+          <label class="file">Choose logo&hellip;
+            <input type="file" accept="image/*" data-slot="logo" data-action="change->screen-look#upload"></label>
+          <button type="button" class="quiet" data-slot="logo" data-action="screen-look#removeMedia">Remove</button>
+        </div>
+        <input type="text" class="lk-input" maxlength="80" placeholder="Church name" aria-label="Church name"
+               data-screen-look-target="brandName" data-action="input->screen-look#setBrand">
+        <input type="text" class="lk-input" maxlength="120" placeholder="Welcome line (optional)" aria-label="Welcome line"
+               data-screen-look-target="brandLine" data-action="input->screen-look#setBrand">
+        <p class="hint">Text fills the screen automatically. A&minus; / A&#43; set the most it may grow. Pictures,
+          video and logo stay on this computer, so they work offline.</p>
+      </div>
+    </div>
+    <%# The older Vellum / Ink / Paper setting, kept in step by screen-look. %>
+    <div class="lk-legacy" hidden>
       <button type="button" data-screen-theme="vellum" data-action="presentation#setTheme">Vellum</button>
       <button type="button" data-screen-theme="ink" data-action="presentation#setTheme">Ink</button>
       <button type="button" data-screen-theme="paper" data-action="presentation#setTheme">Paper</button>
     </div>
-    <div class="row scale">
-      <button type="button" data-screen-scale-delta="-0.1" data-action="presentation#bumpScale">A&minus;</button>
-      <span class="val" data-screen-scale>100%</span>
-      <button type="button" data-screen-scale-delta="0.1" data-action="presentation#bumpScale">A&#43;</button>
-    </div>
-    <div class="row weights">
-      <button type="button" data-screen-weight="regular" data-action="presentation#setWeight">Regular</button>
-      <button type="button" data-screen-weight="bold" data-action="presentation#setWeight"><b>Bold</b></button>
-    </div>
-    <p class="hint">Text fills the screen automatically. A&minus; / A&#43; set the most it may grow.</p>
-    <button type="button" class="done" data-action="presentation#toggleScreenPanel">Done</button>
   </div>
 
   <%# Stage display (?stage=1): NOW small, NEXT big, clock — for the pulpit %>
@@ -185,8 +315,12 @@
         <div><dd><kbd>B</kbd></dd><dd>Back to where you were</dd></div>
         <div><dd><kbd>H</kbd></dd><dd>Home to the teaching text</dd></div>
         <div><dd><kbd>P</kbd></dd><dd>Parallel translations</dd></div>
-        <div><dd><kbd>.</kbd></dd><dd>Blank the projector</dd></div>
+        <div><dd><kbd>.</kbd></dd><dd>Black &mdash; the screen fully black</dd></div>
         <div><dd><kbd>W</kbd></dd><dd>Root word (Hebrew / Greek) of the verse on screen &mdash; <kbd>Shift</kbd>+<kbd>W</kbd> for Preview</dd></div>
+        <div><dd><kbd>C</kbd></dd><dd>Clear &mdash; hide the words, keep the background</dd></div>
+        <div><dd><kbd>O</kbd></dd><dd>Logo on the screen</dd></div>
+        <div><dd><kbd>T</kbd></dd><dd>Countdown timer</dd></div>
+        <div><dd><kbd>A</kbd></dd><dd>Alert across the bottom of the screen</dd></div>
         <div><dd><kbd>Esc</kbd></dd><dd>Close / leave preach (twice while projecting)</dd></div>
       </dl>
       <dl>

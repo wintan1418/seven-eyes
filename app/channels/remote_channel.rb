@@ -2,8 +2,9 @@
 # plus two signed, expiring pairing tokens (RemotePairing) — one for itself,
 # one baked into the pad's QR link — and both ends subscribe with theirs:
 #   {type: "ping"}                       pad asking if the console is there
-#   {type: "here"}                       console answering presence
-#   {type: "command", action:, value:}   next / prev / chase from the pad
+#   {type: "here", value:}               console answering presence (value: what the
+#                                        big screen shows — live/clear/logo/countdown/black)
+#   {type: "command", action:, value:}   next / prev / back / blank / clear / logo / chase
 #
 # A subscription must present a valid token for that code; only the pad role
 # may send commands and pings, only the console may answer "here". Knowing a
@@ -13,7 +14,7 @@ class RemoteChannel < ApplicationCable::Channel
 
   PAD_MESSAGES = %w[ ping command ].freeze
   CONSOLE_MESSAGES = %w[ here ].freeze
-  COMMANDS = %w[ next prev back home blank chase ].freeze
+  COMMANDS = %w[ next prev back home blank clear logo chase ].freeze
 
   def subscribed
     code = params[:code].to_s.upcase

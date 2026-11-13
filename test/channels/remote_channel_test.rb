@@ -58,6 +58,19 @@ class RemoteChannelTest < ActionCable::Channel::TestCase
     end
   end
 
+  test "the pad drives the live screen controls; the console reports what the screen shows" do
+    subscribe code: "ABC234", token: token(RemotePairing::PAD)
+    %w[ blank clear logo ].each do |command|
+      perform :relay, { "type" => "command", "command" => command, "value" => "" }
+      assert_equal command, JSON.parse(broadcasts("remote:ABC234").last)["action"]
+    end
+
+    subscribe code: "ABC234", token: token(RemotePairing::CONSOLE)
+    perform :relay, { "type" => "here", "value" => "logo" }
+    message = JSON.parse(broadcasts("remote:ABC234").last)
+    assert_equal [ "here", "logo" ], message.values_at("type", "value")
+  end
+
   test "unknown message types and actions are dropped" do
     subscribe code: "ABC234", token: token(RemotePairing::PAD)
     assert_no_broadcasts("remote:ABC234") do

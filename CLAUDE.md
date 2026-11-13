@@ -270,9 +270,25 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
 - **Stage display** — `?stage=1` window (`⌗ Stage` button): NOW small / NEXT big / clock, painted
   by `_paintStage()` from the same BroadcastChannel state; hello role `"stage"` so it never flips
   the operator into console mode.
-- **Projection screen prefs** — `✦ Screen` panel: theme (vellum/ink/paper → `out-theme-*` classes
-  on the output root) + text scale (`--ps-out-scale`), persisted in localStorage, broadcast as
-  `{type:"screen"}` and re-sent on output hello.
+- **Projection screen prefs** — text scale (`--ps-out-scale`) + Regular/Bold, persisted in
+  localStorage, broadcast as `{type:"screen"}` and re-sent on output hello (presentation controller).
+- **Looks + live controls** (Nov 2026, phase 2A) — `✦ Looks` panel (`.ps-screen-panel`,
+  `screen_look` controller): 13 slide templates in `lib/slide_themes.js` (registry + per-study /
+  device-default prefs in localStorage `ps-look:*`) drawn by `slide_themes.css` as `--look-*`
+  tokens on `[data-look]` — CSS gradients + inline SVG only (offline; node test checks contrast).
+  Root gets `data-look`, `data-look-ref` (top/bottom), `data-look-bg`, `data-slide-transition`.
+  Custom background picture / looping muted video and the church logo live in IndexedDB
+  (`lib/screen_media.js`, db `ps-screen-media`), church name in `ps-screen-brand`. Vellum/Ink/Paper
+  are looks (the old `out-theme-*` classes are kept in step). Projector crossfades via View
+  Transitions (`lib/slide_transition.js`; Cut setting, reduced motion → cut); words grow/shrink to
+  fit (`lib/fit_text.js`). Live toolbar (`.ps-live-toolbar`, `screen_live` controller, in the bar):
+  Black (`.`, presentation `_blank`) · Clear `C` (until the next slide) · Logo `O` · Timer `T`
+  (countdown → logo at 00:00) · Alert `A` (lower third, also on stage); BroadcastChannel
+  `{type:"live"|"look"|"media"|"brand"}`, `[data-screen-state]` badge on the operator, phone remote
+  mirrors Black/Clear/Logo (`here` carries the state). Both controllers are self-contained
+  components meant to be remounted in the coming console redesign. Scripture sets / seminars
+  (phase 2B rich slides) take the look via `--ps-slide-ref-color` + `.set-ref`/`.sem-*` rules
+  and fit as prose; pictures and PDF pages fill the 16:9 frame untouched.
 - **Phone remote** — `☎ Remote` mints a secret 6-char pairing code + QR (`RemotesController#create`,
   nothing persisted); phone opens `/remote/:code` (`remote_pad` Stimulus controller) and both ends
   join `RemoteChannel` (pure relay with presence ping). Pad commands (next/prev/chase) reach the
