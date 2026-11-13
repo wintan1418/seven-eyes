@@ -1,10 +1,11 @@
 import { Controller } from "@hotwired/stimulus"
+import { shatter } from "../lib/shatter"
 
-// The home page's glossary slider (phones): a row of word cards that snaps
-// one card at a time. It moves on by itself every few seconds until the
-// person touches it, and the dots follow whatever is in view.
-// Reduced motion, a hidden tab or a laptop (where the slider is hidden): no
-// automatic moving.
+// A row of cards that snaps one card at a time — the glossary words and the
+// readers' testimonials. Every few seconds the card on screen breaks like
+// glass to reveal the next (lib/shatter), until the person touches it; a dot
+// does the same. Swiping scrolls as usual, and the dots follow what's in
+// view. Reduced motion, a hidden tab or a hidden slider: no automatic moving.
 export default class extends Controller {
   static targets = [ "track", "slide", "dot" ]
   static values = { interval: { type: Number, default: 5000 } }
@@ -36,7 +37,7 @@ export default class extends Controller {
     if (this.trackTarget.offsetParent === null) return // hidden (laptop layout)
     this.timer = setInterval(() => {
       if (document.hidden) return
-      this.show((this.index + 1) % this.slideTargets.length)
+      this.show((this.index + 1) % this.slideTargets.length, { glass: true })
     }, this.intervalValue)
   }
 
@@ -47,13 +48,20 @@ export default class extends Controller {
 
   go(event) {
     this.stop()
-    this.show(Number(event.currentTarget.dataset.index) || 0)
+    this.show(Number(event.currentTarget.dataset.index) || 0, { glass: true })
   }
 
-  show(i) {
+  show(i, { glass = false } = {}) {
     const slide = this.slideTargets[i]
-    if (!slide) return
-    this.trackTarget.scrollTo({ left: slide.offsetLeft - this.padLeft(), behavior: "smooth" })
+    if (!slide || this.breaking) return
+    const left = slide.offsetLeft - this.padLeft()
+    if (!glass || Math.abs(left - this.trackTarget.scrollLeft) < 2) {
+      this.trackTarget.scrollTo({ left, behavior: "smooth" })
+      return
+    }
+    this.breaking = true
+    shatter(this.trackTarget, () => this.trackTarget.scrollTo({ left, behavior: "instant" }))
+      .finally(() => { this.breaking = false })
   }
 
   padLeft() {

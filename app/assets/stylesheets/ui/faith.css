@@ -460,3 +460,11 @@
 @media (min-width: 960px) {
   .hm-glossary.is-everywhere .hm-gl-slide { flex-basis: calc((100% - 24px) / 3); min-height: 320px; }
 }
+
+/* Glass break (lib/shatter.js): a faint sheen on each shard so the pieces
+   read as glass while they fall. */
+.glass-shard::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 45%, rgba(255, 255, 255, 0.12));
+  mix-blend-mode: screen;
+}

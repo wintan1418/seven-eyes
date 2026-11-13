@@ -40,6 +40,17 @@ class FaithTermsTest < ActionDispatch::IntegrationTest
     assert_select ".ld-foot-links a[href=?]", faith_terms_path
   end
 
+  test "readers' testimonials are a slider on the landing page, not a stack" do
+    3.times do |i|
+      Testimonials::Testimonial.create!(kind: "text", status: "approved", source: "page", consent_given: true,
+                                        name: "Reader #{i}", body: "It helps me prepare. #{i}")
+    end
+    get root_path
+    assert_select ".ld-voices-slider[data-controller='shatter-slider'] .ld-voices-grid[data-shatter-slider-target='track']"
+    assert_select ".ld-voice[data-shatter-slider-target='slide']", 3
+    assert_select ".ld-voices-slider .hm-gl-dot", 3
+  end
+
   test "no reviewed words: no slider or link on the landing page" do
     FaithTerm.update_all(status: FaithTerm.statuses[:draft])
     get root_path

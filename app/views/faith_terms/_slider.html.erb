@@ -5,16 +5,16 @@
     signed-out landing page: shown at every width, with no card to replace). %>
 <% everywhere = local_assigns.fetch(:everywhere, false) %>
 <section class="hm-glossary<%= " is-everywhere" if everywhere %>" aria-labelledby="hm-glossary-title"
-         data-controller="glossary-slider" data-glossary-slider-interval-value="5000">
+         data-controller="shatter-slider" data-shatter-slider-interval-value="5000">
   <div class="hm-glossary-head">
     <h2 class="ui-label" id="hm-glossary-title">Glossary of the Faith</h2>
     <%= link_to "All #{total}", faith_terms_path, class: "hm-glossary-all" %>
   </div>
-  <div class="hm-glossary-track" data-glossary-slider-target="track" tabindex="0"
+  <div class="hm-glossary-track" data-shatter-slider-target="track" tabindex="0"
        aria-roledescription="carousel" aria-label="Words of the faith — swipe to see more">
     <% terms.each_with_index do |term, i| %>
       <% root = roots[term.id] %>
-      <%= link_to faith_term_path(term), class: "hm-gl-slide", data: { glossary_slider_target: "slide" },
+      <%= link_to faith_term_path(term), class: "hm-gl-slide", data: { shatter_slider_target: "slide" },
             aria: { roledescription: "slide", label: "#{i + 1} of #{terms.size}: #{term.name}" } do %>
         <span class="hm-gl-art" aria-hidden="true">
           <%= faith_art_picture(FaithArt.for(term), sizes: "85vw", loading: i.zero? ? "eager" : "lazy") %>
@@ -34,7 +34,7 @@
         </span>
       <% end %>
     <% end %>
-    <%= link_to faith_terms_path, class: "hm-gl-slide is-more", data: { glossary_slider_target: "slide" } do %>
+    <%= link_to faith_terms_path, class: "hm-gl-slide is-more", data: { shatter_slider_target: "slide" } do %>
       <span class="hm-gl-text">
         <span class="hm-gl-label">Glossary of the Faith</span>
         <span class="hm-gl-term">See all <%= total %> words</span>
@@ -46,7 +46,7 @@
   <div class="hm-glossary-dots" aria-hidden="true">
     <% (terms.size + 1).times do |i| %>
       <button type="button" tabindex="-1" class="hm-gl-dot<%= ' is-on' if i.zero? %>"
-              data-glossary-slider-target="dot" data-action="glossary-slider#go" data-index="<%= i %>"></button>
+              data-shatter-slider-target="dot" data-action="shatter-slider#go" data-index="<%= i %>"></button>
     <% end %>
   </div>
 </section>

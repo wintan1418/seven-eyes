@@ -86,9 +86,20 @@
 
 .ld-voices { max-width: 60rem; margin: 80px auto 0; }
 .ld-voices h2 { margin: 0 0 20px; text-align: center; font: 700 22px var(--ui-font); letter-spacing: -0.02em; }
-.ld-voices-grid { display: grid; gap: 16px; }
-@media (min-width: 768px) { .ld-voices-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.ld-voice { margin: 0; padding: 22px; border: 1px solid var(--ui-border); border-radius: 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; }
+/* A horizontal slider, not a stack: one card at a time on phones, 2–3 across wider. */
+.ld-voices-slider { display: grid; gap: 12px; min-width: 0; }
+.ld-voices-grid {
+  position: relative; display: flex; gap: 16px; overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scrollbar-width: none; padding: 2px 0 4px;
+}
+.ld-voices-grid::-webkit-scrollbar { display: none; }
+.ld-voices-grid:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; border-radius: 18px; }
+.ld-voice {
+  flex: 0 0 86%; scroll-snap-align: start; background: var(--ui-bg, var(--ui-surface));
+  margin: 0; padding: 22px; border: 1px solid var(--ui-border); border-radius: 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px;
+}
+@media (min-width: 640px) { .ld-voice { flex-basis: calc((100% - 16px) / 2); } }
+@media (min-width: 960px) { .ld-voice { flex-basis: calc((100% - 32px) / 3); } }
 .ld-voice blockquote { margin: 0; font: 400 17px/1.55 var(--reader-font); }
 .ld-voice figcaption { display: flex; align-items: center; gap: 10px; font: 400 13px var(--ui-font); color: var(--ui-fg-muted); }
 .ld-voice figcaption .who { display: block; font-weight: 600; color: var(--ui-fg); }
