@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_13_150200) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_13_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -159,6 +159,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_150200) do
     t.string "strongs", null: false
     t.string "translit"
     t.datetime "updated_at", null: false
+    t.string "pron"
     t.index ["strongs"], name: "index_lexicon_entries_on_strongs", unique: true
   end
 
@@ -182,6 +183,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_150200) do
     t.datetime "updated_at", null: false
     t.integer "verse_end"
     t.integer "verse_start"
+    t.jsonb "slide_word"
     t.index ["code"], name: "index_live_sessions_on_code", unique: true
     t.index ["study_id"], name: "index_live_sessions_on_study_id"
   end

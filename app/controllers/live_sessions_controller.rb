@@ -108,6 +108,7 @@ class LiveSessionsController < ApplicationController
       slide_title: params[:slide_title].to_s.presence,
       slide_body: params[:slide_body].to_s.presence,
       slide_image_url: params[:slide_image_url].to_s.presence,
+      slide_word: LiveSession.clean_word(params[:slide_word]),
       slide_index: params[:slide_index].to_i }
   end
 

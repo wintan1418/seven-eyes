@@ -1,0 +1,259 @@
+/* ============================================================================
+   Root word projection — the Word Study slide, the operator's root-word card,
+   the stage panels and the live phones' card.
+   Fonts (bundled, SIL Open Font License 1.1 — see app/assets/fonts/root_words/):
+     Noto Serif (Greek + Latin, subset) and Noto Serif Hebrew (subset).
+   They are local files, so the projector shows ἀγαπάω / בָּרָא with no internet.
+   ========================================================================== */
+@font-face {
+  font-family: "RW Greek";
+  src: url("root_words/noto-serif-greek.woff2") format("woff2");
+  font-weight: 400 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "RW Hebrew";
+  src: url("root_words/noto-serif-hebrew.woff2") format("woff2");
+  font-weight: 400 800;
+  font-display: swap;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F, U+200C-200F, U+25CC;
+}
+
+/* The original word: Hebrew first in the stack so its points (niqqud) come
+   from the Hebrew face; Greek/Latin (and transliterations) from Noto Serif. */
+.rw-slide, .rw-card, .rw-stage, .rw-phone, .rw-preview {
+  --rw-script: "RW Hebrew", "RW Greek", "Noto Serif", "Times New Roman", serif;
+  --rw-latin: "RW Greek", "EB Garamond", "Noto Serif", serif;
+}
+[lang="he"] { font-feature-settings: "kern"; }
+
+/* ----- the projected slide ------------------------------------------------ */
+.ps-root .ps-preach-slide .rw-slide {
+  --rw-fit: 1;
+  --rw-ink: #1a1007;
+  --rw-accent: var(--rubric-deep, #5e1a12);
+  --rw-gold: var(--gold, #a3812e);
+  --rw-mark: rgba(201, 158, 52, 0.42);
+  --rw-size: calc(var(--rw-fit) * min(var(--ps-out-scale, 1), 1.25));
+  width: 100%; max-width: 1680px; max-height: 100%;
+  display: grid; align-items: center; gap: calc(3.2vw * var(--rw-fit)) calc(4.5vw * var(--rw-fit));
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+  text-align: left;
+}
+.ps-root.out-theme-ink .ps-preach-slide .rw-slide { --rw-ink: #f1e6cd; --rw-accent: #ecca63; --rw-gold: #d8b550; --rw-mark: rgba(216, 181, 80, 0.32); }
+.ps-root.out-theme-paper .ps-preach-slide .rw-slide { --rw-ink: #20180c; }
+.ps-root .ps-preach-slide .rw-slide.is-word,
+.ps-root .ps-preach-slide .rw-slide:not(:has(.rw-verse-side)) { grid-template-columns: minmax(0, 1fr); text-align: center; max-width: 1400px; }
+@media (max-aspect-ratio: 5/4) {
+  .ps-root .ps-preach-slide .rw-slide { grid-template-columns: minmax(0, 1fr); text-align: center; }
+}
+
+.ps-root .ps-preach-slide .rw-verse-side {
+  display: flex; flex-direction: column; gap: 0.9em; min-width: 0;
+  animation: rw-rise 520ms cubic-bezier(.2, .7, .2, 1) both;
+}
+.ps-root .ps-preach-slide .rw-slide .rw-ref.slide-title {
+  font: 700 calc(clamp(15px, 1.5vw, 30px) * var(--rw-size)) "Inter", system-ui, sans-serif;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--rw-accent);
+}
+.ps-root .ps-preach-slide .rw-slide .rw-verse.slide-stanza {
+  margin: 0; max-width: none; white-space: normal;
+  font: 600 calc(clamp(26px, 3.1vw, 64px) * var(--rw-size))/1.38 "EB Garamond", serif;
+  font-weight: var(--ps-out-weight, 600);
+}
+.ps-root .ps-preach-slide .rw-slide .rw-mark {
+  color: var(--rw-accent); background: linear-gradient(transparent 58%, var(--rw-mark) 58%, var(--rw-mark) 92%, transparent 92%);
+  background-repeat: no-repeat; background-size: 0% 100%; padding: 0 0.06em; border-radius: 2px;
+  animation: rw-sweep 700ms 420ms cubic-bezier(.3, .7, .2, 1) forwards;
+}
+
+.ps-root .ps-preach-slide .rw-word.slide-stanza {
+  font: 500 16px/1.3 "EB Garamond", serif; white-space: normal; max-width: none;
+}
+.ps-root .ps-preach-slide .rw-word {
+  display: flex; flex-direction: column; align-items: flex-start; min-width: 0;
+  padding-left: calc(3.5vw * var(--rw-fit)); border-left: 2px solid color-mix(in srgb, var(--rw-gold) 55%, transparent);
+}
+.ps-root .ps-preach-slide .rw-slide.is-word .rw-word,
+.ps-root .ps-preach-slide .rw-slide:not(:has(.rw-verse-side)) .rw-word { align-items: center; padding-left: 0; border-left: 0; }
+@media (max-aspect-ratio: 5/4) {
+  .ps-root .ps-preach-slide .rw-word { align-items: center; padding-left: 0; border-left: 0; }
+}
+.ps-root .ps-preach-slide .rw-word > * { animation: rw-rise 560ms cubic-bezier(.2, .7, .2, 1) both; }
+.ps-root .ps-preach-slide .rw-word > :nth-child(1) { animation-delay: 160ms; }
+.ps-root .ps-preach-slide .rw-word > :nth-child(2) { animation-delay: 260ms; }
+.ps-root .ps-preach-slide .rw-word > :nth-child(3) { animation-delay: 380ms; }
+.ps-root .ps-preach-slide .rw-word > :nth-child(4) { animation-delay: 460ms; }
+.ps-root .ps-preach-slide .rw-word > :nth-child(5) { animation-delay: 540ms; }
+.ps-root .ps-preach-slide .rw-word > :nth-child(n+6) { animation-delay: 640ms; }
+
+.ps-root .ps-preach-slide .rw-word .rw-eyebrow.slide-title {
+  font: 600 calc(clamp(13px, 1.35vw, 26px) * var(--rw-size)) "Cinzel", serif;
+  letter-spacing: 0.22em; text-transform: uppercase; color: var(--rw-gold);
+}
+.ps-root .ps-preach-slide .rw-word .rw-lemma {
+  font: 600 calc(clamp(64px, 8.6vw, 190px) * var(--rw-size))/1.12 var(--rw-script);
+  color: var(--rw-accent); margin: 0.12em 0 0.02em; letter-spacing: 0.005em;
+  text-shadow: 0 0.04em 0.1em color-mix(in srgb, var(--rw-gold) 18%, transparent);
+}
+.ps-root .ps-preach-slide .rw-slide.rw-lang-hebrew .rw-word .rw-lemma { line-height: 1.4; margin-bottom: 0.08em; }
+.ps-root .ps-preach-slide .rw-slide.is-word .rw-word .rw-lemma { font-size: calc(clamp(96px, 14vw, 300px) * var(--rw-size)); }
+.ps-root .ps-preach-slide .rw-word .rw-translit {
+  font: italic 500 calc(clamp(28px, 3.3vw, 70px) * var(--rw-size))/1.2 var(--rw-latin);
+}
+.ps-root .ps-preach-slide .rw-word .rw-say {
+  display: inline-flex; align-items: baseline; gap: 0.6em; margin-top: 0.45em;
+  font: 700 calc(clamp(18px, 1.9vw, 40px) * var(--rw-size)) "Inter", system-ui, sans-serif;
+  letter-spacing: 0.06em; opacity: 0.86;
+}
+.ps-root .ps-preach-slide .rw-word .rw-say-lbl {
+  font-size: 0.5em; letter-spacing: 0.2em; text-transform: uppercase; padding: 0.3em 0.7em;
+  border: 1px solid color-mix(in srgb, var(--rw-gold) 70%, transparent); border-radius: 999px; color: var(--rw-gold);
+}
+.ps-root .ps-preach-slide .rw-word .rw-rule {
+  width: calc(clamp(60px, 7vw, 150px) * var(--rw-size)); height: 2px; margin: 0.9em 0 0.7em;
+  background: linear-gradient(90deg, var(--rw-gold), transparent);
+}
+.ps-root .ps-preach-slide .rw-slide.is-word .rw-word .rw-rule,
+.ps-root .ps-preach-slide .rw-slide:not(:has(.rw-verse-side)) .rw-word .rw-rule { background: linear-gradient(90deg, transparent, var(--rw-gold), transparent); }
+.ps-root .ps-preach-slide .rw-word .rw-gloss {
+  font: 600 calc(clamp(26px, 2.9vw, 62px) * var(--rw-size))/1.3 "EB Garamond", serif;
+  max-width: 30ch;
+}
+.ps-root .ps-preach-slide .rw-slide.is-word .rw-word .rw-gloss { max-width: 34ch; }
+.ps-root .ps-preach-slide .rw-word .rw-note {
+  display: flex; flex-direction: column; gap: 0.35em; margin-top: 0.8em; max-width: 36ch;
+  font: italic 500 calc(clamp(19px, 1.9vw, 40px) * var(--rw-size))/1.38 "EB Garamond", serif;
+}
+.ps-root .ps-preach-slide .rw-word .rw-note-lbl {
+  font: 700 0.42em "Inter", system-ui, sans-serif; font-style: normal; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--rw-gold);
+}
+.ps-root .ps-preach-slide .rw-word .rw-meta {
+  margin-top: 1.1em; font: 600 calc(clamp(12px, 1.15vw, 24px) * var(--rw-size)) "Inter", system-ui, sans-serif;
+  letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.62;
+}
+.ps-root .ps-preach-slide .rw-word .rw-foot {
+  margin-top: 0.5em; font: italic 500 calc(clamp(16px, 1.6vw, 34px) * var(--rw-size)) "EB Garamond", serif; opacity: 0.8;
+}
+/* Operator's small mirror while a projector is connected. */
+.ps-root.is-projecting:not(.is-output) .ps-preach-slide .rw-slide { --rw-fit: 0.62; }
+
+@keyframes rw-rise { from { opacity: 0; transform: translateY(0.5em); } to { opacity: 1; transform: none; } }
+@keyframes rw-sweep { to { background-size: 100% 100%; } }
+@media (prefers-reduced-motion: reduce) {
+  .ps-root .ps-preach-slide .rw-slide *, .ps-root .ps-preach-slide .rw-verse-side { animation: none !important; }
+  .ps-root .ps-preach-slide .rw-slide .rw-mark { background-size: 100% 100%; }
+}
+
+/* ----- picking words on the live verse while the card is open ----------------- */
+.ps-root.is-rootwords .ps-preach-zone { display: none !important; }
+.ps-root.is-rootwords.is-preaching .ps-pane.is-presented .ps-verse.is-preach-current .ps-verse-text { cursor: pointer; }
+
+/* ----- the operator's card (a popover; can be mounted anywhere) ----------------- */
+.rw-host { display: contents; }
+.rw-card {
+  position: fixed; z-index: 140; left: 50%; bottom: 96px; transform: translateX(-50%);
+  width: min(860px, calc(100vw - 24px)); max-height: min(78vh, 720px); overflow-y: auto;
+  display: flex; flex-direction: column; gap: 10px; padding: 14px 18px 14px;
+  background: rgba(32, 19, 8, 0.98); color: #f3e8cf; border: 1px solid var(--gold, #a3812e); border-radius: 8px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55); font: 400 14px/1.45 "Inter", system-ui, sans-serif;
+}
+.rw-card[hidden] { display: none; }
+.rw-card:focus { outline: none; }
+@media (min-width: 1100px) {
+  .ps-root.is-preaching.is-queue-open:not(.is-output) .rw-card { left: calc((100% - var(--ps-dock-w, 400px)) / 2); width: min(820px, calc(100vw - var(--ps-dock-w, 400px) - 24px)); }
+}
+.rw-card-head { display: flex; align-items: center; gap: 10px; }
+.rw-card-badge { font: 600 20px var(--rw-script); color: var(--gold, #a3812e); }
+.rw-card-title { flex: 1; font: 600 11px "Cinzel", serif; letter-spacing: 0.2em; text-transform: uppercase; color: #e2c770; }
+.rw-close { background: none; border: 0; color: #d8c38a; font-size: 16px; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+.rw-close:hover { background: rgba(255, 255, 255, 0.08); }
+.rw-map-note { margin: 0; font: italic 400 13px/1.4 "EB Garamond", serif; color: rgba(243, 232, 207, 0.72); }
+.rw-words {
+  font: 500 21px/1.9 "EB Garamond", serif; color: rgba(243, 232, 207, 0.86);
+  padding: 8px 10px; border-radius: 6px; background: rgba(255, 247, 224, 0.04);
+}
+.rw-loading, .rw-empty { font: italic 400 15px "EB Garamond", serif; color: rgba(243, 232, 207, 0.7); }
+.rw-chip {
+  font: inherit; color: #fbf1d8; background: none; border: 0; padding: 0 2px; margin: 0 -1px; cursor: pointer; border-radius: 4px;
+  text-decoration: underline dotted rgba(226, 199, 112, 0.7); text-underline-offset: 5px;
+}
+.rw-chip:hover { background: rgba(226, 199, 112, 0.14); }
+.rw-chip:focus-visible { outline: 2px solid #e2c770; outline-offset: 1px; }
+.rw-chip.is-on { background: #e2c770; color: #24160a; text-decoration: none; }
+.rw-hint { margin: -4px 0 0; font-size: 11px; color: rgba(243, 232, 207, 0.5); }
+.rw-hint kbd, .rw-card kbd { font: 600 10px "Inter", sans-serif; padding: 1px 5px; border: 1px solid rgba(243, 232, 207, 0.3); border-radius: 3px; }
+
+.rw-detail { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 18px; padding-top: 4px; }
+.rw-detail[hidden] { display: none; }
+@media (max-width: 640px) { .rw-detail { grid-template-columns: minmax(0, 1fr); } }
+.rw-detail-word { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.rw-detail-english { font: 600 11px "Inter", sans-serif; letter-spacing: 0.14em; text-transform: uppercase; color: #d8c38a; }
+.rw-detail-lemma { font: 600 52px/1.15 var(--rw-script); color: #f6dd8c; }
+.rw-detail-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.rw-detail-translit { font: italic 500 22px var(--rw-latin); color: #fbf1d8; }
+.rw-detail-say { font: 700 14px "Inter", sans-serif; letter-spacing: 0.05em; color: #e2c770; }
+.rw-muted { font-size: 12px; color: rgba(243, 232, 207, 0.62); }
+.rw-detail-meaning { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.rw-label { font: 600 10px "Inter", sans-serif; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(226, 199, 112, 0.85); }
+.rw-gloss-input, .rw-rabbi-text {
+  width: 100%; box-sizing: border-box; font: 500 17px/1.35 "EB Garamond", serif; color: #24160a; background: #f7eedb;
+  border: 1px solid rgba(226, 199, 112, 0.6); border-radius: 5px; padding: 7px 10px;
+}
+.rw-rabbi-text { font-size: 15px; resize: vertical; }
+.rw-kjv { margin: 0; font-size: 12px; color: rgba(243, 232, 207, 0.66); }
+.rw-rabbi { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.rw-rabbi-status { font-size: 12px; color: rgba(243, 232, 207, 0.72); }
+.rw-rabbi-box[hidden], .rw-rabbi-status[hidden] { display: none; }
+.rw-rabbi-box { display: flex; flex-direction: column; gap: 6px; }
+.rw-include { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(243, 232, 207, 0.85); }
+
+.rw-card-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 10px; border-top: 1px solid rgba(163, 129, 46, 0.35); }
+.rw-layouts { display: inline-flex; border: 1px solid rgba(226, 199, 112, 0.5); border-radius: 6px; overflow: hidden; }
+.rw-act {
+  font: 600 12px "Inter", sans-serif; color: #f3e8cf; background: rgba(255, 247, 224, 0.06); border: 1px solid rgba(226, 199, 112, 0.45);
+  border-radius: 6px; padding: 7px 12px; cursor: pointer;
+}
+.rw-act:hover { background: rgba(255, 247, 224, 0.14); }
+.rw-act:disabled { opacity: 0.5; cursor: default; }
+.rw-act[hidden] { display: none; }
+.rw-layouts .rw-act { border: 0; border-radius: 0; }
+.rw-layouts .rw-act[aria-pressed="true"] { background: #e2c770; color: #24160a; }
+.rw-rabbi-btn { align-self: flex-start; }
+.rw-offline { flex: 1; font-size: 11px; color: rgba(243, 232, 207, 0.55); text-align: right; }
+.rw-offline[data-state="ready"] { color: #b9d79a; }
+.rw-project { background: var(--rubric, #8a2418); border-color: var(--rubric-deep, #5e1a12); color: #fff4dc; padding: 8px 18px; }
+.rw-project:hover { background: var(--rubric-deep, #5e1a12); }
+
+/* ----- stage display -------------------------------------------------------------- */
+/* The projected slide layer stays hidden on the stage (slide_tools.css:
+   .is-stage .ps-preach-slide { visibility: hidden }) — the stage paints its own panels. */
+.ps-stage .rw-stage { display: flex; flex-direction: column; gap: 6px; white-space: normal; }
+.ps-stage .rw-stage-lemma { font: 600 clamp(34px, 4.6vw, 84px)/1.2 var(--rw-script); color: #f6dd8c; }
+.ps-stage .rw-stage-line { font: italic 500 clamp(18px, 2.2vw, 36px) var(--rw-latin); color: #f5ecd6; }
+.ps-stage .rw-stage-gloss { font: 600 clamp(22px, 3vw, 48px)/1.25 "EB Garamond", serif; color: #f6dd8c; }
+.ps-stage .rw-stage-note { font: italic 400 clamp(15px, 1.6vw, 26px)/1.35 "EB Garamond", serif; color: rgba(238, 224, 188, 0.8); }
+.ps-stage .rw-stage-verse { margin: 0.3em 0 0; font-size: 0.8em; }
+.ps-stage .rw-stage-verse .rw-mark { color: #f6dd8c; text-decoration: underline 3px rgba(246, 221, 140, 0.6); text-underline-offset: 6px; background: none; }
+
+/* ----- live phones ------------------------------------------------------------------ */
+.rw-phone .rw-word { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 6px 0 14px; }
+.rw-phone .rw-eyebrow { font: 600 11px "Cinzel", serif; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold, #a3812e); }
+.rw-phone .rw-lemma { font: 600 56px/1.15 var(--rw-script); color: var(--rubric-deep, #5e1a12); }
+.rw-phone .rw-translit { font: italic 500 24px var(--rw-latin); }
+.rw-phone .rw-say { display: flex; gap: 8px; align-items: baseline; font: 700 14px "Inter", sans-serif; letter-spacing: 0.05em; }
+.rw-phone .rw-say-lbl { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold, #a3812e); }
+.rw-phone .rw-rule { width: 60px; height: 2px; margin: 8px 0; background: linear-gradient(90deg, transparent, var(--gold, #a3812e), transparent); }
+.rw-phone .rw-gloss { font: 600 21px/1.35 "EB Garamond", serif; }
+.rw-phone .rw-note { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; font: italic 400 17px/1.4 "EB Garamond", serif; }
+.rw-phone .rw-note-lbl { font: 700 10px "Inter", sans-serif; font-style: normal; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold, #a3812e); }
+.rw-phone .rw-meta { margin-top: 8px; font: 600 11px "Inter", sans-serif; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6; }
+.rw-phone .rw-foot { font: italic 400 15px "EB Garamond", serif; opacity: 0.8; }
+.rw-phone .rw-phone-verse { font: 400 19px/1.55 "EB Garamond", serif; margin: 6px 4px 0; }
+.rw-phone .rw-mark { background: rgba(201, 158, 52, 0.3); border-radius: 2px; padding: 0 2px; }
+
+/* ----- Preview card ------------------------------------------------------------------ */
+.rw-preview { display: flex; flex-direction: column; gap: 2px; }
+.rw-preview-lemma { font: 600 30px/1.2 var(--rw-script); color: var(--rubric-deep, #5e1a12); }
+.rw-preview-line { font-size: 13px; }

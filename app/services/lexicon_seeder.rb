@@ -34,6 +34,9 @@ class LexiconSeeder
         lemma: e["lemma"],
         # Greek entries use "translit"; Hebrew entries use "xlit" (fallback to "pron").
         translit: (e["translit"] || e["xlit"] || e["pron"])&.strip,
+        # Hebrew only: Strong's own pronunciation ("baw-raw'"); its ' marks the
+        # stressed syllable for the root-word say-it guide.
+        pron: e["pron"]&.strip.presence,
         definition: e["strongs_def"]&.strip, kjv_def: e["kjv_def"]&.strip,
         derivation: e["derivation"]&.strip,
         created_at: now, updated_at: now

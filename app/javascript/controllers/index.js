@@ -97,6 +97,9 @@ application.register("remote", RemoteController)
 import RemotePadController from "./remote_pad_controller"
 application.register("remote-pad", RemotePadController)
 
+import RootWordsController from "./root_words_controller"
+application.register("root-words", RootWordsController)
+
 import SearchController from "./search_controller"
 application.register("search", SearchController)
 

@@ -1,0 +1,71 @@
+<%# Root-word card (preach mode, operator): pick a word of the live / previewed
+    verse, see its Hebrew or Greek original (Strong's), project it as a Word
+    Study slide or queue it. A self-contained popover (root_words_controller),
+    so it can sit wherever the console puts Preview. The fonts are bundled
+    (OFL, app/assets/fonts/root_words) and prefetched so the projector has them
+    offline. %>
+<link rel="prefetch" href="<%= asset_path("root_words/noto-serif-greek.woff2") %>" as="font" type="font/woff2" crossorigin>
+<link rel="prefetch" href="<%= asset_path("root_words/noto-serif-hebrew.woff2") %>" as="font" type="font/woff2" crossorigin>
+<div class="rw-host" data-controller="root-words"
+     data-root-words-explain-url-value="<%= root_words_explain_path %>">
+  <section class="rw-card" data-root-words-target="card" hidden tabindex="-1"
+           role="dialog" aria-label="Root words">
+    <header class="rw-card-head">
+      <span class="rw-card-badge" aria-hidden="true">&#8501;</span>
+      <span class="rw-card-title">Root words &middot; <span data-root-words-target="title"></span></span>
+      <button type="button" class="rw-close" data-action="root-words#close" title="Close (Esc)" aria-label="Close">&#10005;</button>
+    </header>
+    <p class="rw-map-note" data-root-words-target="mapNote" hidden>
+      Words from the KJV &mdash; the translation tagged with Strong&rsquo;s numbers. The slide marks the word in your
+      translation when it appears there.
+    </p>
+    <div class="rw-words" data-root-words-target="words" aria-label="Pick a word"></div>
+    <p class="rw-hint">Tap a word here or on the verse &middot; <kbd>&larr;</kbd> <kbd>&rarr;</kbd> to move</p>
+
+    <div class="rw-detail" data-root-words-target="detail" hidden>
+      <div class="rw-detail-word">
+        <div class="rw-detail-english" data-root-words-target="english"></div>
+        <div class="rw-detail-lemma" data-root-words-target="lemma"></div>
+        <div class="rw-detail-line">
+          <span class="rw-detail-translit" data-root-words-target="translit"></span>
+          <span class="rw-detail-say" data-root-words-target="say" title="How to say it"></span>
+        </div>
+        <div class="rw-detail-line rw-muted">
+          <span data-root-words-target="strongs"></span> &middot; <span data-root-words-target="count"></span>
+        </div>
+      </div>
+      <div class="rw-detail-meaning">
+        <label class="rw-label" for="rw-gloss">Meaning on the slide</label>
+        <input id="rw-gloss" type="text" class="rw-gloss-input" maxlength="200" autocomplete="off"
+               data-root-words-target="gloss" data-action="input->root-words#editGloss">
+        <p class="rw-kjv" data-root-words-target="kjv"></p>
+
+        <div class="rw-rabbi">
+          <button type="button" class="rw-act rw-rabbi-btn" data-root-words-target="rabbiButton" data-action="root-words#askRabbi"
+                  title="A one-or-two-sentence explanation for the slide, from Rabbi (AI) — you can edit it first (R)">&#10022; Ask Rabbi</button>
+          <span class="rw-rabbi-status" data-root-words-target="rabbiStatus" hidden></span>
+          <div class="rw-rabbi-box" data-root-words-target="rabbiBox" hidden>
+            <label class="rw-label" for="rw-rabbi-text">Rabbi (AI) &mdash; check and edit before projecting</label>
+            <textarea id="rw-rabbi-text" rows="3" maxlength="400" class="rw-rabbi-text" data-root-words-target="rabbiText"></textarea>
+            <label class="rw-include"><input type="checkbox" data-root-words-target="rabbiInclude"> Show on the slide (labelled &ldquo;AI-assisted&rdquo;)</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="rw-card-foot">
+      <div class="rw-layouts" role="group" aria-label="Slide layout">
+        <button type="button" class="rw-act" data-root-words-target="layoutButton" data-layout="verse" aria-pressed="true"
+                data-action="root-words#setLayout" title="The verse with the word marked, and the word beside it">Beside the verse</button>
+        <button type="button" class="rw-act" data-root-words-target="layoutButton" data-layout="word" aria-pressed="false"
+                data-action="root-words#setLayout" title="Only the word, full screen">Word only</button>
+      </div>
+      <span class="rw-offline" data-root-words-target="status"></span>
+      <button type="button" class="rw-act rw-quiet" data-root-words-target="offlineButton" data-action="root-words#saveOffline" hidden
+              title="Keep the Strong's data on this device so root words work with no internet">Save for offline</button>
+      <button type="button" class="rw-act rw-quiet" data-action="root-words#queue" title="Add this word study to the queue (+)">&#43; Queue</button>
+      <button type="button" class="rw-act rw-project" data-action="root-words#project"
+              title="Put the word study on the screen (Enter · Shift+Enter: word only)">Project &#9656;</button>
+    </footer>
+  </section>
+</div>

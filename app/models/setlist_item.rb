@@ -15,13 +15,15 @@
 #               the server only keeps the deck key and page count in `data`
 #   seminar   — slides built in the app (title, bullets, picture, quote,
 #               section divider) with speaker notes, kept in `data`
+#   word      — a root-word study (Strong's): the word study as JSON in body
+#               (lib/root_words.js), title "Word study: agapáō — John 3:16"
 class SetlistItem < ApplicationRecord
   belongs_to :study
 
-  enum :kind, { scripture: 0, song: 1, thought: 2, picture: 3, scripture_set: 4, presentation: 5, seminar: 6 }
+  enum :kind, { scripture: 0, song: 1, thought: 2, picture: 3, scripture_set: 4, presentation: 5, seminar: 6, word: 7 }
 
   # Kinds that project as content slides (not chased through the pane).
-  SLIDE_KINDS = %w[ song thought picture scripture_set presentation seminar ].freeze
+  SLIDE_KINDS = %w[ song thought picture scripture_set presentation seminar word ].freeze
 
   # Cloudinary-hosted pictures are capped per study so one queue can't be used
   # to park unlimited images on our hosting account.
@@ -38,6 +40,7 @@ class SetlistItem < ApplicationRecord
   validate :scripture_set_must_have_passages, if: :scripture_set?
   validate :presentation_must_have_pages, if: :presentation?
   validate :seminar_must_have_slides, if: :seminar?
+  validate :word_study_must_parse, if: :word?
   validates :body, length: { maximum: 40_000 }
 
   before_validation { self.data = SlideData.clean(kind, data) if will_save_change_to_data? || will_save_change_to_kind? }
@@ -105,6 +108,15 @@ class SetlistItem < ApplicationRecord
 
   def song_sheet
     SongSheet.new(body, arrangement)
+  end
+
+  # The word study a queue item carries, or nil when body isn't one.
+  def word_study
+    return nil unless word?
+    data = JSON.parse(body.to_s)
+    data.is_a?(Hash) && data["s"].to_s.match?(/\A[GH]\d{1,5}[a-z]?\z/i) ? data : nil
+  rescue JSON::ParserError
+    nil
   end
 
   # The queue as the device-side controller holds it (setlist_controller.js).
@@ -178,6 +190,11 @@ class SetlistItem < ApplicationRecord
   def picture_limit
     return unless study && study.setlist_items.picture.where.not(id: id).count >= PICTURE_LIMIT
     errors.add(:base, "A queue can hold at most #{PICTURE_LIMIT} pictures")
+  end
+
+  def word_study_must_parse
+    errors.add(:base, "That word study couldn't be read") unless word_study
+    errors.add(:body, "is too long") if body.to_s.bytesize > 4_000
   end
 
   def slide_must_have_content

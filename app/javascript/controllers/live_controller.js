@@ -1,5 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import { projectedBody } from "../lib/song_sheet"
+import { wordStudyText } from "../lib/root_words"
 import { createConsumer } from "@rails/actioncable"
 
 const PUSH_DEBOUNCE_MS = 120
@@ -230,6 +231,12 @@ export default class extends Controller {
   _params(state) {
     const seq = this._nextSeq()
     if (!state) return { seq }
+    if (state.slide?.word) {
+      // A root-word study: phones draw the word card (slide_word); the body is
+      // its plain-text version for any page that only knows stanzas.
+      return { seq, kind: "slide", slide_title: state.slide.title, slide_body: wordStudyText(state.slide.word),
+               slide_image_url: null, slide_index: 0, slide_word: state.slide.word }
+    }
     if (state.slide) {
       return {
         seq,

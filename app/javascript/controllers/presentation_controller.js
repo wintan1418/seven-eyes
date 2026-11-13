@@ -5,6 +5,8 @@ import { allBookTexts } from "../lib/offline/store"
 import { searchVerses } from "../lib/offline/keyword_search"
 import { songSlides } from "../lib/song_sheet"
 import { richSlides, paintRichSlide, paintPresenter, sameRich } from "../lib/slides/rich_slides"
+import { wordFromDetail, wordStudyTitle, encodeWordStudy } from "../lib/root_words"
+import { renderWordSlide, renderStageWord } from "../lib/root_word_slide"
 
 // Drives focus-pane presentation mode plus the EasyWorship-style preach sub-mode.
 //
@@ -1094,7 +1096,7 @@ export default class extends Controller {
     }
     if (detail.kind === "slide") {
       if (this.element.classList.contains("is-preaching")) {
-        this._presentSlide({ title: detail.title, body: detail.body, arrangement: detail.arrangement, image: detail.image, index: detail.index || 0, rich: detail.rich })
+        this._presentSlide({ title: detail.title, body: detail.body, arrangement: detail.arrangement, image: detail.image, index: detail.index || 0, rich: detail.rich, word: wordFromDetail(detail) })
       } else {
         // The setlist doesn't mark it live either — nothing went on a screen.
         this._toast("Enter Preach mode first, then pick the song or slide to put it on the screen")
@@ -1109,7 +1111,8 @@ export default class extends Controller {
   // full-screen slide. Labels show to the operator and stage, never projected.
   // A scripture set / presentation / seminar deck (`rich`, lib/slides) lays
   // out its own steps but rides the same layer, state and broadcast.
-  _presentSlide({ title, body, arrangement, image, index, rich }) {
+  _presentSlide({ title, body, arrangement, image, index, rich, word }) {
+    if (word) { this._presentWordSlide(title, word); return }
     const slides = rich ? (richSlides(rich) || []) : songSlides(body, arrangement).slides.filter(s => s.text)
     if (slides.length === 0 && !title && !image) return
     this._remember()
@@ -1127,6 +1130,17 @@ export default class extends Controller {
     this._paintSlide()
   }
 
+  // A root-word study (lib/root_words, root_words_controller): one slide,
+  // rendered by lib/root_word_slide. body carries the study as JSON so the
+  // queue, the output window and live phones all compare/replay it as-is.
+  _presentWordSlide(title, word) {
+    this._remember()
+    this._slide = { title: title || wordStudyTitle(word), body: encodeWordStudy(word), arrangement: "", image: null,
+                    stanzas: [ "" ], labels: [ null ], index: 0, word }
+    this.element.classList.add("is-slide")
+    this._paintSlide()
+  }
+
   _stepSlide(delta) {
     const next = this._slide.index + delta
     if (next < 0 || next >= this._slide.stanzas.length) return
@@ -1138,8 +1152,18 @@ export default class extends Controller {
     const layer = this.element.querySelector("[data-preach-slide]")
     if (!layer || !this._slide) return
     const render = () => {
-      const { title, image, stanzas, index, rich } = this._slide
+      const { title, image, stanzas, index, rich, word } = this._slide
       layer.innerHTML = ""
+      if (word) {
+        renderWordSlide(layer, word)
+        const counter = this.element.querySelector("[data-preach-counter]")
+        if (counter) counter.innerHTML = `<span class="num">word study</span>`
+        this._paintSlideNextPreview()
+        this._paintRef()
+        if (this._isStage) this._paintStage()
+        this._broadcast()
+        return
+      }
       if (rich) {
         const fit = paintRichSlide(layer, rich, index)
         if (fit) this._fitSlide(layer, fit)
@@ -1194,8 +1218,8 @@ export default class extends Controller {
   _paintSlideNextPreview() {
     const box = this.element.querySelector("[data-preach-next]")
     if (!box || this._isOutput) return
-    if (this._slide.image) {
-      box.innerHTML = `<span class="lbl">On screen</span><span class="txt end">— picture —</span>`
+    if (this._slide.image || this._slide.word) {
+      box.innerHTML = `<span class="lbl">On screen</span><span class="txt end">${this._slide.word ? "— word study · Esc or Back returns to the verse —" : "— picture —"}</span>`
       return
     }
     const { stanzas, index } = this._slide
@@ -1244,7 +1268,7 @@ export default class extends Controller {
   _snapshot() {
     if (this._slide) {
       return { kind: "slide", title: this._slide.title, body: this._slide.body, arrangement: this._slide.arrangement,
-               image: this._slide.image, index: this._slide.index, rich: this._slide.rich }
+               image: this._slide.image, index: this._slide.index, rich: this._slide.rich, word: this._slide.word || null }
     }
     const pane = this.element.querySelector(".ps-pane.is-presented")
     const reference = pane?.querySelector("input[name='pane[reference]']")?.value?.trim()
@@ -1298,7 +1322,7 @@ export default class extends Controller {
     this._restoring = true
     try {
       if (entry.kind === "slide") {
-        this._presentSlide({ title: entry.title, body: entry.body, arrangement: entry.arrangement, image: entry.image, index: entry.index, rich: entry.rich })
+        this._presentSlide({ title: entry.title, body: entry.body, arrangement: entry.arrangement, image: entry.image, index: entry.index, rich: entry.rich, word: entry.word })
         return
       }
       const pane = this.element.querySelector(".ps-pane.is-presented")
@@ -1749,7 +1773,8 @@ export default class extends Controller {
     paintPresenter(this.element, this._slide) // seminar / presentation: notes + timer
 
     if (this._slide) {
-      const { title, image, stanzas, index } = this._slide
+      const { title, image, stanzas, index, word } = this._slide
+      if (word) { renderStageWord({ now, next, ref }, word); return }
       if (image) {
         if (ref) ref.textContent = title || "Picture"
         this._fillStagePanel(now, "on screen", "— picture —")
@@ -2065,7 +2090,7 @@ export default class extends Controller {
       verseStart: this._range?.first ?? null,
       verseEnd: this._range?.last ?? null,
       slide: this._slide
-        ? { title: this._slide.title, body: this._slide.body, arrangement: this._slide.arrangement, image: this._slide.image, index: this._slide.index, rich: this._slide.rich }
+        ? { title: this._slide.title, body: this._slide.body, arrangement: this._slide.arrangement, image: this._slide.image, index: this._slide.index, rich: this._slide.rich, word: this._slide.word || null }
         : null
     }
   }
