@@ -1,108 +1,137 @@
-<% content_for :title, "#{@term.name} · Glossary of the Faith · BiblioRata" %>
+<% title = "#{@term.name} · Glossary of the Faith · BiblioRata" %>
+<% content_for :title, title %>
 <% content_for :head do %>
   <meta name="description" content="<%= @term.short_definition.truncate(180) %>">
 <% end %>
-<%# One term: definition, a line for new believers, the explanation, its Greek /
-    Hebrew roots (from the lexicon, with verses to open in the reader), key
-    verses in the KJV and related terms. %>
-<div class="ps-root ui-more-page ft-page">
-  <%= render "studies/app_bar", title: @term.name %>
-  <%= render "studies/menu_sheet" %>
+<%# One term: a hero with Bible art behind its name, the definition, then the
+    reading (a line for new believers, the explanation in the pastor's
+    paragraphs) beside a study column (Greek / Hebrew roots from the lexicon,
+    related terms), and the key verses (KJV) as cards that open the reader. %>
+<% art = FaithArt.for(@term) %>
+<% main = @term.new_believer.present? || @term.explanation.present? %>
+<% study = @roots.any? || @related.any? %>
+<%= render layout: "faith_terms/shell", locals: { letters: @letters, current: @term } do %>
+  <article class="ft-view ft-term" data-title="<%= title %>" data-path="<%= faith_term_path(@term) %>">
+    <nav class="ft-crumb" aria-label="Glossary">
+      <%= link_to faith_terms_path, data: { turbo_frame: "ft-content" } do %><%= icon(:chevron_left) %> All terms<% end %>
+    </nav>
 
-  <main class="ft-main">
-    <article class="ft-term">
-      <nav class="ft-crumb"><%= link_to faith_terms_path do %><%= icon(:chevron_left) %> Glossary of the Faith<% end %></nav>
-
-      <header class="ft-term-head">
+    <header class="ft-hero">
+      <%= faith_art_picture(art, sizes: "(min-width: 1024px) calc(100vw - 340px), 100vw", img_class: "ft-hero-img", loading: "eager") %>
+      <div class="ft-hero-text">
+        <span class="ft-kicker">Glossary of the Faith</span>
         <%= render "faith_terms/draft_badge", term: @term %>
         <h1><%= @term.name %></h1>
-        <% if @term.aliases.any? %>
-          <p class="ft-aliases">Also: <%= @term.aliases.first(4).join(", ") %></p>
-        <% end %>
-        <p class="ft-term-def"><%= @term.short_definition %></p>
-      </header>
-
-      <% if @term.new_believer.present? %>
-        <aside class="ft-newbeliever">
-          <span class="ui-label">If you are new to faith</span>
-          <p><%= @term.new_believer %></p>
-        </aside>
-      <% end %>
-
-      <% if @term.explanation.present? %>
-        <section class="ft-section">
-          <h2>Going deeper</h2>
-          <p class="ft-explanation"><%= @term.explanation %></p>
-        </section>
-      <% end %>
-
-      <% if @roots.any? %>
-        <section class="ft-section" aria-labelledby="ft-roots-title">
-          <h2 id="ft-roots-title">Root words</h2>
-          <div class="ft-roots">
-            <% @roots.each do |root| %>
+        <% if @roots.any? %>
+          <p class="ft-hero-roots">
+            <% @roots.first(2).each do |root| %>
               <% entry = root[:entry] %>
-              <div class="ft-root">
-                <%= render "faith_terms/root_line", entry: entry %>
-                <% if entry.pron.present? %><span class="ft-root-say">say: <%= entry.pron %></span><% end %>
-                <% if entry.definition.present? %>
-                  <p class="ft-root-def"><%= entry.definition.squish.truncate(220, separator: " ") %></p>
-                <% end %>
-                <% if entry.kjv_def.present? %>
-                  <p class="ft-root-kjv"><b>KJV renders it:</b> <%= entry.kjv_def.squish.truncate(140, separator: " ") %></p>
-                <% end %>
-                <% if root[:count].positive? %>
-                  <p class="ft-root-count">In <%= pluralize(root[:count], "verse") %> of the KJV, for example:</p>
-                  <ul class="ft-root-samples">
-                    <% root[:samples].each do |verse| %>
-                      <% slug = PassageSlug.slug_for(osis: verse.book.osis_code, chapter: verse.chapter, verse_start: verse.verse_number) %>
-                      <li><%= link_to verse.label, open_passage_path(slug, t: @translation.code) %></li>
+              <span lang="<%= entry.language == "hebrew" ? "he" : "grc" %>"><%= entry.lemma.presence || entry.strongs %></span><% if entry.translit.present? %> <i><%= entry.translit %></i><% end %>
+            <% end %>
+          </p>
+        <% end %>
+      </div>
+      <%= link_to art.credit, credits_path(anchor: "art"), class: "ft-art-credit" %>
+    </header>
+
+    <div class="ft-term-lead">
+      <p class="ft-term-def"><%= @term.short_definition %></p>
+      <% if @term.aliases.any? %>
+        <p class="ft-aliases">Also: <%= @term.aliases.first(4).join(", ") %></p>
+      <% end %>
+    </div>
+
+    <div class="ft-term-body<%= " is-single" unless main && study %>">
+      <% if main %>
+        <div class="ft-term-main">
+          <% if @term.new_believer.present? %>
+            <aside class="ft-newbeliever">
+              <span class="ui-label">If you are new to faith</span>
+              <%= faith_paragraphs(@term.new_believer) %>
+            </aside>
+          <% end %>
+
+          <% if @term.explanation.present? %>
+            <section class="ft-section ft-deeper" aria-labelledby="ft-deeper-title">
+              <h2 id="ft-deeper-title">Going deeper</h2>
+              <div class="ft-explanation"><%= faith_paragraphs(@term.explanation) %></div>
+            </section>
+          <% end %>
+        </div>
+      <% end %>
+
+      <% if study %>
+        <div class="ft-term-study">
+          <% if @roots.any? %>
+            <section class="ft-section" aria-labelledby="ft-roots-title">
+              <h2 id="ft-roots-title">Root words</h2>
+              <div class="ft-roots">
+                <% @roots.each do |root| %>
+                  <% entry = root[:entry] %>
+                  <div class="ft-root">
+                    <%= render "faith_terms/root_line", entry: entry %>
+                    <% if entry.pron.present? %><span class="ft-root-say">say: <%= entry.pron %></span><% end %>
+                    <% if entry.definition.present? %>
+                      <p class="ft-root-def"><%= entry.definition.squish.truncate(220, separator: " ") %></p>
                     <% end %>
-                  </ul>
+                    <% if entry.kjv_def.present? %>
+                      <p class="ft-root-kjv"><b>KJV renders it:</b> <%= entry.kjv_def.squish.truncate(140, separator: " ") %></p>
+                    <% end %>
+                    <% if root[:count].positive? %>
+                      <p class="ft-root-count">In <%= pluralize(root[:count], "verse") %> of the KJV, for example:</p>
+                      <ul class="ft-root-samples">
+                        <% root[:samples].each do |verse| %>
+                          <% slug = PassageSlug.slug_for(osis: verse.book.osis_code, chapter: verse.chapter, verse_start: verse.verse_number) %>
+                          <li><%= link_to verse.label, open_passage_path(slug, t: @translation.code) %></li>
+                        <% end %>
+                      </ul>
+                    <% end %>
+                  </div>
                 <% end %>
               </div>
-            <% end %>
-          </div>
-          <p class="ft-hint">Open any verse and tap it, then <b>Word study</b>, to see every tagged word.</p>
-        </section>
-      <% end %>
+              <p class="ft-hint">Open any verse and tap it, then <b>Word study</b>, to see every tagged word.</p>
+            </section>
+          <% end %>
 
-      <% if @passages.any? %>
-        <section class="ft-section" aria-labelledby="ft-verses-title">
-          <h2 id="ft-verses-title">Key verses</h2>
-          <ul class="ft-verses">
-            <% @passages.each do |passage| %>
-              <li>
-                <%= link_to open_passage_path(passage.slug, t: passage.translation_code), class: "ft-verse-link" do %>
-                  <span class="ft-verse-text"><%= passage.text %></span>
-                  <span class="ft-verse-ref"><%= passage.label %> &middot; <%= passage.translation_code %> <%= icon(:chevron_right) %></span>
+          <% if @related.any? %>
+            <section class="ft-section" aria-labelledby="ft-related-title">
+              <h2 id="ft-related-title">Related words</h2>
+              <div class="ft-related">
+                <% @related.each do |term| %>
+                  <%= link_to term.name, faith_term_path(term), class: "ui-btn is-sm", data: { turbo_frame: "ft-content" } %>
                 <% end %>
-              </li>
-            <% end %>
-          </ul>
-        </section>
+              </div>
+            </section>
+          <% end %>
+        </div>
       <% end %>
+    </div>
 
-      <% if @related.any? %>
-        <section class="ft-section" aria-labelledby="ft-related-title">
-          <h2 id="ft-related-title">Related words</h2>
-          <div class="ft-related">
-            <% @related.each do |term| %>
-              <%= link_to term.name, faith_term_path(term), class: "ui-btn is-sm" %>
-            <% end %>
-          </div>
-        </section>
+    <% if @passages.any? %>
+      <section class="ft-section ft-keyverses" aria-labelledby="ft-verses-title">
+        <h2 id="ft-verses-title">Key verses</h2>
+        <ul class="ft-verses">
+          <% @passages.each do |passage| %>
+            <li>
+              <%= link_to open_passage_path(passage.slug, t: passage.translation_code), class: "ft-verse-link" do %>
+                <span class="ft-verse-text"><%= passage.text %></span>
+                <span class="ft-verse-ref"><%= passage.label %> &middot; <%= passage.translation_code %> <%= icon(:chevron_right) %></span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+
+    <footer class="ft-foot">
+      <% if @term.reviewed? && @term.reviewed_at %>
+        Reviewed<%= " by #{@term.reviewed_by}" if @term.reviewed_by.present? %> on <%= @term.reviewed_at.strftime("%-d %B %Y") %>.
       <% end %>
-
-      <footer class="ft-foot">
-        <% if @term.reviewed? && @term.reviewed_at %>
-          Reviewed<%= " by #{@term.reviewed_by}" if @term.reviewed_by.present? %> on <%= @term.reviewed_at.strftime("%-d %B %Y") %>.
-        <% end %>
-        Scripture from the <%= @translation&.name || "King James Version" %>; root words from Strong&rsquo;s concordance.
-        <% if authenticated? && current_user.faith_reviewer? %>
-          &middot; <%= link_to "Edit or review", edit_admin_faith_term_path(@term) %>
-        <% end %>
-      </footer>
-    </article>
-  </main>
-</div>
+      Scripture from the <%= @translation&.name || "King James Version" %>; root words from Strong&rsquo;s concordance.
+      <%= link_to "Sources & credits", credits_path %>
+      <% if authenticated? && current_user.faith_reviewer? %>
+        &middot; <%= link_to "Edit or review", edit_admin_faith_term_path(@term) %>
+      <% end %>
+    </footer>
+  </article>
+<% end %>

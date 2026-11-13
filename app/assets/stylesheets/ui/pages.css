@@ -176,6 +176,9 @@ a.hm-card:hover { background: var(--ui-surface-2); }
   /* Word of the day: term, root and definition; the verses are on its page. */
   .hm-grid .ft-card .ft-card-verses { display: none; }
   .hm-grid .ft-card .ft-card-def { margin-bottom: 14px; }
+  /* …and nothing more: the term itself opens its page. */
+  .hm-grid .ft-card .ft-card-actions { display: none; }
+  .hm-grid .ft-card .ft-card-def { margin-bottom: 0; }
   /* Word for today: the reflection in three lines, the whole of it on /today. */
   .hm-grid .dw-card.is-compact .dw-reflection {
     display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;

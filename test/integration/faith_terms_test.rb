@@ -43,6 +43,39 @@ class FaithTermsTest < ActionDispatch::IntegrationTest
     assert_select ".ft-draft", count: 0
   end
 
+  test "the explanation keeps the pastor's paragraphs" do
+    @grace.update!(explanation: "Grace is a gift.\n\nIt keeps carrying us.\r\n\r\nIt is never a licence to sin.",
+                   new_believer: "It is a gift.\n\nYou cannot earn it.")
+    get faith_term_path(@grace)
+    assert_select ".ft-explanation p", 3
+    assert_select ".ft-explanation p", text: "It keeps carrying us."
+    assert_select ".ft-newbeliever p", 2
+  end
+
+  test "the term page and the glossary show Bible art, credited, with a small and a large file" do
+    get faith_term_path(@grace)
+    art = FaithArt.for(@grace)
+    assert_select ".ft-hero picture.ft-art[data-art=?]", art.key do
+      assert_select "source[type='image/webp'][srcset*='-800'][srcset*='-1600']"
+      assert_select "img[srcset*='-800'][srcset*='-1600'][alt='']"
+    end
+    assert_select ".ft-hero .ft-art-credit", text: art.credit
+
+    get faith_terms_path
+    assert_select ".ft-welcome picture.ft-art"
+    assert_select ".ft-side .ft-item", 2
+
+    get credits_path
+    assert_select "#art li", FaithArt.all.size
+  end
+
+  test "a frame request gets the term without the side pane's list" do
+    get faith_term_path(@grace), headers: { "Turbo-Frame" => "ft-content" }
+    assert_response :success
+    assert_select "turbo-frame#ft-content .ft-hero h1", "Grace"
+    assert_select ".ft-side", count: 0
+  end
+
   test "the public cannot open a draft, even by its URL" do
     get faith_term_path(@faith)
     assert_response :not_found

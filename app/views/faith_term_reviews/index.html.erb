@@ -52,8 +52,8 @@
       <% end %>
       <dl class="ft-review-text">
         <dt>Short definition</dt><dd><%= term.short_definition %></dd>
-        <dt>For a new believer</dt><dd><%= term.new_believer.presence || "—" %></dd>
-        <dt>Explanation</dt><dd><%= term.explanation.presence || "—" %></dd>
+        <dt>For a new believer</dt><dd><%= term.new_believer.present? ? faith_paragraphs(term.new_believer) : "—" %></dd>
+        <dt>Explanation</dt><dd><%= term.explanation.present? ? faith_paragraphs(term.explanation) : "—" %></dd>
         <dt>Root words</dt><dd><%= term.root_strongs.join(", ").presence || "—" %></dd>
         <dt>Key verses</dt><dd><%= term.key_references.join("; ").presence || "—" %></dd>
       </dl>

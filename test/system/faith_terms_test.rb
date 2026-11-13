@@ -56,4 +56,51 @@ class FaithTermsSystemTest < ApplicationSystemTestCase
     assert_selector ".hm-head"
     assert_no_selector ".ft-card", visible: true
   end
+
+  test "from 1024px the side pane stays put while terms open beside it" do
+    visit faith_term_path("grace")
+    assert_selector "h1", text: "Grace"
+    within(".ft-side") do
+      assert_selector ".ft-item[aria-current='page']", text: "Grace"
+      assert_selector ".ft-item", count: 3
+    end
+    assert_no_selector ".ft-crumb", visible: true
+
+    # Mark the side pane: a Turbo Frame visit keeps the very same element.
+    page.execute_script("document.querySelector('.ft-side').dataset.kept = 'yes'")
+    find(".ft-side .ft-item", text: "Covenant").click
+    assert_selector ".ft-hero h1", text: "Covenant"
+    assert_current_path faith_term_path("covenant")
+    assert_selector ".ft-side[data-kept='yes'] .ft-item[aria-current='page']", text: "Covenant"
+    assert_selector ".ft-side .ft-item[aria-current='page']", count: 1
+    assert_equal "Covenant · Glossary of the Faith · BiblioRata", page.title
+
+    # The search still filters the side pane on a term page.
+    fill_in "Search the glossary", with: "born again"
+    assert_selector ".ft-side .ft-item", count: 1, text: "Regeneration"
+
+    # Back to the welcome, still in the frame.
+    find(".ft-side-title").click
+    assert_selector ".ft-welcome h1", text: "The words of the faith"
+    assert_selector ".ft-side[data-kept='yes']"
+    assert_no_selector ".ft-side .ft-item[aria-current]"
+  end
+
+  test "a phone gets the list, then the term alone with a way back to all terms" do
+    page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
+    visit faith_terms_path
+    assert_selector ".ft-welcome"
+    assert_selector ".ft-side .ft-item", count: 3
+    assert_no_selector ".ft-today", visible: true
+    find(".ft-side .ft-item", text: "Grace").click
+
+    assert_selector ".ft-hero h1", text: "Grace"
+    assert_no_selector ".ft-side", visible: true
+    assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth"), "no sideways scroll"
+    click_on "All terms"
+    assert_selector ".ft-side .ft-item", count: 3, visible: true
+    assert_current_path faith_terms_path
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
 end

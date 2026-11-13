@@ -1,0 +1,71 @@
+# Bible art for the Glossary of the Faith (FaithArt). Public domain only —
+# check the licence on each picture's Wikimedia Commons page before adding it,
+# and add its credit here (the /credits page lists every picture).
+#
+# images — key → where it came from. Files: app/assets/images/faith/<key>-1600
+#          and <key>-800, each as .webp and .jpg (under ~200 KB). Its focal
+#          point (where the subject sits when cropped) is in ui/faith.css.
+# terms  — key → the term slugs that show it. Unlisted terms get a steady pick.
+# intro  — the picture on the /faith welcome panel.
+
+images:
+  crucifixion:
+    title: Le Calvaire (The Crucifixion)
+    artist: Gustave Doré
+    year: 1877
+    commons_url: https://commons.wikimedia.org/wiki/File:Gustave_Dor%C3%A9-Le_Calvaire.jpg
+    licence: Public domain
+  resurrection:
+    title: The Resurrection (engraved by H. Pisan; from The Bible Panorama, 1891)
+    artist: Gustave Doré
+    year: 1866
+    commons_url: https://commons.wikimedia.org/wiki/File:The_Bible_panorama,_or_The_Holy_Scriptures_in_picture_and_story_(1891)_(14785046505).jpg
+    licence: Public domain (Doré died 1883; book published 1891) — Commons tags it “No known copyright restrictions”
+  sermon-on-the-mount:
+    title: The Sermon on the Mount
+    artist: Gustave Doré
+    year: 1866
+    commons_url: https://commons.wikimedia.org/wiki/File:Dore_Bible_Sermon_on_the_Mount.jpg
+    licence: Public domain
+  prodigal-son:
+    title: The Return of the Prodigal Son
+    artist: Rembrandt van Rijn
+    year: c. 1668
+    commons_url: https://commons.wikimedia.org/wiki/File:Rembrandt_Harmensz._van_Rijn_-_The_Return_of_the_Prodigal_Son.jpg
+    licence: Public domain
+  moses-tablets:
+    title: Moses Breaks the Tables of the Law
+    artist: Gustave Doré
+    year: 1866
+    commons_url: https://commons.wikimedia.org/wiki/File:041A.Moses_Breaks_the_Tables_of_the_Law.jpg
+    licence: Public domain
+  pentecost:
+    title: La Pentecôte (Pentecost; engraved by Paul Jonnard)
+    artist: Gustave Doré
+    year: 1866
+    commons_url: https://commons.wikimedia.org/wiki/File:La_Pentec%C3%B4te_-_(estampe)_(%C3%89tat_%C3%A9dit%C3%A9_avec_la_lettre)_-_G._Dor%C3%A9_;_Jonnard_-_btv1b10321127s.jpg
+    licence: Public domain
+  ascension:
+    title: L’Ascension (The Ascension)
+    artist: Gustave Doré
+    year: 1879
+    commons_url: https://commons.wikimedia.org/wiki/File:Gustave_Dor%C3%A9_-_L%27Ascension.jpg
+    licence: Public domain
+  creation-light:
+    title: The Creation of Light
+    artist: Gustave Doré
+    year: 1866
+    commons_url: https://commons.wikimedia.org/wiki/File:001.The_Creation_of_Light.jpg
+    licence: Public domain
+
+terms:
+  crucifixion: [salvation, redemption, atonement, propitiation, sin, reconciliation, gospel, love]
+  resurrection: [resurrection, eternal-life, hope, glorification, regeneration, justification]
+  sermon-on-the-mount: [kingdom-of-god, discipleship, righteousness, holiness, peace, joy, prayer, sanctification]
+  prodigal-son: [grace, mercy, forgiveness, repentance, adoption, faith]
+  moses-tablets: [covenant, judgment, election]
+  pentecost: [holy-spirit, church, baptism, fellowship, lords-supper]
+  ascension: [ascension, second-coming, heaven, intercession, glory]
+  creation-light: [incarnation, trinity, worship]
+
+intro: sermon-on-the-mount
