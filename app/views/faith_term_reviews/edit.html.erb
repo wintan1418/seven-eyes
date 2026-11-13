@@ -12,6 +12,8 @@
     <%= link_to "&larr; All terms".html_safe, admin_faith_terms_path(anchor: @term.slug), class: "back" %>
   </header>
 
+  <%= render "rewriter", term: @term %>
+
   <section class="panel">
     <%= form_with model: @term, url: admin_faith_term_path(@term), method: :patch, class: "ft-review-form" do |f| %>
       <% if @term.errors.any? %>

@@ -56,6 +56,7 @@ Rails.application.routes.draw do
     patch  "/:slug",        action: :update,   as: :admin_faith_term
     post   "/:slug/review", action: :review,   as: :review_admin_faith_term
     delete "/:slug/review", action: :unreview
+    post   "/:slug/rewrite", action: :rewrite, as: :rewrite_admin_faith_term # AI suggestion, saves nothing
   end
 
   get "/s/:token", to: "shared_studies#show", as: :shared_study

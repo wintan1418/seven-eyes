@@ -1,0 +1,35 @@
+<%# "Rewrite with AI": the pastor explains the term in his own words (typed, or
+    dictated with the phone keyboard's microphone) and the AI drafts the fields.
+    The suggestion appears in the faith_rewrite frame; nothing is saved here. %>
+<section class="panel fr-panel" data-controller="faith-rewriter" aria-labelledby="fr-title">
+  <h2 id="fr-title">Rewrite with AI <span>&mdash; explain it in your own words</span></h2>
+  <p class="fr-intro">Type or dictate what this word means, the way you would teach it. The AI tidies it into the fields below and adds KJV verses that support your points &mdash; it keeps your doctrine as you said it.</p>
+
+  <%= form_with url: rewrite_admin_faith_term_path(term), id: "faith-rewrite-form", class: "fr-form",
+                data: { turbo_frame: "faith_rewrite", action: "submit->faith-rewriter#collect" } do %>
+    <label for="fr-words" class="fr-label">Your words</label>
+    <%= text_area_tag :words, nil, id: "fr-words", rows: 6, maxlength: FaithTermRewriter::WORDS_LIMIT,
+                      class: "fr-words", autocapitalize: "sentences",
+                      placeholder: "e.g. #{term.name.downcase} is not just… it is God's way of…" %>
+
+    <fieldset class="fr-chips">
+      <legend class="fr-label">Optional</legend>
+      <% FaithTermRewriter::CHIP_LABELS.each do |key, label| %>
+        <label class="fr-chip">
+          <%= check_box_tag "chips[]", key, false, id: "fr-chip-#{key}" %><span><%= label %></span>
+        </label>
+      <% end %>
+    </fieldset>
+
+    <% FaithTermRewriter::FIELDS.each do |field| %>
+      <%= hidden_field_tag "current[#{field}]", nil, id: "fr-current-#{field}", data: { faith_rewriter_target: "current", field: field } %>
+    <% end %>
+
+    <div class="fr-actions">
+      <button type="submit" class="dw-admin-btn is-primary fr-go" data-turbo-submits-with="Rewriting…">Rewrite</button>
+      <span class="fr-busy" aria-hidden="true">Writing it up&hellip; this takes a few seconds.</span>
+    </div>
+  <% end %>
+
+  <%= turbo_frame_tag "faith_rewrite", class: "fr-frame" %>
+</section>
