@@ -1,0 +1,894 @@
+/* ============================================================================
+   LOOKS — projection slide templates (screen_look_controller, lib/slide_themes)
+   ----------------------------------------------------------------------------
+   Each look is a block of --look-* tokens on [data-look="<id>"] — on the
+   .ps-root while preaching (operator, projector) and on each thumbnail in the
+   Looks panel. Everything is drawn with CSS gradients and inline SVG, so a
+   look needs no network and no image files. test/javascript/slide_themes_test
+   reads these blocks and checks every look's text / reference contrast
+   against its --look-tone (the colour behind the words).
+
+     --look-base / --look-bg / --look-bg-size   the background
+     --look-overlay / -size / -blend / -mask     texture laid over it
+     --look-frame                                hairline frame (or transparent)
+     --look-tone                                 colour behind the words (for tests)
+     --look-wash                                 r,g,b to darken/lighten a custom picture
+     --look-fg / -font / -weight / -line / -shadow       the words
+     --look-accent / --look-ref-*                       the reference line
+     --look-num / --look-num-display                    verse numbers
+   ========================================================================== */
+
+[data-look] {
+  --tex-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --tex-mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -.7 .4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
+  --tex-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .24 0 0 0 0 .1 0 0 0 .11 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+  --tex-stars: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cg fill='%23fff'%3E%3Ccircle cx='12' cy='30' r='1'/%3E%3Ccircle cx='74' cy='112' r='.7'/%3E%3Ccircle cx='140' cy='22' r='1.3'/%3E%3Ccircle cx='205' cy='88' r='.6'/%3E%3Ccircle cx='260' cy='40' r='.9'/%3E%3Ccircle cx='330' cy='120' r='1.1'/%3E%3Ccircle cx='398' cy='64' r='.6'/%3E%3Ccircle cx='38' cy='210' r='.8'/%3E%3Ccircle cx='118' cy='260' r='1.2'/%3E%3Ccircle cx='182' cy='190' r='.6'/%3E%3Ccircle cx='246' cy='300' r='.9'/%3E%3Ccircle cx='300' cy='226' r='.7'/%3E%3Ccircle cx='372' cy='280' r='1.4'/%3E%3Ccircle cx='20' cy='350' r='.6'/%3E%3Ccircle cx='96' cy='398' r='.9'/%3E%3Ccircle cx='170' cy='340' r='.7'/%3E%3Ccircle cx='222' cy='408' r='1'/%3E%3Ccircle cx='290' cy='370' r='.6'/%3E%3Ccircle cx='350' cy='405' r='.8'/%3E%3Ccircle cx='405' cy='190' r='.7'/%3E%3Ccircle cx='60' cy='160' r='.5'/%3E%3Ccircle cx='160' cy='130' r='.5'/%3E%3Ccircle cx='270' cy='160' r='.5'/%3E%3Ccircle cx='320' cy='330' r='.5'/%3E%3C/g%3E%3C/svg%3E");
+  --lf-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --lf-serif: "Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif;
+  --lf-garamond: "EB Garamond", Garamond, Georgia, serif;
+  --lf-caps: "Cinzel", "Trajan Pro", Georgia, serif;
+
+  --look-bg-size: auto;
+  --look-overlay: none;
+  --look-overlay-size: auto;
+  --look-overlay-blend: normal;
+  --look-overlay-mask: none;
+  --look-frame: transparent;
+  --look-wash: 0, 0, 0;
+  /* Bold (the default) projects at 700, Regular at 500: heavy enough for the back row. */
+  --look-weight: calc(var(--ps-out-weight, 600) + 100);
+  --look-line: 1.3;
+  --look-tracking: 0;
+  --look-shadow: none;
+  --look-ref-font: var(--lf-caps);
+  --look-ref-weight: 700;
+  --look-ref-tracking: 0.14em;
+  --look-ref-case: uppercase;
+  --look-ref-rule: none;
+  --look-num-display: inline;
+  --look-num-font: var(--lf-sans);
+}
+
+/* ---- Vellum — the original warm parchment, now full-screen ---- */
+[data-look="vellum"] {
+  --look-base: #efe2c2;
+  --look-bg: radial-gradient(ellipse 120% 95% at 50% 42%, #fbf4e1 0%, #f4e8ca 48%, #e6d3a6 82%, #cfb37b 100%);
+  --look-overlay: var(--tex-paper);
+  --look-frame: rgba(138, 104, 40, 0.5);
+  --look-tone: #f4e8ca;
+  --look-wash: 250, 243, 226;
+  --look-fg: #1d1208;
+  --look-font: var(--lf-garamond);
+  --look-line: 1.28;
+  --look-accent: #8a2418;
+  --look-num: #8a2418;
+  --look-num-display: block;
+}
+
+/* ---- Royal Blue — the familiar church blue: textured, bold white, gold reference ---- */
+[data-look="royal"] {
+  --look-base: #0c2c7c;
+  --look-bg:
+    radial-gradient(ellipse 70% 50% at 50% 36%, rgba(96, 160, 255, 0.38), transparent 70%),
+    repeating-conic-gradient(from -8deg at 50% -18%, rgba(255, 255, 255, 0.045) 0deg 2.5deg, transparent 2.5deg 8deg),
+    radial-gradient(ellipse 140% 105% at 50% 38%, #1d52c4 0%, #113892 42%, #0a2263 74%, #04112f 100%);
+  --look-overlay: var(--tex-mottle), var(--tex-grain);
+  --look-overlay-blend: soft-light;
+  --look-tone: #113892;
+  --look-fg: #ffffff;
+  --look-font: var(--lf-sans);
+  --look-weight: calc(var(--ps-out-weight, 600) + 100);
+  --look-line: 1.26;
+  --look-tracking: -0.005em;
+  --look-shadow: 0 2px 0 rgba(2, 12, 46, 0.35), 0 3px 18px rgba(2, 10, 40, 0.7);
+  --look-accent: #ffd84a;
+  --look-ref-font: var(--lf-sans);
+  --look-ref-tracking: 0.08em;
+  --look-ref-rule: block;
+  --look-num: #ffd84a;
+}
+
+/* ---- Emerald — deep green with a soft diagonal sheen ---- */
+[data-look="emerald"] {
+  --look-base: #0b4a37;
+  --look-bg:
+    linear-gradient(118deg, transparent 36%, rgba(255, 255, 255, 0.055) 49%, transparent 63%),
+    radial-gradient(ellipse 70% 50% at 24% 14%, rgba(80, 200, 150, 0.32), transparent 70%),
+    radial-gradient(ellipse 135% 105% at 50% 40%, #15704f 0%, #0b4a37 46%, #062c21 80%, #021710 100%);
+  --look-overlay: var(--tex-grain);
+  --look-tone: #0b4a37;
+  --look-fg: #f5fbf6;
+  --look-font: var(--lf-serif);
+  --look-line: 1.3;
+  --look-shadow: 0 2px 14px rgba(0, 20, 12, 0.6);
+  --look-accent: #ecc768;
+  --look-ref-rule: block;
+  --look-num: #ecc768;
+}
+
+/* ---- Crimson Velvet — rich red pile, cream words, gold ---- */
+[data-look="crimson"] {
+  --look-base: #64101f;
+  --look-bg:
+    radial-gradient(ellipse 62% 46% at 50% 34%, rgba(220, 70, 90, 0.3), transparent 70%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.07) 0 1px, transparent 1px 4px),
+    radial-gradient(ellipse 130% 100% at 50% 40%, #8e1729 0%, #64101f 44%, #3a0712 80%, #1c0208 100%);
+  --look-overlay: var(--tex-mottle), var(--tex-grain);
+  --look-overlay-blend: soft-light;
+  --look-tone: #64101f;
+  --look-fg: #fff4e1;
+  --look-font: var(--lf-garamond);
+  --look-line: 1.26;
+  --look-shadow: 0 2px 3px rgba(30, 0, 6, 0.45), 0 4px 22px rgba(30, 0, 6, 0.65);
+  --look-accent: #f0c869;
+  --look-ref-rule: block;
+  --look-num: #f0c869;
+}
+
+/* ---- Royal Purple — purple and gold, for majesty ---- */
+[data-look="majesty"] {
+  --look-base: #3a1b78;
+  --look-bg:
+    radial-gradient(ellipse 58% 42% at 50% -2%, rgba(242, 207, 99, 0.3), transparent 72%),
+    repeating-conic-gradient(from 0deg at 50% -10%, rgba(255, 230, 160, 0.035) 0deg 2deg, transparent 2deg 9deg),
+    radial-gradient(ellipse 130% 100% at 50% 36%, #5b30a2 0%, #3a1b78 44%, #22104a 80%, #10062a 100%);
+  --look-overlay: var(--tex-mottle), var(--tex-grain);
+  --look-overlay-blend: soft-light;
+  --look-tone: #3a1b78;
+  --look-fg: #ffffff;
+  --look-font: var(--lf-serif);
+  --look-line: 1.28;
+  --look-shadow: 0 2px 16px rgba(12, 2, 34, 0.7);
+  --look-accent: #f2cf63;
+  --look-ref-rule: block;
+  --look-num: #f2cf63;
+}
+
+/* ---- Dawn — indigo night breaking into sunrise along the bottom ---- */
+[data-look="dawn"] {
+  --look-base: #2a2668;
+  --look-bg:
+    radial-gradient(ellipse 72% 36% at 50% 112%, rgba(255, 200, 120, 0.9), rgba(240, 120, 90, 0.4) 46%, transparent 76%),
+    radial-gradient(ellipse 40% 30% at 82% 8%, rgba(150, 140, 255, 0.18), transparent 70%),
+    linear-gradient(180deg, #0d1338 0%, #1d2160 32%, #3f2f7a 60%, #7f3f78 82%, #c35e64 100%);
+  --look-overlay: var(--tex-grain);
+  --look-tone: #2f2a6c;
+  --look-fg: #ffffff;
+  --look-font: var(--lf-sans);
+  --look-line: 1.3;
+  --look-shadow: 0 2px 18px rgba(16, 8, 48, 0.75);
+  --look-accent: #ffd9a0;
+  --look-ref-font: var(--lf-sans);
+  --look-ref-weight: 600;
+  --look-ref-tracking: 0.22em;
+  --look-num: #ffd9a0;
+}
+
+/* ---- Night Sky — stars over deep navy ---- */
+[data-look="night"] {
+  --look-base: #0a1230;
+  --look-bg:
+    radial-gradient(ellipse 55% 38% at 74% 16%, rgba(110, 140, 255, 0.2), transparent 70%),
+    linear-gradient(126deg, transparent 28%, rgba(150, 170, 255, 0.045) 45%, transparent 63%),
+    radial-gradient(ellipse 135% 105% at 50% 30%, #15224e 0%, #0a1230 50%, #040713 100%);
+  --look-overlay: var(--tex-stars), var(--tex-stars);
+  --look-overlay-size: 420px 420px, 260px 260px;
+  --look-overlay-mask: radial-gradient(ellipse 52% 42% at 50% 50%, rgba(0, 0, 0, 0.25), #000 85%);
+  --look-tone: #0a1230;
+  --look-fg: #f3f5ff;
+  --look-font: var(--lf-serif);
+  --look-line: 1.3;
+  --look-shadow: 0 2px 16px rgba(0, 4, 20, 0.8);
+  --look-accent: #f2d888;
+  --look-num: #f2d888;
+}
+
+/* ---- Stained Glass — jewel light through leaded glass, calm in the middle ---- */
+[data-look="glass"] {
+  --look-base: #0c0a14;
+  --look-bg:
+    radial-gradient(ellipse 58% 52% at 50% 50%, rgba(8, 6, 16, 0.88), rgba(8, 6, 16, 0.6) 62%, rgba(8, 6, 16, 0.1) 100%),
+    radial-gradient(circle at 10% 16%, rgba(205, 30, 60, 0.9), transparent 30%),
+    radial-gradient(circle at 90% 20%, rgba(30, 85, 215, 0.9), transparent 32%),
+    radial-gradient(circle at 16% 88%, rgba(20, 155, 100, 0.85), transparent 30%),
+    radial-gradient(circle at 86% 86%, rgba(240, 165, 30, 0.9), transparent 30%),
+    radial-gradient(circle at 50% 4%, rgba(150, 60, 205, 0.75), transparent 24%),
+    radial-gradient(circle at 50% 100%, rgba(40, 175, 205, 0.6), transparent 24%),
+    radial-gradient(circle at 0% 52%, rgba(240, 120, 40, 0.6), transparent 20%),
+    radial-gradient(circle at 100% 54%, rgba(120, 200, 60, 0.55), transparent 20%);
+  --look-overlay:
+    repeating-linear-gradient(62deg, rgba(4, 3, 8, 0.92) 0 3px, transparent 3px 150px),
+    repeating-linear-gradient(-58deg, rgba(4, 3, 8, 0.92) 0 3px, transparent 3px 170px),
+    repeating-linear-gradient(0deg, rgba(4, 3, 8, 0.85) 0 3px, transparent 3px 190px),
+    var(--tex-grain);
+  --look-overlay-mask: radial-gradient(ellipse 50% 46% at 50% 50%, transparent 35%, #000 78%);
+  --look-tone: #15111f;
+  --look-fg: #ffffff;
+  --look-font: var(--lf-garamond);
+  --look-weight: calc(var(--ps-out-weight, 600) + 100);
+  --look-line: 1.26;
+  --look-shadow: 0 2px 4px rgba(0, 0, 0, 0.85), 0 0 26px rgba(0, 0, 0, 0.75);
+  --look-accent: #ffcf6b;
+  --look-num: #ffcf6b;
+}
+
+/* ---- Living Water — teal depths with light from above, modern type ---- */
+[data-look="water"] {
+  --look-base: #074459;
+  --look-bg:
+    radial-gradient(ellipse 46% 30% at 28% -4%, rgba(170, 255, 240, 0.22), transparent 70%),
+    radial-gradient(ellipse 36% 24% at 74% 4%, rgba(170, 255, 240, 0.14), transparent 70%),
+    radial-gradient(ellipse 130% 110% at 50% 115%, #10918f 0%, #0a6676 34%, #074459 64%, #032537 100%);
+  --look-overlay: var(--tex-mottle), var(--tex-grain);
+  --look-overlay-blend: soft-light;
+  --look-tone: #074459;
+  --look-fg: #ffffff;
+  --look-font: var(--lf-sans);
+  --look-weight: calc(var(--ps-out-weight, 600) + 100);
+  --look-line: 1.28;
+  --look-shadow: 0 2px 16px rgba(0, 20, 30, 0.7);
+  --look-accent: #ffd77a;
+  --look-ref-font: var(--lf-sans);
+  --look-ref-tracking: 0.1em;
+  --look-num: #8ff0e0;
+}
+
+/* ---- Ink — candle-dark, cream words (the older Ink theme) ---- */
+[data-look="ink"] {
+  --look-base: #14100a;
+  --look-bg: radial-gradient(ellipse 115% 90% at 50% 38%, #2b2117 0%, #18120b 55%, #0a0704 100%);
+  --look-overlay: var(--tex-grain);
+  --look-tone: #18120b;
+  --look-fg: #f4ead3;
+  --look-font: var(--lf-garamond);
+  --look-line: 1.28;
+  --look-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+  --look-accent: #e3c164;
+  --look-num: #e3c164;
+  --look-num-display: block;
+}
+
+/* ---- Paper — a clean white page (the older Paper theme) ---- */
+[data-look="paper"] {
+  --look-base: #fbf9f3;
+  --look-bg: linear-gradient(180deg, #fdfcf8 0%, #f3efe4 100%);
+  --look-tone: #f7f4ec;
+  --look-wash: 251, 249, 243;
+  --look-fg: #17120b;
+  --look-font: var(--lf-serif);
+  --look-line: 1.3;
+  --look-accent: #7a1f14;
+  --look-ref-font: var(--lf-sans);
+  --look-ref-tracking: 0.12em;
+  --look-num: #7a1f14;
+  --look-num-display: block;
+}
+
+/* ---- Minimal Black — pure black, white sans; LED walls and dark rooms ---- */
+[data-look="black"] {
+  --look-base: #000;
+  --look-bg: none;
+  --look-tone: #000000;
+  --look-fg: #ffffff;
+  --look-font: var(--lf-sans);
+  --look-line: 1.3;
+  --look-accent: #b4b4b4;
+  --look-ref-font: var(--lf-sans);
+  --look-ref-weight: 600;
+  --look-ref-tracking: 0.2em;
+  --look-num: #8c8c8c;
+}
+
+/* ---- High Contrast — black on white for bright halls and washed-out projectors ---- */
+[data-look="contrast"] {
+  --look-base: #fff;
+  --look-bg: none;
+  --look-tone: #ffffff;
+  --look-wash: 255, 255, 255;
+  --look-fg: #000000;
+  --look-font: var(--lf-sans);
+  --look-weight: calc(var(--ps-out-weight, 600) + 100);
+  --look-line: 1.24;
+  --look-tracking: -0.01em;
+  --look-accent: #0a3a8c;
+  --look-ref-font: var(--lf-sans);
+  --look-ref-tracking: 0.08em;
+  --look-num: #0a3a8c;
+}
+
+/* ============================================================================
+   The projection surface — operator and projector while preaching (never the
+   stage display, never reading mode). Doubled .ps-root wins over the older
+   preach/projector rules without !important wars.
+   ========================================================================== */
+.ps-root.ps-root.is-preaching[data-look]:not(.is-stage) {
+  isolation: isolate; /* the background layer sits under the words, above the page */
+  background: transparent;
+  --safe-x: 6vw;
+  --safe-y: 6vh;
+  --ps-bottom-chrome: 72px; /* the operator's bar */
+  --look-ref-size: calc(clamp(20px, 2.7vw, 54px) * min(var(--ps-out-scale, 1), 1.3));
+  --ps-ref-band: calc(var(--look-ref-size) * 2.3);
+}
+.ps-root.ps-root.is-preaching.is-projecting[data-look]:not(.is-output) {
+  --ps-bottom-chrome: 150px; /* bar + next-verse strip */
+  --look-ref-size: 15px;
+  --safe-x: 3vw;
+  --safe-y: 3vh;
+}
+.ps-root.ps-root.is-output.is-preaching[data-look]:not(.is-stage) { --ps-bottom-chrome: 0px; }
+
+.ps-root.ps-root.is-preaching[data-look]:not(.is-stage) :is(.ps-shell, .ps-workspace, .ps-pane, .ps-verses, .ps-verse-body) {
+  background: transparent;
+  background-image: none;
+}
+.ps-root.ps-root.is-preaching[data-look]:not(.is-stage) .ps-pane:is(.is-presented, .is-paired) {
+  background: transparent !important; /* the old Ink / Paper themes paint panes with !important */
+  border-color: transparent;
+  box-shadow: none;
+}
+.ps-root.ps-root.is-preaching[data-look]:not(.is-stage) .ps-verses { background: transparent !important; }
+.ps-root.ps-root.is-preaching[data-look]:not(.is-stage) .ps-pane::before { display: none; }
+
+/* ---- the background layer ---- */
+.ps-look-bg { display: none; }
+.ps-root.ps-root.is-preaching[data-look]:not(.is-stage) .ps-look-bg { display: block; position: fixed; inset: 0; z-index: -1; }
+:is(.ps-look-bg, .ps-look-tile .lt-screen, .ps-look-preview) {
+  overflow: hidden;
+  background-color: var(--look-base);
+  background-image: var(--look-bg);
+  background-size: var(--look-bg-size);
+}
+:is(.ps-look-bg, .ps-look-tile .lt-screen, .ps-look-preview)::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: var(--look-overlay);
+  background-size: var(--look-overlay-size);
+  mix-blend-mode: var(--look-overlay-blend);
+  -webkit-mask-image: var(--look-overlay-mask);
+  mask-image: var(--look-overlay-mask);
+}
+/* Vellum's gold hairline frame */
+:is(.ps-look-bg, .ps-look-tile .lt-screen, .ps-look-preview)::before {
+  content: ""; position: absolute; inset: 2.4vh 1.6vw; pointer-events: none; z-index: 1;
+  border: 1px solid var(--look-frame);
+  box-shadow: 0 0 0 5px transparent, 0 0 0 6px var(--look-frame);
+  opacity: 0.8;
+}
+.ps-look-tile .lt-screen::before, .ps-look-preview::before { inset: 5px 6px; box-shadow: none; }
+.ps-root:not(.is-output) .ps-look-bg::before { display: none; } /* the frame is for the projector */
+
+/* The church's own picture / looping video, darkened (or lightened, on the
+   light looks) so the words stay readable. */
+.ps-look-bg .media, .ps-look-preview .lp-bg .media {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.ps-root[data-look-bg="image"] .ps-look-bg::after,
+.ps-root[data-look-bg="video"] .ps-look-bg::after,
+.ps-look-preview .lp-bg:has(.media)::after {
+  content: ""; position: absolute; inset: 0;
+  background: rgba(var(--look-wash), var(--look-dim, 0.35));
+  mix-blend-mode: normal; -webkit-mask-image: none; mask-image: none;
+}
+.ps-root:is([data-look-bg="image"], [data-look-bg="video"]) .ps-look-bg::before { display: none; }
+
+/* ---- the words ---- */
+.ps-root.ps-root.is-preaching[data-look]:not(.is-stage) .ps-pane:is(.is-presented, .is-paired) .ps-verse.is-preach-current {
+  font-family: var(--look-font);
+  font-weight: var(--look-weight);
+  line-height: var(--look-line);
+  letter-spacing: var(--look-tracking);
+  color: var(--look-fg);
+  text-shadow: var(--look-shadow);
+  padding: 0.12em 0;
+  text-wrap: balance;
+  hyphens: manual; /* never split a word across lines on the big screen */
+}
+.ps-root.ps-root.is-preaching[data-look]:not(.is-stage) .ps-pane:is(.is-presented, .is-paired) .ps-verse.is-preach-current + .ps-verse.is-preach-current {
+  margin-top: 0.35em;
+}
+.ps-root.ps-root.is-preaching[data-look]:not(.is-stage) .ps-pane:is(.is-presented, .is-paired) .ps-verse.is-preach-current .ps-vnum {
+  display: var(--look-num-display);
+  font-family: var(--look-num-font);
+  font-weight: 800;
+  font-size: 0.5em;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--look-num);
+  vertical-align: 0.72em;
+  margin: 0 0.32em 0 0;
+}
+.ps-root.ps-root.is-preaching[data-look]:not(.is-stage) .ps-pane:is(.is-presented, .is-paired) .ps-verse.is-preach-current .ps-vnum {
+  margin-bottom: 0.2em;
+}
+.ps-root.ps-root.is-preaching[data-look]:not(.is-stage) .ps-eword.is-emph {
+  color: var(--look-accent);
+  background: color-mix(in srgb, var(--look-accent) 20%, transparent);
+  box-shadow: 0 0 0 0.08em color-mix(in srgb, var(--look-accent) 20%, transparent);
+}
+
+/* The projector: the words get the whole 16:9 screen inside safe margins, with
+   a band kept for the reference (top or bottom, per look). */
+.ps-root.ps-root.is-output.is-preaching[data-look]:not(.is-stage, .is-split, .is-parallel) .ps-workspace { padding: 0; }
+.ps-root.ps-root.is-preaching[data-look]:not(.is-stage, .is-projecting, .is-split) .ps-pane:is(.is-presented, .is-paired) .ps-verses {
+  padding: var(--ps-ref-band) var(--safe-x) calc(var(--safe-y) + var(--ps-bottom-chrome));
+}
+.ps-root.ps-root.is-preaching[data-look][data-look-ref="bottom"]:not(.is-stage, .is-projecting, .is-split) .ps-pane:is(.is-presented, .is-paired) .ps-verses {
+  padding: var(--safe-y) var(--safe-x) calc(var(--ps-ref-band) + var(--ps-bottom-chrome));
+}
+.ps-root.ps-root.is-preaching.is-parallel[data-look]:not(.is-stage, .is-projecting) .ps-pane:is(.is-presented, .is-paired) .ps-verses {
+  padding-left: 2vw; padding-right: 2vw;
+}
+/* Operator console while a projector is connected: same look, its own margins. */
+.ps-root.ps-root.is-preaching.is-projecting[data-look]:not(.is-output) .ps-pane:is(.is-presented, .is-paired) .ps-verses {
+  padding-top: 52px;
+  padding-bottom: 170px;
+}
+
+/* ---- the reference line ---- */
+.ps-root.ps-root.is-preaching[data-look]:not(.is-stage) .ps-preach-ref {
+  gap: 0.75em;
+  height: var(--ps-ref-band);
+  padding: 0 var(--safe-x);
+  background: none;
+  font-family: var(--look-ref-font);
+  font-weight: var(--look-ref-weight);
+  font-size: var(--look-ref-size);
+  letter-spacing: var(--look-ref-tracking);
+  text-transform: var(--look-ref-case);
+  line-height: 1.1;
+  color: var(--look-accent);
+  text-shadow: var(--look-shadow);
+}
+.ps-root.ps-root.is-preaching[data-look]:not(.is-stage) .ps-preach-ref::before,
+.ps-root.ps-root.is-preaching[data-look]:not(.is-stage) .ps-preach-ref::after {
+  content: ""; display: var(--look-ref-rule); flex: none;
+  width: 1.8em; height: 0.09em; min-height: 2px; background: currentColor; opacity: 0.6;
+}
+.ps-root.ps-root.is-preaching[data-look][data-look-ref="bottom"]:not(.is-stage) .ps-preach-ref {
+  top: auto;
+  bottom: var(--ps-bottom-chrome);
+}
+.ps-root.ps-root.is-preaching.is-projecting[data-look]:not(.is-output) .ps-preach-ref { height: 46px; }
+.ps-root.ps-root.is-preaching.is-projecting[data-look][data-look-ref="bottom"]:not(.is-output) .ps-preach-ref {
+  top: 0; bottom: auto; /* the console keeps it out of the next-verse strip's way */
+}
+.ps-root.is-preaching.is-emphasising[data-look]:not(.is-output) .ps-preach-ref::after { display: none; }
+
+/* ---- songs and thoughts ---- */
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide {
+  gap: 0;
+  padding: var(--ps-ref-band) var(--safe-x) calc(var(--safe-y) + var(--ps-bottom-chrome));
+}
+.ps-root.ps-root.is-preaching.is-slide[data-look][data-look-ref="bottom"]:not(.is-stage) .ps-preach-slide {
+  padding: var(--safe-y) var(--safe-x) calc(var(--ps-ref-band) + var(--ps-bottom-chrome));
+}
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide .slide-stanza {
+  max-width: none;
+  font-family: var(--look-font);
+  font-weight: var(--look-weight);
+  line-height: var(--look-line);
+  letter-spacing: var(--look-tracking);
+  color: var(--look-fg);
+  text-shadow: var(--look-shadow);
+  text-wrap: balance;
+}
+/* Scripture sets, seminar slides and presentations (lib/slides/rich_slides)
+   ride the same layer: they take the look's words, reference and accent. */
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide {
+  --ps-slide-ref-color: var(--look-accent);
+}
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide .slide-stanza:not(.slide-seminar) { width: 100%; }
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .slide-stanza.is-set .set-ref {
+  font-family: var(--look-ref-font);
+  font-weight: var(--look-ref-weight);
+  letter-spacing: var(--look-ref-tracking);
+  text-transform: var(--look-ref-case);
+  line-height: 1.25;
+}
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .slide-stanza.is-set .set-vnum {
+  font-family: var(--look-num-font);
+  font-weight: 800;
+  color: var(--look-num);
+  opacity: 1;
+}
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .slide-seminar :is(.sem-title, .sem-cite) {
+  font-family: var(--look-ref-font);
+  letter-spacing: var(--look-ref-tracking);
+}
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .slide-seminar .sem-title { text-transform: var(--look-ref-case); }
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .slide-seminar.layout-section .sem-title { border-color: var(--look-accent); }
+/* A picture or presentation page fills the 16:9 screen as it is — no margins,
+   no frame, no restyling; the look shows only around a page of another shape. */
+.ps-root.ps-root.is-output.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide:has(> .slide-img) { padding: 0; }
+.ps-root.ps-root.is-output.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide > .slide-img {
+  width: 100vw; height: 100vh; max-width: none; max-height: none;
+}
+.ps-root.ps-root.is-output.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide > .slide-img img {
+  width: 100%; height: 100%; max-width: none; max-height: none; object-fit: contain; border-radius: 0; box-shadow: none;
+}
+.ps-root .ps-preach-slide .slide-stanza.is-nowrap { white-space: pre !important; } /* fit_text measures one line per lyric line */
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide .slide-title {
+  position: absolute; left: 0; right: 0; top: 0;
+  height: var(--ps-ref-band);
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 var(--safe-x);
+  font-family: var(--look-ref-font);
+  font-weight: var(--look-ref-weight);
+  font-size: calc(var(--look-ref-size) * 0.78);
+  letter-spacing: var(--look-ref-tracking);
+  text-transform: var(--look-ref-case);
+  color: var(--look-accent);
+  text-shadow: var(--look-shadow);
+  opacity: 0.88;
+}
+.ps-root.ps-root.is-preaching.is-slide[data-look][data-look-ref="bottom"]:not(.is-stage) .ps-preach-slide .slide-title {
+  top: auto; bottom: var(--ps-bottom-chrome);
+}
+.ps-root.ps-root.is-preaching.is-projecting.is-slide[data-look]:not(.is-output) .ps-preach-slide { padding-bottom: 180px; }
+
+/* ============================================================================
+   Live controls on the projector: Black / Clear / Logo / Countdown / Alert
+   ========================================================================== */
+/* Black is truly black — nothing showing, not even an ornament. */
+.ps-root.is-output.is-blank:not(.is-stage) .ps-preach-hold { background: #000; z-index: 66; }
+.ps-root.is-output.is-blank:not(.is-stage) .ps-preach-hold .orn { display: none; }
+
+/* Clear / Logo / Countdown: the words step aside, the look's background stays. */
+.ps-root.is-output:is(.screen-clear, .screen-logo, .screen-countdown):not(.is-stage) :is(.ps-workspace, .ps-preach-slide, .ps-preach-ref) {
+  visibility: hidden;
+}
+
+.ps-screen-logo, .ps-screen-countdown { display: none; }
+.ps-root.is-output.screen-logo:not(.is-stage) .ps-screen-logo,
+.ps-root.is-output.screen-countdown:not(.is-stage) .ps-screen-countdown {
+  display: flex; position: fixed; inset: 0; z-index: 64;
+  flex-direction: column; align-items: center; justify-content: center; gap: 3.2vh;
+  padding: 8vh 8vw; text-align: center;
+  animation: lookFadeIn 0.5s ease;
+}
+.ps-root.is-output.screen-logo:not(.is-stage) .ps-screen-logo { z-index: 65; }
+.ps-screen-logo .logo-img {
+  max-width: 64vw; max-height: 46vh; object-fit: contain;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.35));
+}
+.ps-screen-logo .logo-name {
+  font-family: var(--look-ref-font, "Cinzel", serif);
+  font-weight: 700;
+  font-size: clamp(30px, 5.6vw, 120px);
+  line-height: 1.12;
+  letter-spacing: 0.06em;
+  text-transform: var(--look-ref-case, uppercase);
+  color: var(--look-fg, #1d1208);
+  text-shadow: var(--look-shadow, none);
+  text-wrap: balance;
+}
+.ps-screen-logo.has-img .logo-name { font-size: clamp(22px, 3.4vw, 72px); }
+.ps-screen-logo .logo-line {
+  font-family: var(--look-font, "EB Garamond", serif);
+  font-style: italic;
+  font-size: clamp(18px, 2.6vw, 54px);
+  color: var(--look-accent, #8a2418);
+  text-shadow: var(--look-shadow, none);
+}
+.ps-screen-logo .logo-orn {
+  font: 400 clamp(60px, 14vh, 180px) "Cinzel", serif;
+  color: var(--look-accent, #8a2418);
+  opacity: 0.75;
+  text-shadow: var(--look-shadow, none);
+}
+.ps-screen-countdown .cd-head {
+  font-family: var(--look-ref-font, "Cinzel", serif);
+  font-weight: var(--look-ref-weight, 700);
+  font-size: clamp(22px, 3.4vw, 72px);
+  letter-spacing: var(--look-ref-tracking, 0.14em);
+  text-transform: var(--look-ref-case, uppercase);
+  color: var(--look-accent, #8a2418);
+  text-shadow: var(--look-shadow, none);
+}
+.ps-screen-countdown .cd-digits {
+  font-family: "Inter", system-ui, sans-serif;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: min(30vh, 22vw);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--look-fg, #1d1208);
+  text-shadow: var(--look-shadow, none);
+}
+
+/* Alert — a lower-third over whatever is showing (even Black). */
+.ps-screen-alert { display: none; }
+.ps-root.is-output.has-alert:not(.is-stage) .ps-screen-alert:not([hidden]) {
+  display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
+  min-height: 13vh;
+  justify-content: center; align-items: center;
+  padding: 2.4vh 6vw 3vh;
+  background: linear-gradient(90deg, rgba(8, 10, 18, 0.94), rgba(14, 16, 26, 0.88) 50%, rgba(8, 10, 18, 0.94));
+  border-top: 0.45vh solid var(--look-accent, #f2c14e);
+  box-shadow: 0 1.5vh 5vh rgba(0, 0, 0, 0.45);
+  animation: alertIn 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.ps-root.is-output.has-alert .ps-screen-alert .al-text {
+  font: 700 clamp(24px, 5.4vh, 72px)/1.2 "Inter", system-ui, sans-serif;
+  color: #fff;
+  text-align: center;
+  text-wrap: balance;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+/* A reference along the bottom steps aside while an alert is up. */
+.ps-root.is-output.has-alert[data-look-ref="bottom"] :is(.ps-preach-ref, .ps-preach-slide .slide-title) { visibility: hidden; }
+/* The light looks keep their accent readable on the dark band. */
+.ps-root:is([data-look="vellum"], [data-look="paper"], [data-look="contrast"]).is-output .ps-screen-alert {
+  --look-accent: #f2c14e;
+}
+
+/* Stage display: the alert along the top, the countdown in a pill. */
+.ps-root.is-stage.has-alert .ps-screen-alert:not([hidden]) {
+  display: flex; position: fixed; left: 0; right: 0; top: 0; z-index: 60;
+  justify-content: center; padding: 10px 24px;
+  background: #b3261e; color: #fff;
+  font: 700 clamp(18px, 2.4vw, 34px)/1.25 "Inter", system-ui, sans-serif;
+}
+.ps-root.is-stage.has-alert .ps-screen-alert:not([hidden]) {
+  height: 72px; align-items: center; overflow: hidden; text-align: center;
+}
+.ps-root.is-stage.has-alert .ps-stage { top: 72px; } /* the pulpit still sees NOW / NEXT / clock */
+.ps-root.is-stage.screen-countdown .ps-screen-countdown {
+  display: flex; position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 60;
+  align-items: baseline; gap: 14px; padding: 8px 22px; border-radius: 999px;
+  background: rgba(16, 140, 140, 0.92); color: #fff;
+}
+.ps-root.is-stage .ps-screen-countdown .cd-head { color: #e6fffb; font: 600 16px "Inter", sans-serif; letter-spacing: 0.08em; text-transform: uppercase; }
+.ps-root.is-stage .ps-screen-countdown .cd-digits { color: #fff; text-shadow: none; font: 700 34px "Inter", sans-serif; font-variant-numeric: tabular-nums; }
+
+@keyframes lookFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes alertIn { from { opacity: 0; transform: translateY(40%); } to { opacity: 1; transform: none; } }
+
+/* The projector crossfades slides (lib/slide_transition: View Transitions). */
+:root:has(.ps-root.is-output)::view-transition-old(root),
+:root:has(.ps-root.is-output)::view-transition-new(root) {
+  animation-duration: 0.45s;
+  animation-timing-function: ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-root.is-output .ps-screen-alert, .ps-screen-logo, .ps-screen-countdown { animation: none !important; }
+}
+
+/* ============================================================================
+   Operator: the live controls in the bar, the state badge, the popovers
+   ========================================================================== */
+.ps-live-controls {
+  display: inline-flex; align-items: stretch; gap: 3px; padding: 3px;
+  border: 1px solid rgba(163, 129, 46, 0.45); border-radius: 7px;
+  background: rgba(0, 0, 0, 0.28);
+}
+.ps-live-btn {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  min-width: 54px; height: 54px; padding: 3px 8px;
+  border: 1px solid transparent; border-radius: 5px;
+  background: transparent; color: var(--vellum-0, #f4ecd9);
+  font: 600 10px/1.1 "Inter", system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.ps-live-btn:hover { background: rgba(216, 181, 80, 0.14); border-color: rgba(216, 181, 80, 0.5); }
+.ps-live-btn .ic { font-size: 16px; line-height: 1; }
+.ps-live-btn kbd {
+  font: 600 8.5px "Inter", sans-serif; letter-spacing: 0.04em; opacity: 0.55;
+  padding: 0 4px; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 3px;
+}
+.ps-root:not(.is-output) .ps-live-btn.is-black.is-on {
+  background: #000; color: #fff; border-color: #e5483a;
+  animation: liveBtnPulse 1.8s ease-in-out infinite;
+}
+.ps-live-btn.is-clear.is-on { background: #f0b232; color: #1d1107; border-color: #f0b232; }
+.ps-live-btn.is-logo.is-on { background: #3d6fe0; color: #fff; border-color: #6d95ff; }
+.ps-live-btn.is-timer.is-on { background: #138f8f; color: #fff; border-color: #3cc8c8; font-variant-numeric: tabular-nums; }
+.ps-live-btn.is-alert.is-on { background: #c0392b; color: #fff; border-color: #ff7b6b; }
+.ps-live-btn.is-on kbd { border-color: currentColor; }
+@keyframes liveBtnPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(229, 72, 58, 0); }
+  50% { box-shadow: 0 0 0 3px rgba(229, 72, 58, 0.55); }
+}
+@media (max-width: 1280px) { .ps-live-btn kbd { display: none; } .ps-live-btn { min-width: 46px; padding: 3px 5px; } }
+@media (max-width: 900px) { .ps-live-btn .lbl { display: none; } .ps-live-btn { min-width: 38px; height: 46px; } }
+
+/* "What the room sees" — top-left of the operator's screen. */
+.ps-screen-state { display: none; }
+.ps-root.is-preaching:not(.is-output) .ps-screen-state:not([hidden]) {
+  display: flex; position: fixed; top: 14px; left: 18px; z-index: 2;
+  align-items: center; gap: 8px; flex-wrap: wrap; max-width: min(60vw, 720px);
+  font: 700 12px/1.2 "Inter", system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.ps-screen-state .st-mode, .ps-screen-state .st-alert {
+  display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+.ps-screen-state .st-mode::before {
+  content: ""; width: 9px; height: 9px; border-radius: 50%; background: currentColor;
+  animation: ps-live-pulse 1.6s ease-in-out infinite;
+}
+.ps-screen-state[data-state="black"] .st-mode { background: #000; color: #fff; outline: 2px solid #e5483a; }
+.ps-screen-state[data-state="clear"] .st-mode { background: #f0b232; color: #1d1107; }
+.ps-screen-state[data-state="logo"] .st-mode { background: #3d6fe0; color: #fff; }
+.ps-screen-state[data-state="countdown"] .st-mode { background: #138f8f; color: #fff; font-variant-numeric: tabular-nums; }
+.ps-screen-state .st-alert { background: #c0392b; color: #fff; text-transform: none; letter-spacing: 0; max-width: 420px; }
+.ps-screen-state .st-dismiss {
+  padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(0, 0, 0, 0.55); color: #fff; cursor: pointer;
+  font: 700 11px "Inter", sans-serif; letter-spacing: 0.06em; text-transform: uppercase;
+}
+
+/* Timer / Alert popovers above the bar. */
+.ps-live-panel-pop { display: none; }
+.ps-root.is-preaching .ps-live-panel-pop:not([hidden]) {
+  display: flex; flex-direction: column; gap: 10px;
+  position: fixed; right: 24px; bottom: 84px; width: min(380px, calc(100vw - 32px));
+  padding: 14px 16px; border-radius: 8px;
+  background: rgba(28, 18, 8, 0.98); border: 1px solid rgba(163, 129, 46, 0.6);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.55);
+  color: var(--vellum-0, #f4ecd9); font: 400 13px "Inter", system-ui, sans-serif;
+}
+/* Beside the docked queue, never under it. */
+@media (min-width: 1100px) {
+  .ps-root.is-preaching.is-queue-open:not(.is-output) .ps-live-panel-pop:not([hidden]) { right: calc(var(--ps-dock-w) + 16px); }
+}
+.ps-live-panel-pop .pp-head {
+  display: flex; justify-content: space-between; align-items: center;
+  font: 700 11px "Inter", sans-serif; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold, #d8b550);
+}
+.ps-live-panel-pop .close { background: none; border: 0; color: inherit; cursor: pointer; font-size: 14px; }
+.ps-live-panel-pop label { display: flex; flex-direction: column; gap: 4px; font-size: 11.5px; color: rgba(241, 230, 204, 0.8); flex: 1; }
+.ps-live-panel-pop :is(input, select) {
+  padding: 9px 10px; border-radius: 5px; border: 1px solid rgba(163, 129, 46, 0.55);
+  background: rgba(255, 247, 224, 0.08); color: #fff; font: 500 15px "Inter", sans-serif; color-scheme: dark;
+}
+.ps-live-panel-pop :is(input, select):focus { outline: 2px solid var(--gold, #d8b550); outline-offset: 1px; }
+.ps-live-panel-pop .pp-row { display: flex; align-items: flex-end; gap: 10px; }
+.ps-live-panel-pop .or { padding-bottom: 10px; font-size: 11.5px; color: rgba(241, 230, 204, 0.6); }
+.ps-live-panel-pop .pp-hint { margin: 0; font-size: 11.5px; color: rgba(241, 230, 204, 0.62); }
+.ps-live-panel-pop :is(.pp-go, .pp-quiet) {
+  flex: 1; padding: 11px; border-radius: 5px; cursor: pointer;
+  font: 700 12px "Inter", sans-serif; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.ps-live-panel-pop .pp-go { background: var(--rubric, #8a2418); color: #fff; border: 1px solid var(--rubric-deep, #6a1a10); }
+.ps-live-panel-pop .pp-quiet { background: transparent; color: var(--vellum-0, #f4ecd9); border: 1px solid rgba(163, 129, 46, 0.6); }
+
+/* ============================================================================
+   The Looks panel
+   ========================================================================== */
+.ps-root.is-preaching .ps-screen-panel.ps-looks:not([hidden]) {
+  width: min(1060px, calc(100vw - 32px));
+  max-height: calc(100vh - 104px);
+  overflow-y: auto;
+  gap: 14px;
+  padding: 16px 18px 18px;
+  right: 16px;
+  border-radius: 10px;
+}
+.ps-looks .lk-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.ps-looks .lk-head .lbl { font-size: 12px; }
+.ps-looks .lk-head .sub { margin-top: 4px; font: 400 12.5px "Inter", system-ui, sans-serif; color: rgba(241, 230, 204, 0.72); }
+.ps-looks .lk-head .done { padding: 9px 18px; }
+.ps-looks .lk-body { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+@media (max-width: 860px) { .ps-looks .lk-body { grid-template-columns: 1fr; } }
+.ps-looks .lk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.ps-looks .lk-side { display: flex; flex-direction: column; gap: 8px; }
+.ps-looks .lk-label {
+  margin-top: 6px; font: 700 10px "Inter", sans-serif; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--gold, #d8b550);
+}
+.ps-looks .row.seg button { font-family: "Inter", sans-serif; letter-spacing: 0.06em; }
+.ps-looks .row.files, .ps-looks .row.brand { flex-wrap: wrap; }
+.ps-looks .file {
+  position: relative; flex: 1; padding: 8px 10px; border-radius: 3px; cursor: pointer; text-align: center;
+  border: 1px dashed rgba(163, 129, 46, 0.65); color: var(--vellum-0, #f4ecd9);
+  font: 600 11px "Inter", sans-serif; letter-spacing: 0.04em;
+}
+.ps-looks .file:hover { border-color: var(--gold, #d8b550); background: rgba(216, 181, 80, 0.1); }
+.ps-looks .file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.ps-looks .file:focus-within { outline: 2px solid var(--gold, #d8b550); }
+.ps-looks .row.brand .quiet { flex: none; padding: 8px 10px; }
+.ps-looks .dim { gap: 10px; font: 600 11px "Inter", sans-serif; color: rgba(241, 230, 204, 0.8); }
+.ps-looks .dim input { flex: 1; accent-color: var(--gold, #d8b550); }
+.ps-looks .lk-note { margin: 0; min-height: 0; font: 500 11.5px/1.4 "Inter", sans-serif; color: #b9d9a8; }
+.ps-looks .lk-note:empty { display: none; }
+.ps-looks .lk-note.is-error { color: #ffb4a6; }
+.ps-looks .lk-input {
+  padding: 8px 10px; border-radius: 4px; border: 1px solid rgba(163, 129, 46, 0.5);
+  background: rgba(255, 247, 224, 0.08); color: #fff; font: 500 13px "Inter", sans-serif;
+}
+.ps-looks .logo-thumb {
+  flex: none; width: 64px; height: 36px; border-radius: 4px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(163, 129, 46, 0.4);
+  font: 500 9px "Inter", sans-serif; color: rgba(241, 230, 204, 0.6);
+}
+.ps-looks .logo-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+/* a look's thumbnail: a little 16:9 screen in that look */
+.ps-look-tile {
+  display: flex; flex-direction: column; gap: 6px; padding: 0; border: 0; background: none; cursor: pointer;
+  text-align: left; color: var(--vellum-0, #f4ecd9);
+}
+.ps-look-tile .lt-screen {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 16 / 9; width: 100%; padding: 14% 9%; border-radius: 6px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 6px 16px rgba(0, 0, 0, 0.4);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.ps-look-tile:hover .lt-screen { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(216, 181, 80, 0.6), 0 10px 20px rgba(0, 0, 0, 0.45); }
+.ps-look-tile.is-on .lt-screen { box-shadow: 0 0 0 3px var(--gold, #d8b550), 0 10px 22px rgba(0, 0, 0, 0.5); }
+.ps-look-tile:focus-visible { outline: none; }
+.ps-look-tile:focus-visible .lt-screen { box-shadow: 0 0 0 3px #fff; }
+.ps-look-tile .lt-text, .ps-look-preview .lp-text {
+  position: relative; z-index: 2; text-align: center; text-wrap: balance;
+  font-family: var(--look-font); font-weight: var(--look-weight); line-height: 1.22;
+  color: var(--look-fg); text-shadow: var(--look-shadow);
+}
+.ps-look-tile .lt-text { font-size: 11.5px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ps-look-tile .lt-ref, .ps-look-preview .lp-ref {
+  position: absolute; left: 0; right: 0; top: 7%; z-index: 2; text-align: center;
+  font-family: var(--look-ref-font); font-weight: var(--look-ref-weight);
+  letter-spacing: var(--look-ref-tracking); text-transform: var(--look-ref-case);
+  color: var(--look-accent); text-shadow: var(--look-shadow);
+}
+.ps-look-tile .lt-ref { font-size: 7.5px; }
+:is(.ps-look-tile, .ps-look-preview)[data-look-ref="bottom"] :is(.lt-ref, .lp-ref) { top: auto; bottom: 7%; }
+.ps-look-tile .lt-name { font: 600 11.5px "Inter", sans-serif; letter-spacing: 0.02em; display: flex; gap: 6px; align-items: center; }
+.ps-look-tile.is-on .lt-name { color: var(--gold, #d8b550); }
+.ps-look-tile.is-on .lt-name::before { content: "✓"; }
+
+/* the big preview, with the church's picture/video when one is chosen */
+.ps-look-preview {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 16 / 9; width: 100%; padding: 12% 8%; border-radius: 8px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 10px 26px rgba(0, 0, 0, 0.5);
+}
+.ps-look-preview .lp-bg { position: absolute; inset: 0; z-index: 0; }
+.ps-look-preview .lp-text { font-size: 16px; }
+.ps-look-preview .lp-ref { font-size: 9px; }
+.ps-look-preview .lp-name {
+  position: absolute; left: 8px; top: 8px; z-index: 3; padding: 3px 8px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55); color: #fff; font: 700 9px "Inter", sans-serif; letter-spacing: 0.12em; text-transform: uppercase;
+}
+
+/* ============================================================================
+   Phone remote: Black / Clear / Logo
+   ========================================================================== */
+.ps-remote-pad .screen { display: flex; gap: 8px; padding: 0 16px 12px; }
+.ps-remote-pad .screen button {
+  flex: 1; height: 54px; border-radius: 10px; cursor: pointer;
+  border: 1px solid rgba(163, 129, 46, 0.55); background: rgba(255, 247, 224, 0.05);
+  color: var(--vellum-0, #f4ecd9); font: 700 13px "Inter", system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.ps-remote-pad .screen button:active { transform: scale(0.97); }
+.ps-remote-pad .screen button.is-on[data-screen-command="blank"] { background: #000; border-color: #e5483a; color: #fff; }
+.ps-remote-pad .screen button.is-on[data-screen-command="clear"] { background: #f0b232; border-color: #f0b232; color: #1d1107; }
+.ps-remote-pad .screen button.is-on[data-screen-command="logo"] { background: #3d6fe0; border-color: #6d95ff; color: #fff; }
+
+/* The live toolbar is one component (buttons + badge + popovers); in the bar
+   only its button group takes room — the badge and popovers are fixed. */
+.ps-live-toolbar { display: inline-flex; align-items: center; }
+
+/* What's New — the Looks card: three looks cycling, the live buttons under them. */
+.mock-looks { position: relative; width: 86%; height: 82%; }
+.mock-looks .ml {
+  position: absolute; inset: 0 0 30px 0; border-radius: 4px; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background-color: var(--look-base); background-image: var(--look-bg);
+  opacity: 0; animation: newsLooks 9s ease-in-out infinite;
+}
+.mock-looks .ml b { position: relative; font: 700 15px/1.2 var(--look-font); color: var(--look-fg); text-shadow: var(--look-shadow); }
+.mock-looks .ml i { position: relative; font: 700 8px var(--look-ref-font); font-style: normal; letter-spacing: 0.14em; text-transform: uppercase; color: var(--look-accent); }
+.mock-looks .ml-dawn b { font: 700 30px "Inter", sans-serif; }
+.mock-looks .ml-glass { animation-delay: 3s; }
+.mock-looks .ml-dawn { animation-delay: 6s; }
+.mock-looks .ml-bar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 3px; justify-content: center; }
+.mock-looks .ml-bar em {
+  font: 700 7.5px "Inter", sans-serif; font-style: normal; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 6px 7px; border-radius: 3px; color: #f4ecd9; border: 1px solid rgba(163, 129, 46, 0.5);
+}
+.mock-looks .ml-bar em.on { animation: newsLooksBtn 9s step-end infinite; }
+@keyframes newsLooks { 0%, 30% { opacity: 1; } 36%, 94% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes newsLooksBtn { 0% { background: transparent; } 85% { background: #000; border-color: #e5483a; } }

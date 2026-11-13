@@ -23,6 +23,16 @@
     </button>
   </main>
 
+  <%# Live screen controls — lit for what the room sees now. %>
+  <nav class="screen" aria-label="Big screen">
+    <button type="button" data-remote-pad-target="screen" data-screen-command="blank" aria-pressed="false"
+            data-action="remote-pad#screen">Black</button>
+    <button type="button" data-remote-pad-target="screen" data-screen-command="clear" aria-pressed="false"
+            data-action="remote-pad#screen">Clear</button>
+    <button type="button" data-remote-pad-target="screen" data-screen-command="logo" aria-pressed="false"
+            data-action="remote-pad#screen">Logo</button>
+  </nav>
+
   <footer class="chase">
     <button type="button" class="back" title="Back to the previous scripture"
             data-action="remote-pad#back">&#10558;</button>

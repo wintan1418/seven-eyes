@@ -7,6 +7,8 @@ import { songSlides } from "../lib/song_sheet"
 import { richSlides, paintRichSlide, paintPresenter, sameRich } from "../lib/slides/rich_slides"
 import { wordFromDetail, wordStudyTitle, encodeWordStudy } from "../lib/root_words"
 import { renderWordSlide, renderStageWord } from "../lib/root_word_slide"
+import { transitionStyle, crossfade } from "../lib/slide_transition"
+import { fitElement, screenCap } from "../lib/fit_text"
 
 // Drives focus-pane presentation mode plus the EasyWorship-style preach sub-mode.
 //
@@ -97,6 +99,13 @@ export default class extends Controller {
       this._channel.onmessage = (e) => this._onMessage(e.data)
     }
     warmLocal() // the reference parser + download list, before anyone types
+    // A new look (screen_look) changes fonts and margins: fit the words again.
+    this._onRefit = () => requestAnimationFrame(() => {
+      if (!this.element.classList.contains("is-preaching")) return
+      this._autoFit()
+      if (this._slide) this._paintSlide()
+    })
+    window.addEventListener("preach:refit", this._onRefit)
     if (this._isOutput) {
       this._enterOutput(parseInt(params.get("pane") || "0", 10))
     } else {
@@ -1204,7 +1213,10 @@ export default class extends Controller {
       if (this._isStage) this._paintStage()
       this._broadcast()
     }
-    if (fade) {
+    const style = fade ? transitionStyle(this.element) : "cut"
+    if (style === "xfade" && !this._inCrossfade) {
+      crossfade(render)
+    } else if (style === "dip" && !this._inCrossfade) {
       layer.classList.add("is-changing")
       setTimeout(() => {
         render()
@@ -1239,6 +1251,23 @@ export default class extends Controller {
 
   _fitSlide(layer, stanza) {
     stanza.style.fontSize = ""
+    if (this._slideGrows()) {
+      // The projector: the stanza as big as the screen allows (lib/fit_text).
+      const scale = parseFloat(getComputedStyle(this.element).getPropertyValue("--ps-out-scale")) || this._screen?.scale || 1
+      const fit = { min: AUTOFIT_MIN_PX, max: screenCap(window.innerWidth, window.innerHeight, scale, 0.1) }
+      // Scripture sets and seminar slides wrap as prose.
+      if (this._slide?.rich) { fitElement(layer, [ stanza ], fit); return }
+      // One lyric line per screen line, unless wrapping makes it much bigger.
+      stanza.classList.add("is-nowrap")
+      const single = fitElement(layer, [ stanza ], fit)
+      stanza.classList.remove("is-nowrap")
+      const wrapped = fitElement(layer, [ stanza ], fit)
+      if (single >= wrapped * 0.75) {
+        stanza.classList.add("is-nowrap")
+        stanza.style.fontSize = `${single}px`
+      }
+      return
+    }
     let fs = parseFloat(getComputedStyle(stanza).fontSize) || 56
     let iters = AUTOFIT_MAX_ITERS
     while (layer.scrollHeight > layer.clientHeight + 1 && iters > 0 && fs > AUTOFIT_MIN_PX) {
@@ -1951,7 +1980,10 @@ export default class extends Controller {
     this.element.classList.toggle("is-blank", !!msg.blank)
     this._emphasis = msg.emphasis || {}
     if (msg.slide) { this._applySlide(msg.slide); return }
-    if (this._slide) this._clearSlide({ repaint: false })
+    if (this._slide) {
+      this._crossfadeKind(() => { this._clearSlide({ repaint: false }); this._applyState(msg) })
+      return
+    }
     if (msg.split) { this._applySplitState(msg); return }
     // The operator left split — drop the region layout before single-cursor paint.
     if (this._isSplit()) {
@@ -2016,7 +2048,17 @@ export default class extends Controller {
       }
       return
     }
-    this._presentSlide(slide)
+    this._crossfadeKind(() => this._presentSlide(slide))
+  }
+
+  // Projector: song ↔ scripture ↔ another song dissolve into each other
+  // instead of cutting (the steps inside them fade through _transition).
+  _crossfadeKind(swap) {
+    if (transitionStyle(this.element) !== "xfade" || this._inCrossfade) { swap(); return }
+    crossfade(() => {
+      this._inCrossfade = true
+      try { swap() } finally { this._inCrossfade = false }
+    })
   }
 
   // Output/stage window: mirror split projection. Load any region whose passage
@@ -2166,6 +2208,7 @@ export default class extends Controller {
     if (this._onJoin) window.removeEventListener("preach:join", this._onJoin)
     if (this._onNotice) window.removeEventListener("preach:notice", this._onNotice)
     if (this._onResize) window.removeEventListener("resize", this._onResize)
+    if (this._onRefit) window.removeEventListener("preach:refit", this._onRefit)
     clearTimeout(this._resizeTimer)
     if (this._onBeforeCache) document.removeEventListener("turbo:before-cache", this._onBeforeCache)
     clearTimeout(this._toastTimer)
@@ -2185,6 +2228,14 @@ export default class extends Controller {
     if (this._fading) { this._queuedTransition = { mutate, opts }; return }
     const bodies = opts.bodies || this._activeBodies()
     if (bodies.length === 0) { mutate(); this._paint(); return }
+    // Cut, or a crossfade on the projector (lib/slide_transition): swap at once.
+    const style = this._inCrossfade ? "cut" : transitionStyle(this.element)
+    if (style !== "dip") {
+      const swap = () => { mutate(); this._paint(); this._autoFit() }
+      if (style === "xfade") crossfade(swap)
+      else swap()
+      return
+    }
     this._fading = true
     bodies.forEach(b => b.classList.add("is-changing"))
     setTimeout(() => {
@@ -2311,6 +2362,13 @@ export default class extends Controller {
   _fitGrows() {
     const c = this.element.classList
     if (!c.contains("is-preaching") || c.contains("is-stage") || this._slide) return false
+    return c.contains("is-output") || !c.contains("is-projecting")
+  }
+
+  // Songs and thoughts grow the same way, on the same screens.
+  _slideGrows() {
+    const c = this.element.classList
+    if (c.contains("is-stage")) return false
     return c.contains("is-output") || !c.contains("is-projecting")
   }
 

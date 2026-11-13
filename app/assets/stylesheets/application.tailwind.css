@@ -16,6 +16,7 @@
 @import "./root_words.css";
 @import "./whats_new_mocks.css";
 @import "./legacy/audio.css";
+@import "./slide_themes.css"; /* projection Looks + live controls (after the preach layer) */
 
 /* The modern reader (YouVersion-style). Imported after the legacy layer so
    it wins ties; reading-mode rules are scoped to

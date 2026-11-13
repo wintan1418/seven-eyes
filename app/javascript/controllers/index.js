@@ -100,6 +100,12 @@ application.register("remote-pad", RemotePadController)
 import RootWordsController from "./root_words_controller"
 application.register("root-words", RootWordsController)
 
+import ScreenLiveController from "./screen_live_controller"
+application.register("screen-live", ScreenLiveController)
+
+import ScreenLookController from "./screen_look_controller"
+application.register("screen-look", ScreenLookController)
+
 import SearchController from "./search_controller"
 application.register("search", SearchController)
 
