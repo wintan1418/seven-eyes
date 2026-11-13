@@ -255,6 +255,18 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   study) and the **order of service** (copy for WhatsApp / share / print, built on the device).
   Collections and templates are cached on the device and saved through the outbox
   (`queueRecordSave`), so they work offline. Pure logic is node-tested (`test/javascript/slides_test.mjs`).
+- **Root word projection** (Nov 2026) — "the Greek word here is agapē…" on the big screen. Preach
+  mode: `W` / bar's ℵ Root word (live verse), `Shift+W` / ℵ in the Preview row (previewed verse) open
+  the `root_words` card (self-contained popover, `studies/_root_words`): the verse's Strong's-tagged
+  KJV words (other translations map through the KJV verse), lemma in Hebrew/Greek, transliteration,
+  say-it guide, Strong's no., short meaning (`GLOSSES` + derived from Open Scriptures text —
+  `lib/root_words.js`, node-tested), count. Project = a word-study **slide** (`slide.word`, body =
+  the study as JSON) through `presentation#_presentSlide`, so projector/stage/phones get it
+  (`live_sessions.slide_word`); queue items are `setlist_items.kind = word` (enum 7, word study JSON in `body`). Ask Rabbi:
+  `POST /root_words/explain` (`RootWordExplainer`, cached, editable, labelled AI). Data:
+  `GET /root_words/:osis/:ch/:v`; offline = `RootWordPack` (`/root_words/pack`, ~2.3 MB gz, KJV
+  tokens + lexicon) in IndexedDB (`lib/offline/word_pack.js`, books store code `~strongs`),
+  saved on entering preach. Fonts: bundled OFL subsets in `app/assets/fonts/root_words/`.
 - **Stage display** — `?stage=1` window (`⌗ Stage` button): NOW small / NEXT big / clock, painted
   by `_paintStage()` from the same BroadcastChannel state; hello role `"stage"` so it never flips
   the operator into console mode.

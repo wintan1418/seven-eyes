@@ -97,22 +97,22 @@ export function fitWordSlide(layer, slide) {
   }
 }
 
-// Stage display: NOW = the word (big enough to read from the pulpit), NEXT =
-// the verse it came from (Esc / Back returns there).
+// Stage display: NOW = the word, NEXT (the big panel) = its meaning, the AI
+// note if projected, and the verse it came from (Esc / Back returns there).
 export function renderStageWord({ now, next, ref }, word) {
   if (ref) ref.textContent = `Word study · ${word.reference || ""}`.trim()
   if (now) {
     const wrap = el("div", `txt rw-stage rw-lang-${word.lang}`)
     wrap.append(lemmaNode(word, "rw-stage-lemma"))
     wrap.append(el("div", "rw-stage-line", [ word.translit, word.say && `(${word.say})`, word.s ].filter(Boolean).join("  ")))
-    if (word.gloss) wrap.append(el("div", "rw-stage-gloss", word.gloss))
-    if (word.note) wrap.append(el("div", "rw-stage-note", word.note))
     now.replaceChildren(el("div", "lbl", `on screen · word study${word.english ? ` · “${word.english}”` : ""}`), wrap)
   }
   if (next) {
-    const txt = el("div", "txt")
+    const txt = el("div", "txt rw-stage")
+    if (word.gloss) txt.append(el("div", "rw-stage-gloss", word.gloss))
+    if (word.note) txt.append(el("div", "rw-stage-note", word.note))
     txt.append(verseNode(word, "rw-stage-verse"))
-    next.replaceChildren(el("div", "lbl", `back to ${word.reference || "the verse"} · Esc / Back`), txt)
+    next.replaceChildren(el("div", "lbl", `meaning · then back to ${word.reference || "the verse"} (Esc / Back)`), txt)
   }
 }
 

@@ -100,6 +100,8 @@ class LiveSession < ApplicationRecord
       w["s"] = w["s"].upcase
       w["lang"] = w["s"].start_with?("H") ? "hebrew" : "greek"
       w["n"] = raw["n"].to_i.clamp(0, 1_000_000)
+      mark = Array(raw["mark"]).map { |i| Integer(i, exception: false) }
+      w["mark"] = mark if mark.size == 2 && mark.all? { |i| i&.between?(0, w["verse"].length) } && mark[0] < mark[1]
     end
   end
 

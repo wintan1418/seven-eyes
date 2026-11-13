@@ -145,7 +145,8 @@ class RootWordsTest < ActionDispatch::IntegrationTest
     post study_live_path(study), params: { reference: "John 3", translation_id: @kjv.id }, as: :json
     patch study_live_path(study), params: {
       kind: "slide", slide_title: "Word study: agapáō — John 3:16", slide_body: "ἀγαπάω (agapáō) G25",
-      slide_word: { s: "g25", lemma: "ἀγαπάω", translit: "agapáō", gloss: "to love", evil: "<script>", note: "x" * 900 }
+      slide_word: { s: "g25", lemma: "ἀγαπάω", translit: "agapáō", gloss: "to love", evil: "<script>", note: "x" * 900,
+                    verse: "For God so loved", mark: [ 11, 16 ] }
     }, as: :json
     assert_response :success
     live = study.live_session.reload
@@ -154,5 +155,6 @@ class RootWordsTest < ActionDispatch::IntegrationTest
     assert_equal "greek", state[:slide_word]["lang"]
     assert_nil state[:slide_word]["evil"]
     assert_equal 400, state[:slide_word]["note"].length
+    assert_equal [ 11, 16 ], state[:slide_word]["mark"]
   end
 end
