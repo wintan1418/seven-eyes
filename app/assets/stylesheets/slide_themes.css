@@ -466,7 +466,7 @@
 .ps-root.ps-root.is-preaching.is-slide[data-look][data-look-ref="bottom"]:not(.is-stage) .ps-preach-slide {
   padding: var(--safe-y) var(--safe-x) calc(var(--ps-ref-band) + var(--ps-bottom-chrome));
 }
-.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide .slide-stanza {
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide > .slide-stanza {
   max-width: none;
   font-family: var(--look-font);
   font-weight: var(--look-weight);
@@ -482,7 +482,7 @@
   /* the set's "gold" reference: the look's own gold (its accent, unless that isn't gold) */
   --ps-slide-ref-color: var(--look-gold, var(--look-accent));
 }
-.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide .slide-stanza:not(.slide-seminar) { width: 100%; }
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide > .slide-stanza:not(.slide-seminar) { width: 100%; }
 .ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .slide-stanza.is-set .set-ref {
   font-family: var(--look-ref-font);
   font-weight: var(--look-ref-weight);
@@ -501,6 +501,25 @@
   letter-spacing: var(--look-ref-tracking);
 }
 .ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .slide-seminar.layout-section .sem-title { border-color: var(--look-accent); }
+/* The root-word study (lib/root_word_slide, root_words.css) keeps its own
+   layout and Hebrew / Greek faces; the look gives it colours and legibility. */
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide .rw-slide {
+  --rw-ink: var(--look-fg);
+  --rw-accent: var(--look-gold, var(--look-accent));
+  --rw-gold: var(--look-gold, var(--look-accent));
+  --rw-mark: color-mix(in srgb, var(--look-gold, var(--look-accent)) 34%, transparent);
+}
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide .rw-slide :is(.slide-stanza, .slide-title) {
+  color: var(--look-fg);
+  text-shadow: var(--look-shadow);
+}
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide .rw-slide :is(.rw-ref, .rw-eyebrow, .rw-lemma, .rw-mark, .rw-say-lbl, .rw-note-lbl) {
+  color: var(--rw-accent);
+}
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide .rw-slide .rw-lemma {
+  text-shadow: var(--look-shadow), 0 0.04em 0.1em color-mix(in srgb, var(--rw-gold) 18%, transparent);
+}
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide .rw-slide :is(.rw-meta, .rw-foot) { opacity: 0.85; }
 /* A picture or presentation page fills the 16:9 screen as it is — no margins,
    no frame, no restyling; the look shows only around a page of another shape. */
 .ps-root.ps-root.is-output.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide:has(> .slide-img) { padding: 0; }
@@ -511,7 +530,7 @@
   width: 100%; height: 100%; max-width: none; max-height: none; object-fit: contain; border-radius: 0; box-shadow: none;
 }
 .ps-root .ps-preach-slide .slide-stanza.is-nowrap { white-space: pre !important; } /* fit_text measures one line per lyric line */
-.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide .slide-title {
+.ps-root.ps-root.is-preaching.is-slide[data-look]:not(.is-stage) .ps-preach-slide > .slide-title {
   position: absolute; left: 0; right: 0; top: 0;
   height: var(--ps-ref-band);
   display: flex; align-items: center; justify-content: center;
@@ -525,7 +544,7 @@
   text-shadow: var(--look-shadow);
   opacity: 0.88;
 }
-.ps-root.ps-root.is-preaching.is-slide[data-look][data-look-ref="bottom"]:not(.is-stage) .ps-preach-slide .slide-title {
+.ps-root.ps-root.is-preaching.is-slide[data-look][data-look-ref="bottom"]:not(.is-stage) .ps-preach-slide > .slide-title {
   top: auto; bottom: var(--ps-bottom-chrome);
 }
 .ps-root.ps-root.is-preaching.is-projecting.is-slide[data-look]:not(.is-output) .ps-preach-slide { padding-bottom: 180px; }
@@ -620,7 +639,7 @@
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 /* A reference along the bottom steps aside while an alert is up. */
-.ps-root.is-output.has-alert[data-look-ref="bottom"] :is(.ps-preach-ref, .ps-preach-slide .slide-title) { visibility: hidden; }
+.ps-root.is-output.has-alert[data-look-ref="bottom"] :is(.ps-preach-ref, .ps-preach-slide > .slide-title) { visibility: hidden; }
 /* The light looks keep their accent readable on the dark band. */
 .ps-root:is([data-look="vellum"], [data-look="paper"], [data-look="contrast"]).is-output .ps-screen-alert {
   --look-accent: #f2c14e;
