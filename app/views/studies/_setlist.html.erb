@@ -24,7 +24,7 @@
   <%= form_with url: study_setlist_items_path(study), method: :post,
         class: "ps-setlist-form kind-#{selected_kind}",
         html: { enctype: "multipart/form-data" },
-        data: { setlist_target: "form", action: "submit->setlist#add" } do |f| %>
+        data: { setlist_target: "form", action: "submit->setlist#add", controller: "song-editor" } do |f| %>
     <div class="err" data-setlist-target="error" <%= "hidden" unless errored %>><%= errored&.errors&.full_messages&.to_sentence %></div>
     <div class="kinds">
       <% { "scripture" => "&#167; Scripture", "song" => "&#9835; Song",
@@ -42,18 +42,32 @@
            value="<%= errored&.reference %>" placeholder="e.g. Jn 11:35, Rev 12:10; Jer 10:10-11">
     <div class="ref-hint" data-setlist-target="hint">Add several at once &mdash; separate with commas
       (<span class="eg">John 3:16, Rom 8:28, Ps 23</span>). Enter adds; keep typing the next.</div>
+    <%# Songs: the song bank (song_bank controller on .ps-root) finds one to add;
+        the song editor (song_editor controller, this form) helps write one. %>
     <div class="ps-song-library">
-      <button type="button" class="lib-toggle" data-action="setlist#toggleLibrary">
-        &#9835; Pick from your songs &amp; the hymnal
+      <button type="button" class="lib-toggle" data-action="song-bank#open">
+        &#9835; Song bank &mdash; search <%= Hymnal::HYMNS.size %> hymns &amp; your songs
       </button>
-      <div class="lib-list" data-setlist-target="libraryList" hidden></div>
     </div>
     <input type="text" name="setlist_item[title]" class="title-field" autocomplete="off"
-           data-setlist-target="title" data-action="keydown.esc->setlist#cancelEdit"
+           data-setlist-target="title" data-song-editor-target="title" data-action="keydown.esc->setlist#cancelEdit"
            value="<%= errored&.title %>" placeholder="Title — e.g. Amazing Grace, or Welcome">
+    <div class="ps-song-tools">
+      <button type="button" data-action="song-editor#openFile" title="Open the words from a .txt file">&#8613; Open .txt</button>
+      <button type="button" data-action="song-editor#tidy" title="Find verses, chorus and stanzas in the words">&#10003; Tidy</button>
+      <button type="button" class="save" data-action="song-editor#save" title="Keep it in your song bank for any service">&#9734; Save to my songs</button>
+      <input type="file" accept=".txt,text/plain" hidden data-song-editor-target="file" data-action="change->song-editor#fileChosen">
+    </div>
     <textarea name="setlist_item[body]" rows="5" class="body-field"
-              data-setlist-target="body" data-action="keydown.esc->setlist#cancelEdit"
-              placeholder="Words to project. Leave a blank line between stanzas — each stanza becomes its own slide."><%= errored&.body %></textarea>
+              data-setlist-target="body" data-song-editor-target="body"
+              data-action="keydown.esc->setlist#cancelEdit paste->song-editor#paste input->song-editor#refresh"
+              placeholder="Words to project. Leave a blank line between stanzas — each stanza becomes its own slide. Paste a whole song: [Verse 1], [Chorus]… are found for you."><%= errored&.body %></textarea>
+    <input type="text" name="setlist_item[arrangement]" class="order-field" autocomplete="off" spellcheck="false"
+           data-setlist-target="arrangement" data-song-editor-target="arrangement"
+           data-action="input->song-editor#refresh keydown.esc->setlist#cancelEdit"
+           value="<%= errored&.arrangement %>" placeholder="Order (optional) — e.g. V1 C V2 C B C">
+    <div class="song-flow" data-song-editor-target="flow" aria-live="polite"></div>
+    <div class="song-note" data-song-editor-target="saved" role="status" hidden></div>
     <input type="file" name="setlist_item[image]" class="image-field" accept="image/*">
     <div class="image-hint image-field">Pictures only, up to 5&nbsp;MB &mdash; projected full-screen.</div>
     <div class="form-actions">

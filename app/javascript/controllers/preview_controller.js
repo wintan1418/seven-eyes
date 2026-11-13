@@ -5,6 +5,7 @@ import { bookText } from "../lib/offline/store"
 import { chapterVerses } from "../lib/offline/pane_renderer"
 import { quickFetch } from "../lib/offline/network"
 import { queueKey } from "../lib/offline/setlist_state"
+import { songSlides } from "../lib/song_sheet"
 
 // Preview → Live, EasyWorship-style, on the operator screen only (never on the
 // ?output=1 projector or the ?stage=1 pulpit screen). Lives on .ps-root.
@@ -119,6 +120,9 @@ export default class extends Controller {
     this._showList(chapter, { focus: p.verseStart })
   }
 
+  // A song / thought: every slide in projection order (EasyWorship's slide
+  // list), its section label small. Clicking a slide puts the song on screen at
+  // that slide; while the song is live, the slide on screen is marked.
   _paintSlide(preview) {
     const nodes = []
     if (preview.image) {
@@ -127,9 +131,39 @@ export default class extends Controller {
       img.alt = ""
       nodes.push(img)
     }
-    const stanza = (preview.body || "").split(/\n\s*\n/)[0]?.trim()
-    if (stanza) nodes.push(el("span", "stanza", stanza))
+    const { slides } = songSlides(preview.body, preview.arrangement)
+    this.previewTextTarget.classList.toggle("is-slides", slides.length > 1)
+    if (slides.length === 1) nodes.push(el("span", "stanza", slides[0].text))
+    else {
+      slides.forEach((s, i) => {
+        const btn = el("button", "slide")
+        btn.type = "button"
+        btn.dataset.index = String(i)
+        btn.dataset.action = "preview#slideLive"
+        btn.title = "Put this slide on the screen"
+        btn.append(el("span", "lbl", s.label || `${i + 1}`), el("span", "txt", s.text))
+        nodes.push(btn)
+      })
+    }
     this.previewTextTarget.replaceChildren(...nodes)
+    this._paintLiveSlide()
+  }
+
+  // A slide in Preview's list: that song, live, at that slide.
+  slideLive(event) {
+    event?.preventDefault?.()
+    if (!this._preview || !this.element.classList.contains("is-preaching")) return
+    const { parsed, ...detail } = this._preview
+    window.dispatchEvent(new CustomEvent("setlist:present", { detail: { ...detail, index: Number(event.currentTarget.dataset.index) || 0 } }))
+    this.previewCardTarget.dataset.state = "live"
+  }
+
+  _paintLiveSlide() {
+    if (!this.hasPreviewTextTarget) return
+    const live = this._preview && this._isLive(this._preview) ? this._live?.index : null
+    this.previewTextTarget.querySelectorAll(".slide").forEach((b) => {
+      b.classList.toggle("is-live", live != null && Number(b.dataset.index) === live)
+    })
   }
 
   // Go live with what's in Preview (button, L, Enter in the preview card).
@@ -156,7 +190,7 @@ export default class extends Controller {
     if (!p) return
     window.dispatchEvent(new CustomEvent("setlist:add", { detail: p.kind === "scripture"
       ? { kind: "scripture", reference: p.label || p.reference }
-      : { kind: p.itemKind || "thought", title: p.title, body: p.body } }))
+      : { kind: p.itemKind || "thought", title: p.title, body: p.body, arrangement: p.arrangement } }))
   }
 
   queueLive(event) {
@@ -197,7 +231,7 @@ export default class extends Controller {
   _liveState(state) {
     if (!state || !this.hasLiveLabelTarget) return
     if (state.slide) {
-      this._live = { slide: true, label: state.slide.title || "Slide" }
+      this._live = { slide: true, label: state.slide.title || "Slide", index: state.slide.index || 0, body: state.slide.body }
       this.liveLabelTarget.textContent = `♫ ${this._live.label}`
     } else {
       const ref = (state.reference || "").trim()
@@ -223,12 +257,13 @@ export default class extends Controller {
     }
     this._paintListMarks()
     this._paintQueueButtons()
+    this._paintLiveSlide()
   }
 
   _isLive(preview) {
     const l = this._live
     if (!l || !preview) return false
-    if (preview.kind !== "scripture") return !!l.slide && l.label === (preview.title || "Slide")
+    if (preview.kind !== "scripture") return !!l.slide && l.label === (preview.title || "Slide") && (l.body || "") === (preview.body || "")
     const p = preview.parsed
     if (!p || l.slide) return false
     return l.osis === p.osis && l.chapter === p.chapter && (p.verseStart == null || p.verseStart === l.first)

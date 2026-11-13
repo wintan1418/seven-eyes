@@ -3,6 +3,7 @@ import { warmLocal, localCheck, loadPaneLocally } from "../lib/offline/local_pan
 import { quickFetch, isNetworkSlow } from "../lib/offline/network"
 import { allBookTexts } from "../lib/offline/store"
 import { searchVerses } from "../lib/offline/keyword_search"
+import { songSlides } from "../lib/song_sheet"
 
 // Drives focus-pane presentation mode plus the EasyWorship-style preach sub-mode.
 //
@@ -67,7 +68,7 @@ export default class extends Controller {
   initialize() {
     this._preachIndex = 0
     this._groupSize = 1
-    this._slide = null // {title, body, stanzas, index} while a song/thought is projected
+    this._slide = null // {title, body, arrangement, stanzas, labels, index} while a song/thought is projected
     this._history = [] // where we were before each chase/queue/AI jump — for ⟲ Back
     this._blank = false // projector held on a calm blank screen (between segments)
     this._anchor = null // pinned "teaching text" — {reference, index} — for ⌂ Home
@@ -1092,7 +1093,7 @@ export default class extends Controller {
     }
     if (detail.kind === "slide") {
       if (this.element.classList.contains("is-preaching")) {
-        this._presentSlide({ title: detail.title, body: detail.body, image: detail.image, index: 0 })
+        this._presentSlide({ title: detail.title, body: detail.body, arrangement: detail.arrangement, image: detail.image, index: detail.index || 0 })
       } else {
         // The setlist doesn't mark it live either — nothing went on a screen.
         this._toast("Enter Preach mode first, then pick the song or slide to put it on the screen")
@@ -1101,18 +1102,22 @@ export default class extends Controller {
   }
 
   // Project a song/thought/picture instead of the verse. Blank lines in the
-  // body split it into stanzas; next/prev walk the stanzas until scripture
-  // returns. A picture is a single full-screen slide.
-  _presentSlide({ title, body, image, index }) {
-    const stanzas = (body || "").split(/\n\s*\n/).map(s => s.trim()).filter(Boolean)
-    if (stanzas.length === 0 && !title && !image) return
+  // body split it into stanzas; section labels and the arrangement decide the
+  // order (lib/song_sheet — a chorus typed once can project after every verse);
+  // next/prev walk the slides until scripture returns. A picture is a single
+  // full-screen slide. Labels show to the operator and stage, never projected.
+  _presentSlide({ title, body, arrangement, image, index }) {
+    const slides = songSlides(body, arrangement).slides.filter(s => s.text)
+    if (slides.length === 0 && !title && !image) return
     this._remember()
     this._slide = {
       title: title || "",
       body: body || "",
+      arrangement: arrangement || "",
       image: image || null,
-      stanzas: stanzas.length ? stanzas : [title || ""],
-      index: Math.max(0, Math.min(index || 0, Math.max(stanzas.length - 1, 0)))
+      stanzas: slides.length ? slides.map(s => s.text) : [title || ""],
+      labels: slides.map(s => s.label || null),
+      index: Math.max(0, Math.min(index || 0, Math.max(slides.length - 1, 0)))
     }
     this.element.classList.add("is-slide")
     this._paintSlide()
@@ -1154,9 +1159,12 @@ export default class extends Controller {
       }
       const counter = this.element.querySelector("[data-preach-counter]")
       if (counter) {
+        const label = this._slideLabel(index)
         counter.innerHTML = image
           ? `<span class="num">picture</span>`
-          : `<span class="num">stanza ${index + 1}</span><span class="of">of ${stanzas.length}</span>`
+          : (label ? `<span class="num"></span><span class="of">${index + 1} of ${stanzas.length}</span>`
+                   : `<span class="num">stanza ${index + 1}</span><span class="of">of ${stanzas.length}</span>`)
+        if (label && !image) counter.querySelector(".num").textContent = label
       }
       this._paintSlideNextPreview()
       this._paintRef()
@@ -1186,8 +1194,14 @@ export default class extends Controller {
       box.innerHTML = `<span class="lbl">Next</span><span class="txt end">— end —</span>`
       return
     }
-    box.innerHTML = `<span class="lbl">Next · stanza ${index + 2}</span><span class="txt"></span>`
+    box.innerHTML = `<span class="lbl"></span><span class="txt"></span>`
+    box.querySelector(".lbl").textContent = `Next · ${this._slideLabel(index + 1) || `stanza ${index + 2}`}`
     box.querySelector(".txt").textContent = stanzas[index + 1]
+  }
+
+  // "Chorus", "Verse 2" — the slide's section, when the song has labels.
+  _slideLabel(index) {
+    return this._slide?.labels?.[index] || null
   }
 
   _fitSlide(layer, stanza) {
@@ -1220,7 +1234,7 @@ export default class extends Controller {
 
   _snapshot() {
     if (this._slide) {
-      return { kind: "slide", title: this._slide.title, body: this._slide.body,
+      return { kind: "slide", title: this._slide.title, body: this._slide.body, arrangement: this._slide.arrangement,
                image: this._slide.image, index: this._slide.index }
     }
     const pane = this.element.querySelector(".ps-pane.is-presented")
@@ -1275,7 +1289,7 @@ export default class extends Controller {
     this._restoring = true
     try {
       if (entry.kind === "slide") {
-        this._presentSlide({ title: entry.title, body: entry.body, image: entry.image, index: entry.index })
+        this._presentSlide({ title: entry.title, body: entry.body, arrangement: entry.arrangement, image: entry.image, index: entry.index })
         return
       }
       const pane = this.element.querySelector(".ps-pane.is-presented")
@@ -1733,8 +1747,10 @@ export default class extends Controller {
         return
       }
       if (ref) ref.textContent = title || "Song"
-      this._fillStagePanel(now, `stanza ${index + 1} of ${stanzas.length}`, stanzas[index] || "")
-      this._fillStagePanel(next, "next", stanzas[index + 1] || "— end —")
+      const nowLabel = this._slideLabel(index)
+      const nextLabel = this._slideLabel(index + 1)
+      this._fillStagePanel(now, `${nowLabel ? `${nowLabel} · ` : "stanza "}${index + 1} of ${stanzas.length}`, stanzas[index] || "")
+      this._fillStagePanel(next, nextLabel && index + 1 < stanzas.length ? `next · ${nextLabel}` : "next", stanzas[index + 1] || "— end —")
       return
     }
 
@@ -1957,6 +1973,7 @@ export default class extends Controller {
   // new stanza; different slide → render it fresh.
   _applySlide(slide) {
     if (this._slide && this._slide.body === slide.body && this._slide.title === slide.title &&
+        (this._slide.arrangement || "") === (slide.arrangement || "") &&
         (this._slide.image || null) === (slide.image || null)) {
       if (this._slide.index !== slide.index) {
         this._slide.index = slide.index
@@ -2038,7 +2055,7 @@ export default class extends Controller {
       verseStart: this._range?.first ?? null,
       verseEnd: this._range?.last ?? null,
       slide: this._slide
-        ? { title: this._slide.title, body: this._slide.body, image: this._slide.image, index: this._slide.index }
+        ? { title: this._slide.title, body: this._slide.body, arrangement: this._slide.arrangement, image: this._slide.image, index: this._slide.index }
         : null
     }
   }

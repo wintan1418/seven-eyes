@@ -28,6 +28,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :songs, only: %i[ create destroy ]
+
   # Public "follow along" pages — congregants follow the pulpit live, no login.
   get "/live/:code",         to: "live_sessions#show",    as: :live_session
   get "/live/:code/passage", to: "live_sessions#passage", as: :live_session_passage

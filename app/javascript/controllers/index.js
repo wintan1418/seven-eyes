@@ -103,6 +103,12 @@ application.register("search", SearchController)
 import SetlistController from "./setlist_controller"
 application.register("setlist", SetlistController)
 
+import SongBankController from "./song_bank_controller"
+application.register("song-bank", SongBankController)
+
+import SongEditorController from "./song_editor_controller"
+application.register("song-editor", SongEditorController)
+
 import PreviewController from "./preview_controller"
 application.register("preview", PreviewController)
 

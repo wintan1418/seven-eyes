@@ -170,7 +170,7 @@ class SetlistItemsController < ApplicationController
   end
 
   def render_error(attrs, message, status: :ok)
-    @errored = @study.setlist_items.new(attrs.slice(:kind, :reference, :title, :body))
+    @errored = @study.setlist_items.new(attrs.slice(:kind, :reference, :title, :body, :arrangement))
     @errored.errors.add(:base, message)
     render_setlist(status: status)
   end
@@ -184,7 +184,7 @@ class SetlistItemsController < ApplicationController
   end
 
   def item_params
-    params.require(:setlist_item).permit(:kind, :reference, :title, :body)
+    params.require(:setlist_item).permit(:kind, :reference, :title, :body, :arrangement)
   end
 
   def render_setlist(status: :ok)

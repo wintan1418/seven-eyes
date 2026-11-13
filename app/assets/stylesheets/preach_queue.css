@@ -85,12 +85,12 @@
 .ps-setlist-form.kind-song .title-field, .ps-setlist-form.kind-song .body-field { display: block; }
 .ps-setlist-form.kind-thought .title-field, .ps-setlist-form.kind-thought .body-field { display: block; }
 
-/* Song library: only offered for songs (reuse a past song / pick a hymn). */
-.ps-song-library { display: none; }
-.ps-setlist-form.kind-song .ps-song-library { display: block; margin-bottom: 8px; }
+/* Song bank button + song editor tools: only offered for songs. */
+.ps-song-library, .ps-song-tools, .ps-setlist-form .order-field, .ps-setlist-form .song-flow, .ps-setlist-form .song-note { display: none; }
+.ps-setlist-form.kind-song .ps-song-library { display: block; }
 .ps-song-library .lib-toggle {
   width: 100%;
-  padding: 7px 10px;
+  padding: 8px 10px;
   font: 600 11px "Cinzel", serif;
   letter-spacing: 0.08em;
   color: var(--rubric);
@@ -100,45 +100,119 @@
   cursor: pointer;
 }
 .ps-song-library .lib-toggle:hover { background: var(--vellum-2); }
-.ps-song-library .lib-list {
-  margin-top: 6px;
-  max-height: 220px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.ps-setlist-form.kind-song .ps-song-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.ps-song-tools button {
+  padding: 4px 9px; cursor: pointer; border-radius: 2px;
+  background: transparent; border: 1px solid rgba(138, 116, 68, 0.45); color: var(--sepia);
+  font: 600 11px Inter, system-ui, sans-serif;
 }
-.ps-song-library .lib-empty {
-  padding: 8px 4px;
-  font-size: 12px;
-  color: var(--sepia, #6b5a44);
-  font-style: italic;
+.ps-song-tools button:hover { border-color: var(--rubric); color: var(--rubric); }
+.ps-song-tools .save { margin-left: auto; color: var(--rubric); border-color: rgba(138, 36, 24, 0.45); }
+.ps-setlist-form.kind-song .order-field { display: block; font: 600 13px Inter, system-ui, sans-serif; letter-spacing: 0.04em; }
+.ps-setlist-form.kind-song .song-flow { display: block; font: 12px/1.6 Inter, system-ui, sans-serif; color: var(--sepia-mute); }
+.ps-setlist-form .song-flow[data-tone="error"] { color: var(--rubric-deep); }
+.ps-root.is-preaching .ps-setlist-form .song-flow[data-tone="hint"] { display: none; }
+.ps-setlist-form .song-flow .chip {
+  display: inline-block; min-width: 1.9em; padding: 0 5px; text-align: center; border-radius: 3px;
+  background: var(--vellum-2); color: var(--ink); font: 700 10.5px/1.7 Inter, system-ui, sans-serif;
 }
-.ps-song-library .lib-song {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 10px;
-  text-align: left;
-  background: var(--vellum-0);
-  border: 1px solid var(--gold);
-  border-radius: 6px;
-  cursor: pointer;
+.ps-setlist-form .song-flow .chip[title^="Chorus"] { background: rgba(138, 36, 24, 0.14); color: var(--rubric-deep); }
+.ps-setlist-form.kind-song .song-note:not([hidden]) { display: block; font: 12px Inter, system-ui, sans-serif; color: #2f6b2f; }
+.ps-setlist-form .song-note[data-tone="error"] { color: var(--rubric-deep); }
+
+/* ====== Song bank (EasyWorship's Songs tab) ====== */
+.ps-song-bank[hidden] { display: none; }
+.ps-song-bank {
+  position: fixed; inset: 0; z-index: 145; display: flex; align-items: center; justify-content: center;
+  padding: 24px; background: rgba(20, 14, 8, 0.55);
 }
-.ps-song-library .lib-song:hover { background: var(--vellum-2); border-color: var(--rubric); }
-.ps-song-library .lib-song .t { font: 500 14px "EB Garamond", serif; color: var(--ink); }
-.ps-song-library .lib-song .tag {
-  flex: none;
-  font: 600 9px "Cinzel", serif;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: var(--vellum-2);
-  color: var(--sepia, #6b5a44);
+.ps-root.is-output .ps-song-bank { display: none; }
+.ps-song-bank-card {
+  display: flex; flex-direction: column; width: min(1120px, 100%); height: min(760px, 100%);
+  background: linear-gradient(180deg, #f3e9cf 0%, #e8d9b2 100%); color: var(--ink);
+  border: 1px solid var(--gold); border-radius: 6px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5); overflow: hidden;
 }
-.ps-song-library .lib-song.is-hymn .tag { background: rgba(138, 36, 24, 0.1); color: var(--rubric); }
+.ps-song-bank .bank-head {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid rgba(138, 116, 68, 0.35);
+}
+.ps-song-bank .bank-head .ttl { font: 600 13px "Cinzel", serif; letter-spacing: 0.2em; text-transform: uppercase; color: var(--rubric); }
+.ps-song-bank .bank-head .status { flex: 1; font: italic 12px Inter, system-ui, sans-serif; color: #2f6b2f; }
+.ps-song-bank .bank-head .close { background: transparent; border: 0; font-size: 16px; color: var(--sepia); cursor: pointer; }
+.ps-song-bank .bank-search {
+  margin: 12px 16px 10px; padding: 11px 14px; background: #fff7e0; outline: none;
+  border: 1px solid rgba(138, 116, 68, 0.5); border-radius: 3px; font: 17px "EB Garamond", serif; color: var(--ink);
+}
+.ps-song-bank .bank-search:focus { border-color: var(--rubric); box-shadow: 0 0 0 2px rgba(138, 36, 24, 0.12); }
+.ps-song-bank .bank-body {
+  flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 170px minmax(0, 1.5fr) minmax(0, 1fr);
+  border-top: 1px solid rgba(138, 116, 68, 0.25);
+}
+.ps-song-bank .bank-sources { display: flex; flex-direction: column; gap: 4px; padding: 12px 10px; border-right: 1px solid rgba(138, 116, 68, 0.25); }
+.ps-song-bank .bank-sources button {
+  display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; cursor: pointer; text-align: left;
+  background: transparent; border: 1px solid transparent; border-radius: 3px; font: 600 12.5px Inter, system-ui, sans-serif; color: var(--sepia);
+}
+.ps-song-bank .bank-sources button:hover { border-color: rgba(138, 116, 68, 0.45); }
+.ps-song-bank .bank-sources button.is-on { background: var(--rubric); color: var(--vellum-0); }
+.ps-song-bank .bank-sources .n { font-weight: 700; font-size: 11px; opacity: 0.8; }
+.ps-song-bank .bank-sources .note { margin: auto 2px 0; font: 11px/1.45 Inter, system-ui, sans-serif; color: var(--sepia-mute); }
+.ps-song-bank .bank-list { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid rgba(138, 116, 68, 0.25); }
+.ps-song-bank .bank-cols, .ps-song-bank .bank-row {
+  display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr) 96px 118px; gap: 10px; align-items: center;
+}
+.ps-song-bank .bank-cols {
+  padding: 6px 14px; font: 700 10px Inter, system-ui, sans-serif; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--sepia-mute); border-bottom: 1px solid rgba(138, 116, 68, 0.25);
+}
+.ps-song-bank .bank-results { flex: 1 1 auto; overflow-y: auto; }
+.ps-song-bank .bank-row { padding: 7px 14px; cursor: pointer; border-bottom: 1px solid rgba(138, 116, 68, 0.15); }
+.ps-song-bank .bank-row:hover { background: rgba(255, 247, 224, 0.6); }
+.ps-song-bank .bank-row.is-picked { background: #fff1c9; box-shadow: inset 3px 0 0 var(--rubric); }
+.ps-song-bank .bank-row .main { display: flex; flex-direction: column; min-width: 0; }
+.ps-song-bank .bank-row .t { font: 600 15px "EB Garamond", serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-song-bank .bank-row .line { font: italic 12.5px "EB Garamond", serif; color: var(--sepia); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-song-bank .bank-row .author { font: 12px Inter, system-ui, sans-serif; color: var(--sepia); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-song-bank .bank-row .rights { font: 600 10px Inter, system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: var(--sepia-mute); }
+.ps-song-bank .bank-row.is-hymn .rights { color: #2f6b2f; }
+.ps-song-bank .bank-row .acts { display: flex; gap: 4px; justify-content: flex-end; }
+.ps-song-bank button.add, .ps-song-bank button.edit, .ps-song-bank button.remove {
+  padding: 4px 8px; cursor: pointer; border-radius: 3px; white-space: nowrap; font: 600 11px Inter, system-ui, sans-serif;
+}
+.ps-song-bank button.add { background: var(--rubric); color: var(--vellum-0); border: 1px solid var(--rubric-deep); }
+.ps-song-bank button.add:hover { background: var(--rubric-deep); }
+.ps-song-bank button.edit, .ps-song-bank button.remove { background: transparent; color: var(--sepia); border: 1px solid rgba(138, 116, 68, 0.5); }
+.ps-song-bank button.edit:hover { border-color: var(--rubric); color: var(--rubric); }
+.ps-song-bank .bank-empty { padding: 28px 16px; font: italic 15px "EB Garamond", serif; color: var(--sepia); text-align: center; }
+.ps-song-bank .bank-empty .hint { display: block; margin-top: 6px; font: 12px Inter, system-ui, sans-serif; font-style: normal; color: var(--sepia-mute); }
+.ps-song-bank .bank-preview { overflow-y: auto; padding: 14px 18px 20px; }
+.ps-song-bank .bank-preview .head { position: sticky; top: -14px; padding: 2px 0 10px; background: #efe3c4; border-bottom: 1px dashed rgba(138, 116, 68, 0.45); }
+.ps-song-bank .bank-preview .head .t { font: 600 20px "EB Garamond", serif; }
+.ps-song-bank .bank-preview .head .meta { font: 12px Inter, system-ui, sans-serif; color: var(--sepia); margin-top: 2px; }
+.ps-song-bank .bank-preview .head .flow { font: 600 11px Inter, system-ui, sans-serif; letter-spacing: 0.04em; color: var(--rubric); margin-top: 6px; }
+.ps-song-bank .bank-preview .head .acts { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.ps-song-bank .bank-preview .head .acts button { padding: 6px 12px; }
+.ps-song-bank .bank-preview .sec { margin-top: 12px; }
+.ps-song-bank .bank-preview .sec .lbl {
+  font: 700 9.5px Inter, system-ui, sans-serif; letter-spacing: 0.14em; text-transform: uppercase; color: var(--rubric);
+}
+.ps-song-bank .bank-preview .sec .txt { font: 15px/1.5 "EB Garamond", serif; white-space: pre-line; }
+.ps-song-bank .bank-keys {
+  display: flex; gap: 18px; padding: 8px 16px; border-top: 1px solid rgba(138, 116, 68, 0.3);
+  font: 11.5px Inter, system-ui, sans-serif; color: var(--sepia);
+}
+.ps-song-bank kbd {
+  display: inline-block; min-width: 1.5em; padding: 0 4px; margin-right: 2px; text-align: center; border-radius: 3px;
+  border: 1px solid rgba(138, 116, 68, 0.5); background: var(--vellum-0); font: 600 10.5px Inter, sans-serif;
+}
+@media (max-width: 900px) {
+  .ps-song-bank { padding: 0; }
+  .ps-song-bank-card { height: 100%; border-radius: 0; }
+  .ps-song-bank .bank-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .ps-song-bank .bank-sources { flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid rgba(138, 116, 68, 0.25); }
+  .ps-song-bank .bank-sources .note, .ps-song-bank .bank-preview, .ps-song-bank .bank-cols, .ps-song-bank .bank-keys { display: none; }
+  .ps-song-bank .bank-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .ps-song-bank .bank-row .author, .ps-song-bank .bank-row .rights { display: none; }
+}
 .ps-setlist-form .add {
   padding: 10px; background: var(--rubric); color: var(--vellum-0);
   border: 1px solid var(--rubric-deep); border-radius: 2px; cursor: pointer;

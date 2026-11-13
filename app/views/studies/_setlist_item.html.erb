@@ -6,6 +6,7 @@
     data-reference="<%= item.reference %>"
     data-title="<%= item.title %>"
     data-body="<%= item.body %>"
+    data-arrangement="<%= item.arrangement %>"
     data-image="<%= item.media_url %>">
   <span class="grip" data-action="pointerdown->setlist#dragStart" title="Drag to reorder" aria-hidden="true">&#10303;</span>
   <button type="button" class="present" data-action="click->setlist#present dblclick->setlist#presentLive"
@@ -17,7 +18,7 @@
     <% end %>
     <span class="lbl"><%= item.label %></span>
     <% if (item.song? || item.thought?) && item.stanzas.size > 1 %>
-      <span class="meta"><%= item.stanzas.size %> stanzas</span>
+      <span class="meta"><%= item.stanzas.size %> slides</span>
     <% end %>
   </button>
   <span class="sync" data-sync hidden></span>
