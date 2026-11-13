@@ -74,8 +74,9 @@
           <button type="button" class="ui-btn is-sm" data-action="new-study#open"><%= icon(:plus) %> New study</button>
         </div>
         <% if @studies.present? %>
-          <div class="hm-study-grid" data-controller="offline-studies">
-            <% @studies.first(9).each do |study| %>
+          <% shown = @studies.first(9) %>
+          <div class="hm-study-grid" data-controller="offline-studies reveal" data-reveal-class="is-expanded">
+            <% shown.each do |study| %>
               <%= link_to study_path(study), class: "hm-study",
                     data: { offline_studies_target: "study", action: "click->offline-studies#guard" } do %>
                 <span class="nm"><%= study.name %></span>
@@ -83,6 +84,12 @@
                 <span class="refs"><%= refs.any? ? refs.first(3).join(" · ") : "No passage yet" %></span>
                 <span class="meta"><%= time_ago_in_words(study.last_opened_at || study.updated_at) %> ago</span>
               <% end %>
+            <% end %>
+            <% if shown.size > 3 %>
+              <%# Phones show three; the rest are a tap away. %>
+              <button type="button" class="ui-btn is-sm hm-study-more" data-action="reveal#show">
+                Show all <%= shown.size %> studies
+              </button>
             <% end %>
           </div>
         <% else %>

@@ -215,3 +215,6 @@ application.register("service-templates", ServiceTemplatesController)
 
 import OrderOfServiceController from "./order_of_service_controller"
 application.register("order-of-service", OrderOfServiceController)
+
+import RevealController from "./reveal_controller"
+application.register("reveal", RevealController)

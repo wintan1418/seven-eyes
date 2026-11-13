@@ -168,3 +168,23 @@ a.hm-card:hover { background: var(--ui-surface-2); }
 }
 .ps-ai-report-btn:hover, .ps-ai-report-btn:focus-visible { opacity: 1; }
 .ps-ai-report-done { opacity: 0.8; }
+
+/* ---- Home on a phone: the essentials first, the rest a tap away ---- */
+.hm-study-more { display: none; }
+@media (max-width: 639px) {
+  .hm-grid { gap: 12px; margin-top: 24px; }
+  /* Word of the day: term, root and definition; the verses are on its page. */
+  .hm-grid .ft-card .ft-card-verses { display: none; }
+  .hm-grid .ft-card .ft-card-def { margin-bottom: 14px; }
+  /* Word for today: the reflection in three lines, the whole of it on /today. */
+  .hm-grid .dw-card.is-compact .dw-reflection {
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .hm-grid .dw-card.is-compact [data-action="daily-word#copy"] { display: none; }
+  /* Three studies, then "Show all". */
+  .hm-studies { margin-top: 32px; }
+  .hm-study-grid:not(.is-expanded) > .hm-study:nth-of-type(n + 4) { display: none; }
+  .hm-study-grid:not(.is-expanded) > .hm-study-more { display: inline-flex; justify-self: start; }
+  /* The tools guide: its title and the link to the full guide. */
+  .ps-guide .ps-guide-grid { display: none; }
+}
