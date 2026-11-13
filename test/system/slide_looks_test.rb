@@ -176,6 +176,35 @@ class SlideLooksTest < ApplicationSystemTestCase
     assert_selector "[data-preach-slide] .slide-stanza", text: /Twas grace/, wait: 5
   end
 
+  test "a two-scripture slide takes the look: its reference style, the safe margins, and Clear" do
+    start_preaching("John 3:16")
+    projector = open_window("output")
+    find("[data-action~='presentation#toggleScreenPanel']").click
+    find(".ps-look-tile[data-look-id='royal']").click
+    find(".ps-looks .done").click
+    page.execute_script(<<~JS)
+      window.dispatchEvent(new CustomEvent("setlist:present", { detail: { kind: "slide", title: "Two scriptures", body: "", rich: { type: "set", data: {
+        refs: [
+          { reference: "John 3:16", translation: "KJV", label: "John 3:16", verses: [ { c: 3, n: 16, text: "For God so loved the world, that he gave his only begotten Son." } ] },
+          { reference: "John 3:17", translation: "KJV", label: "John 3:17", verses: [ { c: 3, n: 17, text: "For God sent not his Son into the world to condemn the world." } ] }
+        ], ref_position: "top", verse_numbers: true, split: "auto", ref_style: "gold" } } } }))
+    JS
+    within_window(projector) do
+      assert_selector "[data-preach-slide] .slide-stanza.is-set .set-ref", count: 2, visible: true
+      ref = page.evaluate_script(<<~JS)
+        (() => { const r = getComputedStyle(document.querySelector(".set-ref")); const s = document.querySelector(".slide-stanza.is-set").getBoundingClientRect();
+                 return { color: r.color, font: r.fontFamily, top: s.top, bottom: s.bottom, h: innerHeight } })()
+      JS
+      assert_equal "rgb(255, 216, 74)", ref["color"], "the look's gold reference"
+      assert_match(/Inter/, ref["font"])
+      assert_operator ref["top"], :>=, 0, "fits on the screen"
+      assert_operator ref["bottom"], :<=, ref["h"]
+      shot "projector-two-scriptures-royal"
+    end
+    send_keys "c"
+    within_window(projector) { assert_no_selector "[data-preach-slide] .slide-stanza", visible: true }
+  end
+
   private
 
   def start_preaching(reference)

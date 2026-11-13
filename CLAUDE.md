@@ -286,7 +286,9 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   (countdown → logo at 00:00) · Alert `A` (lower third, also on stage); BroadcastChannel
   `{type:"live"|"look"|"media"|"brand"}`, `[data-screen-state]` badge on the operator, phone remote
   mirrors Black/Clear/Logo (`here` carries the state). Both controllers are self-contained
-  components meant to be remounted in the coming console redesign.
+  components meant to be remounted in the coming console redesign. Scripture sets / seminars
+  (phase 2B rich slides) take the look via `--ps-slide-ref-color` + `.set-ref`/`.sem-*` rules
+  and fit as prose; pictures and PDF pages fill the 16:9 frame untouched.
 - **Phone remote** — `☎ Remote` mints a secret 6-char pairing code + QR (`RemotesController#create`,
   nothing persisted); phone opens `/remote/:code` (`remote_pad` Stimulus controller) and both ends
   join `RemoteChannel` (pure relay with presence ping). Pad commands (next/prev/chase) reach the

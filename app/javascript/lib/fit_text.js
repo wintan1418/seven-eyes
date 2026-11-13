@@ -28,9 +28,15 @@ export function fitElement(box, targets, { min = 18, max }) {
   const list = Array.from(targets)
   if (!box || list.length === 0) return null
   const set = (px) => list.forEach((el) => { el.style.fontSize = `${px}px` })
+  // The room inside the box's padding (the safe margins and reference band).
+  // Measured on the targets themselves: centred content that overflows
+  // spills above the top too, where scrollHeight never sees it.
+  const cs = getComputedStyle(box)
+  const roomH = box.clientHeight - parseFloat(cs.paddingTop || 0) - parseFloat(cs.paddingBottom || 0)
   const fits = (px) => {
     set(px)
-    return box.scrollHeight <= box.clientHeight + 1 && box.scrollWidth <= box.clientWidth + 1 &&
+    const height = list.reduce((sum, el) => sum + el.getBoundingClientRect().height, 0)
+    return height <= roomH + 1 && box.scrollHeight <= box.clientHeight + 1 && box.scrollWidth <= box.clientWidth + 1 &&
       list.every((el) => textWidth(el) <= el.clientWidth + 1)
   }
   const size = fitFontSize({ min, max, fits })
