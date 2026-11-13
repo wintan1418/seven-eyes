@@ -449,3 +449,14 @@
 .hm-gl-dot { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 999px; background: var(--ui-border); cursor: pointer; transition: width 0.2s, background 0.2s; }
 .hm-gl-dot.is-on { width: 20px; background: var(--ui-accent); }
 @media (prefers-reduced-motion: reduce) { .hm-gl-dot { transition: none; } }
+
+/* Signed-out landing page: the slider at every width (no card to replace). */
+.ld-glossary { max-width: 60rem; margin: 40px auto 0; }
+.hm-glossary.is-everywhere { display: grid; gap: 10px; min-width: 0; }
+.hm-glossary.is-everywhere .hm-glossary-track { margin: 0; padding: 2px 0 4px; scroll-padding-inline: 0; }
+@media (min-width: 640px) {
+  .hm-glossary.is-everywhere .hm-gl-slide { flex-basis: calc((100% - 12px) / 2); }
+}
+@media (min-width: 960px) {
+  .hm-glossary.is-everywhere .hm-gl-slide { flex-basis: calc((100% - 24px) / 3); min-height: 320px; }
+}
