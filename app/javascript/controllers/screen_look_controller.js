@@ -157,8 +157,8 @@ export default class extends Controller {
     if (bg !== this.prefs.bg) return // changed while reading
     this.root.dataset.lookBg = url ? bg : "look"
     const current = layer.querySelector(".media")
-    if (!url) { current?.remove(); this._paintPreviewMedia(null, null); return }
-    if (current && current.dataset.src === url) return
+    if (!url) { current?.remove(); this._paintMirrors(null, null); return }
+    if (current && current.dataset.src === url) { this._paintMirrors(bg, url); return }
     const el = document.createElement(bg === "video" ? "video" : "img")
     el.className = "media"
     el.dataset.src = url
@@ -174,7 +174,7 @@ export default class extends Controller {
     current?.remove()
     layer.prepend(el)
     if (bg === "video") el.play?.().catch(() => {})
-    this._paintPreviewMedia(bg, url)
+    this._paintMirrors(bg, url)
   }
 
   async _paintLogo() {
@@ -208,10 +208,11 @@ export default class extends Controller {
       btn.setAttribute("role", "radio")
       btn.title = `${look.name} — ${look.blurb}`
       const screen = make("span", "lt-screen")
-      screen.append(make("span", "lt-text", "For God so loved the world"), make("span", "lt-ref", "John 3:16"))
+      screen.append(make("span", "lt-bg"), make("span", "lt-text", "For God so loved the world"), make("span", "lt-ref", "John 3:16"))
       btn.append(screen, make("span", "lt-name", look.name))
       return btn
     }))
+    this._paintBackground()
   }
 
   _syncPanel() {
@@ -261,15 +262,37 @@ export default class extends Controller {
     this._syncPanel()
   }
 
-  _paintPreviewMedia(bg, url) {
-    if (this.isOutput || !this.hasPreviewTarget) return
-    const holder = this.previewTarget.querySelector(".lp-bg")
-    if (!holder) return
-    holder.replaceChildren()
-    if (!url) return
-    const el = make(bg === "video" ? "video" : "img", "media", null, { src: url })
-    if (bg === "video") Object.assign(el, { muted: true, loop: true, autoplay: true, playsInline: true })
-    holder.append(el)
+  // Every small copy of the screen on the operator's window shows the church's
+  // own picture / video too: the console's Preview miniature, the Looks
+  // panel's big preview and each look thumbnail. Thumbnails get a still frame
+  // of a video (one playing video per tile would be heavy).
+  _paintMirrors(bg, url) {
+    if (this.isOutput) return
+    const holders = [
+      ...this.root.querySelectorAll("[data-look-mirror]"),
+      ...(this.hasPreviewTarget ? this.previewTarget.querySelectorAll(".lp-bg") : []),
+      ...(this.hasGridTarget ? this.gridTarget.querySelectorAll(".lt-bg") : [])
+    ]
+    holders.forEach((holder) => {
+      const current = holder.querySelector(".media")
+      if (url && current?.dataset.src === url) return
+      holder.replaceChildren()
+      if (!url) return
+      const still = holder.classList.contains("lt-bg")
+      const el = make(bg === "video" ? "video" : "img", "media", null, { alt: "" })
+      el.dataset.src = url
+      el.setAttribute("aria-hidden", "true")
+      if (bg === "video") {
+        Object.assign(el, { muted: true, playsInline: true, preload: still ? "metadata" : "auto", loop: !still, autoplay: !still })
+        el.setAttribute("muted", "")
+        el.setAttribute("playsinline", "")
+        el.src = still ? `${url}#t=0.5` : url
+        if (!still) el.play?.().catch(() => {})
+      } else {
+        el.src = url
+      }
+      holder.append(el)
+    })
   }
 
   async _checkMedia(slot) {

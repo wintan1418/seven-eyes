@@ -337,6 +337,13 @@
   color: var(--look-fg, #1a1007);
   box-shadow: 0 0 0 2px var(--ps-preview), 0 8px 22px rgba(0, 0, 0, 0.45);
 }
+/* The church's own picture / video under the words (screen_look paints it). */
+.cx-mini-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.cx-mini-bg:empty { display: none; }
+.cx-mini > :where(.cx-mini-title, .cx-mini-words, .cx-mini-empty, .cx-mini-img) { position: relative; }
+.cx-mini > :is(.cx-mini-title, .cx-mini-words, .cx-mini-ref, .cx-mini-empty, .cx-mini-img, .cx-mini-rich) { z-index: 1; }
+.cx-mini:is([data-kind="empty"], [data-kind="picture"]) .cx-mini-bg,
+.cx-mini[data-kind="rich"]:has(.slide-img) .cx-mini-bg { display: none; }
 .cx-mini-title { font: 600 1.6cqw "Cinzel", serif; letter-spacing: 0.26em; text-transform: uppercase; color: var(--look-accent, var(--rubric)); margin-bottom: 2cqh; }
 .cx-mini-title:empty, .cx-mini-ref:empty { display: none; }
 .cx-mini-words {
