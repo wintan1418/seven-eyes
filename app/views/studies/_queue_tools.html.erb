@@ -1,0 +1,15 @@
+<%# The queue's slide tools — EasyWorship's Presentations tab and more, in one
+    row. Each button opens its dialog (studies/_slide_tools) through the window
+    event queue-tool:open {tool}; setlist#openTool sends it. %>
+<div class="ps-queue-tools" role="toolbar" aria-label="Slide tools">
+  <button type="button" data-tool="scripture-set" data-action="setlist#openTool"
+          title="Scripture slide — several scriptures on one slide, each in its own Bible (Col 2:2; Matt 28:19 BSB)">&#10697; Scriptures</button>
+  <button type="button" data-tool="presentation" data-action="setlist#openTool"
+          title="Presentation — import a PDF (PowerPoint / Keynote / Google Slides → Save as PDF) or pictures as a slideshow">&#9636; Presentation</button>
+  <button type="button" data-tool="seminar" data-action="setlist#openTool"
+          title="Seminar slides — title, points, picture, quote, section — with speaker notes and Seminar mode">&#9638; Seminar</button>
+  <button type="button" data-tool="templates" data-action="setlist#openTool"
+          title="Service templates — save this order, or start from one (Sunday Service, Midweek…)">&#9776; Templates</button>
+  <button type="button" data-tool="order" data-action="setlist#openTool"
+          title="Order of service — copy it for WhatsApp, share or print">&#9113; Order</button>
+</div>

@@ -14,11 +14,11 @@
     <% if item.picture? %>
       <img class="thumb" src="<%= item.media_url %>" alt="" loading="lazy">
     <% else %>
-      <span class="icon"><%= item.scripture? ? "&#167;".html_safe : (item.song? ? "&#9835;".html_safe : "&#10086;".html_safe) %></span>
+      <span class="icon"><%= { "scripture" => "§", "song" => "♫", "scripture_set" => "⧉", "presentation" => "▤", "seminar" => "▦" }.fetch(item.kind, "❦") %></span>
     <% end %>
     <span class="lbl"><%= item.label %></span>
-    <% if (item.song? || item.thought?) && item.stanzas.size > 1 %>
-      <span class="meta"><%= item.stanzas.size %> slides</span>
+    <% unless item.scripture? || item.picture? || item.slide_count <= 1 %>
+      <span class="meta"><%= item.slide_count %> <%= item.presentation? ? "pages" : "slides" %></span>
     <% end %>
   </button>
   <span class="sync" data-sync hidden></span>

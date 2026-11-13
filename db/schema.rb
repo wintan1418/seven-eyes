@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_13_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_13_150200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -233,6 +233,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_120100) do
     t.index ["user_id"], name: "index_reading_plans_on_user_id"
   end
 
+  create_table "service_templates", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "client_id", null: false
+    t.string "name", null: false
+    t.jsonb "items", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "client_id"], name: "index_service_templates_on_user_id_and_client_id", unique: true
+    t.index ["user_id"], name: "index_service_templates_on_user_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -255,6 +266,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_120100) do
     t.datetime "updated_at", null: false
     t.string "client_id"
     t.string "arrangement"
+    t.jsonb "data", default: {}, null: false
     t.index ["study_id", "client_id"], name: "index_setlist_items_on_study_id_and_client_id", unique: true, where: "(client_id IS NOT NULL)"
     t.index ["study_id", "position"], name: "index_setlist_items_on_study_id_and_position"
     t.index ["study_id"], name: "index_setlist_items_on_study_id"
@@ -402,6 +414,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_120100) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "song_collections", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "client_id", null: false
+    t.string "name", null: false
+    t.jsonb "titles", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "client_id"], name: "index_song_collections_on_user_id_and_client_id", unique: true
+    t.index ["user_id"], name: "index_song_collections_on_user_id"
+  end
+
   create_table "songs", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "title", null: false
@@ -539,6 +562,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_120100) do
   add_foreign_key "plan_days", "reading_plans"
   add_foreign_key "reading_plans", "studies", on_delete: :nullify
   add_foreign_key "reading_plans", "users"
+  add_foreign_key "service_templates", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "setlist_items", "studies"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
@@ -547,6 +571,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_120100) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "song_collections", "users"
   add_foreign_key "songs", "users"
   add_foreign_key "studies", "users"
   add_foreign_key "verses", "books"

@@ -15,14 +15,14 @@
 //   queueKey(item)                "the same thing" for de-duplication
 //   nextUp(items, liveCid)        the one-glance "next" item
 
-export const ITEM_FIELDS = [ "kind", "reference", "label", "title", "body", "arrangement", "image", "stanzas" ]
+export const ITEM_FIELDS = [ "kind", "reference", "label", "title", "body", "arrangement", "image", "stanzas", "data" ]
 
 export function fromServer(row) {
   return {
     cid: row.client_id || `srv-${row.id}`, id: row.id ?? null,
     kind: row.kind, reference: row.reference || null, label: row.label || row.reference || row.title || "",
     title: row.title || null, body: row.body || null, arrangement: row.arrangement || null,
-    image: row.image || null, stanzas: row.stanzas || 0
+    image: row.image || null, stanzas: row.stanzas || 0, data: row.data || null
   }
 }
 

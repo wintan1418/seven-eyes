@@ -169,6 +169,22 @@ export async function queueSongRemove(song, owner) {
   return upsert({ kind: "song-remove", key: `${songKey(song.title)}:rm`, owner, url, method: "DELETE", format: "json" })
 }
 
+// ---- whole records keyed by the device's id (service templates, song collections)
+// The device sends the whole record every time (PUT upserts it), so a replay
+// is harmless and ten offline edits coalesce into one request.
+export function queueRecordSave(kind, url, body, owner) {
+  return upsert({ kind, key: `${kind}:${url}`, owner, url, method: "PUT", format: "json", body })
+}
+
+export async function queueRecordRemove(kind, url, owner) {
+  await removeOps((o) => o.owner === owner && o.key === `${kind}:${url}`)
+  return upsert({ kind: `${kind}-remove`, key: `${kind}:${url}:rm`, owner, url, method: "DELETE", format: "json" })
+}
+
+export async function pendingRecords(kind, owner) {
+  return opsWhere((o) => o.owner === owner && o.kind === kind)
+}
+
 // ---- the preach queue (setlist) ---------------------------------------------
 // Every op carries `setlist` = { studyId, action, cid, … } so the queue can
 // replay what hasn't reached the server on top of what has (setlist_state.js).
@@ -178,7 +194,8 @@ export async function queueSongRemove(song, owner) {
 const setlistBase = (studyId) => `/studies/${studyId}/setlist`
 const itemUrl = (studyId, item) => `${setlistBase(studyId)}/${encodeURIComponent(item.id ?? item.cid)}`
 const itemBody = (item) => ({
-  kind: item.kind, reference: item.reference ?? "", title: item.title ?? "", body: item.body ?? "", arrangement: item.arrangement ?? ""
+  kind: item.kind, reference: item.reference ?? "", title: item.title ?? "", body: item.body ?? "", arrangement: item.arrangement ?? "",
+  ...(item.data ? { data: item.data } : {})
 })
 
 export function queueSetlistCreate(studyId, item, position, owner) {

@@ -1,7 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
-import { cachedSongs, refreshSongs, searchSongs } from "../lib/song_library"
+import { cachedSongs, refreshSongs, searchSongs, cachedCollections, storeCollections } from "../lib/song_library"
 import { songSlides, flowCodes } from "../lib/song_sheet"
-import { queueSongRemove, flushOutbox } from "../lib/offline/outbox"
+import { queueSongRemove, flushOutbox, queueRecordSave, queueRecordRemove, pendingOps, newTempId } from "../lib/offline/outbox"
+import { inCollection, toggleTitle, applyCollectionOps } from "../lib/song_collections"
 import { owner } from "../lib/offline/page"
 
 // The song bank: find a song or hymn and put it in the queue — EasyWorship's
@@ -17,19 +18,27 @@ import { owner } from "../lib/offline/page"
 //   Edit first (E)      opens it in the queue's song editor, to change before adding
 //   ↑ ↓ pick · Esc close · typing goes to the search box
 //
+// Collections ("Communion", "Christmas", "Choir") sit under the sources with
+// their counts: pick one to see its songs; the preview's chips put the picked
+// song in or out of a collection. Kept on the device (meta "songCollections")
+// and saved through the outbox (PUT /song_collections/:id, the whole
+// collection each time), so they work offline. Accounts only.
+//
 // Window events: out setlist:add {kind: "song", …, duplicate}, setlist:edit-song;
 // in song-bank:open, song-bank:saved {song} (the editor saved one).
 const SOURCES = { "": "All songs", yours: "My songs", hymnal: "Hymnal" }
 const MAX_ROWS = 200
 
 export default class extends Controller {
-  static targets = [ "dialog", "search", "sources", "results", "preview", "status" ]
+  static targets = [ "dialog", "search", "sources", "results", "preview", "status", "collections", "newCollection" ]
   static values = { url: String }
 
   connect() {
     if (this.element.classList.contains("is-output")) return
     this._songs = []
     this._source = ""
+    this._collections = []
+    this._collection = null
     this._picked = 0
     this._listeners = {
       "song-bank:open": () => this.open(),
@@ -51,13 +60,20 @@ export default class extends Controller {
     this.element.classList.add("is-song-bank-open")
     this.searchTarget.focus()
     this.searchTarget.select()
+    this._collections = await this._withPending((await cachedCollections()) || [])
+    this._paintCollections()
     if (!this._songs.length) {
       this._songs = (await cachedSongs()) || []
       this._status(this._songs.length ? "" : "Gathering songs…")
       this._paint()
     }
     const fresh = await refreshSongs(this.urlValue)
-    if (fresh) { this._songs = fresh; this._status(""); this._paint() }
+    if (fresh) {
+      this._songs = fresh
+      this._collections = await this._withPending((await cachedCollections()) || [])
+      this._status("")
+      this._paint()
+    }
     else if (!this._songs.length) this._status("No songs saved on this device yet — open the song bank once while online.")
     else this._status("Offline — showing the songs saved on this device.")
   }
@@ -82,6 +98,7 @@ export default class extends Controller {
 
   pickSource(event) {
     this._source = event.currentTarget.dataset.source || ""
+    this._collection = null
     this._picked = 0
     this._paint()
     this.searchTarget.focus()
@@ -103,6 +120,106 @@ export default class extends Controller {
       this._edit(this._results[this._picked]?.song)
     }
     event.stopPropagation() // the preach-mode keys (arrows, L, N…) stay out of the bank
+  }
+
+  // ---- collections ------------------------------------------------------------------------
+
+  pickCollection(event) {
+    const id = event.currentTarget.closest("[data-collection]")?.dataset.collection
+    this._collection = this._collection === id ? null : id
+    this._source = ""
+    this._picked = 0
+    this._paint()
+    this.searchTarget.focus()
+  }
+
+  newCollectionKey(event) {
+    event.stopPropagation() // Enter here names a collection; it doesn't add a song
+    if (event.key === "Enter") { event.preventDefault(); this.createCollection() }
+    else if (event.key === "Escape") { event.preventDefault(); this.newCollectionTarget.value = ""; this.searchTarget.focus() }
+  }
+
+  createCollection(event) {
+    event?.preventDefault?.()
+    if (owner() === "guest") { window.dispatchEvent(new CustomEvent("auth:required")); return }
+    const name = this.newCollectionTarget.value.trim().slice(0, 60)
+    if (!name) { this.newCollectionTarget.focus(); return }
+    let collection = this._collections.find((c) => c.name.toLowerCase() === name.toLowerCase())
+    if (!collection) {
+      collection = { id: newTempId().replace(/^tmp-/, "col-"), name, titles: [] }
+      this._collections.push(collection)
+      // Make it with the picked song in it — "new collection from this song".
+      const song = this._results?.[this._picked]?.song
+      if (song && event?.currentTarget?.dataset?.withSong) collection.titles.push(song.title)
+      this._saveCollection(collection)
+    }
+    this.newCollectionTarget.value = ""
+    this._collection = collection.id
+    this._source = ""
+    this._picked = 0
+    this._paint()
+    this._flash(`Collection “${collection.name}” ready — use the chips beside a song to add it`)
+  }
+
+  toggleInCollection(event) {
+    event.preventDefault()
+    const collection = this._collections.find((c) => c.id === event.currentTarget.dataset.collection)
+    const song = this._results?.[this._picked]?.song
+    if (!collection || !song) return
+    collection.titles = toggleTitle(collection.titles, song.title)
+    this._saveCollection(collection)
+    const inIt = inCollection(collection, song)
+    this._paintSources(this.searchTarget.value)
+    this._paintCollections()
+    this._paintPreview(song)
+    this._flash(inIt ? `Added “${song.title}” to ${collection.name}` : `Took “${song.title}” out of ${collection.name}`)
+  }
+
+  async deleteCollection(event) {
+    event.preventDefault()
+    event.stopPropagation()
+    const collection = this._collections.find((c) => c.id === event.currentTarget.closest("[data-collection]")?.dataset.collection)
+    if (!collection || !window.confirm(`Delete the “${collection.name}” collection? The songs stay in your bank.`)) return
+    this._collections = this._collections.filter((c) => c !== collection)
+    if (this._collection === collection.id) this._collection = null
+    storeCollections(this._collections)
+    await queueRecordRemove("song-collection", `/song_collections/${collection.id}`, owner()).catch(() => {})
+    flushOutbox().catch(() => {})
+    this._paint()
+  }
+
+  _saveCollection(collection) {
+    storeCollections(this._collections)
+    queueRecordSave("song-collection", `/song_collections/${collection.id}`,
+      { song_collection: { name: collection.name, titles: collection.titles } }, owner())
+      .then(() => flushOutbox()).catch(() => {})
+  }
+
+  // The server's list with this device's unsynced changes on top.
+  async _withPending(list) {
+    const ops = (await pendingOps().catch(() => [])).filter((o) => o.owner === owner() && /^song-collection/.test(o.kind || ""))
+    return applyCollectionOps(list, ops)
+  }
+
+  _paintCollections() {
+    if (!this.hasCollectionsTarget) return
+    const signedIn = owner() !== "guest"
+    this.collectionsTarget.closest(".bank-collections")?.classList.toggle("is-guest", !signedIn)
+    this.collectionsTarget.replaceChildren(...this._collections.map((c) => {
+      const row = el("div", `coll${c.id === this._collection ? " is-on" : ""}`)
+      row.dataset.collection = c.id
+      const pick = el("button", "pick")
+      pick.type = "button"
+      pick.dataset.action = "song-bank#pickCollection"
+      pick.setAttribute("aria-pressed", String(c.id === this._collection))
+      pick.append(el("span", "name", c.name), el("span", "n", String(this._songs.filter((s) => inCollection(c, s)).length)))
+      const del = el("button", "del", "✕")
+      del.type = "button"
+      del.title = `Delete the “${c.name}” collection`
+      del.dataset.action = "song-bank#deleteCollection"
+      row.append(pick, del)
+      return row
+    }))
   }
 
   // ---- actions -------------------------------------------------------------------------
@@ -179,10 +296,14 @@ export default class extends Controller {
   _paint() {
     if (!this.hasResultsTarget) return
     const query = this.searchTarget.value
-    this._results = searchSongs(this._songs, query, { source: this._source }).slice(0, MAX_ROWS)
+    const collection = this._collections.find((c) => c.id === this._collection)
+    const pool = collection ? this._songs.filter((s) => inCollection(collection, s)) : this._songs
+    this._results = searchSongs(pool, query, { source: this._source }).slice(0, MAX_ROWS)
     this._paintSources(query)
+    this._paintCollections()
     if (!this._results.length) {
-      const empty = el("div", "bank-empty", this._songs.length ? `No song matches “${query.trim()}”${this._source ? ` in ${SOURCES[this._source]}` : ""}.` : "")
+      const where = collection ? ` in ${collection.name}` : (this._source ? ` in ${SOURCES[this._source]}` : "")
+      const empty = el("div", "bank-empty", collection && !query.trim() ? `${collection.name} is empty — pick a song and tap its “${collection.name}” chip.` : (this._songs.length ? `No song matches “${query.trim()}”${where}.` : ""))
       if (this._songs.length) empty.append(el("span", "hint", "Try a line of the words, or paste the song in the queue's song editor."))
       this.resultsTarget.replaceChildren(empty)
       this.previewTarget.replaceChildren()
@@ -198,8 +319,9 @@ export default class extends Controller {
     searchSongs(this._songs, query).forEach((r) => { counts[""]++; counts[r.song.source] = (counts[r.song.source] || 0) + 1 })
     this.sourcesTarget.querySelectorAll("[data-source]").forEach((btn) => {
       const src = btn.dataset.source
-      btn.classList.toggle("is-on", src === this._source)
-      btn.setAttribute("aria-pressed", String(src === this._source))
+      const on = !this._collection && src === this._source
+      btn.classList.toggle("is-on", on)
+      btn.setAttribute("aria-pressed", String(on))
       btn.querySelector(".n").textContent = String(counts[src] || 0)
     })
   }
@@ -241,6 +363,19 @@ export default class extends Controller {
     acts.append(button("+ Add to queue", "song-bank#addPicked", "Enter", "add"), button("Edit first", "song-bank#editPicked", "Shift+Enter", "edit"))
     if (song.saved) acts.append(button("Remove from my songs", "song-bank#removePicked", "", "remove"))
     head.append(acts)
+    if (owner() !== "guest") {
+      const chips = el("div", "colls")
+      chips.append(el("span", "lbl", "Collections"))
+      this._collections.forEach((c) => {
+        const on = inCollection(c, song)
+        const chip = button(`${on ? "✓ " : "+ "}${c.name}`, "song-bank#toggleInCollection", on ? `Take it out of ${c.name}` : `Add it to ${c.name}`, `chip${on ? " is-on" : ""}`)
+        chip.dataset.collection = c.id
+        chip.setAttribute("aria-pressed", String(on))
+        chips.append(chip)
+      })
+      if (!this._collections.length) chips.append(el("span", "none", "Make one on the left — e.g. Communion"))
+      head.append(chips)
+    }
 
     // The words as written, each section once, labels small.
     const seen = new Set()

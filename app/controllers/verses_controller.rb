@@ -1,5 +1,5 @@
 class VersesController < ApplicationController
-  allow_unauthenticated_access only: %i[ count check chapter ]
+  allow_unauthenticated_access only: %i[ count check chapter passage ]
 
   # Parse a typed reference (preach-mode quick chase). The operator validates
   # what the preacher called out BEFORE the projected pane is touched, so a
@@ -34,6 +34,27 @@ class VersesController < ApplicationController
       verse_start: parsed.verse_start, verse_end: parsed.verse_end,
       translation: translation&.code,
       verses: verses.map { |c, n, t| { chapter: c, num: n, text: t } }
+    }
+  end
+
+  # The words of a reference in one translation (by code), as JSON — the
+  # scripture slide composer when that Bible isn't downloaded to the device.
+  # Capped so a careless "Psalm 1-150" can't pull a whole book.
+  PASSAGE_MAX_VERSES = 80
+
+  def passage
+    parsed = ReferenceParser.call(params[:q].to_s)
+    book = parsed.valid? && Book.find_by_osis(parsed.osis)
+    return render(json: { ok: false, error: "unknown_reference" }) unless book
+
+    code = params[:translation].to_s
+    translation = code.present? ? Translation.available.find_by("LOWER(translations.code) = ?", code.downcase) : Translation.default
+    return render(json: { ok: false, error: "unknown_translation" }) unless translation
+
+    verses = Verse.passage(translation:, book:, **parsed.passage_args).limit(PASSAGE_MAX_VERSES).pluck(:chapter, :verse_number, :text)
+    render json: {
+      ok: true, label: parsed.label, osis: parsed.osis, translation: translation.code,
+      verses: verses.map { |c, n, t| { c: c, n: n, text: t } }
     }
   end
 
