@@ -5,6 +5,25 @@ import { Controller } from "@hotwired/stimulus"
 // id (the `sheets` controller turns button clicks into that event), closes on
 // the backdrop, Esc, or any [data-action~='sheet#close']. Locks page scroll
 // while open and hands focus back to the button that opened it.
+//
+// The lock is a class on <html>, which Turbo keeps across visits — so it is
+// also released whenever a visit starts or a page loads with no sheet open,
+// and a sheet left open by a link inside it is closed before Turbo caches the
+// page (a Back would otherwise restore an open sheet with no lock owner).
+const SCROLL_LOCK = "ui-scroll-lock"
+function releaseScrollLock() {
+  if (!document.querySelector(".ui-sheet.is-open")) document.documentElement.classList.remove(SCROLL_LOCK)
+}
+if (!window.__uiSheetTurboBound) {
+  window.__uiSheetTurboBound = true
+  document.addEventListener("turbo:before-visit", () => document.documentElement.classList.remove(SCROLL_LOCK))
+  document.addEventListener("turbo:load", releaseScrollLock)
+  document.addEventListener("turbo:before-cache", () => {
+    document.querySelectorAll(".ui-sheet.is-open").forEach((sheet) => { sheet.classList.remove("is-open"); sheet.hidden = true })
+    document.documentElement.classList.remove(SCROLL_LOCK)
+  })
+}
+
 export default class extends Controller {
   static values = { id: String }
 
@@ -36,10 +55,17 @@ export default class extends Controller {
     clearTimeout(this._hideTimer)
     this.element.hidden = false
     requestAnimationFrame(() => this.element.classList.add("is-open"))
-    document.documentElement.classList.add("ui-scroll-lock")
+    document.documentElement.classList.add(SCROLL_LOCK)
     document.addEventListener("keydown", this._onKey, true)
     this.dispatch("opened", { detail })
-    const focusable = this.element.querySelector("[autofocus], .ui-sheet-panel [tabindex='-1']")
+    // Focus lands inside the sheet — on its scrolling body when nothing asks
+    // for focus — so ↑/↓, Page Down and End scroll a long sheet (focus left on
+    // the opening button scrolled the locked page instead: nothing moved).
+    let focusable = this.element.querySelector("[autofocus], .ui-sheet-panel [tabindex='-1']")
+    if (!focusable) {
+      focusable = this.element.querySelector(".ui-sheet-body")
+      if (focusable && !focusable.hasAttribute("tabindex")) focusable.setAttribute("tabindex", "-1")
+    }
     setTimeout(() => focusable?.focus({ preventScroll: true }), 60)
   }
 
@@ -61,6 +87,6 @@ export default class extends Controller {
   }
 
   _unlock() {
-    if (!document.querySelector(".ui-sheet.is-open")) document.documentElement.classList.remove("ui-scroll-lock")
+    releaseScrollLock()
   }
 }

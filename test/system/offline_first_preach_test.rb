@@ -71,8 +71,11 @@ class OfflineFirstPreachTest < ApplicationSystemTestCase
     find(".ps-preach-jump input").send_keys("Jesus scourged", :enter)
     within(".ps-preach-finds") do
       assert_text(/offline search \(keywords\)/i, wait: 6)
-      find(".find", text: /Mark 15:15/i).click
+      find(".find .pick", text: /Mark 15:15/i).click
     end
+    # A result goes to Preview first; L puts it on the screen.
+    assert_selector ".ps-console-preview .what", text: "Mark 15:15"
+    find("body").send_keys("l")
     assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-osis='Mark'][data-verse-num='15']", wait: 2
 
     go_online

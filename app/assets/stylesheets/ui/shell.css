@@ -18,6 +18,18 @@ body > .ps-root.rd-app:not(.is-presenting, .is-output) {
   flex-direction: column;
 }
 
+/* The More and Offline Bibles pages are documents: the window scrolls. The
+   legacy .ps-root artboard (height: 100% / 100vh, overflow: hidden) clipped
+   them at the bottom of the window with nothing to scroll — wheel, scrollbar
+   and keys all dead. The app bar stays in reach. */
+body > .ps-root.ui-more-page {
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: visible;
+}
+.ps-root.ui-more-page > .ui-appbar { position: sticky; top: 0; }
+
 /* App bar ---------------------------------------------------------------- */
 .ui-appbar {
   position: relative;

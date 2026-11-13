@@ -556,7 +556,7 @@ export default class extends Controller {
       if (this.jumpInputTarget.value.trim() !== raw) return // typed on
       if (parsed) this._lastCheck = { raw, parsed }
       if (parsed?.ok) this._setJumpHint(`↵ ${parsed.label || parsed.chapter_reference}`, "ok")
-      else if (parsed || local) this._setJumpHint(this.hasQuickFindUrlValue ? `↵ Search the Scriptures for “${raw}”` : "Not a reference yet: try “jn 3:16”", "ai")
+      else if (parsed || local) this._setJumpHint(this.hasQuickFindUrlValue ? `↵ Search the Scriptures for “${raw}” — results go to Preview` : "Not a reference yet: try “jn 3:16”", "ai")
     }, 120)
   }
 
@@ -596,7 +596,7 @@ export default class extends Controller {
 
   // Go box with Shift+Enter (or "Preview first" ticked): the reference goes to
   // the operator's Preview, never the projector. Text that isn't a reference
-  // still searches as usual — its results are one-tap choices anyway.
+  // opens the search results, which go to Preview too (see _appendFindChips).
   jumpPreviewSubmit(event) {
     event?.preventDefault?.()
     const raw = this.jumpInputTarget.value.trim()
@@ -616,7 +616,10 @@ export default class extends Controller {
       reference = `${chapter}:${raw.replace(/\s+/g, "")}`
     } else {
       const local = localCheck(raw)
-      if (local && !local.ok) { this._closeJump(); this._chase(raw); return } // a described thought: search
+      // Not read on the device (a described thought, or the parser isn't
+      // loaded yet): the server decides — a reference still lands in Preview,
+      // anything else opens the search results. Never the projector.
+      if (!local?.ok) { this._closeJump(); this._chase(raw, { toPreview: true }); return }
     }
     this._closeJump()
     window.dispatchEvent(new CustomEvent("preview:load", { detail: { kind: "scripture", reference, source: "go" } }))
@@ -628,7 +631,8 @@ export default class extends Controller {
   // Preach mode never exits; the output window and live followers pick the
   // move up through the normal broadcast. Text the parser can't read falls
   // through to the AI quick search ("the prodigal son" → references).
-  async _chase(raw, { silent = false, remember = true } = {}) {
+  // `toPreview`: a reference goes to the operator's Preview instead.
+  async _chase(raw, { silent = false, remember = true, toPreview = false } = {}) {
     let parsed = this._lastCheck?.raw === raw ? this._lastCheck.parsed : null // already checked while typing
     if (!parsed?.ok) {
       // On the device first; the server only for what the device can't read.
@@ -647,6 +651,11 @@ export default class extends Controller {
       // ("azusa street", "the crusaders", "walls of jericho"...).
       if (this.hasQuickFindUrlValue) { this._quickFind(raw); return }
       this._flashJumpError(raw)
+      return
+    }
+    if (toPreview) {
+      const reference = parsed.label || (parsed.verse_start ? `${parsed.chapter_reference}:${parsed.verse_start}` : parsed.chapter_reference)
+      window.dispatchEvent(new CustomEvent("preview:load", { detail: { kind: "scripture", reference, source: "go" } }))
       return
     }
     this._loadPassage(parsed.chapter_reference, parsed.verse_start, { remember, label: remember ? (parsed.label || raw) : null })
@@ -764,8 +773,10 @@ export default class extends Controller {
 
   // The volunteer typed something the parser can't read ("the walls of jericho
   // falling"). Ask the AI for matching references — validated server-side and
-  // loaded from our own DB — and offer them as one-tap chips. The big screen
-  // never changes until a chip is picked.
+  // loaded from our own DB — and list them. However the search was started (Go,
+  // Preview, Shift+Enter, "Preview first"), a result goes to the operator's
+  // Preview; the big screen never changes until an explicit live action
+  // (the row's Go live, double-click, Shift+Enter, or L / Go live on Preview).
   async _quickFind(q) {
     const box = this._findsBox()
     if (!box) return
@@ -852,6 +863,17 @@ export default class extends Controller {
     this._appendFindChips(box, results)
   }
 
+  // "Results go to Preview" — so the operator always knows a click is safe.
+  _findsHint() {
+    const hint = document.createElement("div")
+    hint.className = "mode"
+    hint.dataset.findsMode = "preview"
+    hint.innerHTML = "<b>Results go to Preview</b> &mdash; the screen doesn&rsquo;t change. " +
+      "Click or <kbd>Enter</kbd> previews &middot; <kbd>L</kbd> sends Preview live &middot; " +
+      "<b>Go live</b>, double-click or <kbd>Shift</kbd>+<kbd>Enter</kbd> puts a result straight on the screen"
+    return hint
+  }
+
   _renderAiFinds(box, q, data, { offline = false } = {}) {
     if (!data?.ok || (!data.summary && !data.suggestions?.length)) {
       // A genuine miss (e.g. not a biblical subject) — tell the operator plainly
@@ -889,49 +911,150 @@ export default class extends Controller {
       const project = document.createElement("button")
       project.type = "button"
       project.className = "project"
-      project.dataset.action = "presentation#projectFind"
+      project.dataset.action = "presentation#previewFindCard"
       project.dataset.title = data.topic || q
       project.dataset.body = data.summary
-      project.innerHTML = "&#10697; Put this on the screen"
-      card.append(topic, sum, project)
+      project.innerHTML = "&#10697; Preview this card"
+      const live = document.createElement("button")
+      live.type = "button"
+      live.className = "project live"
+      live.dataset.action = "presentation#projectFind"
+      live.dataset.title = data.topic || q
+      live.dataset.body = data.summary
+      live.textContent = "Go live"
+      const acts = document.createElement("div")
+      acts.className = "acts"
+      acts.append(project, live)
+      card.append(topic, sum, acts)
       box.appendChild(card)
     }
     this._appendFindChips(box, data.suggestions || [])
   }
 
-  // One-tap chips: [{ reference, chapter_reference, verse_start, preview }].
+  // Result rows: [{ reference, chapter_reference, verse_start, preview }].
+  // The row itself previews; "Go live" and "+ Queue" are explicit actions.
   _appendFindChips(box, suggestions) {
+    if (!suggestions.length) return
+    box.appendChild(this._findsHint())
+    const active = document.activeElement
+    const refocus = !active || active === document.body || box.contains(active)
     suggestions.forEach(s => {
-      const btn = document.createElement("button")
-      btn.type = "button"
-      btn.className = "find"
-      btn.dataset.action = "presentation#pickFind"
-      btn.dataset.chapterReference = s.chapter_reference
-      if (s.verse_start) btn.dataset.verseStart = String(s.verse_start)
+      const row = document.createElement("div")
+      row.className = "find"
+      row.dataset.reference = s.reference
+      const pick = document.createElement("button")
+      pick.type = "button"
+      pick.className = "pick"
+      pick.dataset.action = "click->presentation#pickFind dblclick->presentation#liveFind keydown->presentation#findKey"
+      pick.title = `${s.reference} — click to preview, double-click to go live`
       const ref = document.createElement("span")
       ref.className = "ref"
       ref.textContent = s.reference
       const preview = document.createElement("span")
       preview.className = "prev"
       preview.textContent = s.preview || ""
-      btn.append(ref, preview)
-      box.appendChild(btn)
+      pick.append(ref, preview)
+      const live = document.createElement("button")
+      live.type = "button"
+      live.className = "golive"
+      live.dataset.action = "presentation#liveFind"
+      live.title = `Put ${s.reference} on the screen now`
+      live.textContent = "Go live"
+      const queue = document.createElement("button")
+      queue.type = "button"
+      queue.className = "queue"
+      queue.dataset.action = "presentation#queueFind"
+      queue.title = `Add ${s.reference} to the queue`
+      queue.textContent = "+ Queue"
+      const acts = document.createElement("div")
+      acts.className = "acts"
+      acts.append(live, queue)
+      row.append(pick, acts)
+      box.appendChild(row)
     })
+    // The keyboard lands on the first result: ↑/↓ walk, Enter previews.
+    if (refocus) box.querySelector(".find .pick")?.focus({ preventScroll: true })
   }
 
+  _findRow(event) {
+    return event?.currentTarget?.closest?.(".find")
+  }
+
+  // A result → Preview (the projector doesn't change). The list stays open so
+  // the operator can compare results; L / Go live then decides.
   pickFind(event) {
     event?.preventDefault?.()
-    const d = event.currentTarget.dataset
-    this._closeFinds()
-    this._loadPassage(d.chapterReference, d.verseStart ? parseInt(d.verseStart, 10) : null)
+    const row = this._findRow(event)
+    if (!row?.dataset.reference) return
+    this._findsBox()?.querySelectorAll(".is-preview").forEach(r => r.classList.remove("is-preview"))
+    row.classList.add("is-preview")
+    window.dispatchEvent(new CustomEvent("preview:load", { detail: { kind: "scripture", reference: row.dataset.reference, source: "search" } }))
   }
 
-  // Project the AI answer card as a content slide (same path as songs/thoughts).
+  // An explicit live action on a result (its Go live, double-click,
+  // Shift+Enter): through Preview, then live — like the chapter verse list.
+  liveFind(event) {
+    event?.preventDefault?.()
+    const row = this._findRow(event)
+    if (!row?.dataset.reference) return
+    window.dispatchEvent(new CustomEvent("preview:load", { detail: { kind: "scripture", reference: row.dataset.reference, source: "search" } }))
+    window.dispatchEvent(new CustomEvent("preview:golive"))
+    this._closeFinds()
+  }
+
+  queueFind(event) {
+    event?.preventDefault?.()
+    const row = this._findRow(event)
+    if (!row?.dataset.reference) return
+    window.dispatchEvent(new CustomEvent("setlist:add", { detail: { kind: "scripture", reference: row.dataset.reference } }))
+    row.classList.add("is-queued")
+    const button = row.querySelector(".queue")
+    if (button) button.textContent = "✓ Queued"
+  }
+
+  // Keys on a result: ↑/↓ move, Enter / Space preview, Shift+Enter goes live,
+  // + queues. (L falls through to preach mode: what's in Preview goes live.)
+  findKey(event) {
+    const row = this._findRow(event)
+    if (!row) return
+    const stop = () => { event.preventDefault(); event.stopPropagation() }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      stop()
+      const rows = Array.from(this._findsBox()?.querySelectorAll(".find") || [])
+      const next = rows[rows.indexOf(row) + (event.key === "ArrowDown" ? 1 : -1)]
+      next?.querySelector(".pick")?.focus()
+    } else if (event.key === "Enter" && event.shiftKey) {
+      stop()
+      this.liveFind(event)
+    } else if (event.key === "Enter" || event.key === " ") {
+      stop()
+      this.pickFind(event)
+    } else if (event.key === "+") {
+      stop()
+      this.queueFind(event)
+    }
+  }
+
+  // The AI answer card → Preview as a content slide (the operator decides).
+  previewFindCard(event) {
+    event?.preventDefault?.()
+    this._findsBox()?.querySelectorAll(".is-preview").forEach(r => r.classList.remove("is-preview"))
+    event.currentTarget.closest(".card")?.classList.add("is-preview")
+    window.dispatchEvent(new CustomEvent("preview:load", { detail: this._findCard(event) }))
+  }
+
+  // The card's own Go live: through Preview, then on the screen as a content
+  // slide (same path as songs/thoughts).
   projectFind(event) {
     event?.preventDefault?.()
-    const d = event.currentTarget.dataset
+    window.dispatchEvent(new CustomEvent("preview:load", { detail: this._findCard(event) }))
+    window.dispatchEvent(new CustomEvent("preview:golive"))
     this._closeFinds()
-    this._presentSlide({ title: d.title, body: d.body, index: 0 })
+  }
+
+  _findCard(event) {
+    const d = event.currentTarget.dataset
+    return { kind: "slide", itemKind: "thought", title: d.title, body: d.body }
   }
 
   cancelFinds(event) {
@@ -2239,7 +2362,12 @@ export default class extends Controller {
       else if (e.key === "." || e.key === "0") { e.preventDefault(); this.toggleBlank() }
       // The queue and Preview (preview / setlist controllers): L sends what's in
       // Preview live, N previews the next queue item, Q puts the keyboard in the queue.
-      else if (e.key === "l" || e.key === "L") { e.preventDefault(); window.dispatchEvent(new CustomEvent("preview:golive")) }
+      else if (e.key === "l" || e.key === "L") {
+        e.preventDefault()
+        window.dispatchEvent(new CustomEvent("preview:golive"))
+        // A result previewed from the list has now gone live: the list is done.
+        if (this._findsOpen && this._findsBox()?.querySelector(".is-preview")) this._closeFinds()
+      }
       else if (e.key === "n" || e.key === "N") { e.preventDefault(); window.dispatchEvent(new CustomEvent("setlist:preview-next")) }
       else if (e.key === "q" || e.key === "Q") { e.preventDefault(); window.dispatchEvent(new CustomEvent("setlist:focus")) }
       else if (e.key === "?") { e.preventDefault(); this.toggleKeys() }
