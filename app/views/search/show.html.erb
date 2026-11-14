@@ -60,7 +60,7 @@
             <% end %>
             <li class="sr-hit">
               <%= link_to read_path(ref: hit.reference, t: @translation.code), class: "sr-open",
-                    data: { turbo_frame: "_top", open_ref: hit.reference, translation_id: @translation.id,
+                    data: { turbo_frame: "_top", turbo_prefetch: false, open_ref: hit.reference, translation_id: @translation.id,
                             action: "click->search-page#open" } do %>
                 <span class="sr-ref"><%= hit.reference %></span>
                 <span class="sr-text"><%= hit.highlighted %></span>

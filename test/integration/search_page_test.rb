@@ -98,4 +98,15 @@ class SearchPageTest < ActionDispatch::IntegrationTest
     get search_path(q: "John 3:16"), headers: { "Turbo-Frame" => "search_results" }
     assert_response :success
   end
+
+  # Hovering a result must not open it in the background: Turbo's prefetch of
+  # /read?ref= moved the reader's latest study to that passage.
+  test "search results are never prefetched" do
+    get search_path(q: "dew rain")
+    assert_response :success
+    links = css_select("a.sr-open")
+    assert_not_empty links
+    links.each { |a| assert_equal "false", a["data-turbo-prefetch"] }
+  end
+
 end
