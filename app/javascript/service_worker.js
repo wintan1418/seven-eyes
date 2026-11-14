@@ -76,6 +76,7 @@ const CHECK_TIMEOUT_MS = 1500 // /reference_check — the JS parser can always a
 const PAGE_TIMEOUT_MS = 4000 // a saved page rather than wait on a request that hangs this long
 const NO_COPY_TIMEOUT_MS = 15000 // a tab page with nothing saved: the "needs one visit" page after this long
 const MAX_SAVED_PAGES = 60
+const PRECACHE_TIMEOUT_MS = 20000
 
 self.addEventListener("install", () => {
   self.skipWaiting()
@@ -503,7 +504,8 @@ async function saveForOffline(raw) {
   const url = new URL(raw, self.location.origin)
   try {
     // X-Offline-Precache: saving a study isn't opening it (it keeps its place in "recent").
-    const res = await fetch(url.href, { credentials: "same-origin", headers: { Accept: "text/html", "X-Offline-Precache": "1" } })
+    // A saved page is never worth a request that hangs ("data on but dead").
+    const res = await fetchWithTimeout(new Request(url.href, { credentials: "same-origin", headers: { Accept: "text/html", "X-Offline-Precache": "1" } }), PRECACHE_TIMEOUT_MS)
     if (!cacheable(res) || !pageKey(new URL(res.url))) return null
     await savePage(res.clone())
     const html = await res.text()
@@ -554,7 +556,7 @@ async function runWarm({ owner = "guest", signedIn = false } = {}) {
   let ok = 0
   const htmlOf = {}
   for (const page of CORE_PAGES) {
-    if (stale()) return
+    if (stale() || await networkSlowStored().catch(() => false)) return
     const html = await saveForOffline(page)
     if (html !== null) { ok++; htmlOf[page] = html }
   }

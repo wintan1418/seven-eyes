@@ -89,6 +89,7 @@ class ReadingPlansController < ApplicationController
 
   def require_account
     return if authenticated?
+    return head(:no_content) if request.headers["X-Offline-Precache"].present? # no flash for the next page
     redirect_to new_session_path, alert: "Sign in to use reading plans."
   end
 end
