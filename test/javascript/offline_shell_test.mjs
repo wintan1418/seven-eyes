@@ -113,3 +113,12 @@ test("an offline-drawn pane carries the phone pager and the verse focus, like th
   assert.match(html, /<nav class="rd-pager" aria-label="Previous and next chapter"><form[^>]*class="rd-pager-form"[^>]*>.*?class="rd-pager-btn is-prev"[^>]*><span>John 2<\/span>/)
   assert.match(html, /class="rd-pager-form is-next".*?class="rd-pager-btn is-next"[^>]*><span>John 4<\/span>/)
 })
+
+test("each offline page names the real page to return to once online", () => {
+  const books = [ { osis: "John", name: "John", chapters: 21, position: 43 } ]
+  const chapter = renderChapter({ bible: { code: "KJV" }, downloaded: [ { code: "KJV" } ], books, osis: "John", chapter: 3,
+                                   verses: [ { num: 16, text: "For God so loved the world" } ] })
+  assert.match(chapter, /data-online-href='\/read\?ref=John%203&amp;t=KJV'/)
+  assert.match(renderBooks({ bible: { code: "KJV" }, books }), /data-online-href='\/read'/)
+  assert.match(renderOffline({ path: "/reading_plans", tab: true }), /data-online-href='\/reading_plans'/)
+})
