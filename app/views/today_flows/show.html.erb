@@ -95,12 +95,35 @@
             <p class="tf-hint">Pray it slowly, in your own words if you like.</p>
           <% when :amen %>
             <div class="tf-amen" data-today-flow-target="amen">
-              <div class="tf-seal" aria-hidden="true">
-                <svg class="tf-seal-ring" viewBox="0 0 120 120">
+              <div class="tf-seal">
+                <svg class="tf-seal-ring" viewBox="0 0 120 120" aria-hidden="true">
                   <circle class="tf-seal-track" cx="60" cy="60" r="52" />
                   <circle class="tf-seal-fill" cx="60" cy="60" r="52" pathLength="100" data-today-flow-target="ring" />
                 </svg>
-                <span class="tf-seal-num" data-today-flow-target="streak">✠</span>
+                <%# The seal: a gilded cross pattée in a double ring, drawn (not a font glyph)
+                    so it stays crisp at any size; after Amen the streak number takes its place. %>
+                <svg class="tf-seal-mark" viewBox="0 0 64 64" role="img" aria-label="Amen seal: a gilded cross">
+                  <defs>
+                    <linearGradient id="tf-seal-gold" gradientUnits="userSpaceOnUse" x1="10" y1="6" x2="54" y2="58">
+                      <stop offset="0" stop-color="#f3d68a" />
+                      <stop offset="0.38" stop-color="#c99b3c" />
+                      <stop offset="0.62" stop-color="#8a6118" />
+                      <stop offset="1" stop-color="#d9b25a" />
+                    </linearGradient>
+                  </defs>
+                  <g fill="none" stroke="url(#tf-seal-gold)">
+                    <circle cx="32" cy="32" r="29" stroke-width="2.2" />
+                    <circle cx="32" cy="32" r="25" stroke-width="0.8" />
+                  </g>
+                  <g fill="url(#tf-seal-gold)">
+                    <path d="M24.2 12.4Q32 10.2 39.8 12.4L35.4 28.6 51.6 24.2Q53.8 32 51.6 39.8L35.4 35.4 39.8 51.6Q32 53.8 24.2 51.6L28.6 35.4 12.4 39.8Q10.2 32 12.4 24.2L28.6 28.6Z" />
+                  </g>
+                  <g fill="url(#tf-seal-gold)">
+                    <circle cx="32" cy="4.6" r="1.1" /><circle cx="59.4" cy="32" r="1.1" />
+                    <circle cx="32" cy="59.4" r="1.1" /><circle cx="4.6" cy="32" r="1.1" />
+                  </g>
+                </svg>
+                <span class="tf-seal-num" data-today-flow-target="streak" aria-hidden="true"></span>
               </div>
               <div class="tf-amen-ask" data-today-flow-target="ask">
                 <p class="tf-amen-lead">So be it.</p>

@@ -47,10 +47,14 @@ class TodayFlowSystemTest < ApplicationSystemTestCase
     click_on "Finish"
     assert_selector ".tf-count", text: "6 of 6"
 
+    # The seal is a drawn gilt cross in a ring (not a font glyph); after Amen the streak takes its place.
+    assert_selector "svg.tf-seal-mark[role='img'][aria-label='Amen seal: a gilded cross']", visible: true
     click_on "Amen"
     assert_selector ".tf-amen-title", text: "Today is done"
     assert_selector ".tf-amen-streak", text: "2 days in a row."
     assert_selector ".tf-root.is-complete"
+    assert_selector ".tf-seal-num", text: "2", visible: true
+    assert_no_selector "svg.tf-seal-mark", visible: true
     Timeout.timeout(5) { sleep 0.1 until DailyCompletion.done_on?(users(:one)) }
 
     click_on "Back to Home"

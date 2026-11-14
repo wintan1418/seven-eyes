@@ -3,7 +3,8 @@
     this page without the personal parts; website visitors get the landing).
     "The illuminated Bible": Today leads — the day's verse over a painting with
     one button into the guided daily flow (/today/begin) — then everything a
-    swipe away: Continue, Words of the faith, For you, quick actions, studies.
+    swipe away: Continue, Words of the faith, For you, From fellow readers
+    (testimonials), studies.
     Pastor mode puts This Sunday first. The page takes the hour's tint
     (data-daypart: dawn / day / evening) over whatever theme the reader chose.
     Styles: ui/home.css + ui/illuminated.css. %>
@@ -48,8 +49,12 @@
         <%= render "studies/home/for_you", cards: @for_you %>
       <% end %>
 
+      <% if @testimonials.present? %>
+        <%= render "studies/home/voices", testimonials: @testimonials %>
+      <% end %>
+
       <% unless guest %>
-        <%= render "studies/home/studies", studies: @studies %>
+        <%= render "studies/home/studies", studies: @studies, skip: home_rail_studies(@studies, @resume) %>
       <% end %>
 
       <% if @show_guide %>

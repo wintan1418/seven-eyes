@@ -39,10 +39,10 @@ module FaithArt
   # The verse of the day's picture: one that suits the part of the Bible it
   # comes from, the same all day (picked by date among the fitting ones).
   PASSAGE_ART = {
-    law: %w[ creation-light moses-tablets ],
-    history: %w[ moses-tablets creation-light ],
+    law: %w[ creation-light moses-tablets noah-dove jacob-angel ],
+    history: %w[ moses-tablets creation-light david-goliath ],
     wisdom: %w[ creation-light sermon-on-the-mount ascension ],
-    prophets: %w[ ascension creation-light crucifixion ],
+    prophets: %w[ ascension creation-light crucifixion daniel-lions jonah-whale ],
     gospels: %w[ sermon-on-the-mount prodigal-son crucifixion resurrection ],
     acts: %w[ pentecost ],
     letters: %w[ resurrection pentecost crucifixion sermon-on-the-mount ],

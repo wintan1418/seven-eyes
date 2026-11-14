@@ -140,10 +140,60 @@ class StudiesIndexTest < ActionDispatch::IntegrationTest
 
   test "recent studies appear as a shelf of cards for the owner" do
     sign_in_as users(:one)
-    users(:one).studies.create!(name: "Romans deep dive", pane_count: 2)
+    users(:one).studies.create!(name: "Romans deep dive", pane_count: 2, last_opened_at: 10.days.ago)
+    4.times { |i| users(:one).studies.create!(name: "Recent #{i}", pane_count: 1, last_opened_at: i.hours.ago) }
     get root_path
     assert_select ".hm-studies .hm-study .nm", text: "Romans deep dive"
     assert_select ".hm-continue-block .hm-rail", text: /Continue reading|Start reading/
+  end
+
+  test "a study in the Continue rail isn't repeated under the studies list" do
+    sign_in_as users(:one)
+    users(:one).studies.where(quick_present: false).destroy_all
+    6.times { |i| users(:one).studies.create!(name: "Study #{i}", pane_count: 1, last_opened_at: i.hours.ago) }
+    get root_path
+    rail = css_select(".hm-continue-block .hm-rail-title").map { |n| n.text.strip }
+    listed = css_select(".hm-studies .hm-study .nm").map { |n| n.text.strip }
+    assert_equal [ "Study 4", "Study 5" ], listed
+    %w[ 1 2 3 ].each { |i| assert_includes rail, "Study #{i}" }
+    assert_empty listed & rail
+    assert_select ".hm-studies .il-heading-title", text: /More studies/
+  end
+
+  test "when the rail holds every study, the list points to the menu instead of repeating them" do
+    sign_in_as users(:one)
+    users(:one).studies.where(quick_present: false).destroy_all
+    2.times { |i| users(:one).studies.create!(name: "Only #{i}", pane_count: 1, last_opened_at: i.hours.ago) }
+    get root_path
+    assert_select ".hm-studies .hm-study", count: 0
+    assert_select ".hm-studies button[data-sheets-id-param='menu']", text: /All your studies/
+  end
+
+  test "readers' testimonials get an illuminated slider on Home, and none means no section" do
+    sign_in_as users(:one)
+    get root_path
+    assert_select ".hm-voices", count: 0
+
+    3.times do |i|
+      Testimonials::Testimonial.create!(kind: "text", status: "approved", source: "page", consent_given: true,
+                                        name: "Reader #{i}", body: "It helps me prepare. #{i}")
+    end
+    get root_path
+    assert_select ".hm-voices .il-heading-title", text: /From fellow readers/
+    assert_select ".hm-voices-slider[data-controller='shatter-slider'] .hm-voices-track[data-shatter-slider-target='track']"
+    assert_select ".hm-voice[data-shatter-slider-target='slide']", 3
+    assert_select ".hm-voice .hm-voice-mark", 3
+    assert_select ".hm-voices a[href='/testimonials/new']", text: /Share how BiblioRata helps you/
+    html = response.body
+    assert_operator html.index("hm-voices"), :<, html.index("hm-studies"), "testimonials come before the studies"
+  end
+
+  test "an app guest's Home has the testimonials too" do
+    Testimonials::Testimonial.create!(kind: "text", status: "approved", source: "page", consent_given: true,
+                                      name: "Ada", body: "Helps every Sunday.")
+    get root_path, headers: { "User-Agent" => "BiblioRata/1.0.5; NativeBridge; Hotwire Native Android; Turbo Native Android; Mozilla/5.0" }
+    assert_select ".hm-root.is-guest"
+    assert_select ".hm-voice", text: /Helps every Sunday/
   end
 
   test "quick-open creates a guest study named after the passage with pane I preloaded" do

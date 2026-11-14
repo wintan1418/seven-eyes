@@ -25,7 +25,8 @@ class HomePhoneTest < ApplicationSystemTestCase
     FaithTerm.create!(name: "Grace", short_definition: "God's enabling power that brings salvation.",
                       position: 1, status: :reviewed, key_references: [ "Ephesians 2:8" ])
     FaithTerm.create!(name: "Election", short_definition: "A draft nobody may see yet.", position: 2)
-    5.times { |i| users(:one).studies.create!(name: "Study #{i}", pane_count: 1) }
+    # Four go in the Continue rail; "Your studies" lists the rest.
+    9.times { |i| users(:one).studies.create!(name: "Study #{i}", pane_count: 1) }
   end
 
   test "a phone gets the verse, the slider, three studies and Show all" do

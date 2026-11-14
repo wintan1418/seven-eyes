@@ -1,10 +1,14 @@
 <%# Your studies: compact rows (three on phones, then "Show all"); Quick Present lives under Present.
-    locals: studies %>
+    The studies already in the Continue rail (skip) aren't repeated here; when
+    that leaves nothing, a line points to the ☰ menu, which lists them all.
+    locals: studies, skip (studies shown in the rail) %>
+<% skip = Array(local_assigns[:skip]) %>
+<% mine = studies.reject(&:quick_present?) %>
+<% shown = (mine - skip).first(9) %>
 <section class="hm-studies" aria-labelledby="hm-studies-title">
-  <%= illuminated_heading("Your studies", id: "hm-studies-title",
+  <%= illuminated_heading(shown.any? && (mine & skip).any? ? "More studies" : "Your studies", id: "hm-studies-title",
         aside: tag.button(safe_join([ icon(:plus), " New study" ]), type: "button", class: "il-heading-link",
                           data: { action: "new-study#open" })) %>
-  <% shown = studies.reject(&:quick_present?).first(9) %>
   <% if shown.any? %>
     <div class="hm-study-grid" data-controller="offline-studies reveal" data-reveal-class="is-expanded">
       <% shown.each do |study| %>
@@ -20,6 +24,10 @@
         <button type="button" class="hm-study-more" data-action="reveal#show">Show all <%= shown.size %> studies</button>
       <% end %>
     </div>
+  <% elsif mine.any? %>
+    <p class="hm-empty">Your recent studies are in Continue above.
+      <button type="button" class="hm-empty-link" data-action="sheets#open" data-sheets-id-param="menu"
+              data-native-action="menu">All your studies</button></p>
   <% else %>
     <p class="hm-empty">Your studies will appear here. Open a passage above, or start a new study.</p>
   <% end %>
