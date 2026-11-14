@@ -1,0 +1,68 @@
+<%# Verse of the day: today's DailyWord over a Bible painting (FaithArt, a
+    steady pick by date), a dark veil so the words always read. Read the
+    chapter (at the verse; never prefetched on hover — /read moves the
+    reader's latest study there), Share (daily_words/share_modal, rendered by the
+    page), and the reflection + prayer folded underneath. locals: word, art %>
+<% if word %>
+  <section class="hm-verse" aria-labelledby="hm-verse-title"
+           data-controller="daily-word" data-daily-word-text-value="<%= word.share_text(daily_word_url(word)) %>">
+    <div class="hm-verse-stage">
+      <div class="hm-verse-art" aria-hidden="true">
+        <%= faith_art_picture(art, sizes: "(min-width: 1024px) 760px, 100vw", loading: "eager", phone_small: true) %>
+      </div>
+      <div class="hm-verse-body">
+        <h2 class="hm-verse-label" id="hm-verse-title">Verse of the day</h2>
+        <blockquote class="hm-verse-text<%= ' is-long' if word.verse_text.length > 200 %><%= ' is-longer' if word.verse_text.length > 340 %>"><%= word.verse_text %></blockquote>
+        <p class="hm-verse-ref"><%= word.reference %> <span>&middot; <%= word.translation_code %></span></p>
+        <div class="hm-verse-actions">
+          <%= link_to read_path(ref: word.reference, t: word.translation_code), class: "hm-verse-read", data: { turbo_prefetch: false } do %>
+            <%= icon(:book) %> Read the chapter
+          <% end %>
+          <button type="button" class="hm-verse-icon" data-action="daily-word#share" aria-label="Share" title="Share as a picture"><%= icon(:share) %></button>
+          <button type="button" class="hm-verse-icon" data-action="daily-word#copy" data-daily-word-target="copy"
+                  aria-label="Copy" title="Copy the verse, reflection and prayer"><%= icon(:copy) %></button>
+        </div>
+      </div>
+      <span class="hm-verse-credit" title="<%= art.credit %>"><%= art.artist %></span>
+    </div>
+
+    <% if word.composed? %>
+      <details class="hm-reflect">
+        <summary>
+          <span class="hm-reflect-icon"><%= icon(:prayer) %></span>
+          <span class="hm-reflect-title">Reflection &amp; prayer <small><%= word.reflection.truncate(160, separator: " ", omission: "") %></small></span>
+          <span class="hm-reflect-chev"><%= icon(:chevron_down) %></span>
+        </summary>
+        <div class="hm-reflect-body">
+          <p class="hm-reflect-text"><%= word.reflection %></p>
+          <p class="hm-reflect-prayer"><%= word.prayer %></p>
+          <div class="hm-reflect-foot">
+            <%= link_to today_path, class: "hm-link" do %>Word for today <%= icon(:chevron_right) %><% end %>
+            <%= render "shared/ai_report", kind: "daily_word", key: "daily_word_#{word.date.iso8601}",
+                       context: word.reference, excerpt: [ word.reflection, word.prayer ].join("\n\n") %>
+          </div>
+        </div>
+      </details>
+    <% else %>
+      <%= link_to today_path, class: "hm-reflect is-quiet" do %>
+        <span class="hm-reflect-icon"><%= icon(:prayer) %></span>
+        <span class="hm-reflect-title"><%= DailyWord::FALLBACK_LINE %></span>
+        <span class="hm-reflect-chev"><%= icon(:chevron_right) %></span>
+      <% end %>
+    <% end %>
+  </section>
+<% else %>
+  <%# No Bible seeded yet: a fixed verse stands in. %>
+  <section class="hm-verse" aria-labelledby="hm-verse-title">
+    <div class="hm-verse-stage">
+      <div class="hm-verse-art" aria-hidden="true">
+        <%= faith_art_picture(art, sizes: "(min-width: 1024px) 760px, 100vw", loading: "eager", phone_small: true) %>
+      </div>
+      <div class="hm-verse-body">
+        <h2 class="hm-verse-label" id="hm-verse-title">Verse of the day</h2>
+        <blockquote class="hm-verse-text">Open thou mine eyes, that I may behold wondrous things out of thy law.</blockquote>
+        <p class="hm-verse-ref">Psalms 119:18 <span>&middot; KJV</span></p>
+      </div>
+    </div>
+  </section>
+<% end %>

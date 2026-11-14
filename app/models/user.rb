@@ -19,4 +19,15 @@ class User < ApplicationRecord
   # May read draft glossary terms and review them (/admin/faith): admins, and
   # pastors flagged with `bin/rails reviewer:grant EMAIL=...`.
   def faith_reviewer? = admin? || reviewer?
+
+  # Accounts carry no name, only an email. The home greeting uses the email's
+  # first word when it reads like a name ("grace.okafor@…" → "Grace") and
+  # nothing otherwise ("info@…", "a1@…").
+  NOT_A_NAME = %w[ info admin contact hello office church mail email user test team support ministry pastor ].freeze
+
+  def greeting_name
+    word = email_address.to_s.split("@").first.to_s.split(/[._+\-]/).first.to_s.gsub(/\d+/, "")
+    return nil unless word.match?(/\A[a-z]{2,20}\z/i) && NOT_A_NAME.exclude?(word.downcase)
+    word.capitalize
+  end
 end

@@ -26,23 +26,31 @@ class StudiesController < ApplicationController
              with: -> { redirect_to root_path, alert: "You're creating studies very quickly — please wait a moment." }
 
   def index
-    @studies = authenticated? ? current_user.studies.recent.includes(:panes) : []
     @daily_word = DailyWord.today
-    @show_guide = !authenticated? || current_user.guide_dismissed_at.blank?
-    @canon_stats = Rails.cache.fetch("home_canon_stats_v1", expires_in: 12.hours) do
-      { translations: Translation.count, verses: Verse.count, cross_references: CrossReference.count }
-    end
-    @testimonials = Testimonials::Testimonial.publishable.featured_first.limit(6)
     if authenticated?
+      @studies = current_user.studies.recent.includes(panes: :translation).limit(HOME_STUDIES)
+      @resume = @studies.find { |s| !s.quick_present? }
       @active_plan = current_user.reading_plans.recent.first
-      @plan_today = @active_plan&.todays_day
+      @plan_progress = @active_plan&.progress
+      @show_guide = current_user.guide_dismissed_at.blank?
+      set_faith_term_of_the_day
+    elsif hotwire_native_app?
+      # Inside the apps Home is a tab, not a sales pitch: the same Bible-first
+      # home without the personal parts, and a gentle invitation to sign up.
+      @studies = []
+      @guest = true
+      @resume = guest_home_study
       set_faith_term_of_the_day
     else
-      # Visitors get the landing page; the workspace welcome is for keepers.
-      # They see the glossary slider too (reviewed words only).
+      # Website visitors get the landing page, with the glossary slider too
+      # (reviewed words only).
+      @canon_stats = canon_stats
+      @testimonials = Testimonials::Testimonial.publishable.featured_first.limit(6)
       set_faith_term_of_the_day
-      render :landing
+      return render :landing
     end
+    @canon_stats = canon_stats
+    @verse_art = FaithArt.for_passage(@daily_word&.osis_code || "Ps", DailyWord.today_date)
   end
 
   def show
@@ -72,6 +80,9 @@ class StudiesController < ApplicationController
     # gentle "not found" state, which beats bouncing the visitor back.
     if params[:reference].present?
       study.panes.first&.update(reference: params[:reference].to_s.strip)
+      # Compare from the home page: the other panes show the same passage in
+      # other translations straight away.
+      study.seed_compare_panes! if study.pane_count > 1
     end
     redirect_to study
   end
@@ -266,22 +277,31 @@ class StudiesController < ApplicationController
 
   private
 
-  # Home's "Word of the day" from the Glossary of the Faith: the same term for
-  # everyone on a date (reviewers' rotation includes drafts). No card when no
-  # term is visible.
-  FAITH_CARD_VERSES = 3
+  HOME_STUDIES = 30 # the ☰ menu's list too
 
+  def canon_stats
+    Rails.cache.fetch("home_canon_stats_v1", expires_in: 12.hours) do
+      { translations: Translation.count, verses: Verse.count, cross_references: CrossReference.count }
+    end
+  end
+
+  # An app guest's Bible-tab study (ReadController keeps it in the session).
+  def guest_home_study
+    Study.includes(panes: :translation).find_by(id: session[:guest_study_id], user_id: nil) if session[:guest_study_id]
+  end
+
+  # Home's glossary slider starts at the Glossary of the Faith's word of the
+  # day: the same term for everyone on a date (reviewers' rotation includes
+  # drafts). No slider when no term is visible.
   def set_faith_term_of_the_day
     @faith_date = DailyWord.today_date
     @faith_term = FaithTerm.of_the_day(@faith_date, scope: FaithTerm.visible_to(current_user))
     return unless @faith_term
 
-    @faith_passages = KeyPassages.call(@faith_term.key_references.first(FAITH_CARD_VERSES))
-    @faith_root = @faith_term.root_entries.first
     set_faith_slides
   end
 
-  # Phones: a slider of glossary words on the home page, starting with
+  # A slider of glossary words on the home page, starting with
   # today's word and carrying on in the same order the daily word walks.
   FAITH_SLIDES = 12
 

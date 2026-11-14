@@ -1,0 +1,30 @@
+<%# Continue reading: the last study's passage and translation, one tap back
+    in. App guests with no reading yet start at John 3 (/read makes it).
+    locals: study (or nil), guest %>
+<% pane = study&.panes&.min_by(&:position) %>
+<% ref = pane&.reference.presence %>
+<% if study %>
+  <%= link_to study_path(study), class: "hm-card hm-resume hm-continue",
+        data: { controller: "offline-studies", offline_studies_target: "study", action: "click->offline-studies#guard" } do %>
+    <span class="hm-resume-mark" aria-hidden="true"><%= home_book_mark(ref) || icon(:book) %></span>
+    <span class="hm-resume-text">
+      <span class="ui-label">Continue reading</span>
+      <span class="hm-resume-ref"><%= ref || study.name %></span>
+      <span class="hm-resume-meta">
+        <%= pane&.translation&.code || Translation.default&.code %> &middot;
+        <% if guest %>Pick up where you left off<% else %><%= home_ago(study.last_opened_at || study.updated_at) %><% end %>
+      </span>
+    </span>
+    <span class="hm-resume-go" aria-hidden="true"><%= icon(:chevron_right) %></span>
+  <% end %>
+<% else %>
+  <%= link_to read_path, class: "hm-card hm-resume hm-continue is-start", data: { turbo_prefetch: false } do %>
+    <span class="hm-resume-mark" aria-hidden="true">John</span>
+    <span class="hm-resume-text">
+      <span class="ui-label">Start reading</span>
+      <span class="hm-resume-ref">John 3</span>
+      <span class="hm-resume-meta">A good place to begin</span>
+    </span>
+    <span class="hm-resume-go" aria-hidden="true"><%= icon(:chevron_right) %></span>
+  <% end %>
+<% end %>

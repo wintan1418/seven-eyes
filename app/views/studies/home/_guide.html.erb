@@ -1,0 +1,10 @@
+<%# The tools guide, slim: one line and a link (the full guide is also in More). %>
+<section class="hm-guide ps-guide-slim">
+  <span class="hm-guide-icon" aria-hidden="true"><%= icon(:compass) %></span>
+  <p><b>What’s at your desk</b><span> &middot; a guide to every tool</span></p>
+  <%= link_to "Open", guide_path, class: "ui-btn is-sm" %>
+  <% if authenticated? %>
+    <%= button_to dismiss_guide_path, method: :post, class: "ui-iconbtn is-sm hm-guide-hide",
+          form: { class: "contents" }, "aria-label": "Hide the guide", title: "Hide (bring it back from the ☰ menu)" do %><%= icon(:x) %><% end %>
+  <% end %>
+</section>

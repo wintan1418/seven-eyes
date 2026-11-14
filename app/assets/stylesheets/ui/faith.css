@@ -39,10 +39,10 @@
 .ft-art[data-art="pentecost"] img { object-position: center 45%; }
 .ft-art[data-art="ascension"] img { object-position: center 22%; }
 .ft-art[data-art="creation-light"] img { object-position: 40% 28%; }
-.ft-page, .ft-card { --ft-ink: sepia(0.55) saturate(0.9); --ft-ink-soft: sepia(0.6) contrast(0.95); }
-[data-theme="candlelight"] .ft-page, [data-theme="candlelight"] .ft-card { --ft-ink-soft: invert(1) sepia(0.7) brightness(0.9); }
+.ft-page { --ft-ink: sepia(0.55) saturate(0.9); --ft-ink-soft: sepia(0.6) contrast(0.95); }
+[data-theme="candlelight"] .ft-page { --ft-ink-soft: invert(1) sepia(0.7) brightness(0.9); }
 @media (prefers-color-scheme: dark) {
-  [data-theme="auto"] .ft-page, [data-theme="auto"] .ft-card { --ft-ink-soft: invert(1) sepia(0.7) brightness(0.9); }
+  [data-theme="auto"] .ft-page { --ft-ink-soft: invert(1) sepia(0.7) brightness(0.9); }
 }
 .ft-art-credit {
   position: absolute; right: 12px; bottom: 10px; z-index: 2; max-width: calc(100% - 24px);
@@ -51,42 +51,6 @@
 }
 .ft-art-credit:hover { color: #fff8ea; text-decoration: underline; }
 
-/* Home card ----------------------------------------------------------------- */
-.hm-grid > .ft-card { grid-column: 1 / -1; }
-.ft-card {
-  gap: 8px; padding: 24px 24px 20px; border-radius: 22px; border: 1px solid var(--ui-border);
-  overflow: hidden; isolation: isolate;
-}
-@media (min-width: 768px) { .ft-card { padding: 28px 32px 24px; } }
-.ft-card.is-dismissed { display: none; }
-/* The art: faint, on the right, fading out before the words. */
-.ft-card-art {
-  position: absolute; inset: 0 0 0 auto; z-index: -1; width: min(62%, 560px); pointer-events: none;
-  opacity: 0.2; -webkit-mask-image: linear-gradient(to left, #000 15%, transparent 92%);
-  mask-image: linear-gradient(to left, #000 15%, transparent 92%);
-}
-.ft-card-art .ft-art { height: 100%; }
-.ft-card-art img { filter: var(--ft-ink-soft); }
-.ft-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.ft-card-dismiss { margin: -6px -8px -6px 0; color: var(--ui-fg-subtle); }
-.ft-card-term { margin: 2px 0 0; font: 600 34px/1.1 var(--reader-font); letter-spacing: -0.01em; }
-@media (min-width: 768px) { .ft-card-term { font-size: 40px; } }
-.ft-card-term a { color: inherit; text-decoration: none; }
-.ft-card-term a:hover { color: var(--ui-accent); }
-.ft-card-root { margin: 0; }
-.ft-card-def { margin: 4px 0 0; max-width: 44rem; font: 400 17px/1.6 var(--ui-font); color: var(--ui-fg-muted); }
-.ft-card-verses {
-  display: grid; gap: 4px; margin: 6px -12px 0; padding: 0; list-style: none;
-}
-@media (min-width: 900px) { .ft-card-verses { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-/* Phones: two verses and a shorter label keep the card above the fold. */
-@media (max-width: 899px) { .ft-card-verses li:nth-child(n + 3) { display: none; } }
-@media (max-width: 559px) { .ft-card-label-more { display: none; } }
-.ft-card-verses .ft-verse-text { font-size: 16px; }
-.ft-card-verses .ft-verse-link:hover { background: color-mix(in srgb, var(--ui-surface-2) 80%, transparent); }
-.ft-card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-.ft-card-actions .ui-btn { gap: 4px; text-decoration: none; }
-.ft-card-actions .ui-btn svg { width: 16px; height: 16px; }
 
 /* Pages (/faith, /faith/:slug) ------------------------------------------------
    Phone first: one column. The side pane is the /faith list (after the
@@ -397,13 +361,7 @@
 .ft-review-submit { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
 .ft-review-errors { margin: 0 0 6px; padding: 10px 14px 10px 28px; border: 1px solid var(--rubric); color: var(--rubric); }
 
-/* ---- Home: the glossary slider (phones) ----
-   Replaces the single Word of the day card under 640px; laptops keep the card. */
-.hm-glossary { display: none; }
-@media (max-width: 639px) {
-  .hm-grid > .ft-card { display: none; }
-  .hm-glossary { display: grid; gap: 10px; grid-column: 1 / -1; min-width: 0; }
-}
+/* ---- Home: the glossary slider (home and landing) ---- */
 .hm-glossary-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .hm-glossary-head .ui-label { margin: 0; }
 .hm-glossary-all { font: 600 13px var(--ui-font); color: var(--ui-accent); text-decoration: none; }

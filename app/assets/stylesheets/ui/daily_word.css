@@ -34,10 +34,6 @@
 .dw-actions .ui-btn svg { width: 16px; height: 16px; }
 .dw-card .ps-ai-report { align-self: flex-start; }
 
-/* Home: the word leads, full width, above Continue / plan. */
-.hm-grid > .dw-card { grid-column: 1 / -1; }
-@media (min-width: 900px) { .hm-grid:has(> .dw-card) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-
 /* Public /today page */
 .dw-page-head { margin: 28px 0 18px; text-align: center; }
 .dw-page-head h1 { margin: 0; font: 600 34px/1.15 var(--reader-font); letter-spacing: -0.01em; }

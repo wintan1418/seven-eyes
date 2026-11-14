@@ -24,13 +24,13 @@ class DailyWordSystemTest < ApplicationSystemTestCase
     end
   end
 
-  test "Share on the signed-in home card opens the share modal" do
+  test "Share on the signed-in home's verse of the day opens the share modal" do
     visit new_session_path
     fill_in "email_address", with: users(:one).email_address
     fill_in "password", with: "password"
     click_on "Sign In"
-    assert_selector ".hm-grid .dw-card"
-    within(".hm-grid .dw-card") { click_on "Share" }
+    assert_selector ".hm-verse"
+    within(".hm-verse") { click_on "Share" }
     assert_selector ".ps-share-host.is-open"
   end
 end

@@ -1,6 +1,6 @@
 require "application_system_test_case"
 
-# Browser smoke of the Glossary of the Faith: the home "Word of the day" card
+# Browser smoke of the Glossary of the Faith: the home slider's word of the day
 # leads to the term page and the glossary, whose search filters as you type.
 class FaithTermsSystemTest < ApplicationSystemTestCase
   setup do
@@ -22,15 +22,15 @@ class FaithTermsSystemTest < ApplicationSystemTestCase
     click_on "Sign In"
   end
 
-  test "the home card leads to the term and the glossary, and the glossary search filters" do
+  test "the home slider leads to the term and the glossary, and the glossary search filters" do
     sign_in
     today = FaithTerm.of_the_day
-    within(".hm-grid .ft-card") do
-      assert_selector ".ft-card-term", text: today.name
-      assert_text "For by grace are ye saved"
-      click_on "Go deeper"
+    within(".hm-glossary") do
+      assert_selector ".hm-gl-slide:first-child .hm-gl-term", text: today.name
+      first(".hm-gl-slide").click
     end
     assert_selector "h1", text: today.name
+    assert_text "For by grace are ye saved"
 
     visit faith_terms_path
     assert_selector ".ft-item", count: 3
@@ -46,15 +46,6 @@ class FaithTermsSystemTest < ApplicationSystemTestCase
 
     fill_in "Search the glossary", with: ""
     assert_selector ".ft-item", count: 3
-  end
-
-  test "the card can be hidden until tomorrow" do
-    sign_in
-    find(".ft-card-dismiss").click
-    assert_no_selector ".ft-card", visible: true
-    visit root_path
-    assert_selector ".hm-head"
-    assert_no_selector ".ft-card", visible: true
   end
 
   test "from 1024px the side pane stays put while terms open beside it" do

@@ -1,9 +1,10 @@
-<%# Phones: the Glossary of the Faith as a row of picture cards you swipe
-    through (today's word first). Each card opens its word. Laptops keep the
-    single "Word of the day" card instead (CSS). locals: terms, roots
-    ({term.id => LexiconEntry}), total (all visible words), everywhere (the
-    signed-out landing page: shown at every width, with no card to replace). %>
+<%# The Glossary of the Faith as a row of picture cards you swipe through
+    (today's word first; one across on phones, three on laptops). Each card
+    opens its word. locals: terms, roots ({term.id => LexiconEntry}), total
+    (all visible words), everywhere (shown at every width — home and
+    landing), eager_first (false where something above already loads eagerly). %>
 <% everywhere = local_assigns.fetch(:everywhere, false) %>
+<% eager_first = local_assigns.fetch(:eager_first, true) %>
 <section class="hm-glossary<%= " is-everywhere" if everywhere %>" aria-labelledby="hm-glossary-title"
          data-controller="shatter-slider" data-shatter-slider-interval-value="5000">
   <div class="hm-glossary-head">
@@ -17,7 +18,8 @@
       <%= link_to faith_term_path(term), class: "hm-gl-slide", data: { shatter_slider_target: "slide" },
             aria: { roledescription: "slide", label: "#{i + 1} of #{terms.size}: #{term.name}" } do %>
         <span class="hm-gl-art" aria-hidden="true">
-          <%= faith_art_picture(FaithArt.for(term), sizes: "85vw", loading: i.zero? ? "eager" : "lazy") %>
+          <%= faith_art_picture(FaithArt.for(term), sizes: "(min-width: 960px) 320px, (min-width: 640px) 50vw, 85vw",
+                                loading: i.zero? && eager_first ? "eager" : "lazy", phone_small: true) %>
         </span>
         <span class="hm-gl-text">
           <span class="hm-gl-label"><%= i.zero? ? "Word of the day" : "Glossary of the Faith" %></span>

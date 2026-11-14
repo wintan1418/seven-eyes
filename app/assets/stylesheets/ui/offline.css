@@ -77,19 +77,8 @@ body:has(.ps-root.is-presenting) .ps-offline-host { top: 8px; }
 a.ui-toggle { text-decoration: none; }
 .ps-setlist-panel .ui-sunday { margin: 8px 14px 14px; flex: 0 0 auto; max-height: 45vh; overflow-y: auto; }
 
-/* Present offline (home card, More, Offline Bibles) and "Available offline"
+/* Present offline (home quick actions, More, Offline Bibles) and "Available offline"
    markers on study lists — lib/offline/ready.js keeps them true. */
-.hm-present {
-  border: 0; text-align: left; cursor: pointer; font: inherit;
-  background: var(--ui-accent); color: var(--ui-accent-fg);
-}
-.hm-present:hover { background: var(--ui-accent-hover); }
-.hm-present .ui-label { color: inherit; opacity: 0.8; }
-.hm-present-title { display: inline-flex; align-items: center; gap: 10px; font: 600 26px/1.15 var(--reader-font); letter-spacing: -0.01em; }
-.hm-present-title svg { width: 26px; height: 26px; }
-.hm-present-meta { padding-right: 28px; font: 500 13px/1.4 var(--ui-font); opacity: 0.9; }
-.hm-present .hm-continue-go { color: inherit; opacity: 0.8; }
-.hm-present[aria-busy="true"] { opacity: 0.75; cursor: progress; }
 
 .ui-offline-mark {
   align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; margin-top: 2px;

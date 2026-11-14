@@ -1,0 +1,27 @@
+<%# Your studies: compact rows (three on phones, then "Show all"); Quick Present lives under Present.
+    locals: studies %>
+<section class="hm-studies" aria-labelledby="hm-studies-title">
+  <div class="hm-section-head">
+    <h2 id="hm-studies-title">Your studies</h2>
+    <button type="button" class="ui-btn is-sm is-quiet" data-action="new-study#open"><%= icon(:plus) %> New study</button>
+  </div>
+  <% shown = studies.reject(&:quick_present?).first(9) %>
+  <% if shown.any? %>
+    <div class="hm-study-grid" data-controller="offline-studies reveal" data-reveal-class="is-expanded">
+      <% shown.each do |study| %>
+        <%= link_to study_path(study), class: "hm-study",
+              data: { offline_studies_target: "study", action: "click->offline-studies#guard" } do %>
+          <span class="nm"><%= study.name %></span>
+          <% refs = study.panes.sort_by(&:position).filter_map { |p| p.reference.presence } %>
+          <span class="refs"><%= refs.any? ? refs.first(3).join(" · ") : "No passage yet" %></span>
+          <span class="meta"><%= home_ago(study.last_opened_at || study.updated_at) %></span>
+        <% end %>
+      <% end %>
+      <% if shown.size > 3 %>
+        <button type="button" class="hm-study-more" data-action="reveal#show">Show all <%= shown.size %> studies</button>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="hm-empty">Your studies will appear here. Open a passage above, or start a new study.</p>
+  <% end %>
+</section>

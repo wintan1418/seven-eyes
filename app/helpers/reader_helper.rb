@@ -4,6 +4,7 @@ module ReaderHelper
   # 24×24, 2px round strokes, currentColor. Inline so they theme with the text.
   ICONS = {
     menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+    flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
     search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
     chevron_down: '<path d="m6 9 6 6 6-6"/>',
     chevron_left: '<path d="m15 18-6-6 6-6"/>',

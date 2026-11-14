@@ -1,0 +1,23 @@
+<%# Home greeting: the day, "Good morning, Grace", the reading streak (when
+    there is one) and one search box — a reference ("John 3:16") opens the
+    reader there, words search the Bible (SearchController). locals: guest %>
+<% streak = @plan_progress&.streak.to_i %>
+<% name = current_user&.greeting_name unless guest %>
+<header class="hm-head hm-hello">
+  <div class="hm-hello-text">
+    <p class="hm-hello-date"><time datetime="<%= DailyWord.today_date.iso8601 %>"><%= home_today %></time></p>
+    <h1><%= home_greeting %><%= ", #{name}" if name %>.</h1>
+  </div>
+  <% if streak.positive? %>
+    <%= link_to reading_plan_path(@active_plan), class: "hm-streak",
+          title: "Your reading streak", "aria-label": "#{streak}-day reading streak" do %>
+      <%= icon(:flame) %><span><b><%= streak %></b> <%= streak == 1 ? "day" : "days" %></span>
+    <% end %>
+  <% end %>
+  <%= form_with url: search_path, method: :get, class: "hm-search", role: "search" do %>
+    <%= icon(:search) %>
+    <%= search_field_tag :q, nil, class: "hm-search-input", autocomplete: "off", spellcheck: "false",
+          autocapitalize: "none", enterkeyhint: "search",
+          placeholder: "Search the Bible or open John 3:16", "aria-label": "Search the Bible or open a passage" %>
+  <% end %>
+</header>

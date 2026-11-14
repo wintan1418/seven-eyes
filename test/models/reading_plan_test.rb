@@ -51,4 +51,28 @@ class ReadingPlanTest < ActiveSupport::TestCase
       end
     end
   end
+
+  test "progress: totals, today's day and a streak that waits for today to be read" do
+    days = @plan.plan_days.order(:day_number).to_a
+    days[1].create_completion!
+    days[2].create_completion!
+    days[3].create_completion! # yesterday; today (day 5) not read yet
+    progress = @plan.progress
+    assert_equal 5, progress.total
+    assert_equal 3, progress.done
+    assert_equal 60, progress.percent
+    assert_equal days[4], progress.today
+    assert_equal 3, progress.streak
+
+    days[4].create_completion!
+    assert_equal 4, @plan.reload.progress.streak
+  end
+
+  test "progress outside the plan's dates has no day for today" do
+    later = @user.reading_plans.create!(name: "Later", start_date: Date.current + 3.days)
+    later.plan_days.create!(day_number: 1, refs: "Ps 1")
+    assert_nil later.progress.today
+    assert_equal 0, later.progress.streak
+    assert_equal 0.0, @user.reading_plans.create!(name: "Empty", start_date: Date.current).progress.fraction
+  end
 end
