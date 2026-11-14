@@ -30,6 +30,17 @@ class FaithArtTest < ActiveSupport::TestCase
     assert_empty slugs - FaithArt::TERMS.keys
   end
 
+  test "neighbouring slides in the glossary's order never share a picture, and every picture is used" do
+    slugs = YAML.safe_load_file(Rails.root.join("config/faith_terms.yml")).map { |t| t["slug"] }
+    keys = slugs.map { |slug| FaithArt.for(slug).key }
+    keys.each_with_index do |key, i|
+      neighbour = keys[(i + 1) % keys.size]
+      assert_not_equal key, neighbour, "#{slugs[i]} and #{slugs[(i + 1) % slugs.size]} share #{key}"
+    end
+    assert_empty FaithArt::IMAGES.keys - keys, "every picture shows on some term"
+    assert_operator keys.tally.values.max, :<=, 6, "no picture dominates the slider"
+  end
+
   test "the verse of the day gets a fitting picture, the same all day" do
     date = Date.new(2026, 11, 14)
     assert_equal "pentecost", FaithArt.for_passage("Acts", date).key

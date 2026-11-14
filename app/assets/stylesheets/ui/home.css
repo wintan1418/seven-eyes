@@ -240,6 +240,43 @@ body > .ps-root.hm-root { height: 100vh; height: 100dvh; display: flex; flex-dir
 }
 @media (max-width: 420px) { .hm-wide-only { display: none; } }
 
+/* Phones: a compact card — title, date, one summary line, the three buttons —
+   with the order of service and the checks folded away (sunday_card#toggle). */
+.hm-sunday-brief { display: none; }
+.hm-sunday-detail { display: contents; }
+@media (max-width: 639px) {
+  .hm-sunday { gap: 10px; margin: 12px 12px 0; padding: 16px 16px 14px; border-radius: 20px; }
+  .hm-sunday-head { gap: 2px; }
+  .hm-sunday-title { font-size: calc(20px * var(--reader-scale, 1)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .hm-sunday-counts { display: none; }
+  .hm-sunday-brief {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0;
+    font: 500 13px/1.3 var(--ui-font); color: var(--ui-fg-muted);
+  }
+  .hm-sunday-brief > span { display: inline-flex; align-items: center; gap: 4px; }
+  .hm-sunday-brief svg { width: 15px; height: 15px; }
+  .hm-sunday-brief .is-ok svg { color: #3f7a3a; }
+  .hm-sunday-brief .is-todo { color: #a8661a; }
+  [data-theme="candlelight"] .hm-sunday-brief .is-ok svg { color: #8CC27C; }
+  [data-theme="candlelight"] .hm-sunday-brief .is-todo { color: #E2B240; }
+  .hm-sunday-fold {
+    margin-left: auto; display: inline-flex; align-items: center; gap: 2px; min-height: 32px; padding: 0 2px;
+    border: 0; background: none; cursor: pointer; font: 600 13px var(--ui-font); color: var(--ui-accent);
+  }
+  .hm-sunday-fold svg { width: 16px; height: 16px; transition: transform 0.2s ease; }
+  .hm-sunday.is-open .hm-sunday-fold svg { transform: rotate(180deg); }
+  .hm-sunday-fold:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: 6px; }
+  .hm-sunday-detail { display: none; }
+  .hm-sunday.is-open .hm-sunday-detail { display: grid; gap: 10px; }
+  .hm-sunday-actions { grid-template-columns: 1.15fr 1fr 1fr; gap: 6px; margin-top: 0; }
+  .hm-sunday-btn { min-height: 42px; padding: 0 8px; gap: 5px; font-size: 13px; border-radius: 11px; }
+  .hm-sunday-btn svg { width: 15px; height: 15px; }
+  .hm-sunday-btn.is-primary { grid-row: auto; grid-column: auto; order: -1; }
+  .hm-sunday-btn { white-space: nowrap; min-width: 0; }
+}
+@media (max-width: 420px) { .hm-sunday-btn:not(.is-primary) svg { display: none; } }
+@media (max-width: 639px) and (prefers-reduced-motion: reduce) { .hm-sunday-fold svg { transition: none; } }
+
 /* Search ------------------------------------------------------------------------------- */
 .hm-search {
   position: relative; display: flex; align-items: center; max-width: 40rem;
@@ -257,8 +294,8 @@ body > .ps-root.hm-root { height: 100vh; height: 100dvh; display: flex; flex-dir
 .hm-search-input::-webkit-search-cancel-button { display: none; }
 
 /* Sections ---------------------------------------------------------------------------- */
-.hm-continue-block, .hm-block, .hm-foryou, .hm-studies { margin-top: 34px; min-width: 0; }
-@media (min-width: 768px) { .hm-continue-block, .hm-block, .hm-foryou, .hm-studies { margin-top: 48px; } }
+.hm-continue-block, .hm-block, .hm-foryou, .hm-voices, .hm-studies { margin-top: 34px; min-width: 0; }
+@media (min-width: 768px) { .hm-continue-block, .hm-block, .hm-foryou, .hm-voices, .hm-studies { margin-top: 48px; } }
 .hm-root .hm-glossary .il-heading { margin-bottom: 4px; }
 @media (max-width: 639px) {
   .hm-root .hm-glossary.is-everywhere .hm-glossary-track { margin: 0 -20px; padding: 2px 20px 4px; scroll-padding-inline: 20px; }
@@ -477,3 +514,58 @@ a.hm-fy-card:focus-visible, .hm-fy-cta:focus-visible { outline: 2px solid var(--
   .hm-action-icon, .hm-begin, .hm-rail-card { transition: none; }
   .hm-today-art { transform: none !important; }
 }
+
+/* From fellow readers — testimonials as illuminated cards that break like
+   glass into the next (shatter-slider). ------------------------------------------------ */
+.hm-voices-slider { display: grid; gap: 12px; min-width: 0; }
+.hm-voices-track {
+  position: relative; display: flex; gap: 14px; overflow-x: auto; overscroll-behavior-x: contain;
+  margin: 0 -20px; padding: 4px 20px 10px; scroll-padding-inline: 20px;
+  scroll-snap-type: x mandatory; scrollbar-width: none;
+}
+.hm-voices-track::-webkit-scrollbar { display: none; }
+.hm-voices-track:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: -2px; border-radius: 12px; }
+@media (min-width: 768px) { .hm-voices-track { margin: 0 -32px; padding-inline: 32px; scroll-padding-inline: 32px; } }
+@media (min-width: 1024px) { .hm-voices-track { margin: 0; padding: 4px 0 10px; scroll-padding-inline: 0; } }
+.hm-voice {
+  position: relative; flex: 0 0 86%; scroll-snap-align: start; margin: 0; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 18px; min-height: 196px;
+  padding: 24px 22px 20px; border-radius: 20px; background: var(--ui-elevated); color: var(--ui-fg);
+  box-shadow: var(--ui-shadow-sm), inset 0 0 0 1px var(--ui-border);
+}
+.hm-voice::before { /* a gilt hairline along the top, like the This Sunday card */
+  content: ""; position: absolute; left: 22px; right: 22px; top: 0; height: 2px; border-radius: 2px;
+  background: var(--il-leaf-ink); opacity: 0.7;
+}
+.hm-voice::after { /* a faint gilt wash in the corner the quote mark sits in */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(120% 70% at 0% 0%, var(--il-gold-faint), transparent 55%);
+}
+@media (min-width: 640px) { .hm-voice { flex-basis: calc((100% - 14px) / 2); } }
+@media (min-width: 1024px) { .hm-voice { flex-basis: calc((100% - 28px) / 3); } }
+.hm-voice > * { position: relative; z-index: 1; }
+.hm-voice-mark { width: 34px; height: 26px; margin-bottom: -6px; fill: var(--il-gold); filter: drop-shadow(0 1px 0 rgba(92, 63, 12, 0.25)); }
+.hm-voice blockquote {
+  flex: 1 1 auto; margin: 0; font: italic 400 calc(18px * var(--reader-scale, 1)) / 1.55 var(--reader-font); color: var(--ui-fg);
+  text-wrap: pretty;
+}
+.hm-voice figcaption {
+  display: flex; align-items: center; gap: 10px; padding-top: 14px; border-top: 1px solid var(--il-gold-faint);
+  font: 400 13px var(--ui-font); color: var(--ui-fg-muted);
+}
+.hm-voice figcaption .who { display: block; font: 600 12px/1.3 "Cinzel", Georgia, serif; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ui-fg); }
+.hm-voice figcaption .role { display: block; margin-top: 1px; }
+.hm-voice-avatar {
+  flex: 0 0 auto; width: 34px; height: 34px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
+  font: 600 15px "Cinzel", Georgia, serif; color: #fff8e6; background: var(--il-leaf-ink);
+  box-shadow: 0 0 0 2px var(--ui-elevated), 0 0 0 3px var(--il-gold-soft);
+}
+.hm-voices-cta { margin: 14px 0 0; text-align: center; }
+.hm-voices-cta a {
+  display: inline-flex; align-items: center; gap: 2px; min-height: 36px;
+  font: 600 13.5px var(--ui-font); color: var(--ui-accent); text-decoration: none;
+}
+.hm-voices-cta a svg { width: 16px; height: 16px; }
+.hm-voices-cta a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.hm-voices-cta a:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: 6px; }
+.hm-empty-link { border: 0; padding: 0; background: none; cursor: pointer; font: 600 14px var(--ui-font); color: var(--ui-accent); }

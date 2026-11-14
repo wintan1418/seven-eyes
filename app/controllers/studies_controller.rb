@@ -53,6 +53,7 @@ class StudiesController < ApplicationController
       return render :landing
     end
     @canon_stats = canon_stats
+    @testimonials = Testimonials::Testimonial.publishable.featured_first.limit(6).to_a
     @verse_art = FaithArt.for_passage(@daily_word&.osis_code || "Ps", DailyWord.today_date)
     @daypart = home_daypart
   end

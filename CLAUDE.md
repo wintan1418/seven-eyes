@@ -318,15 +318,19 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   `ui/home.css`, ornaments in `ui/illuminated.css`) leads with the **Today hero** (FaithArt painting,
   DailyWord verse with an illuminated initial — `illuminated()` / `illuminated_heading()` in
   `HomeHelper`, "Begin today · ~5 min"), then a Continue rail (scroll-snap), Words of the faith,
-  For you (`ForYou` — real data only), quick actions, studies. `Daypart` (Lagos clock; `?at=HH:MM`
+  For you (`ForYou` — real data only), From fellow readers (`studies/home/_voices`: publishable
+  testimonials, `shatter-slider`; hidden when none), quick actions, studies (only those NOT in the
+  rail — `home_rail_studies`). Glossary art: `config/faith_art.yml` maps every seeded slug so
+  neighbouring slides never share a picture (`faith_art_test`). `Daypart` (Lagos clock; `?at=HH:MM`
   outside production) sets `data-daypart` = dawn/day/evening, a tint layer over the theme.
   **Today flow** `/today/begin` (`TodayFlowsController`, `TodayFlow`, `today_flow` controller,
   `ui/today.css`): verse (Listen = `reader` controller's device voice) → passage → reflection →
-  word of the faith (reviewed only) → prayer → Amen. `PUT /today/:date/done` → `DailyCompletion`
+  word of the faith (reviewed only) → prayer → Amen (a drawn SVG seal, `.tf-seal-mark`). `PUT /today/:date/done` → `DailyCompletion`
   (daily streak, idempotent); offline it goes through the outbox (`today-done`), guests keep it in
   localStorage (`lib/today_state.js`, node-tested). Saved offline (service worker OWN/CORE pages).
   **Pastor mode** (`users.pastor_mode`, nil = on if the account has a queue or went live; switch
-  in /more): `ThisSunday` card first on Home — order of service, readiness, Open service
+  in /more): `ThisSunday` card first on Home (phones <640px: compact —
+  summary line + 3 buttons; the order of service folds out via `sunday_card#toggle`) — order of service, readiness, Open service
   (`?queue=1`), Present (`?present=1`), Get ready (`?ready=1` runs `sunday_ready`).
 - **Admin ("Overseer")** — `/admin`, `users.admin` flag (`bin/rails admin:grant EMAIL=...`),
   read-only overview: totals, live-now sessions, recent accounts/studies/live services.

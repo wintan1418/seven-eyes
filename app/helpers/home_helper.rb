@@ -59,6 +59,14 @@ module HomeHelper
     end
   end
 
+  # The studies the Continue rail shows (the one to resume plus the next three
+  # recent ones), so "Your studies" can leave them out and nothing shows twice.
+  def home_rail_studies(studies, resume)
+    rest = Array(studies).reject { |s| s.quick_present? || s == resume }.first(HOME_RAIL_STUDIES)
+    [ resume, *rest ].compact
+  end
+  HOME_RAIL_STUDIES = 3
+
   # "Day 3 of 21" style fraction as a 0–100 integer, for progress bars.
   def home_percent(part, whole) = whole.to_i.positive? ? ((part.to_f / whole) * 100).round.clamp(0, 100) : 0
 end

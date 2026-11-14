@@ -57,15 +57,52 @@ images:
     year: 1866
     commons_url: https://commons.wikimedia.org/wiki/File:001.The_Creation_of_Light.jpg
     licence: Public domain
+  jacob-angel:
+    title: Jacob Wrestles with the Angel
+    artist: Gustave Doré
+    year: 1866
+    commons_url: https://commons.wikimedia.org/wiki/File:024.Jacob_Wrestles_with_the_Angel.jpg
+    licence: Public domain
+  daniel-lions:
+    title: Daniel in the Lions’ Den
+    artist: Gustave Doré
+    year: 1866
+    commons_url: https://commons.wikimedia.org/wiki/File:131.Daniel_in_the_Lions%27_Den.jpg
+    licence: Public domain
+  noah-dove:
+    title: A Dove Is Sent Forth from the Ark
+    artist: Gustave Doré
+    year: 1866
+    commons_url: https://commons.wikimedia.org/wiki/File:008.A_Dove_Is_Sent_Forth_from_the_Ark.jpg
+    licence: Public domain
+  david-goliath:
+    title: David Slays Goliath
+    artist: Gustave Doré
+    year: 1866
+    commons_url: https://commons.wikimedia.org/wiki/File:071A.David_Slays_Goliath.jpg
+    licence: Public domain
+  jonah-whale:
+    title: Jonah Is Spewed Forth by the Whale
+    artist: Gustave Doré
+    year: 1866
+    commons_url: https://commons.wikimedia.org/wiki/File:137.Jonah_Is_Spewed_Forth_by_the_Whale.jpg
+    licence: Public domain
 
 terms:
-  crucifixion: [salvation, redemption, atonement, propitiation, sin, reconciliation, gospel, love]
-  resurrection: [resurrection, eternal-life, hope, glorification, regeneration, justification]
-  sermon-on-the-mount: [kingdom-of-god, discipleship, righteousness, holiness, peace, joy, prayer, sanctification]
-  prodigal-son: [grace, mercy, forgiveness, repentance, adoption, faith]
-  moses-tablets: [covenant, judgment, election]
-  pentecost: [holy-spirit, church, baptism, fellowship, lords-supper]
-  ascension: [ascension, second-coming, heaven, intercession, glory]
-  creation-light: [incarnation, trinity, worship]
+  # Spread so neighbouring slides (FaithTerm.in_order, the order of
+  # faith_terms.yml) never share a picture; test/services/faith_art_test.rb checks it.
+  crucifixion: [salvation, atonement, forgiveness, lords-supper]
+  resurrection: [justification, eternal-life, resurrection, joy, glorification]
+  sermon-on-the-mount: [righteousness, gospel, kingdom-of-god, incarnation, peace]
+  prodigal-son: [grace, mercy, love]
+  moses-tablets: [propitiation, holiness, sin, judgment]
+  pentecost: [holy-spirit, church, fellowship]
+  ascension: [glory, ascension, heaven]
+  creation-light: [trinity, worship]
+  jacob-angel: [sanctification, adoption, election, intercession]
+  daniel-lions: [second-coming, prayer]
+  noah-dove: [covenant, reconciliation, regeneration, baptism, hope]
+  david-goliath: [faith, discipleship]
+  jonah-whale: [redemption, repentance]
 
 intro: sermon-on-the-mount

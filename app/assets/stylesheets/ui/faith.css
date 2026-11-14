@@ -39,6 +39,11 @@
 .ft-art[data-art="pentecost"] img { object-position: center 45%; }
 .ft-art[data-art="ascension"] img { object-position: center 22%; }
 .ft-art[data-art="creation-light"] img { object-position: 40% 28%; }
+.ft-art[data-art="jacob-angel"] img { object-position: 50% 30%; }
+.ft-art[data-art="daniel-lions"] img { object-position: 45% 45%; }
+.ft-art[data-art="noah-dove"] img { object-position: center 35%; }
+.ft-art[data-art="david-goliath"] img { object-position: 45% 30%; }
+.ft-art[data-art="jonah-whale"] img { object-position: 55% 50%; }
 .ft-page { --ft-ink: sepia(0.55) saturate(0.9); --ft-ink-soft: sepia(0.6) contrast(0.95); }
 [data-theme="candlelight"] .ft-page { --ft-ink-soft: invert(1) sepia(0.7) brightness(0.9); }
 @media (prefers-color-scheme: dark) {

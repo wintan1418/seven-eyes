@@ -2,9 +2,14 @@
     recent study with a preach queue), its order of service at a glance, what
     still needs doing, and one tap to open it, present it or get it ready
     offline. sunday_card (JS) adds what only this device knows: whether "Get
-    ready for Sunday" has saved it here. locals: sunday (ThisSunday) %>
+    ready for Sunday" has saved it here.
+    Phones (under 640px): a compact card — title, date, one summary line
+    (items · what's still to do) and the three buttons; the order of service
+    and the checks fold out (sunday_card#toggle). Laptops show everything.
+    locals: sunday (ThisSunday) %>
 <% study = sunday.study %>
 <% counts = sunday.counts %>
+<% todo = sunday.checks.count { |c| c.state == :todo } %>
 <section class="hm-sunday" aria-labelledby="hm-sunday-title"
          data-controller="sunday-card" data-sunday-card-url-value="<%= study_path(study) %>">
   <div class="hm-sunday-head">
@@ -17,6 +22,21 @@
     </p>
   </div>
 
+  <p class="hm-sunday-brief">
+    <span><%= pluralize(sunday.items.size, "item") %></span>
+    <span aria-hidden="true">&middot;</span>
+    <% if todo.positive? %>
+      <span class="is-todo"><%= icon(:help) %> <%= todo %> to do</span>
+    <% else %>
+      <span class="is-ok"><%= icon(:check) %> Ready</span>
+    <% end %>
+    <button type="button" class="hm-sunday-fold" aria-expanded="false" aria-controls="hm-sunday-detail"
+            data-action="sunday-card#toggle" data-sunday-card-target="fold">
+      Order of service <%= icon(:chevron_down) %>
+    </button>
+  </p>
+
+  <div class="hm-sunday-detail" id="hm-sunday-detail">
   <ol class="hm-sunday-order" aria-label="Order of service">
     <% sunday.shown.each do |item| %>
       <li class="hm-sunday-item is-<%= item.kind %>">
@@ -35,6 +55,7 @@
     <% end %>
     <li class="is-device" data-sunday-card-target="device" hidden><%= icon(:offline) %><span data-sunday-card-target="deviceText"></span></li>
   </ul>
+  </div>
 
   <div class="hm-sunday-actions">
     <%= link_to study_path(study, queue: 1), class: "hm-sunday-btn" do %><%= icon(:queue) %> Open service<% end %>

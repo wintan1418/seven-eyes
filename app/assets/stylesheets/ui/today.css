@@ -168,6 +168,16 @@ body.hotwire-native .tf-close { visibility: hidden; } /* the native bar has Back
 .tf-seal-track { fill: none; stroke: var(--ui-border); stroke-width: 6; }
 .tf-seal-fill { fill: none; stroke: var(--il-gold); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 100 100; stroke-dashoffset: 100; opacity: 0; }
 .tf-root.is-complete .tf-seal-fill { opacity: 1; }
+.tf-seal-mark { /* the drawn seal, centred in the ring; the streak number replaces it after Amen */
+  position: absolute; left: 50%; top: 50%; width: 58%; height: 58%; transform: translate(-50%, -50%);
+  overflow: visible; filter: drop-shadow(0 1px 0 rgba(92, 63, 12, 0.22));
+}
+.tf-root.is-complete .tf-seal-mark { display: none; }
+.tf-seal-num:empty { display: none; }
+@media (forced-colors: active) {
+  .tf-seal-mark g { fill: CanvasText; stroke: CanvasText; }
+  .tf-seal-mark g:first-of-type { fill: none; }
+}
 .tf-seal-num {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   font: 600 52px/1 "Cinzel", Georgia, serif;
@@ -227,10 +237,12 @@ body.hotwire-native .tf-close { visibility: hidden; } /* the native bar has Back
     animation: tf-motes 2.4s 0.4s ease-out both;
   }
   .tf-seg-btn::before { transition: background 0.3s ease; }
+  .tf-seal-mark { animation: tf-glint 5s ease-in-out infinite; } /* the gilt catches the light, slowly */
 }
 @keyframes tf-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes tf-bloom { 0% { opacity: 0; transform: scale(0.4); } 40% { opacity: 1; } 100% { opacity: 0.8; transform: scale(1); } }
 @keyframes tf-pop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+@keyframes tf-glint { 0%, 100% { filter: drop-shadow(0 1px 0 rgba(92, 63, 12, 0.22)); } 50% { filter: drop-shadow(0 1px 0 rgba(92, 63, 12, 0.22)) drop-shadow(0 0 10px rgba(233, 196, 109, 0.45)); } }
 @keyframes tf-motes { from { opacity: 0; transform: translateY(20px); } 30% { opacity: 1; } to { opacity: 0; transform: translateY(-90px); } }
 @media (prefers-reduced-motion: reduce) {
   .tf-track { scroll-behavior: auto; }

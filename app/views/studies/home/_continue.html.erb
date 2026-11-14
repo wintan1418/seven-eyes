@@ -8,7 +8,7 @@
 <% ref = pane&.reference.presence %>
 <% parsed = ref && ReferenceParser.call(ref) %>
 <% parsed = nil unless parsed&.valid? %>
-<% recent = Array(studies).reject { |s| s.quick_present? || s == resume }.first(3) %>
+<% recent = home_rail_studies(studies, resume) - [ resume ] %>
 <section class="hm-continue-block" aria-labelledby="hm-continue-title">
   <%= illuminated_heading("Continue", id: "hm-continue-title") %>
   <div class="hm-rail" tabindex="0" aria-label="Continue — swipe for more">

@@ -1,0 +1,38 @@
+<%# From fellow readers — the landing page's testimonials, in the illuminated
+    style: a gilt quote mark on each card, one card at a time on phones (2–3
+    across wider), and every few seconds the card breaks like glass to reveal
+    the next (shatter-slider). Hidden when there's nothing publishable.
+    locals: testimonials %>
+<section class="hm-voices" aria-labelledby="hm-voices-title">
+  <%= illuminated_heading("From fellow readers", id: "hm-voices-title") %>
+  <div class="hm-voices-slider" data-controller="shatter-slider" data-shatter-slider-interval-value="6500">
+    <div class="hm-voices-track" data-shatter-slider-target="track" tabindex="0"
+         aria-roledescription="carousel" aria-label="What readers say — swipe to see more">
+      <% testimonials.each_with_index do |t, i| %>
+        <figure class="hm-voice" data-shatter-slider-target="slide"
+                aria-roledescription="slide" aria-label="<%= i + 1 %> of <%= testimonials.size %>">
+          <svg class="hm-voice-mark" viewBox="0 0 48 36" aria-hidden="true" focusable="false">
+            <path d="M0 36V22.5C0 9.8 6.6 2.3 19.2 0l2 4.6C14 6.6 10.6 10.9 10.2 17.4H20V36H0Zm27.4 0V22.5C27.4 9.8 34 2.3 46.6 0l2 4.6c-7.2 2-10.6 6.3-11 12.8h9.8V36H27.4Z"/>
+          </svg>
+          <blockquote><%= t.best_line.presence || truncate(t.body, length: 160) %></blockquote>
+          <figcaption>
+            <span class="hm-voice-avatar" aria-hidden="true"><%= (t.name.presence || "A").strip[0].upcase %></span>
+            <span>
+              <span class="who"><%= t.name.presence || "A reader" %></span>
+              <% if t.title_company.present? %><span class="role"><%= t.title_company %></span><% end %>
+            </span>
+          </figcaption>
+        </figure>
+      <% end %>
+    </div>
+    <% if testimonials.size > 1 %>
+      <div class="hm-glossary-dots" aria-hidden="true">
+        <% testimonials.size.times do |i| %>
+          <button type="button" tabindex="-1" class="hm-gl-dot<%= ' is-on' if i.zero? %>"
+                  data-shatter-slider-target="dot" data-action="shatter-slider#go" data-index="<%= i %>"></button>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+  <p class="hm-voices-cta"><%= link_to "/testimonials/new" do %>Share how BiblioRata helps you <%= icon(:chevron_right) %><% end %></p>
+</section>
