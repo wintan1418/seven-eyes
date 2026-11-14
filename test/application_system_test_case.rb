@@ -2,6 +2,7 @@ require "test_helper"
 require_relative "test_helpers/offline_test_helper"
 
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
+  include OfflineTestHelper
   driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1000 ]
 
   # One browser at a time. The offline tests flip a process-wide network switch
@@ -14,6 +15,21 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # Lets offline tests cut the test server off (see OfflineTestHelper).
   Capybara.app = NetworkUnplug.new(Capybara.app) unless Capybara.app.is_a?(NetworkUnplug)
   teardown { NetworkUnplug.unplugged = false; NetworkUnplug.hanging = false }
+
+  # Capybara resets the session (and waits up to 60 s for the server's open
+  # requests) before `teardown` blocks run: let hanging requests go first, or a
+  # "data on but dead" test can leave more of them than that wait allows.
+  def before_teardown
+    super
+  ensure
+    NetworkUnplug.unplugged = false
+    NetworkUnplug.hanging = false
+  end
+
+  # Every test starts on a clean device. The app saves pages and downloads the
+  # KJV by itself on any visit (lib/offline/warm.js, auto_bible.js), so one
+  # test's Bible (another test's verses) mustn't leak into the next.
+  setup { clear_offline_data }
 
   # On the study page: wait until Stimulus has connected (the theme
   # controller marks the current theme in the settings sheet on connect), so

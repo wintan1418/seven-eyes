@@ -41,6 +41,9 @@ module Authentication
     end
 
     def request_authentication
+      # The service worker saving pages for offline use: no "return to" (it
+      # would send the next sign-in there) and nothing to save.
+      return head(:no_content) if request.headers["X-Offline-Precache"].present?
       session[:return_to_after_authenticating] = request.url
       redirect_to new_session_path
     end

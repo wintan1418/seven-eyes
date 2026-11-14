@@ -50,3 +50,31 @@ export function isReady(quick, { owner, pageSaved, downloaded }) {
 export function presentUrl(quick, { saved = true } = {}) {
   return `${quick.url}?present=1${saved ? "&saved=1" : ""}`
 }
+
+// ---- the reader's Bible, downloaded by itself (auto_bible.js) -----------------
+
+export const AUTO_BIBLE_CODE = "KJV"
+export const AUTO_RETRY_MS = 10 * 60 * 1000 // after a failed try
+
+// Which translation to fetch on first launch, so reading works with no data
+// (like a native Bible app): the KJV (else the site default), for everyone —
+// guests too. Inside the apps always; on the web not on Data Saver. Nothing
+// with no (or a dead) network, in the projector/stage windows, while a recent
+// try failed, when the reader removed it from the device themselves, or when
+// it is already on the device at the current version.
+export function autoBibleToDownload({ manifest, downloaded, native = false, saveData = false, online = true,
+                                      slow = false, screen = false, lastFailedAt = 0, optedOut = false, now = Date.now() }) {
+  if (!online || slow || screen) return null
+  if (saveData && !native) return null
+  if (lastFailedAt && now - lastFailedAt < AUTO_RETRY_MS) return null
+  const list = manifest?.translations || []
+  const t = list.find((x) => x.code === AUTO_BIBLE_CODE) || list.find((x) => x.code === manifest?.default_code)
+  if (!t) return null
+  const have = (downloaded || []).find((d) => d.code === t.code)
+  if (!have && optedOut) return null // removed on Offline Bibles: the reader's call
+  return have && have.version === t.version ? null : t
+}
+
+// Wait this long after a page loads before starting: soon inside the apps
+// (that's where people read with no data), later on the web.
+export const autoBibleDelay = ({ native }) => (native ? 800 : 4000)

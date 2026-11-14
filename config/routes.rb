@@ -114,6 +114,9 @@ Rails.application.routes.draw do
 
   # Offline reading: downloads page, Bible bundles for IndexedDB, own highlights.
   get "/offline",              to: "offline#show",       as: :offline
+  # The offline reader is drawn by the service worker (lib/offline/shell.js);
+  # without one (or with ?sw=off) these addresses just open the Bible.
+  get "/offline/read(/*rest)", to: redirect("/read"), as: :offline_reader
   get "/offline/bibles",       to: "offline#manifest",   as: :offline_bibles, defaults: { format: :json }
   get "/offline/bibles/:code", to: "offline#bible",      as: :offline_bible, defaults: { format: :json }
   get "/offline/highlights",   to: "offline#highlights", as: :offline_highlights, defaults: { format: :json }

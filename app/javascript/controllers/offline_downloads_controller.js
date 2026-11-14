@@ -1,14 +1,17 @@
 import { Controller } from "@hotwired/stimulus"
 import {
   fetchManifest, storedManifest, downloadedBibles, downloadBible, removeBible,
-  storageEstimate, requestPersistence, refreshHighlights
+  storageEstimate, requestPersistence, refreshHighlights, bibleDownloading, setMeta
 } from "../lib/offline/store"
+import { AUTO_BIBLE_CODE } from "../lib/offline/ready_plan"
+import { OPT_OUT_KEY } from "../lib/offline/auto_bible"
 import { precachePages } from "../lib/offline/page"
 
 // The Offline Bibles page: shows which translations are on this device, with
 // their sizes, and downloads / removes them (IndexedDB, via lib/offline/store).
 // After a download it asks the service worker to save the pages the reader
-// needs to open the app with no signal.
+// needs to open the app with no signal. A download started elsewhere (the
+// KJV that downloads by itself, lib/offline/auto_bible.js) shows here too.
 export default class extends Controller {
   static targets = ["row", "network", "storage"]
   static values = { manifestUrl: String, returnUrl: String, signedIn: Boolean }
@@ -19,12 +22,31 @@ export default class extends Controller {
     window.addEventListener("offline", this._onNet)
     this.renderNetwork()
     this.busy = new Set()
+    this._onDownload = (e) => this.progress(e.detail || {})
+    window.addEventListener("offline:bible-download", this._onDownload)
     await this.refresh()
   }
 
   disconnect() {
     window.removeEventListener("online", this._onNet)
     window.removeEventListener("offline", this._onNet)
+    window.removeEventListener("offline:bible-download", this._onDownload)
+  }
+
+  // Any download's progress, whoever started it.
+  progress({ code, state, fraction }) {
+    const row = this.rowTargets.find((r) => r.dataset.code === code)
+    if (!row) return
+    const bar = row.querySelector("[data-role='bar']")
+    if (state === "progress") {
+      if (!this.busy.has(code)) { this.busy.add(code); this.renderRow(row) }
+      bar.hidden = false
+      bar.value = Math.max(2, Math.round((fraction || 0) * 100))
+    } else {
+      this.busy.delete(code)
+      bar.hidden = true
+      this.refresh()
+    }
   }
 
   async refresh() {
@@ -34,6 +56,7 @@ export default class extends Controller {
       this.manifest = await storedManifest()
     }
     this.downloaded = await downloadedBibles()
+    this.rowTargets.forEach((row) => { if (bibleDownloading(row.dataset.code)) this.busy.add(row.dataset.code) })
     this.rowTargets.forEach((row) => this.renderRow(row))
     this.renderStorage()
   }
@@ -97,8 +120,9 @@ export default class extends Controller {
     const bar = row.querySelector("[data-role='bar']")
     bar.hidden = false
     bar.value = 2
+    if (code === AUTO_BIBLE_CODE) setMeta(OPT_OUT_KEY, false).catch(() => {})
     try {
-      await downloadBible(summary, { onProgress: (f) => { bar.value = Math.round(f * 100) } })
+      await downloadBible(summary)
       requestPersistence()
       this.savePages()
       if (this.signedInValue) refreshHighlights().catch(() => {})
@@ -113,6 +137,8 @@ export default class extends Controller {
 
   async remove(event) {
     const row = event.currentTarget.closest("[data-code]")
+    // Removed on purpose: don't download it again by itself.
+    if (row.dataset.code === AUTO_BIBLE_CODE) await setMeta(OPT_OUT_KEY, true).catch(() => {})
     await removeBible(row.dataset.code).catch(() => {})
     await this.refresh()
   }

@@ -145,10 +145,17 @@ function applyPlanRefs() {
   if (rest.length) window.dispatchEvent(new CustomEvent("offline:toast", { detail: { message: `Also today: ${rest.join(", ")}` } }))
 }
 
+// Resolves once this page load has checked who the offline data belongs to
+// (and wiped another reader's saved pages) — warm.js waits for it before
+// asking the worker to save pages, so they aren't wiped straight after.
+let sessionReady = Promise.resolve()
+export const sessionSynced = () => sessionReady
+
 let started = false
 function start() {
   applyPlanRefs()
-  syncSession().then(refreshIfStale).then(syncNow).catch(() => {})
+  sessionReady = syncSession().catch(() => {})
+  sessionReady.then(refreshIfStale).then(syncNow).catch(() => {})
   if (started) return
   started = true
   window.addEventListener("online", () => { syncNow().catch(() => {}); refreshIfStale().catch(() => {}) })

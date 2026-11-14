@@ -71,6 +71,26 @@ module OfflineTestHelper
     end
   end
 
+  # The service worker has finished saving the app's core pages (the
+  # "warm" run, lib/offline/warm.js) — so a test that then kills the network
+  # doesn't leave those requests hanging.
+  def wait_for_warm_up(timeout: 30)
+    Timeout.timeout(timeout) do
+      sleep 0.2 until page.evaluate_async_script(<<~JS)
+        const done = arguments[0]
+        const q = indexedDB.open("bibliorata-offline")
+        q.onupgradeneeded = () => q.transaction.abort()
+        q.onsuccess = () => {
+          try {
+            const r = q.result.transaction("meta").objectStore("meta").get("warmedAt")
+            r.onsuccess = () => done(!!r.result); r.onerror = () => done(false)
+          } catch (e) { done(false) }
+        }
+        q.onerror = () => done(false)
+      JS
+    end
+  end
+
   def download_bible(code)
     within(".ui-offline-row[data-code='#{code}']") do
       assert_no_text "Checking"

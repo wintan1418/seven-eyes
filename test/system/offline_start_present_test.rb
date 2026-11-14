@@ -139,6 +139,7 @@ class OfflineStartPresentTest < ApplicationSystemTestCase
     wait_for_service_worker
     assert_selector ".hm-present", text: /Quick Present is ready offline/i, wait: 40
     assert_selector ".hm-study.is-offline-ready", text: "Sunday", wait: 40
+    wait_for_warm_up # the app's own pages, saved in the background too
     page.save_screenshot(SHOTS.join("online_home_studies_available_offline.png").to_s)
   end
 
