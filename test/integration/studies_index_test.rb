@@ -18,34 +18,51 @@ class StudiesIndexTest < ActionDispatch::IntegrationTest
     get root_path
     assert_response :success
     assert_select ".hm-page"
-    assert_select ".hm-hello h1", text: /\AGood (morning|afternoon|evening)/
+    assert_select ".hm-root[data-daypart]"
+    assert_select ".hm-today-hello", text: /\AGood (morning|afternoon|evening)/
     assert_select "form.hm-search[action=?][method=get] input[name=q]", search_path
-    assert_select ".hm-hello form", count: 1
-    assert_select ".hm-verse"
+    assert_select "form.hm-search", count: 1
+    assert_select ".hm-today"
+    assert_select ".hm-today .hm-begin[href=?]", today_begin_path
     assert_select ".hm-actions .hm-present[data-action='quick-present#open']"
     assert_select ".hm-actions [data-quick-present-target=status]"
     assert_select ".hm-join", count: 0
+    assert_select ".il-heading-title", text: /Continue/
   end
 
-  test "an active plan shows its ring, today's passages, one tap to start, and the streak" do
+  test "?at= stands in for the clock outside production: dawn, midday, evening" do
+    sign_in_as users(:one)
+    { "06:30" => [ "dawn", "Good morning" ], "13:00" => [ "day", "Good afternoon" ], "20:15" => [ "evening", "Good evening" ] }.each do |at, (part, hello)|
+      get root_path(at:)
+      assert_select ".hm-root[data-daypart=?]", part
+      assert_select ".hm-today-hello", text: /\A#{hello}/
+      assert_select "[data-today-hero-fixed-value=true]"
+    end
+  end
+
+  test "an active plan shows its ring and today's passages in the Continue rail" do
     user = users(:one)
     plan = user.reading_plans.create!(name: "John in 21 days", start_date: Date.current - 2)
     (1..4).each { |n| plan.plan_days.create!(day_number: n, refs: "John #{n}") }
     plan.plan_days.where(day_number: [ 1, 2 ]).each { |d| PlanCompletion.create!(plan_day: d) }
     sign_in_as user
     get root_path
-    assert_select ".hm-plan .hm-plan-ring[aria-label=?]", "2 of 4 days read"
-    assert_select ".hm-plan .hm-plan-refs", text: /John 3/
-    assert_select ".hm-plan a[href=?]", open_today_reading_plan_path(plan), text: /Start today/
-    # Today isn't read yet, but yesterday and the day before were.
-    assert_select ".hm-streak", text: /2\s+days/
+    assert_select ".hm-rail .hm-plan[href=?]", open_today_reading_plan_path(plan) do
+      assert_select ".hm-plan-ring[aria-label=?]", "2 of 4 days read"
+      assert_select ".hm-rail-meta", text: /John 3/
+      assert_select ".hm-rail-foot", text: /2-day plan streak/
+    end
   end
 
-  test "no plan: an invitation to make one, and no streak" do
-    sign_in_as users(:one)
+  test "no plan: the For you card offers one, started in one tap" do
+    Book.create!(osis_code: "John", name: "John", testament: :new, position: 43, chapter_count: 21)
+    user = users(:one)
+    sign_in_as user
     get root_path
-    assert_select ".hm-plan.is-empty a[href=?]", new_reading_plan_path
-    assert_select ".hm-streak", count: 0
+    assert_select ".hm-rail .hm-plan", count: 0
+    assert_select ".hm-foryou form.hm-fy-card.is-plan[action=?]", reading_plans_path do
+      assert_select "input[name='reading_plan[template]'][value=book]"
+    end
   end
 
   test "inside the app a signed-out Home tab is the Bible-first home, not the landing page" do
@@ -53,17 +70,20 @@ class StudiesIndexTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".ps-landing", count: 0
     assert_select ".hm-root.is-guest" do
-      assert_select ".hm-verse"
+      assert_select ".hm-today .hm-begin[href=?]", today_begin_path
       assert_select ".hm-resume[href=?]", read_path, text: /Start reading.*John 3/m
       assert_select ".hm-join a[href=?]", new_registration_path
       assert_select ".hm-join a[href=?]", new_session_path
       assert_select ".hm-actions a[href=?]", search_path
       assert_select ".hm-present", count: 0 # Quick Present needs an account
       assert_select ".hm-studies", count: 0
-      assert_select ".hm-plan", count: 0
-      assert_select ".hm-streak", count: 0
+      assert_select ".hm-rail .hm-plan", count: 0
+      assert_select ".hm-foryou", count: 0
+      assert_select ".hm-sunday", count: 0
+      assert_select ".hm-streak[hidden]"
+      assert_select ".hm-done-keep a[href=?]", new_registration_path # keep your streak
     end
-    assert_select ".hm-hello h1", text: /\AGood (morning|afternoon|evening)\.\z/
+    assert_select ".hm-today-hello", text: /\AGood (morning|afternoon|evening)\.\z/
   end
 
   test "an app guest who has been reading picks up their last passage" do
@@ -72,6 +92,7 @@ class StudiesIndexTest < ActionDispatch::IntegrationTest
     study.panes.first.update!(reference: "Romans 8")
     get root_path, headers: ANDROID_APP
     assert_select ".hm-resume[href=?]", study_path(study), text: /Continue reading.*Romans 8/m
+    assert_select ".hm-resume progress.hm-bar[value='8'][max='16']"
   end
 
   test "website visitors still get the landing page" do
@@ -91,6 +112,25 @@ class StudiesIndexTest < ActionDispatch::IntegrationTest
     assert_equal few, many, "home queries grow with the number of studies (N+1)"
   end
 
+  test "the home stays lean with everything on: a plan, a streak, pastor mode and a long queue" do
+    Book.create!(osis_code: "John", name: "John", testament: :new, position: 43, chapter_count: 21)
+    user = users(:one)
+    plan = user.reading_plans.create!(name: "John", start_date: Date.current - 1)
+    (1..3).each { |n| plan.plan_days.create!(day_number: n, refs: "John #{n}") }
+    3.times { |n| user.daily_completions.create!(date: DailyWord.today_date - n) }
+    service = user.studies.create!(name: "Sunday", pane_count: 1, last_opened_at: Time.current)
+    service.panes.first.update!(reference: "John 3")
+    2.times { |n| service.setlist_items.create!(kind: :scripture, reference: "John #{n + 1}:1") }
+    sign_in_as user
+    get root_path
+    few = count_queries { get root_path }
+    8.times { |n| service.setlist_items.create!(kind: :song, title: "Song #{n}", body: "Words") }
+    6.times { |i| user.studies.create!(name: "T#{i}", pane_count: 1, last_opened_at: (i + 1).hours.ago).panes.first.update!(reference: "John #{i + 1}") }
+    many = count_queries { get root_path }
+    assert_equal few, many, "home queries grow with queue items or studies (N+1)"
+    assert_operator many, :<=, 40, "the home makes #{many} queries"
+  end
+
   test "the welcome shows the quick-open bar, illumined verse and canon stats" do
     get root_path
     assert_select "form.ps-quick-open input[name=?]", "reference"
@@ -103,7 +143,7 @@ class StudiesIndexTest < ActionDispatch::IntegrationTest
     users(:one).studies.create!(name: "Romans deep dive", pane_count: 2)
     get root_path
     assert_select ".hm-studies .hm-study .nm", text: "Romans deep dive"
-    assert_select ".hm-continue", text: /Continue reading/
+    assert_select ".hm-continue-block .hm-rail", text: /Continue reading|Start reading/
   end
 
   test "quick-open creates a guest study named after the passage with pane I preloaded" do

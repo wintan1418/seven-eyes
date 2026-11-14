@@ -10,6 +10,7 @@ import { isNetworkSlow, quickFetch } from "../lib/offline/network"
 import { owner } from "../lib/offline/page"
 import { splitReferences, mergeQueue, moveItem, queueKey, nextUp, serverKey } from "../lib/offline/setlist_state"
 import { startDrag } from "../lib/setlist_drag"
+import { onArrival } from "../lib/arrival"
 import { songSlides } from "../lib/song_sheet"
 import { richFor } from "../lib/slides/rich_slides"
 import { pageUrl } from "../lib/slides/deck_store"
@@ -88,6 +89,8 @@ export default class extends Controller {
     this._retryTimer = setInterval(() => { if (this._pending.size) this._kick({ force: true }) }, RETRY_EVERY_MS)
     this._tickTimer = setInterval(() => { if (this._pending.size) this._paintMarks() }, 1000)
     warmLocal()
+    // ?queue=1 (Home's This Sunday → Open service): arrive with the queue open.
+    onArrival("queue", () => { if (this.element.isConnected) this.open() })
   }
 
   disconnect() {

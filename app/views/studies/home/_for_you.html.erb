@@ -1,0 +1,32 @@
+<%# For you — two or three cards from what the reader has really been doing
+    (ForYou): a word of the faith tied to the book they're reading, the
+    cross-references out of their last chapter, a plan through that book.
+    A swipeable row on phones, a row of cards on laptops. locals: cards %>
+<section class="hm-foryou" aria-labelledby="hm-foryou-title">
+  <%= illuminated_heading("For you", id: "hm-foryou-title") %>
+  <div class="hm-rail is-foryou" tabindex="0" aria-label="For you — swipe for more">
+    <% cards.each do |card| %>
+      <% body = capture do %>
+        <span class="hm-fy-eyebrow"><%= card.eyebrow %></span>
+        <span class="hm-fy-title"><%= card.title %></span>
+        <span class="hm-fy-body"><%= card.body %></span>
+      <% end %>
+      <% if card.plan_params %>
+        <%= form_with url: reading_plans_path, method: :post, class: "hm-fy-card is-plan", data: { turbo: false } do %>
+          <% card.plan_params.each do |key, value| %>
+            <%= hidden_field_tag "reading_plan[#{key}]", value %>
+          <% end %>
+          <span class="hm-fy-icon" aria-hidden="true"><%= icon(:calendar) %></span>
+          <%= body %>
+          <button type="submit" class="hm-fy-cta"><%= card.cta %> <%= icon(:chevron_right) %></button>
+        <% end %>
+      <% else %>
+        <%= link_to card.href, class: "hm-fy-card is-#{card.kind}", data: { turbo_prefetch: false } do %>
+          <span class="hm-fy-icon" aria-hidden="true"><%= icon(card.kind == :term ? :word : :xref) %></span>
+          <%= body %>
+          <span class="hm-fy-cta"><%= card.cta %> <%= icon(:chevron_right) %></span>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+</section>

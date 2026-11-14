@@ -1,10 +1,9 @@
 <%# Your studies: compact rows (three on phones, then "Show all"); Quick Present lives under Present.
     locals: studies %>
 <section class="hm-studies" aria-labelledby="hm-studies-title">
-  <div class="hm-section-head">
-    <h2 id="hm-studies-title">Your studies</h2>
-    <button type="button" class="ui-btn is-sm is-quiet" data-action="new-study#open"><%= icon(:plus) %> New study</button>
-  </div>
+  <%= illuminated_heading("Your studies", id: "hm-studies-title",
+        aside: tag.button(safe_join([ icon(:plus), " New study" ]), type: "button", class: "il-heading-link",
+                          data: { action: "new-study#open" })) %>
   <% shown = studies.reject(&:quick_present?).first(9) %>
   <% if shown.any? %>
     <div class="hm-study-grid" data-controller="offline-studies reveal" data-reveal-class="is-expanded">

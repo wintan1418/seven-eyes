@@ -22,7 +22,7 @@
       </header>
     <% end %>
 
-    <blockquote class="dw-verse"><%= word.verse_text %></blockquote>
+    <blockquote class="dw-verse"><%= illuminated(word.verse_text) %></blockquote>
     <p class="dw-ref"><%= word.reference %> &middot; <%= word.translation_code %></p>
 
     <% if word.composed? %>

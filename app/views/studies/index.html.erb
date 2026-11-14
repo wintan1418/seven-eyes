@@ -1,37 +1,51 @@
 <% content_for :title, "Home · BiblioRata" %>
 <%# Home: signed in, and app guests (inside the apps a signed-out Home tab is
     this page without the personal parts; website visitors get the landing).
-    Top to bottom: greeting + search, the verse of the day over a painting,
-    Continue reading + today's plan, quick actions, the glossary slider, your
-    studies, a slim guide line and the footer. Styles: ui/home.css. %>
+    "The illuminated Bible": Today leads — the day's verse over a painting with
+    one button into the guided daily flow (/today/begin) — then everything a
+    swipe away: Continue, Words of the faith, For you, quick actions, studies.
+    Pastor mode puts This Sunday first. The page takes the hour's tint
+    (data-daypart: dawn / day / evening) over whatever theme the reader chose.
+    Styles: ui/home.css + ui/illuminated.css. %>
 <% guest = @guest %>
-<div class="ps-root hm-root<%= ' is-guest' if guest %>" data-controller="new-study">
+<div class="ps-root hm-root<%= ' is-guest' if guest %><%= ' has-sunday' if @sunday %>" data-controller="new-study"
+     data-daypart="<%= @daypart.key %>">
   <%= render "studies/app_bar", title: "Home" %>
   <%= render "studies/menu_sheet", studies: @studies, new_study_modal: !guest %>
 
-  <main class="hm-main">
+  <main class="hm-main" data-controller="parallax" data-parallax-target="scroller">
+    <div class="hm-glow" aria-hidden="true"></div>
+    <div class="hm-lead">
+      <% if @sunday %>
+        <%= render "studies/home/sunday", sunday: @sunday %>
+      <% end %>
+      <%= render "studies/home/today", word: @daily_word, art: @verse_art, guest:, status: @today_status,
+                 daypart: @daypart, fixed: @daypart_fixed %>
+    </div>
+
     <div class="hm-page">
-      <%= render "studies/home/hello", guest: %>
-
-      <div class="hm-top">
-        <%= render "studies/home/verse", word: @daily_word, art: @verse_art %>
-
-        <div class="hm-side">
-          <%= render "studies/home/resume", study: @resume, guest: %>
-          <% if guest %>
-            <%= render "studies/home/join" %>
-          <% else %>
-            <%= render "studies/home/plan", plan: @active_plan, progress: @plan_progress %>
-          <% end %>
-          <%= render "studies/home/actions", guest:, resume: @resume %>
-        </div>
+      <div class="hm-tools">
+        <%= form_with url: search_path, method: :get, class: "hm-search", role: "search" do %>
+          <%= icon(:search) %>
+          <%= search_field_tag :q, nil, class: "hm-search-input", autocomplete: "off", spellcheck: "false",
+                autocapitalize: "none", enterkeyhint: "search",
+                placeholder: "Search the Bible or open John 3:16", "aria-label": "Search the Bible or open a passage" %>
+        <% end %>
+        <%= render "studies/home/actions", guest:, resume: @resume %>
       </div>
+
+      <%= render "studies/home/continue", resume: @resume, guest:, plan: @active_plan, progress: @plan_progress,
+                 studies: @studies %>
 
       <% if @faith_term %>
         <div class="hm-block">
           <%= render "faith_terms/slider", terms: @faith_slides, roots: @faith_slide_roots, total: @faith_total,
-                     everywhere: true, eager_first: false %>
+                     everywhere: true, eager_first: false, title: "Words of the faith" %>
         </div>
+      <% end %>
+
+      <% if @for_you.present? %>
+        <%= render "studies/home/for_you", cards: @for_you %>
       <% end %>
 
       <% unless guest %>
@@ -43,6 +57,7 @@
       <% end %>
 
       <footer class="hm-foot ps-canon-stats">
+        <span class="hm-foot-mark" aria-hidden="true">✠</span>
         <span><%= @canon_stats[:translations] %> translations</span> &middot;
         <span><%= number_with_delimiter(@canon_stats[:verses]) %> verses</span> &middot;
         <span><%= number_with_delimiter(@canon_stats[:cross_references]) %> cross-references</span>

@@ -1,0 +1,107 @@
+<%# Continue — one swipeable row (scroll-snap) of where the reader left off:
+    a half-done Today flow (shown by today_hero from the device), the last
+    chapter (book tile + how far through the book), today's reading plan
+    (ring), and recent studies. App guests: their passage (or John 3) and an
+    invitation to keep their streak.
+    locals: resume (Study or nil), guest, plan, progress (ReadingPlan::Progress), studies %>
+<% pane = resume&.panes&.min_by(&:position) %>
+<% ref = pane&.reference.presence %>
+<% parsed = ref && ReferenceParser.call(ref) %>
+<% parsed = nil unless parsed&.valid? %>
+<% recent = Array(studies).reject { |s| s.quick_present? || s == resume }.first(3) %>
+<section class="hm-continue-block" aria-labelledby="hm-continue-title">
+  <%= illuminated_heading("Continue", id: "hm-continue-title") %>
+  <div class="hm-rail" tabindex="0" aria-label="Continue — swipe for more">
+    <%# Today, part-way through (today_hero reveals it from the device's copy). %>
+    <%= link_to today_begin_path, class: "hm-rail-card is-today", hidden: true,
+          data: { turbo_prefetch: false, controller: "today-resume" } do %>
+      <span class="hm-rail-mark is-today" aria-hidden="true"><%= icon(:prayer) %></span>
+      <span class="hm-rail-text">
+        <span class="hm-rail-eyebrow">Today</span>
+        <span class="hm-rail-title">Pick up where you paused</span>
+        <span class="hm-rail-meta" data-today-resume-target="meta"></span>
+      </span>
+      <progress class="hm-bar" max="6" value="0" data-today-resume-target="bar" aria-label="Today's steps"></progress>
+    <% end %>
+
+    <% if resume %>
+      <%= link_to study_path(resume), class: "hm-rail-card hm-resume",
+            data: { controller: "offline-studies", offline_studies_target: "study", action: "click->offline-studies#guard" } do %>
+        <span class="hm-rail-mark" aria-hidden="true"><%= home_book_mark(ref) || icon(:book) %></span>
+        <span class="hm-rail-text">
+          <span class="hm-rail-eyebrow">Continue reading</span>
+          <span class="hm-rail-title is-scripture"><%= ref || resume.name %></span>
+          <span class="hm-rail-meta">
+            <%= pane&.translation&.code || Translation.default&.code %> &middot;
+            <% if guest %>Pick up where you left off<% else %><%= home_ago(resume.last_opened_at || resume.updated_at) %><% end %>
+          </span>
+        </span>
+        <% if parsed&.chapter_count.to_i > 1 %>
+          <progress class="hm-bar" max="<%= parsed.chapter_count %>" value="<%= parsed.chapter %>"
+                    aria-label="Chapter <%= parsed.chapter %> of <%= parsed.chapter_count %>"></progress>
+          <span class="hm-rail-foot">Chapter <%= parsed.chapter %> of <%= parsed.chapter_count %></span>
+        <% end %>
+      <% end %>
+    <% else %>
+      <%= link_to read_path, class: "hm-rail-card hm-resume is-start", data: { turbo_prefetch: false } do %>
+        <span class="hm-rail-mark" aria-hidden="true">John</span>
+        <span class="hm-rail-text">
+          <span class="hm-rail-eyebrow">Start reading</span>
+          <span class="hm-rail-title is-scripture">John 3</span>
+          <span class="hm-rail-meta">A good place to begin</span>
+        </span>
+      <% end %>
+    <% end %>
+
+    <% if guest %>
+      <div class="hm-rail-card hm-join">
+        <span class="hm-rail-mark is-quiet" aria-hidden="true"><%= icon(:notes) %></span>
+        <span class="hm-rail-text">
+          <span class="hm-rail-eyebrow">Keep what you find</span>
+          <span class="hm-rail-title">Your streak, notes and plans on every device</span>
+        </span>
+        <span class="hm-join-foot">
+          <%= link_to "Create a free account", new_registration_path, class: "ui-btn is-sm is-accent" %>
+          <%= link_to "Sign in", new_session_path, class: "ui-btn is-sm is-quiet" %>
+        </span>
+      </div>
+    <% elsif plan && progress %>
+      <% today = progress.today %>
+      <%= link_to (today&.refs.present? && !today.completed? ? open_today_reading_plan_path(plan) : reading_plan_path(plan)),
+            class: "hm-rail-card hm-plan", data: { turbo_prefetch: false } do %>
+        <span class="hm-plan-ring" role="img" aria-label="<%= progress.done %> of <%= progress.total %> days read">
+          <%= home_progress_ring(progress.fraction, size: 52, stroke: 5) %>
+          <span class="hm-plan-pct"><b><%= progress.done %></b><small>/<%= progress.total %></small></span>
+        </span>
+        <span class="hm-rail-text">
+          <span class="hm-rail-eyebrow"><% if today %>Plan &middot; day <%= today.day_number %><% else %>Reading plan<% end %></span>
+          <span class="hm-rail-title"><%= plan.name %></span>
+          <span class="hm-rail-meta is-scripture">
+            <% if today&.refs.present? %>
+              <%= today.completed? ? "Read today ✓" : today.reference_list.join(" · ") %>
+            <% elsif plan.today_day < 1 %>
+              Begins <%= l(plan.start_date, format: "%-d %B") %>
+            <% else %>
+              Plan complete — well done
+            <% end %>
+          </span>
+        </span>
+        <% if progress.streak.positive? %>
+          <span class="hm-rail-foot"><%= icon(:flame) %> <%= progress.streak %>-day plan streak</span>
+        <% end %>
+      <% end %>
+    <% end %>
+
+    <% recent.each do |study| %>
+      <% refs = study.panes.sort_by(&:position).filter_map { |p| p.reference.presence } %>
+      <%= link_to study_path(study), class: "hm-rail-card hm-rail-study",
+            data: { controller: "offline-studies", offline_studies_target: "study", action: "click->offline-studies#guard" } do %>
+        <span class="hm-rail-text">
+          <span class="hm-rail-eyebrow">Study &middot; <%= home_ago(study.last_opened_at || study.updated_at) %></span>
+          <span class="hm-rail-title"><%= study.name %></span>
+          <span class="hm-rail-meta is-scripture"><%= refs.any? ? refs.first(3).join(" · ") : "No passage yet" %></span>
+        </span>
+      <% end %>
+    <% end %>
+  </div>
+</section>

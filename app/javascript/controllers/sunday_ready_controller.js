@@ -4,6 +4,7 @@ import { makeParser } from "../lib/offline/reference_parser"
 import { passageVerses } from "../lib/offline/pane_renderer"
 import { precachePages } from "../lib/offline/page"
 import { refreshSongs } from "../lib/song_library"
+import { onArrival } from "../lib/arrival"
 
 // "Get ready for Sunday" (preach queue drawer, and the Preach section of the
 // More sheet via [data-sunday-prepare]): makes this study preachable with no
@@ -25,6 +26,13 @@ export default class extends Controller {
     }
     document.addEventListener("click", this._onClick)
     this.showLastReady()
+    // ?ready=1 (Home's This Sunday → Get ready for Sunday): open the queue
+    // and run the checklist straight away.
+    onArrival("ready", () => {
+      if (!this.element.isConnected) return
+      window.dispatchEvent(new CustomEvent("setlist:open"))
+      this.prepare()
+    })
   }
 
   disconnect() {

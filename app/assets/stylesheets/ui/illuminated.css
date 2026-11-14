@@ -1,0 +1,153 @@
+/* ==========================================================================
+   The illuminated Bible — BiblioRata's ornament layer (Home, Today, landing).
+   Gold leaf (layered gradients, never flat "cartoon" yellow), illuminated
+   initials, manuscript rules and headings set like a Bible's chapter heads.
+   The time of day is a tint, not a theme: [data-daypart] on a root sets a few
+   --dp-* colours that glows and veils mix in over the reader's own theme
+   (Vellum / Paper / Candlelight / Auto), which always wins for surfaces/text.
+   ========================================================================== */
+
+:root {
+  /* Gold leaf on dark grounds (paintings, Candlelight). */
+  --il-leaf: linear-gradient(158deg, #8a6420 0%, #d9b45a 22%, #fbeab0 38%, #c99b3c 54%, #8c661f 72%, #e2c171 90%, #a57b2a 100%);
+  /* Gold leaf on light grounds: deeper, so the letter keeps its weight on parchment. */
+  --il-leaf-ink: linear-gradient(158deg, #5c3f0c 0%, #9a7121 28%, #c99b3c 44%, #7d5814 62%, #5a3d0b 80%, #a27a26 100%);
+  --il-gold: #c9a14a;
+  --il-gold-soft: rgba(201, 161, 74, 0.55);
+  --il-gold-faint: rgba(201, 161, 74, 0.22);
+  --il-rubric: var(--ui-accent);
+}
+[data-theme="candlelight"] { --il-leaf-ink: var(--il-leaf); --il-gold-soft: rgba(214, 176, 92, 0.6); }
+@media (prefers-color-scheme: dark) { [data-theme="auto"] { --il-leaf-ink: var(--il-leaf); --il-gold-soft: rgba(214, 176, 92, 0.6); } }
+
+/* Time of day ----------------------------------------------------------------
+   dawn: rose and first gold · day: clear parchment light · evening: candle amber */
+[data-daypart="dawn"] {
+  --dp-glow-a: rgba(236, 150, 120, 0.30);
+  --dp-glow-b: rgba(244, 196, 120, 0.26);
+  --dp-veil-top: rgba(70, 28, 30, 0.30);
+  --dp-veil-tint: rgba(190, 96, 70, 0.14);
+  --dp-light: rgba(255, 176, 120, 0.42);
+  --dp-light-shape: 80% 50% at 95% 0%;
+  --dp-ink: #FFE9D6;
+}
+[data-daypart="day"] {
+  --dp-glow-a: rgba(255, 236, 186, 0.42);
+  --dp-glow-b: rgba(232, 214, 168, 0.24);
+  --dp-veil-top: rgba(28, 22, 12, 0.34);
+  --dp-veil-tint: rgba(120, 96, 50, 0.04);
+  --dp-light: rgba(255, 246, 220, 0.26);
+  --dp-light-shape: 90% 55% at 50% 0%;
+  --dp-ink: #FFF6E2;
+}
+[data-daypart="evening"] {
+  --dp-glow-a: rgba(232, 150, 60, 0.26);
+  --dp-glow-b: rgba(150, 70, 30, 0.20);
+  --dp-veil-top: rgba(16, 10, 6, 0.46);
+  --dp-veil-tint: rgba(170, 90, 20, 0.12);
+  --dp-light: rgba(255, 150, 50, 0.24);
+  --dp-light-shape: 60% 45% at 8% 100%;
+  --dp-ink: #FFE7C2;
+}
+/* On a dark theme the page glow is a whisper; the painting keeps its mood. */
+[data-theme="candlelight"] [data-daypart="dawn"] { --dp-glow-a: rgba(220, 120, 100, 0.12); --dp-glow-b: rgba(200, 150, 80, 0.08); }
+[data-theme="candlelight"] [data-daypart="day"] { --dp-glow-a: rgba(230, 200, 140, 0.08); --dp-glow-b: rgba(200, 170, 110, 0.05); }
+[data-theme="candlelight"] [data-daypart="evening"] { --dp-glow-a: rgba(232, 150, 60, 0.14); --dp-glow-b: rgba(150, 70, 30, 0.10); }
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] [data-daypart="dawn"] { --dp-glow-a: rgba(220, 120, 100, 0.12); --dp-glow-b: rgba(200, 150, 80, 0.08); }
+  [data-theme="auto"] [data-daypart="day"] { --dp-glow-a: rgba(230, 200, 140, 0.08); --dp-glow-b: rgba(200, 170, 110, 0.05); }
+  [data-theme="auto"] [data-daypart="evening"] { --dp-glow-a: rgba(232, 150, 60, 0.14); --dp-glow-b: rgba(150, 70, 30, 0.10); }
+}
+[data-theme="paper"] [data-daypart] { --dp-glow-b: transparent; }
+
+/* Illuminated initial ---------------------------------------------------------- */
+.il-text { display: block; }
+/* Raised initial: a gilded capital standing on the baseline. */
+.il-initial {
+  font: 600 1.62em/0.6 "Cinzel", "EB Garamond", Georgia, serif; margin-right: 0.015em; padding: 0.06em 0.02em 0;
+  background: var(--il-leaf-ink); -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+}
+/* Drop cap: two lines deep, for longer prose. */
+.il-text.is-drop .il-initial {
+  float: left; margin: 0.07em 0.06em -0.1em 0; padding: 0 0.02em;
+  font-size: 3.05em; line-height: 0.82;
+}
+/* Over a painting (or any dark ground): bright leaf and a soft halo. */
+.il-on-dark .il-initial, .hm-today .il-initial, .tf-root .il-initial {
+  background-image: var(--il-leaf);
+  filter: drop-shadow(0 1px 0 rgba(60, 36, 4, 0.55)) drop-shadow(0 0 14px rgba(255, 210, 120, 0.22));
+}
+@media (forced-colors: active) {
+  .il-initial { color: CanvasText; -webkit-text-fill-color: CanvasText; background: none; }
+}
+
+/* Chapter heading: ❧ SMALL CAPS ——————— link ------------------------------------ */
+.il-heading { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; min-width: 0; }
+.il-heading-title {
+  display: inline-flex; align-items: center; gap: 9px; margin: 0; flex: 0 0 auto;
+  font: 600 13.5px/1.2 "Cinzel", "EB Garamond", Georgia, serif; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ui-fg);
+}
+.il-fleuron { /* a small gilt lozenge between two dots, like a rubricator's mark */
+  position: relative; width: 7px; height: 7px; margin: 0 7px; transform: rotate(45deg);
+  background: var(--il-leaf-ink); box-shadow: 0 0 0 1px rgba(201, 161, 74, 0.25);
+}
+.il-rule {
+  flex: 1 1 auto; height: 1px; min-width: 24px;
+  background: linear-gradient(90deg, var(--il-gold-soft), var(--il-gold-faint) 60%, transparent);
+}
+.il-heading-link {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 2px;
+  border: 0; background: none; cursor: pointer; text-decoration: none;
+  font: 600 13.5px var(--ui-font); color: var(--ui-accent);
+}
+.il-heading-link svg { width: 16px; height: 16px; }
+.il-heading-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.il-heading-link:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: 6px; }
+
+/* A thin manuscript rule with a lozenge at its centre. */
+.il-divider { display: flex; align-items: center; gap: 10px; color: var(--il-gold); }
+.il-divider::before, .il-divider::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--il-gold-soft)); }
+.il-divider::after { transform: scaleX(-1); }
+
+/* Gold-leaf progress bars (native <progress>, so it reads as a progress bar). */
+progress.hm-bar, progress.il-bar {
+  -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 4px; border: 0; border-radius: 99px;
+  background: var(--ui-border); overflow: hidden; color: var(--il-gold);
+}
+progress.hm-bar::-webkit-progress-bar { background: var(--ui-border); border-radius: 99px; }
+progress.hm-bar::-webkit-progress-value { background: var(--il-leaf-ink); border-radius: 99px; }
+progress.hm-bar::-moz-progress-bar { background: var(--il-leaf-ink); border-radius: 99px; }
+
+/* More: a switch row (Pastor mode). A plain form button, so it works with no JS. */
+.ui-switch-row {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; width: 100%;
+  min-height: 60px; padding: 10px 12px; border: 0; border-radius: 14px; background: none; color: var(--ui-fg);
+  text-align: left; cursor: pointer; font-family: var(--ui-font);
+}
+.ui-switch-row:hover { background: var(--ui-surface); }
+.ui-switch-row:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+.ui-switch-icon { display: inline-flex; color: var(--ui-accent); }
+.ui-switch-icon svg { width: 20px; height: 20px; }
+.ui-switch-text { display: grid; gap: 2px; }
+.ui-switch-text b { font: 600 15px var(--ui-font); }
+.ui-switch-text small { font: 400 13px/1.4 var(--ui-font); color: var(--ui-fg-muted); }
+.ui-switch {
+  position: relative; width: 46px; height: 28px; border-radius: 99px; background: var(--ui-border-strong); transition: background 0.2s ease;
+}
+.ui-switch > span {
+  position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 0.2s ease;
+}
+.ui-switch.is-on { background: var(--ui-accent); }
+.ui-switch.is-on > span { transform: translateX(18px); }
+@media (prefers-reduced-motion: reduce) { .ui-switch, .ui-switch > span { transition: none; } }
+
+/* The landing page's verse of the day (and /today): a gilt band on the card. */
+.dw-card { position: relative; }
+.ld-vod .dw-card::before {
+  content: ""; position: absolute; left: 22px; right: 22px; top: 0; height: 2px; border-radius: 2px;
+  background: var(--il-leaf-ink); opacity: 0.8;
+}
+.dw-verse .il-initial { font-size: 1.55em; }

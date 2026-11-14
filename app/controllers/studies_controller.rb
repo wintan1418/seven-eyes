@@ -28,12 +28,15 @@ class StudiesController < ApplicationController
   def index
     @daily_word = DailyWord.today
     if authenticated?
-      @studies = current_user.studies.recent.includes(panes: :translation).limit(HOME_STUDIES)
+      @studies = current_user.studies.recent.includes(panes: :translation).limit(HOME_STUDIES).to_a
       @resume = @studies.find { |s| !s.quick_present? }
       @active_plan = current_user.reading_plans.recent.first
       @plan_progress = @active_plan&.progress
       @show_guide = current_user.guide_dismissed_at.blank?
+      @today_status = DailyCompletion.status_for(current_user)
+      @sunday = ThisSunday.for(current_user) if current_user.pastor_mode?
       set_faith_term_of_the_day
+      @for_you = ForYou.call(studies: @studies, terms: @faith_visible_terms, active_plan: @active_plan, skip_term: @faith_term)
     elsif hotwire_native_app?
       # Inside the apps Home is a tab, not a sales pitch: the same Bible-first
       # home without the personal parts, and a gentle invitation to sign up.
@@ -51,6 +54,7 @@ class StudiesController < ApplicationController
     end
     @canon_stats = canon_stats
     @verse_art = FaithArt.for_passage(@daily_word&.osis_code || "Ps", DailyWord.today_date)
+    @daypart = home_daypart
   end
 
   def show
@@ -285,6 +289,18 @@ class StudiesController < ApplicationController
     end
   end
 
+  # Home's time-of-day tint (Daypart). Outside production ?at=HH:MM stands in
+  # for the clock, for screenshots and design review.
+  def home_daypart
+    now = Time.current
+    if !Rails.env.production? && params[:at].to_s.match?(/\A\d{1,2}:\d{2}\z/)
+      h, m = params[:at].split(":").map(&:to_i)
+      now = now.in_time_zone(DailyWord::TIME_ZONE).change(hour: h % 24, min: m % 60)
+      @daypart_fixed = true
+    end
+    Daypart.at(now)
+  end
+
   # An app guest's Bible-tab study (ReadController keeps it in the session).
   def guest_home_study
     Study.includes(panes: :translation).find_by(id: session[:guest_study_id], user_id: nil) if session[:guest_study_id]
@@ -306,7 +322,7 @@ class StudiesController < ApplicationController
   FAITH_SLIDES = 12
 
   def set_faith_slides
-    terms = FaithTerm.visible_to(current_user).in_order.to_a
+    terms = @faith_visible_terms = FaithTerm.visible_to(current_user).in_order.to_a
     start = terms.index(@faith_term) || 0
     @faith_slides = terms.rotate(start).first(FAITH_SLIDES)
     strongs = @faith_slides.filter_map { |t| t.root_strongs.first }

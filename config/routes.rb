@@ -67,6 +67,12 @@ Rails.application.routes.draw do
 
   # Word for Today: today's passage + AI reflection, past days, share JSON.
   get "/today", to: "daily_words#show", as: :today
+  # "Today" on Home: the guided daily flow (verse → passage → reflection →
+  # word of the faith → prayer → Amen), and marking a day done (idempotent;
+  # replayed from the offline outbox).
+  get "/today/begin", to: "today_flows#show", as: :today_begin
+  put "/today/:date/done", to: "today_flows#complete", as: :today_done,
+                           constraints: { date: /\d{4}-\d{2}-\d{2}/ }, defaults: { format: :json }
   constraints date: /\d{4}-\d{2}-\d{2}/ do
     get "/today/:date",        to: "daily_words#show",   as: :daily_word
     get "/today/:date/card",   to: "daily_words#card",   as: :daily_word_card, defaults: { format: :json }
