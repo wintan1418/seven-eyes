@@ -16,6 +16,16 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   Capybara.app = NetworkUnplug.new(Capybara.app) unless Capybara.app.is_a?(NetworkUnplug)
   teardown { NetworkUnplug.unplugged = false; NetworkUnplug.hanging = false }
 
+  # Capybara resets the session (and waits up to 60 s for the server's open
+  # requests) before `teardown` blocks run: let hanging requests go first, or a
+  # "data on but dead" test can leave more of them than that wait allows.
+  def before_teardown
+    super
+  ensure
+    NetworkUnplug.unplugged = false
+    NetworkUnplug.hanging = false
+  end
+
   # Every test starts on a clean device. The app saves pages and downloads the
   # KJV by itself on any visit (lib/offline/warm.js, auto_bible.js), so one
   # test's Bible (another test's verses) mustn't leak into the next.
