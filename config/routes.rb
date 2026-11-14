@@ -105,6 +105,7 @@ Rails.application.routes.draw do
   # the files that let bibliorata.com links open in the apps.
   get "/read", to: "read#show", as: :read
   get "/more", to: "more#show", as: :more
+  get "/search", to: "search#show", as: :search
   get "configurations/ios_v1.json",     to: "configurations#ios_v1",     defaults: { format: :json }
   get "configurations/android_v1.json", to: "configurations#android_v1", defaults: { format: :json }
   get ".well-known/assetlinks.json", to: "well_known#assetlinks", defaults: { format: :json }

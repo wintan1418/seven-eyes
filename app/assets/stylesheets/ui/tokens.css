@@ -174,7 +174,7 @@
 }
 
 /* Text size steps (font-size controller: 0–4 on .ps-root[data-font-size]). */
-.ps-root[data-font-size="0"] { --reader-size: 19px; }
+.ps-root[data-font-size="0"] { --reader-size: 18px; } /* phones: a Bible app's reading size */
 .ps-root[data-font-size="1"] { --reader-size: 22px; }
 .ps-root[data-font-size="2"] { --reader-size: 26px; }
 .ps-root[data-font-size="3"] { --reader-size: 32px; }

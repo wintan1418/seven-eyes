@@ -111,15 +111,16 @@ class OfflineStartPresentTest < ApplicationSystemTestCase
     find(".ui-appbar [data-action~='search#open']").click
     within(".ps-search-panel") do
       find("input[name='q']").send_keys("begotten son", :enter)
-      assert_selector ".ps-ai-resultcount", text: /Offline search · 1 verse in KJV/i
-      assert_selector ".ps-xref .ps-xref-ref", text: "John 3:16"
+      assert_selector ".sr-summary", text: /Offline search · showing 1 verse containing begotten and son · KJV/i
+      assert_selector ".sr-hit .sr-ref", text: "John 3:16"
       assert_text "For God so loved the world"
     end
     sleep 0.5 # the drawer's slide-in, for the picture
     page.save_screenshot(SHOTS.join("offline_bible_search.png").to_s)
-    within(".ps-search-panel") { find(".ps-xref .ps-xref-load", text: "▸ I").click }
-    find(".ps-search-panel button.close").click
-    assert_selector ".ps-pane .ps-verse[data-chapter='3'][data-verse-num='16']", wait: 3
+    # A result opens its whole chapter on the device, the verse marked; the sheet closes.
+    within(".ps-search-panel") { find(".sr-hit .sr-open", text: "John 3:16").click }
+    assert_no_selector ".ps-search-drawer.is-open"
+    assert_selector ".ps-pane .ps-verse.is-focus[data-chapter='3'][data-verse-num='16']", wait: 3
   end
 
   private

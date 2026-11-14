@@ -102,6 +102,23 @@ module ScriptureHelper
     pair && "#{pair[0].name} #{pair[1]}"
   end
 
+  # "▸ I" — load a reference into a pane. With JavaScript the verse-focus
+  # controller takes the form over (data-open-verse) and opens the whole
+  # chapter at the verse, marked; while preaching (and without JS) the form
+  # loads the reference itself, as it always did.
+  def open_in_pane_button(study, pane, reference, label: nil, translation: nil, css: "ps-xref-load", &block)
+    attrs = { reference: reference }
+    attrs[:translation_id] = translation.id if translation
+    options = { method: :patch, params: { pane: attrs }, class: css,
+                title: "Open #{reference}#{" in pane #{pane_numeral(pane.position)}" if pane.study.pane_count > 1}",
+                form: { data: { turbo_frame: pane.frame_id, open_verse: reference }, class: "contents" } }
+    if block
+      button_to(study_pane_path(study, pane), options) { capture(&block) }
+    else
+      button_to(label || "▸ #{pane_numeral(pane.position)}", study_pane_path(study, pane), options)
+    end
+  end
+
   # One-click fix inside a pane: re-render this pane's frame with another
   # translation and/or reference ("Show in KJV", "Show John 3:21").
   def pane_switch_button(pane, label, translation: nil, reference: nil)

@@ -5,6 +5,7 @@
     mobile apps skip the web tour too: it points at web buttons the native
     bars replace. %>
 <% output_window = params[:output] == "1" || params[:stage] == "1" %>
+<% content_for :title, "Bible · BiblioRata" %>
 <div class="ps-root rd-app<%= ' is-output' if output_window %><%= ' is-compare' if @study.pane_count > 1 %>"
      data-controller="ai-search search xref commentary lexicon rabbi <%= 'tour ' unless output_window || hotwire_native_app? %>shortcuts auth-gate new-study font-size presentation preview diff interlinear live setlist song-bank remote reader-header verse-lines<%= " console" unless output_window %>"
      data-live-url-value="<%= study_live_path(@study) %>"
@@ -25,11 +26,11 @@
 
   <div class="ps-shell">
     <main class="ps-workspace <%= workspace_cols_class(@study.pane_count) %>"
-          data-controller="sync-scroll verse-select chapter-swipe"
+          data-controller="sync-scroll verse-select chapter-swipe verse-focus"
           data-action="click->verse-select#click touchstart->chapter-swipe#start:passive touchend->chapter-swipe#end"
           data-sync-scroll-enabled-value="<%= @study.sync_scroll %>">
       <% @study.panes.each do |pane| %>
-        <%= render "panes/pane", pane: pane %>
+        <%= render "panes/pane", pane: pane, focus: (@focus_verses if pane.position.zero? && !output_window) %>
       <% end %>
     </main>
   </div>

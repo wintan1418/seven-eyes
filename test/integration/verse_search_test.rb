@@ -27,6 +27,15 @@ class VerseSearchTest < ActionDispatch::IntegrationTest
   test "no matches renders a friendly message" do
     get search_study_path(@study, q: "zzqxqwx", translation_id: @kjv.id)
     assert_response :success
-    assert_includes response.body, "No matches"
+    assert_includes response.body, "No verses containing zzqxqwx"
+  end
+
+  test "results mark the matched words and open the whole chapter at the verse" do
+    get search_study_path(@study, q: "love enemies", translation_id: @kjv.id)
+    assert_select ".sr-summary", text: /Showing 1 verse containing love and enemies/
+    assert_select ".sr-hit .sr-text mark", text: "Love"
+    assert_select ".sr-hit .sr-text mark", text: "enemies"
+    # The verse-focus controller takes these forms over (whole chapter, verse marked).
+    assert_select "form[data-open-verse='Matthew 5:44'][data-turbo-frame=?]", @study.panes.first.frame_id
   end
 end

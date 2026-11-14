@@ -1,27 +1,33 @@
 import { Controller } from "@hotwired/stimulus"
 import { downloadedBibles, allBookTexts, storedManifest } from "../lib/offline/store"
-import { searchVerses } from "../lib/offline/keyword_search"
 import { isNetworkSlow, markNetworkSlow } from "../lib/offline/network"
+import { rankVerses, wordsLabel } from "../lib/scripture_search"
+import { openInPane } from "../lib/open_verse"
 
 const ROMAN = [ "I", "II", "III", "IV" ]
 const SERVER_WAIT_MS = 3000 // then the downloaded Bible answers instead
-const LIMIT = 50
+const LIMIT = 250
 
 // Opens/closes the full-text "Search the Scriptures" slide-over. The form inside
 // posts to the search endpoint and renders into the verse_search_results frame.
 // With no internet (or a dead one) and a Bible downloaded, the search runs on
 // the device instead (lib/offline/keyword_search) and renders the same result
-// cards, labelled "Offline search"; loading a result goes through the pane's
-// own form, which the downloaded Bible answers.
+// cards (same ranking: lib/scripture_search), labelled "Offline search".
+// Tapping a result opens its whole chapter at the verse (lib/open_verse),
+// through the pane's own form, which the downloaded Bible answers.
 export default class extends Controller {
   static targets = ["drawer", "input", "results"]
 
   connect() {
     this._onKey = (e) => { if (e.key === "Escape") this.close() }
+    // A result opened the chapter: show it (the sheet covers a phone).
+    this._onOpened = () => { if (this.drawerTarget.classList.contains("is-open")) this.close() }
+    window.addEventListener("verse:opened", this._onOpened)
   }
 
   disconnect() {
     clearTimeout(this._fallback)
+    window.removeEventListener("verse:opened", this._onOpened)
   }
 
   open() {
@@ -65,57 +71,92 @@ export default class extends Controller {
     const bible = downloaded.find((b) => String(b.id) === String(translationId)) || downloaded[0]
     this.render([ hint(`Offline search · searching the ${bible.code} on this device…`) ])
     const [ records, manifest ] = await Promise.all([ allBookTexts(bible.code), storedManifest() ])
-    const names = new Map((manifest?.canon || []).map((b) => [ b.osis, b.name ]))
-    const hits = searchVerses(records, query, { limit: LIMIT }) // ranked: every word first, rarer words weigh more
+    const canon = manifest?.canon || []
+    const names = new Map(canon.map((b) => [ b.osis, b.name ]))
+    const order = new Map(canon.map((b, i) => [ b.osis, i ]))
+    const { words, hits, allCount, anyCount } = rankVerses(records, query, { order, limit: LIMIT })
+    const label = wordsLabel(words) || truncate(query, 50)
 
     if (!hits.length) {
-      this.render([ hint(`Offline search · no matches for “${truncate(query, 60)}” in the ${bible.code} on this device. Try fewer or different words.`) ])
+      this.render([ hint(`Offline search · no verses containing ${label} in the ${bible.code} on this device. Try fewer or different words.`) ])
       return
     }
     const count = document.createElement("div")
-    count.className = "ps-ai-resultcount"
-    const other = String(bible.id) !== String(translationId) ? ` (the Bible on this device)` : ""
-    count.textContent = `Offline search · ${hits.length}${hits.length === LIMIT ? "+" : ""} verse${hits.length === 1 ? "" : "s"} in ${bible.code}${other} · “${truncate(query, 50)}”`
-    this.render([ count, ...hits.map((h) => this.card(h, names.get(h.osis) || h.osis, bible)) ])
+    count.className = "ps-ai-resultcount sr-summary"
+    const other = String(bible.id) !== String(translationId) ? " (the Bible on this device)" : ""
+    count.textContent = allCount
+      ? `Offline search · showing ${allCount} verse${allCount === 1 ? "" : "s"} containing ${label} · ${bible.code}${other}`
+      : `Offline search · no verse has ${label} together · ${anyCount} with some of the words · ${bible.code}${other}`
+    const list = document.createElement("ol")
+    list.className = "sr-list"
+    hits.forEach((h, i) => {
+      if (h.tier === "partial" && words.length > 1 && (i === 0 || hits[i - 1].tier !== "partial")) {
+        const divider = document.createElement("li")
+        divider.className = "sr-divider"
+        divider.textContent = "With some of the words"
+        list.appendChild(divider)
+      }
+      list.appendChild(this.card(h, names.get(h.osis) || h.osis, bible))
+    })
+    this.render([ count, list ])
   }
 
   card(hit, bookName, bible) {
     const ref = `${bookName} ${hit.chapter}:${hit.num}`
-    const card = document.createElement("div")
-    card.className = "ps-xref"
-    card.dataset.offlineResult = ""
-    const head = document.createElement("div")
-    head.className = "ps-xref-head"
-    const title = document.createElement("div")
-    title.className = "ps-xref-ref"
+    const item = document.createElement("li")
+    item.className = "sr-hit"
+    item.dataset.offlineResult = ""
+    const forms = this.paneForms()
+    const open = document.createElement("button")
+    open.type = "button"
+    open.className = "sr-open"
+    const title = document.createElement("span")
+    title.className = "sr-ref"
     title.textContent = ref
-    head.appendChild(title)
-    const text = document.createElement("div")
-    text.className = "ps-xref-text"
-    text.textContent = truncate(hit.text, 180)
-    const actions = document.createElement("div")
-    actions.className = "ps-xref-actions"
-    this.paneForms().forEach((form, i) => {
-      const button = document.createElement("button")
-      button.type = "button"
-      button.className = "ps-xref-load"
-      button.textContent = `▸ ${ROMAN[i] || i + 1}`
-      button.addEventListener("click", () => this.load(form, ref, bible))
-      actions.appendChild(button)
+    const text = document.createElement("span")
+    text.className = "sr-text"
+    hit.parts.forEach((part) => {
+      if (part.mark) {
+        const mark = document.createElement("mark")
+        mark.textContent = part.text
+        text.appendChild(mark)
+      } else text.appendChild(document.createTextNode(part.text))
     })
-    card.append(head, text, actions)
-    return card
+    open.append(title, text)
+    open.addEventListener("click", () => this.load(forms[0], ref, bible))
+    item.appendChild(open)
+    if (forms.length > 1) {
+      const actions = document.createElement("div")
+      actions.className = "ps-xref-actions"
+      forms.forEach((form, i) => {
+        const button = document.createElement("button")
+        button.type = "button"
+        button.className = "ps-xref-load"
+        button.textContent = `▸ ${ROMAN[i] || i + 1}`
+        button.addEventListener("click", () => this.load(form, ref, bible))
+        actions.appendChild(button)
+      })
+      item.appendChild(actions)
+    }
+    return item
   }
 
-  // Through the pane's own form: the service worker (or preach mode's local
-  // path) renders it from the downloaded Bible and queues the visit to sync.
+  // The whole chapter at the verse, through the pane's own form: the service
+  // worker (or preach mode's local path) renders it from the downloaded Bible.
   load(form, reference, bible) {
-    const input = form.querySelector("input[name='pane[reference]']")
-    const select = form.querySelector("select[name='pane[translation_id]']")
-    if (!input) return
-    input.value = reference
-    if (select && [ ...select.options ].some((o) => o.value === String(bible.id))) select.value = String(bible.id)
-    form.requestSubmit()
+    const frame = form?.closest(".ps-pane")
+    if (!frame) return
+    const presenting = !!frame.closest(".ps-root")?.matches(".is-presenting, .is-preaching, .is-output")
+    if (presenting) {
+      const input = form.querySelector("input[name='pane[reference]']")
+      const select = form.querySelector("select[name='pane[translation_id]']")
+      input.value = reference
+      if (select && [ ...select.options ].some((o) => o.value === String(bible.id))) select.value = String(bible.id)
+      form.requestSubmit()
+    } else {
+      openInPane(frame, reference, { translationId: bible.id })
+      window.dispatchEvent(new CustomEvent("verse:opened", { detail: { reference, paneId: frame.id } }))
+    }
   }
 
   paneForms() {

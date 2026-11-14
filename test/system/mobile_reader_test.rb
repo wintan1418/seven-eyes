@@ -27,7 +27,7 @@ class MobileReaderTest < ApplicationSystemTestCase
   test "tab bar, no sideways scroll, action bar above the tabs" do
     open_john3
     assert_selector ".ui-tabbar", visible: true
-    assert_selector ".ui-tabbar .ui-tab", count: 4
+    assert_equal %w[Home Bible Search More], all(".ui-tabbar .ui-tab").map(&:text)
     assert_equal false, page.evaluate_script("document.documentElement.scrollWidth > window.innerWidth"),
                  "the page must not scroll sideways"
 
@@ -48,7 +48,7 @@ class MobileReaderTest < ApplicationSystemTestCase
     assert_selector ".ps-verse-text", text: "Chapter four begins here."
   end
 
-  test "the passage picker is a bottom sheet; Notes tab opens the notes" do
+  test "the passage picker is a bottom sheet; notes open from the chapter's tool row" do
     open_john3
     find(".ui-tabbar .ui-tab", text: "Bible").click
     assert_selector ".ui-passage-sheet.is-open"
@@ -59,7 +59,7 @@ class MobileReaderTest < ApplicationSystemTestCase
     find(".ui-passage-sheet [aria-label='Close']").click
     assert_no_selector ".ui-passage-sheet.is-open"
 
-    find(".ui-tabbar .ui-tab", text: "Notes").click
+    find(".ps-pane-tool[title='Notes']").click
     assert_selector ".ps-notes-form.is-open"
   end
 

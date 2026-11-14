@@ -40,14 +40,18 @@ class PassagesTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "only begotten Son"
   end
 
-  test "Open in app creates a guest study at the passage and redirects" do
+  test "Open in app creates a guest study at the whole chapter, the verse marked" do
     assert_difference -> { Study.count }, 1 do
       get open_passage_path("john-3-16", params: { t: "KJV" })
     end
     study = Study.last
-    assert_redirected_to study_path(study)
-    assert_equal "John 3:16", study.panes.first.reference
+    assert_redirected_to study_path(study, verse: "16")
+    assert_equal "John 3", study.panes.first.reference
     assert_equal @kjv.id, study.panes.first.translation_id
+
+    follow_redirect!
+    assert_select ".ps-verses[data-verse-focus='16']"
+    assert_includes response.body, "only begotten Son"
   end
 
   test "Open in app reuses a guest's existing session study" do
