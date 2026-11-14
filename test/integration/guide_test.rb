@@ -42,6 +42,40 @@ class GuideTest < ActionDispatch::IntegrationTest
     assert_match(/Ask the AI Rabbi/, response.body)
   end
 
+  test "the field guide is in five parts, with a contents list that jumps to each" do
+    get guide_path
+    assert_response :success
+    {
+      "getting-started" => "Getting started", "daily-rhythm" => "Your daily rhythm",
+      "reading" => "Reading and studying", "preaching" => "Preaching and the big screen",
+      "shortcuts" => "Keyboard shortcuts"
+    }.each do |anchor, title|
+      assert_select ".ps-tut-toc a[href=?]", "##{anchor}", text: /#{title}/
+      assert_select ".ps-tut-part##{anchor} h2", text: title
+    end
+  end
+
+  test "the field guide covers what shipped recently, with real screenshots" do
+    get guide_path
+    [ "Five tabs along the bottom", "It works with no data", "Begin today", "Six short steps",
+      "The Glossary of the Faith", "From fellow readers", "The Bible reader", "Search the whole Bible",
+      "The operator console", "Looks and live buttons", "The song bank",
+      "This Sunday, ready ahead of time" ].each do |title|
+      assert_select ".ps-tut-copy h3", text: title
+    end
+    %w[home today faith reader search].each do |shot|
+      assert_select ".ps-tut-shot img[src*=?][alt]", "guide/#{shot}"
+    end
+    assert_select ".ps-tut-keys-card", 2
+    assert_select ".ps-tut-foot a[href=?]", whats_new_path
+  end
+
+  test "the field guide is saved for offline use" do
+    sw = Rails.root.join("app/javascript/service_worker.js").read
+    assert_match %r{/\^\\/guide\$/}, sw, "OWN_PAGES keeps it"
+    assert_match %r{CORE_PAGES = \[[^\]]*"/guide"}, sw, "warm saves it"
+  end
+
   test "the illustrated field guide is open to guests" do
     delete session_path
     get guide_path
