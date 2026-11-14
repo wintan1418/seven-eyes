@@ -154,6 +154,28 @@ class HotwireNativeTest < ActionDispatch::IntegrationTest
     assert_equal "John 3", users(:one).studies.recent.first.panes.first.reference
   end
 
+  test "the service worker saving /read never makes a study, but follows to an existing one" do
+    precache = ANDROID.merge("X-Offline-Precache" => "1")
+    assert_no_difference -> { Study.count } do
+      get read_path, headers: precache
+    end
+    assert_response :no_content
+
+    get read_path, headers: ANDROID # the reader really opens the Bible tab
+    study = Study.where(user_id: nil).last
+    assert_no_difference -> { Study.count } do
+      get read_path, headers: precache
+    end
+    assert_redirected_to study_path(study)
+
+    sign_in_as users(:one)
+    users(:one).studies.destroy_all
+    assert_no_difference -> { Study.count } do
+      get read_path, headers: precache
+    end
+    assert_response :no_content
+  end
+
   # -- /more: the More tab ----------------------------------------------------------
 
   test "the More tab offers sign-in to guests" do

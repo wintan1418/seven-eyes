@@ -14,6 +14,12 @@ class ReadController < ApplicationController
              with: -> { redirect_to root_path, alert: "Please wait a moment and try again." }
 
   def show
+    # The service worker saving /read for offline use (X-Offline-Precache)
+    # opens the reader's study but never makes one: a guest who only looked
+    # at the sign-in page mustn't get a study claimed into their account.
+    # With none, offline /read opens the device's offline reader instead.
+    return head(:no_content) if precache? && existing_study.nil?
+
     study = authenticated? ? latest_or_new_user_study : guest_study || new_guest_study
     return redirect_to(study) if params[:ref].blank?
 
@@ -27,6 +33,12 @@ class ReadController < ApplicationController
   end
 
   private
+
+  def precache? = request.headers["X-Offline-Precache"].present?
+
+  def existing_study
+    authenticated? ? current_user.studies.where(quick_present: false).recent.first : guest_study
+  end
 
   def latest_or_new_user_study
     # Quick Present is for the pulpit, not the Bible tab.
