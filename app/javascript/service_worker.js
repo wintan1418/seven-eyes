@@ -22,14 +22,29 @@
 //     request that hangs, and ?saved=1 ("Present offline") opens the saved
 //     copy at once (refreshing it in the background).
 //   • Writes queued offline (outbox) are replayed on Background Sync.
-//   • Everything else passes straight through. An uncached page offline gets
-//     a small "you're offline" page.
+//   • Right after it takes control, and again every few hours online (the page
+//     asks with a "warm" message, lib/offline/warm.js), it saves the app's core
+//     pages — /read (and the study it lands on), /, /reading_plans (+ each
+//     plan and its study), /more, /offline, /search, /faith — and the page
+//     that registered it, which it wasn't controlling yet. One online visit
+//     is enough for the apps' tabs to open with no data.
+//   • With nothing saved, no page is a dead end: /read opens the last study,
+//     else the newest saved one, else the offline reader (/offline/read,
+//     drawn here from the downloaded Bible — lib/offline/shell.js); an unsaved
+//     study opens the offline reader too; the tab start pages get a calm
+//     "needs one visit" page (200) linking to what works. Other unsaved pages
+//     get the friendly offline page with a 503 (the apps' own error screen).
+//   • Everything else passes straight through.
 // Redirected, non-200 or opaque responses are never cached as-is.
 import { getMeta, setMeta } from "./lib/offline/db"
-import { downloadedBibles } from "./lib/offline/store"
+import { downloadedBibles, storedManifest, bookText } from "./lib/offline/store"
 import { renderOfflinePane, offlineReferenceCheck } from "./lib/offline/offline_pane"
 import { flushOutbox, queuePaneVisit } from "./lib/offline/outbox"
 import { networkSlowStored, markNetworkSlow, markNetworkFine } from "./lib/offline/network"
+import { chapterVerses } from "./lib/offline/pane_renderer"
+import {
+  SHELL_ROOT, DEFAULT_PLACE, parseShellPath, pickBible, renderChapter, renderBooks, renderNoBible, renderOffline
+} from "./lib/offline/shell"
 
 const CONFIG = self.PS_SW || { version: "ps-dev", assets: [] }
 const CACHE_PREFIX = "ps-"
@@ -41,7 +56,16 @@ const KEEP = [ STATIC_CACHE, PAGES_CACHE, FONTS_CACHE ]
 
 const PUBLIC_PAGE = /^\/p\/[^/]+\/?$/
 const STUDY_PAGE = /^\/studies\/\d+$/
-const OWN_PAGES = [ /^\/$/, /^\/read$/, /^\/more$/, /^\/offline$/, /^\/reading_plans$/, /^\/reading_plans\/\d+$/ ]
+const OWN_PAGES = [
+  /^\/$/, /^\/read$/, /^\/more$/, /^\/offline$/, /^\/search$/, /^\/faith$/, /^\/faith\/[\w-]+$/,
+  /^\/reading_plans$/, /^\/reading_plans\/\d+$/
+]
+// The apps' tab start pages: always something usable offline, never the 503.
+const TAB_PAGES = [ "/", "/read", "/reading_plans", "/more", "/search", "/offline", "/faith" ]
+// Saved as soon as the worker controls the app, and refreshed while online.
+const CORE_PAGES = [ "/read", "/", "/reading_plans", "/more", "/offline", "/search", "/faith" ]
+const WARM_EVERY_MS = 6 * 60 * 60 * 1000
+const MAX_WARM_PLANS = 8
 const PANE_PATH = /^\/studies\/(\d+)\/panes\/(\d+)$/
 const FONT_HOSTS = [ "fonts.googleapis.com", "fonts.gstatic.com" ]
 // Only when a downloaded Bible can answer instead: a pane that hasn't come
@@ -49,6 +73,7 @@ const FONT_HOSTS = [ "fonts.googleapis.com", "fonts.gstatic.com" ]
 const PANE_TIMEOUT_MS = 2000
 const CHECK_TIMEOUT_MS = 1500 // /reference_check — the JS parser can always answer
 const PAGE_TIMEOUT_MS = 4000 // a saved page rather than wait on a request that hangs this long
+const NO_COPY_TIMEOUT_MS = 15000 // a tab page with nothing saved: the "needs one visit" page after this long
 const MAX_SAVED_PAGES = 60
 
 self.addEventListener("install", () => {
@@ -67,16 +92,20 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("message", (event) => {
   const data = event.data || {}
   if (data.type === "clear-caches") {
-    // Sign-out (or someone else signing in): drop every saved page.
-    event.waitUntil(
-      caches.keys().then((keys) =>
-        Promise.all(keys.filter((k) => k.startsWith(CACHE_PREFIX) && k !== STATIC_CACHE && k !== FONTS_CACHE)
-          .map((k) => caches.delete(k))))
-    )
+    // Sign-out (or someone else signing in): drop every saved page. A warm-up
+    // still saving the previous reader's pages stops; the next one waits.
+    warmGeneration++
+    clearing = caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k.startsWith(CACHE_PREFIX) && k !== STATIC_CACHE && k !== FONTS_CACHE)
+        .map((k) => caches.delete(k))))
+      .then(() => setMeta(WARM_KEY, null)).catch(() => {})
+    event.waitUntil(clearing)
   } else if (data.type === "precache") {
     event.waitUntil(precache(data.urls || []).then((result) => reply(event, { type: "precached", id: data.id, ...result })))
   } else if (data.type === "status") {
     event.waitUntil(cacheStatus(data.urls || []).then((result) => reply(event, { type: "status", id: data.id, ...result })))
+  } else if (data.type === "warm") {
+    event.waitUntil(warm(data).catch(() => {}))
   } else if (data.type === "flush-outbox") {
     event.waitUntil(flushOutbox().catch(() => {}))
   }
@@ -117,6 +146,10 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (!isPageRequest(request)) return
+  if (parseShellPath(url.pathname)) {
+    event.respondWith(shellResponse(url))
+    return
+  }
   const key = pageKey(url)
   if (key) {
     event.respondWith(networkFirst(event, key))
@@ -176,6 +209,7 @@ async function savePage(response) {
 
 async function networkFirst(event, key) {
   const request = event.request
+  const path = new URL(key).pathname
   const cached = await caches.open(PAGES_CACHE).then((c) => c.match(key)).catch(() => null)
   // "Present offline" (?saved=1), or a network known to be dead: the saved
   // copy at once, refreshed in the background when there is a network.
@@ -192,52 +226,128 @@ async function networkFirst(event, key) {
     return res
   })
   fresh.catch(() => {}) // when the saved copy answered first
+  // "Data on but dead": don't wait out a hanging request when the device can
+  // answer — a saved copy (or, for /read and a study, a downloaded Bible)
+  // after 4 s; a tab page with nothing saved gets its "needs one visit" page
+  // after 15 s. Anything else waits for the network as before.
+  const alternative = cached || await hasOfflineAnswer(path)
+  const waitMs = alternative ? (slow ? PAGE_TIMEOUT_MS / 2 : PAGE_TIMEOUT_MS) : (TAB_PAGES.includes(path) ? NO_COPY_TIMEOUT_MS : 0)
   let timer
   try {
-    if (!cached) return await fresh
-    // "Data on but dead": a saved page doesn't wait out a hanging request.
-    return await Promise.race([
+    if (!waitMs) return await fresh
+    const TIMED_OUT = Symbol("timeout")
+    const winner = await Promise.race([
       fresh,
-      new Promise((resolve) => { timer = setTimeout(() => { markNetworkSlow(); resolve(cached) }, PAGE_TIMEOUT_MS) })
+      new Promise((resolve) => { timer = setTimeout(() => resolve(TIMED_OUT), waitMs) })
     ])
+    if (winner !== TIMED_OUT) return winner
+    markNetworkSlow()
+    return cached || await offlineAnswer(request, path) || offlineFallback(request, path)
   } catch (e) {
-    if (cached) return cached
-    // /read opens your last study.
-    if (new URL(key).pathname === "/read") {
-      const last = await getMeta("lastStudyUrl")
-      if (last) return Response.redirect(last, 302)
-    }
-    return offlineFallback(request)
+    return cached || await offlineAnswer(request, path) || offlineFallback(request, path)
   } finally {
     clearTimeout(timer)
   }
 }
 
+const pageMatch = (url) => caches.open(PAGES_CACHE).then((c) => c.match(new URL(url, self.location.origin).href)).catch(() => null)
+
+// The study /read should open offline: the last one opened, else the newest
+// study page saved on the device.
+async function savedStudyUrl() {
+  const last = await getMeta("lastStudyUrl").catch(() => null)
+  if (last && await pageMatch(last)) return last
+  const keys = await caches.open(PAGES_CACHE).then((c) => c.keys()).catch(() => [])
+  for (const req of [ ...keys ].reverse()) {
+    const u = new URL(req.url)
+    if (STUDY_PAGE.test(u.pathname) && !u.search) return u.pathname
+  }
+  return null
+}
+
+const hasBible = async () => (await downloadedBibles().catch(() => [])).length > 0
+
+// Can the device open this page by itself (beyond a saved copy of it)?
+async function hasOfflineAnswer(path) {
+  if (path === "/read") return !!(await savedStudyUrl()) || await hasBible()
+  if (STUDY_PAGE.test(path)) return hasBible()
+  return false
+}
+
+// What the device shows for a page it has no saved copy of, or null.
+async function offlineAnswer(request, path) {
+  const isStudy = STUDY_PAGE.test(path) && !/[?&](output|stage)=1\b/.test(new URL(request.url).search)
+  if (path === "/read") {
+    const study = await savedStudyUrl()
+    if (study) return Response.redirect(new URL(study, self.location.origin).href, 302)
+    return Response.redirect(new URL(SHELL_ROOT, self.location.origin).href, 302)
+  }
+  if (isStudy && await hasBible()) return Response.redirect(new URL(`${SHELL_ROOT}?from=study`, self.location.origin).href, 302)
+  if (TAB_PAGES.includes(path)) return htmlResponse(renderOffline({ path, tab: true, ...await shellContext() }))
+  return null
+}
 async function networkOnly(request) {
   try {
     return await fetch(request)
   } catch (e) {
-    return offlinePage()
+    return offlinePage(new URL(request.url).pathname)
   }
 }
 
 // Turbo Drive visits that fail get a network error, so Turbo (and the
-// iOS/Android apps) treat it as "offline"; a real page load gets the page.
-function offlineFallback(request) {
-  return request.mode === "navigate" ? offlinePage() : Response.error()
+// iOS/Android apps) treat it as "offline"; a real page load gets the friendly
+// page — still a 503, which the apps show as their own offline screen.
+async function offlineFallback(request, path = new URL(request.url).pathname) {
+  return request.mode === "navigate" ? offlinePage(path) : Response.error()
 }
 
-function offlinePage() {
-  return new Response(
-    "<!doctype html><html lang='en'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>" +
-    "<title>Offline</title>" +
-    "<body style='font-family:Georgia,serif; padding:64px 16px; max-width:640px; margin:auto; background:#f4e7c8; color:#2b2017;'>" +
-    "<h1>You appear to be offline</h1>" +
-    "<p>This page isn't saved on this device. Pages you've opened before, and the Bibles you've downloaded " +
-    "(Offline Bibles), keep working without a connection.</p>" +
-    "<p><a href='/read' style='color:#8a2418'>Open my Bible</a></p></body></html>",
-    { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } }
-  )
+async function offlinePage(path = "/") {
+  return htmlResponse(renderOffline({ path, tab: false, ...await shellContext() }), 503)
+}
+
+const htmlResponse = (html, status = 200) =>
+  new Response(html, { status, headers: { "Content-Type": "text/html; charset=utf-8", "X-Offline-Render": "1" } })
+
+// ---- the offline reader (/offline/read…) ----------------------------------------
+
+// The app's own CSS and JS for the pages drawn here — this version's when
+// saved, else any saved copy (an older deploy's bundle still runs Turbo).
+async function shellAssets() {
+  const statics = await caches.open(STATIC_CACHE).catch(() => null)
+  if (!statics) return {}
+  const keys = await statics.keys().catch(() => [])
+  const find = async (ext) => {
+    const current = (CONFIG.assets || []).find((u) => u.split("?")[0].endsWith(ext))
+    if (current && await statics.match(new URL(current, self.location.origin).href)) return current
+    const any = [ ...keys ].reverse().find((r) => /^\/assets\/application-[\w]+\.\w+$/.test(new URL(r.url).pathname) && new URL(r.url).pathname.endsWith(ext))
+    return any ? new URL(any.url).pathname : null
+  }
+  return { css: await find(".css"), js: await find(".js") }
+}
+
+async function shellContext() {
+  return { assets: await shellAssets(), owner: (await getMeta("owner").catch(() => null)) || "guest" }
+}
+
+async function shellResponse(url) {
+  const shell = parseShellPath(url.pathname)
+  const context = await shellContext()
+  const [ manifest, downloaded ] = await Promise.all([ storedManifest().catch(() => null), downloadedBibles().catch(() => []) ])
+  const bible = pickBible(downloaded, url.searchParams.get("t"))
+  if (!manifest?.books?.length || !bible) return htmlResponse(renderNoBible(context))
+  const books = manifest.books
+  if (shell.kind === "books") return htmlResponse(renderBooks({ bible, books, ...context }))
+
+  let place = shell.kind === "chapter" ? shell : await getMeta("shellPlace").catch(() => null)
+  const valid = (p) => p && books.some((b) => b.osis === p.osis && p.chapter >= 1 && p.chapter <= b.chapters)
+  if (!valid(place)) place = DEFAULT_PLACE
+  await setMeta("shellPlace", { osis: place.osis, chapter: place.chapter }).catch(() => {})
+  const record = await bookText(bible.code, place.osis)
+  const verses = chapterVerses(record, place.chapter)
+  const note = url.searchParams.get("from") === "study"
+    ? "That study isn&rsquo;t saved on this device yet &mdash; here is your Bible. The study opens once you&rsquo;re back online."
+    : null
+  return htmlResponse(renderChapter({ bible, downloaded, books, osis: place.osis, chapter: place.chapter, verses, note, ...context }))
 }
 
 // ---- panes --------------------------------------------------------------------
@@ -364,23 +474,88 @@ async function precache(urls) {
   let ok = 0
   const failed = []
   for (const raw of urls) {
-    const url = new URL(raw, self.location.origin)
-    try {
-      // X-Offline-Precache: saving a study isn't opening it (it keeps its place in "recent").
-      const res = await fetch(url.href, { credentials: "same-origin", headers: { Accept: "text/html", "X-Offline-Precache": "1" } })
-      if (!cacheable(res)) { failed.push(url.pathname + url.search); continue }
-      await savePage(res.clone())
-      for (const asset of assetUrls(await res.text())) {
-        const req = new Request(new URL(asset, self.location.origin).href, asset.startsWith("http") ? { mode: "cors" } : {})
-        if (asset.startsWith("http")) await staleWhileRevalidate(req, FONTS_CACHE).catch(() => {})
-        else await (asset.startsWith("/assets/") ? cacheFirst(req, STATIC_CACHE) : staleWhileRevalidate(req, STATIC_CACHE)).catch(() => {})
-      }
-      ok++
-    } catch (e) {
-      failed.push(url.pathname + url.search)
-    }
+    if (await saveForOffline(raw) !== null) ok++
+    else { const u = new URL(raw, self.location.origin); failed.push(u.pathname + u.search) }
   }
   return { ok, failed }
+}
+
+// Save one page and its assets. Resolves to its HTML, or null when it can't
+// be kept (offline, an error page, a redirect to sign-in, a 404…).
+async function saveForOffline(raw) {
+  const url = new URL(raw, self.location.origin)
+  try {
+    // X-Offline-Precache: saving a study isn't opening it (it keeps its place in "recent").
+    const res = await fetch(url.href, { credentials: "same-origin", headers: { Accept: "text/html", "X-Offline-Precache": "1" } })
+    if (!cacheable(res) || !pageKey(new URL(res.url))) return null
+    await savePage(res.clone())
+    const html = await res.text()
+    for (const asset of assetUrls(html)) {
+      const req = new Request(new URL(asset, self.location.origin).href, asset.startsWith("http") ? { mode: "cors" } : {})
+      if (asset.startsWith("http")) await staleWhileRevalidate(req, FONTS_CACHE).catch(() => {})
+      else await (asset.startsWith("/assets/") ? cacheFirst(req, STATIC_CACHE) : staleWhileRevalidate(req, STATIC_CACHE)).catch(() => {})
+    }
+    return html
+  } catch (e) {
+    return null
+  }
+}
+
+// ---- warm: the core pages, saved by themselves (lib/offline/warm.js asks) --------
+
+const WARM_KEY = "warmedAt" // { version, owner, at }
+let warming = null // { owner, promise }
+let warmGeneration = 0 // bumped when saved pages are cleared: a running warm-up stops
+let clearing = Promise.resolve()
+
+// data: { owner, signedIn, url } — url is the page that registered the worker
+// (not controlled, so its load wasn't saved).
+async function warm(data = {}) {
+  if (data.url) {
+    const key = pageKey(new URL(data.url, self.location.origin))
+    if (key && !(await pageMatch(key))) await saveForOffline(data.url)
+  }
+  const owner = data.owner || "guest"
+  if (warming?.owner === owner) return warming.promise
+  // Someone else (say, the guest on the sign-in page) is still being warmed:
+  // the new reader's pages follow once that run notices it was cleared.
+  const before = warming?.promise || Promise.resolve()
+  const run = { owner }
+  run.promise = before.catch(() => {}).then(() => runWarm({ ...data, owner }))
+    .finally(() => { if (warming === run) warming = null })
+  warming = run
+  return run.promise
+}
+
+async function runWarm({ owner = "guest", signedIn = false } = {}) {
+  await clearing
+  const generation = warmGeneration
+  const stale = () => generation !== warmGeneration
+  const last = await getMeta(WARM_KEY).catch(() => null)
+  if (last && last.version === CACHE_VERSION && last.owner === owner && Date.now() - last.at < WARM_EVERY_MS) return
+
+  let ok = 0
+  const htmlOf = {}
+  for (const page of CORE_PAGES) {
+    if (stale()) return
+    const html = await saveForOffline(page)
+    if (html !== null) { ok++; htmlOf[page] = html }
+  }
+  // Each reading plan the reader has, and the study its readings open in.
+  if (signedIn && htmlOf["/reading_plans"]) {
+    const plans = [ ...new Set([ ...htmlOf["/reading_plans"].matchAll(/href="(\/reading_plans\/\d+)"/g) ].map((m) => m[1])) ]
+    const studies = new Set()
+    for (const plan of plans.slice(0, MAX_WARM_PLANS)) {
+      if (stale()) return
+      const html = await saveForOffline(plan)
+      const study = html?.match(/data-plan-offline-study-url-value="(\/studies\/\d+)"/)?.[1]
+      if (study) studies.add(study)
+    }
+    for (const study of studies) {
+      if (!(await pageMatch(study))) await saveForOffline(study)
+    }
+  }
+  if (ok && !stale()) await setMeta(WARM_KEY, { version: CACHE_VERSION, owner, at: Date.now() }).catch(() => {})
 }
 
 // Which of these pages are saved for offline use.

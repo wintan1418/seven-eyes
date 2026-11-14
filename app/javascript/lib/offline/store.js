@@ -32,7 +32,34 @@ export async function downloadedBible(code) {
 
 // Download one translation into IndexedDB. onProgress(fraction 0..1).
 // Reads the body as a stream so a phone on 3G sees the bar move.
-export async function downloadBible(summary, { onProgress = () => {}, signal } = {}) {
+// One download per translation at a time: a second ask (the automatic KJV,
+// Quick Present, the Offline Bibles page) joins the one running. Progress is
+// also announced on the page as `offline:bible-download` { code, state:
+// "progress" | "done" | "failed", fraction } so any screen can show it.
+const inflight = new Map()
+
+export function bibleDownloading(code) {
+  return inflight.has(code)
+}
+
+export function downloadBible(summary, options = {}) {
+  const running = inflight.get(summary.code)
+  if (running) return running
+  const notify = (state, fraction) => {
+    try { options.onProgress?.(fraction) } catch { /* the caller's own */ }
+    if (typeof window !== "undefined" && window.dispatchEvent) {
+      window.dispatchEvent(new CustomEvent("offline:bible-download", { detail: { code: summary.code, state, fraction } }))
+    }
+  }
+  const job = fetchBible(summary, { onProgress: (f) => notify("progress", f), signal: options.signal })
+    .then((record) => { notify("done", 1); return record },
+      (e) => { notify("failed", 0); throw e })
+    .finally(() => inflight.delete(summary.code))
+  inflight.set(summary.code, job)
+  return job
+}
+
+async function fetchBible(summary, { onProgress = () => {}, signal } = {}) {
   const res = await fetch(summary.url, { credentials: "same-origin", signal, headers: { Accept: "application/json" } })
   if (!res.ok) throw new Error(`download ${res.status}`)
 

@@ -14,6 +14,10 @@ import { getMeta, setMeta, fetchManifest, storedManifest, downloadedBibles, down
 import { owner, signedIn, precachePages } from "./page"
 import { quickFetch, isNetworkSlow } from "./network"
 import { shouldPrepare, quickPresentPages, recentPages, bibleToDownload, isReady, presentUrl } from "./ready_plan"
+// For everyone, guests too: the core pages saved as soon as the service worker
+// runs (warm.js) and the KJV downloaded by itself (auto_bible.js).
+import "./warm"
+import "./auto_bible"
 
 const QUICK_KEY = "quickPresent"   // { owner, id, url, name, reference, translation: { id, code }, readyAt }
 const PREPARED_KEY = "offlinePreparedAt" // { owner, at }
