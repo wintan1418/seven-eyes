@@ -29,4 +29,16 @@ class FaithArtTest < ActiveSupport::TestCase
     slugs = YAML.safe_load_file(Rails.root.join("config/faith_terms.yml")).map { |t| t["slug"] }
     assert_empty slugs - FaithArt::TERMS.keys
   end
+
+  test "the verse of the day gets a fitting picture, the same all day" do
+    date = Date.new(2026, 11, 14)
+    assert_equal "pentecost", FaithArt.for_passage("Acts", date).key
+    assert_includes FaithArt::PASSAGE_ART[:gospels], FaithArt.for_passage("John", date).key
+    assert_includes FaithArt::PASSAGE_ART[:letters], FaithArt.for_passage("Rom", date).key
+    assert_includes FaithArt::PASSAGE_ART[:prophets], FaithArt.for_passage("Isa", date).key
+    assert_equal FaithArt.for_passage("Ps", date), FaithArt.for_passage("Ps", date)
+    keys = (0..3).map { |i| FaithArt.for_passage("Matt", date + i).key }.uniq
+    assert_operator keys.size, :>, 1, "the gospels' pictures take turns by date"
+    assert FaithArt.for_passage("Nope", date) # unknown books still get a picture
+  end
 end

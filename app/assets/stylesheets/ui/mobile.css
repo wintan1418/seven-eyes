@@ -9,7 +9,7 @@
   html:has(.rd-app:not(.is-presenting, .is-output)) { --chrome-bottom: var(--tabbar-h); }
   html:has(.rd-app:not(.is-presenting, .is-output)) .ps-toast { bottom: calc(var(--tabbar-h) + 16px); }
 
-  .ps-root:is(.rd-app, .sr-page):not(.is-presenting, .is-output) .ui-tabbar {
+  .ps-root:is(.rd-app, .sr-page, .hm-root):not(.is-presenting, .is-output) .ui-tabbar {
     position: relative; z-index: 30; flex: 0 0 auto;
     display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
     height: var(--tabbar-h);

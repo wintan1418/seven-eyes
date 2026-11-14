@@ -151,22 +151,25 @@ class FaithTermsTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "the home card shows today's reviewed term to a signed-in user" do
+  test "the signed-in home has the glossary slider, starting at today's reviewed word" do
     sign_in_as users(:one)
     get root_path
-    assert_select ".ft-card" do
-      assert_select ".ft-card-term a[href=?]", faith_term_path(FaithTerm.of_the_day)
-      assert_select ".ft-card-actions a[href=?]", faith_terms_path
+    assert_select ".hm-block .hm-glossary.is-everywhere" do
+      assert_select ".hm-gl-slide:first-child[href=?]", faith_term_path(FaithTerm.of_the_day)
+      assert_select ".hm-gl-slide[href=?]", faith_term_path(@faith), count: 0
+      assert_select ".hm-gl-slide.is-more[href=?]", faith_terms_path
+      # The hero above loads eagerly; the slider's pictures wait, and phones get the 800px file.
+      assert_select ".hm-gl-slide img[loading=eager]", count: 0
+      assert_select "source[media='(max-width: 767px)'][srcset*='-800'][srcset$='.webp']"
     end
-    assert_select ".ft-card .ft-draft", count: 0
   end
 
-  test "no reviewed terms, no home card" do
+  test "no reviewed terms, no slider on the home page" do
     FaithTerm.update_all(status: FaithTerm.statuses[:draft])
     sign_in_as users(:one)
     get root_path
     assert_response :success
-    assert_select ".ft-card", count: 0
+    assert_select ".hm-glossary", count: 0
   end
 
   test "the review desk is closed to guests and ordinary users" do

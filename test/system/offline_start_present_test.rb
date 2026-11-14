@@ -42,7 +42,7 @@ class OfflineStartPresentTest < ApplicationSystemTestCase
     go_offline
     visit root_path # the home page itself comes from the device
     assert_selector ".ps-offline-badge", text: /offline/i
-    assert_selector ".hm-present", text: /Quick Present is ready offline/i
+    assert_selector ".hm-actions", text: /Quick Present is ready offline/i
     within(".hm-study-grid") do
       assert_selector ".hm-study.is-offline-ready", text: /Sunday.*Available offline/m
       assert_selector ".hm-study.is-offline-missing", text: /Long ago.*Needs internet to open/m
@@ -137,7 +137,7 @@ class OfflineStartPresentTest < ApplicationSystemTestCase
   # get ready by themselves.
   def prepare_device
     wait_for_service_worker
-    assert_selector ".hm-present", text: /Quick Present is ready offline/i, wait: 40
+    assert_selector ".hm-actions", text: /Quick Present is ready offline/i, wait: 40
     assert_selector ".hm-study.is-offline-ready", text: "Sunday", wait: 40
     wait_for_warm_up # the app's own pages, saved in the background too
     page.save_screenshot(SHOTS.join("online_home_studies_available_offline.png").to_s)

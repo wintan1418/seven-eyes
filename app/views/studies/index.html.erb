@@ -1,116 +1,62 @@
 <% content_for :title, "Home · BiblioRata" %>
-<%# Signed-in home: word for today, continue reading, today's plan, studies. %>
-<% resume = @studies.first %>
-<div class="ps-root hm-root" data-controller="new-study">
+<%# Home: signed in, and app guests (inside the apps a signed-out Home tab is
+    this page without the personal parts; website visitors get the landing).
+    Top to bottom: greeting + search, the verse of the day over a painting,
+    Continue reading + today's plan, quick actions, the glossary slider, your
+    studies, a slim guide line and the footer. Styles: ui/home.css. %>
+<% guest = @guest %>
+<div class="ps-root hm-root<%= ' is-guest' if guest %>" data-controller="new-study">
   <%= render "studies/app_bar", title: "Home" %>
-  <%= render "studies/menu_sheet", studies: @studies, new_study_modal: true %>
+  <%= render "studies/menu_sheet", studies: @studies, new_study_modal: !guest %>
 
   <main class="hm-main">
     <div class="hm-page">
-      <header class="hm-head">
-        <h1>Welcome back.</h1>
-        <%= form_with url: studies_path, method: :post, class: "ps-quick-open ld-search hm-search" do %>
-          <%= icon(:search) %>
-          <%= text_field_tag :reference, nil, class: "ld-search-input", autocomplete: "off",
-                spellcheck: "false", autocapitalize: "none", inputmode: "search", enterkeyhint: "go",
-                placeholder: "Open a passage — John 3:16, Ps 23…", "aria-label": "Open a passage" %>
-          <%= hidden_field_tag :pane_count, 1 %>
-          <button type="submit" class="ui-btn is-accent ld-search-go">Read</button>
-        <% end %>
-      </header>
+      <%= render "studies/home/hello", guest: %>
 
-      <div class="hm-grid">
-        <% if @faith_term %>
-          <%= render "faith_terms/card", term: @faith_term, passages: @faith_passages, root: @faith_root, date: @faith_date %>
-          <%= render "faith_terms/slider", terms: @faith_slides, roots: @faith_slide_roots, total: @faith_total %>
-        <% end %>
+      <div class="hm-top">
+        <%= render "studies/home/verse", word: @daily_word, art: @verse_art %>
 
-        <%# One tap to project, internet or not: Quick Present is kept ready on this device (lib/offline/ready.js). %>
-        <button type="button" class="hm-card hm-present" data-controller="quick-present" data-action="quick-present#open">
-          <span class="ui-label">Present</span>
-          <span class="hm-present-title"><%= icon(:presentation) %> Present offline</span>
-          <span class="hm-present-meta" data-quick-present-target="status">Quick Present &mdash; projects with no internet</span>
-          <span class="hm-continue-go"><%= icon(:chevron_right) %></span>
-        </button>
-
-        <%= render "daily_words/card", word: @daily_word, compact: true, heading_id: "hm-word-title", share_modal: false %>
-
-        <% if resume %>
-          <%= link_to study_path(resume), class: "hm-card hm-continue",
-                data: { controller: "offline-studies", offline_studies_target: "study", action: "click->offline-studies#guard" } do %>
-            <span class="ui-label">Continue reading</span>
-            <% ref = resume.panes.first&.reference.presence %>
-            <span class="hm-continue-ref"><%= ref || resume.name %></span>
-            <span class="hm-continue-meta"><%= resume.name %> &middot; <%= time_ago_in_words(resume.last_opened_at || resume.updated_at) %> ago</span>
-            <span class="hm-continue-go"><%= icon(:chevron_right) %></span>
+        <div class="hm-side">
+          <%= render "studies/home/resume", study: @resume, guest: %>
+          <% if guest %>
+            <%= render "studies/home/join" %>
+          <% else %>
+            <%= render "studies/home/plan", plan: @active_plan, progress: @plan_progress %>
           <% end %>
-        <% end %>
-
-        <% if @active_plan && @plan_today %>
-          <section class="hm-card hm-plan">
-            <span class="ui-label">Today &middot; <%= @active_plan.name %> &middot; day <%= @plan_today.day_number %></span>
-            <p class="hm-plan-refs"><%= @plan_today.refs.presence || "No passages set for today." %></p>
-            <div class="hm-plan-foot">
-              <% if @plan_today.refs.present? %>
-                <%= link_to "Begin today's reading", open_today_reading_plan_path(@active_plan), class: "ui-btn is-sm is-primary" %>
-              <% end %>
-              <%= link_to "Open plan", reading_plan_path(@active_plan), class: "ui-btn is-sm" %>
-              <span class="hm-streak"><%= icon(:sparkles) %> <%= @active_plan.current_streak %>-day streak</span>
-            </div>
-          </section>
-        <% else %>
-          <section class="hm-card hm-plan">
-            <span class="ui-label">A daily rhythm</span>
-            <p class="hm-plan-refs">Build a reading plan &mdash; a single book, the New Testament, the whole Bible in a year, or your own path.</p>
-            <div class="hm-plan-foot">
-              <%= link_to "Create a reading plan", new_reading_plan_path, class: "ui-btn is-sm is-primary" %>
-            </div>
-          </section>
-        <% end %>
+          <%= render "studies/home/actions", guest:, resume: @resume %>
+        </div>
       </div>
 
-      <section class="hm-studies" aria-labelledby="hm-studies-title">
-        <div class="hm-section-head">
-          <h2 id="hm-studies-title">Your studies</h2>
-          <button type="button" class="ui-btn is-sm" data-action="new-study#open"><%= icon(:plus) %> New study</button>
+      <% if @faith_term %>
+        <div class="hm-block">
+          <%= render "faith_terms/slider", terms: @faith_slides, roots: @faith_slide_roots, total: @faith_total,
+                     everywhere: true, eager_first: false %>
         </div>
-        <% if @studies.present? %>
-          <% shown = @studies.first(9) %>
-          <div class="hm-study-grid" data-controller="offline-studies reveal" data-reveal-class="is-expanded">
-            <% shown.each do |study| %>
-              <%= link_to study_path(study), class: "hm-study",
-                    data: { offline_studies_target: "study", action: "click->offline-studies#guard" } do %>
-                <span class="nm"><%= study.name %></span>
-                <% refs = study.panes.filter_map { |p| p.reference.presence } %>
-                <span class="refs"><%= refs.any? ? refs.first(3).join(" · ") : "No passage yet" %></span>
-                <span class="meta"><%= time_ago_in_words(study.last_opened_at || study.updated_at) %> ago</span>
-              <% end %>
-            <% end %>
-            <% if shown.size > 3 %>
-              <%# Phones show three; the rest are a tap away. %>
-              <button type="button" class="ui-btn is-sm hm-study-more" data-action="reveal#show">
-                Show all <%= shown.size %> studies
-              </button>
-            <% end %>
-          </div>
-        <% else %>
-          <p class="hm-empty">Your studies will appear here. Open a passage above, or start a new study.</p>
-        <% end %>
-      </section>
+      <% end %>
+
+      <% unless guest %>
+        <%= render "studies/home/studies", studies: @studies %>
+      <% end %>
 
       <% if @show_guide %>
-        <%= render "studies/guide" %>
+        <%= render "studies/home/guide" %>
       <% end %>
 
       <footer class="hm-foot ps-canon-stats">
         <span><%= @canon_stats[:translations] %> translations</span> &middot;
         <span><%= number_with_delimiter(@canon_stats[:verses]) %> verses</span> &middot;
-        <span><%= number_with_delimiter(@canon_stats[:cross_references]) %> cross-references</span> &middot;
-        <%= link_to "Terms", terms_path %> &middot; <%= link_to "Privacy", privacy_path %> &middot; <%= link_to "Credits", credits_path %>
+        <span><%= number_with_delimiter(@canon_stats[:cross_references]) %> cross-references</span>
+        <span class="hm-foot-links">
+          <%= link_to "Guide", guide_path %> &middot; <%= link_to "Terms", terms_path %> &middot;
+          <%= link_to "Privacy", privacy_path %> &middot; <%= link_to "Credits", credits_path %>
+        </span>
       </footer>
     </div>
   </main>
-  <%= render "studies/new_study_modal" %>
+  <%= render "shared/tab_bar", current: :home %>
+  <% unless guest %>
+    <%= render "studies/new_study_modal" %>
+  <% end %>
   <%# Outside .hm-main (its own stacking context), so the modal covers the app bar. %>
   <%= render "daily_words/share_modal", word: @daily_word if @daily_word %>
 </div>

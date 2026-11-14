@@ -145,9 +145,6 @@ application.register("share-card", ShareCardController)
 import DailyWordController from "./daily_word_controller"
 application.register("daily-word", DailyWordController)
 
-import FaithCardController from "./faith_card_controller"
-application.register("faith-card", FaithCardController)
-
 import GlossaryFilterController from "./glossary_filter_controller"
 application.register("glossary-filter", GlossaryFilterController)
 

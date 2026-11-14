@@ -89,4 +89,13 @@ class SearchPageTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".ps-verses[data-verse-focus]", 0
   end
+
+  test "a reference typed into search opens the reader there; words and frame searches stay searches" do
+    get search_path(q: "John 3:16")
+    assert_redirected_to read_path(ref: "John 3:16")
+    get search_path(q: "Job") # a book name without a number is a word search
+    assert_response :success
+    get search_path(q: "John 3:16"), headers: { "Turbo-Frame" => "search_results" }
+    assert_response :success
+  end
 end

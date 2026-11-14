@@ -138,16 +138,21 @@ class DailyWordsTest < ActionDispatch::IntegrationTest
     assert_select ".ld-vod details.dw-prayer:not([open])"
   end
 
-  test "the signed-in home shows today's word with Read, Share and Copy" do
+  test "the signed-in home shows today's word over a painting, with Read the chapter, Share, Copy and the prayer folded" do
     word = composed_word
     sign_in_as users(:one)
     get root_path
     assert_response :success
-    assert_select ".hm-grid .dw-card .dw-verse", text: word.verse_text
-    assert_select ".hm-grid .dw-card form[action=?] input[name=reference][value=?]", studies_path, word.chapter_label
-    assert_select ".hm-grid .dw-card [data-action='daily-word#share']"
-    assert_select ".hm-grid .dw-card [data-action='daily-word#copy']"
-    assert_select ".hm-grid .dw-card[data-daily-word-text-value*=?]", "Lord, keep us. Amen."
+    assert_select ".hm-verse .hm-verse-art picture img[loading=eager]"
+    assert_select ".hm-verse .hm-verse-text", text: word.verse_text
+    assert_select ".hm-verse a.hm-verse-read[href=?]", read_path(ref: word.reference, t: word.translation_code)
+    assert_select ".hm-verse [data-action='daily-word#share']"
+    assert_select ".hm-verse [data-action='daily-word#copy']"
+    assert_select ".hm-verse[data-daily-word-text-value*=?]", "Lord, keep us. Amen."
+    assert_select ".hm-verse details.hm-reflect:not([open])" do
+      assert_select ".hm-reflect-prayer", text: "Lord, keep us. Amen."
+      assert_select "a[href=?]", today_path
+    end
     # The share modal sits outside the scroller so it covers the app bar.
     assert_select ".hm-root > .ps-share-host[data-share-card-card-url-value=?]", daily_word_card_path(word)
     assert_select ".hm-main .ps-share-host", count: 0

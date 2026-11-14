@@ -1,0 +1,58 @@
+<%# Today's reading plan: a ring of days done, today's passages and one tap
+    to start; or an invitation to make one. locals: plan, progress
+    (ReadingPlan::Progress) %>
+<% if plan && progress %>
+  <% today = progress.today %>
+  <section class="hm-card hm-plan" aria-labelledby="hm-plan-title">
+    <div class="hm-plan-ring" role="img" aria-label="<%= progress.done %> of <%= progress.total %> days read">
+      <%= home_progress_ring(progress.fraction) %>
+      <span class="hm-plan-pct"><b><%= progress.done %></b><small>/<%= progress.total %></small></span>
+    </div>
+    <div class="hm-plan-text">
+      <span class="ui-label" id="hm-plan-title">
+        <% if today %>Today &middot; day <%= today.day_number %><% else %>Reading plan<% end %>
+      </span>
+      <%= link_to plan.name, reading_plan_path(plan), class: "hm-plan-name" %>
+      <p class="hm-plan-refs">
+        <% if today&.refs.present? %>
+          <%= today.reference_list.join(" · ") %>
+        <% elsif today %>
+          No passages set for today.
+        <% elsif plan.today_day < 1 %>
+          Begins <%= l(plan.start_date, format: "%-d %B") %>.
+        <% else %>
+          Plan complete &mdash; well done.
+        <% end %>
+      </p>
+    </div>
+    <div class="hm-plan-foot">
+      <% if today&.refs.present? %>
+        <% if today.completed? %>
+          <span class="hm-plan-done"><%= icon(:check) %> Read today</span>
+          <%= link_to "Read again", open_today_reading_plan_path(plan), class: "ui-btn is-sm", data: { turbo_prefetch: false } %>
+        <% else %>
+          <%= link_to open_today_reading_plan_path(plan), class: "ui-btn is-sm is-accent hm-plan-start", data: { turbo_prefetch: false } do %>
+            <%= icon(:book) %> Start today&rsquo;s reading
+          <% end %>
+        <% end %>
+      <% else %>
+        <%= link_to "Open plan", reading_plan_path(plan), class: "ui-btn is-sm" %>
+      <% end %>
+    </div>
+  </section>
+<% else %>
+  <section class="hm-card hm-plan is-empty" aria-labelledby="hm-plan-title">
+    <div class="hm-plan-ring is-empty" aria-hidden="true">
+      <%= home_progress_ring(0) %>
+      <span class="hm-plan-pct"><%= icon(:calendar) %></span>
+    </div>
+    <div class="hm-plan-text">
+      <span class="ui-label" id="hm-plan-title">A daily rhythm</span>
+      <span class="hm-plan-name">Read a little every day</span>
+      <p class="hm-plan-refs">One book, the New Testament, the whole Bible in a year &mdash; or your own path.</p>
+    </div>
+    <div class="hm-plan-foot">
+      <%= link_to new_reading_plan_path, class: "ui-btn is-sm is-accent" do %><%= icon(:plus) %> Create a reading plan<% end %>
+    </div>
+  </section>
+<% end %>

@@ -1,0 +1,32 @@
+<%# Quick actions: Search, Compare (a two-pane study of the last passage),
+    Present offline (Quick Present, kept ready on this device by
+    lib/offline/ready.js — signed in only) and Offline Bibles. Guests get the
+    field guide instead of Present. locals: guest, resume %>
+<% compare_ref = resume&.panes&.min_by(&:position)&.reference.presence || "John 3" %>
+<nav class="hm-actions" aria-label="Quick actions"
+     <%= tag.attributes(data: (guest ? {} : { controller: "quick-present" })) %>>
+  <div class="hm-actions-grid">
+    <%= link_to search_path, class: "hm-action" do %>
+      <span class="hm-action-icon"><%= icon(:search) %></span><span class="hm-action-label">Search</span>
+    <% end %>
+    <%= button_to studies_path, params: { reference: compare_ref, pane_count: 2 }, class: "hm-action",
+          form: { class: "hm-action-form" }, title: "Compare #{compare_ref} in two translations" do %>
+      <span class="hm-action-icon"><%= icon(:columns) %></span><span class="hm-action-label">Compare</span>
+    <% end %>
+    <% if guest %>
+      <%= link_to guide_path, class: "hm-action" do %>
+        <span class="hm-action-icon"><%= icon(:compass) %></span><span class="hm-action-label">Guide</span>
+      <% end %>
+    <% else %>
+      <button type="button" class="hm-action hm-present" data-action="quick-present#open">
+        <span class="hm-action-icon"><%= icon(:presentation) %></span><span class="hm-action-label">Present</span>
+      </button>
+    <% end %>
+    <%= link_to offline_path, class: "hm-action" do %>
+      <span class="hm-action-icon"><%= icon(:download) %></span><span class="hm-action-label">Offline</span>
+    <% end %>
+  </div>
+  <% unless guest %>
+    <p class="hm-actions-status" data-quick-present-target="status">Present offline &mdash; projects with no internet</p>
+  <% end %>
+</nav>

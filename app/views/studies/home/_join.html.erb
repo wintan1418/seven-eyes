@@ -1,0 +1,12 @@
+<%# App guests: what an account adds, gently. %>
+<section class="hm-card hm-join" aria-labelledby="hm-join-title">
+  <span class="hm-join-icon" aria-hidden="true"><%= icon(:notes) %></span>
+  <div class="hm-join-text">
+    <h2 id="hm-join-title">Keep what you find</h2>
+    <p>Create a free account to keep notes, highlights and reading plans.</p>
+  </div>
+  <div class="hm-join-foot">
+    <%= link_to "Create a free account", new_registration_path, class: "ui-btn is-sm is-accent" %>
+    <%= link_to "Sign in", new_session_path, class: "ui-btn is-sm is-quiet" %>
+  </div>
+</section>

@@ -38,6 +38,28 @@ class ReadingPlan < ApplicationRecord
     streak
   end
 
+  # Everything the home page shows about a plan, from one query: days in all,
+  # days done, today's day (nil outside the plan's dates) and the streak
+  # (which, unlike current_streak, still counts while today is unread).
+  Progress = Data.define(:total, :done, :today, :streak) do
+    def fraction = total.zero? ? 0.0 : done.fdiv(total)
+    def percent = (fraction * 100).round
+  end
+
+  def progress
+    days = plan_days.includes(:completion).to_a
+    by_number = days.index_by(&:day_number)
+    # Today not read yet doesn't break the streak until the day is over.
+    streak = 0
+    n = today_day
+    n -= 1 unless by_number[n]&.completion.present?
+    while n.positive? && by_number[n]&.completion.present?
+      streak += 1
+      n -= 1
+    end
+    Progress.new(total: days.size, done: days.count(&:completed?), today: by_number[today_day], streak:)
+  end
+
   def longest_streak
     best = run = 0
     plan_days.includes(:completion).order(:day_number).each do |d|

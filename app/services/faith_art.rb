@@ -36,6 +36,35 @@ module FaithArt
     IMAGES.fetch(TERMS.fetch(slug) { default_key(slug) })
   end
 
+  # The verse of the day's picture: one that suits the part of the Bible it
+  # comes from, the same all day (picked by date among the fitting ones).
+  PASSAGE_ART = {
+    law: %w[ creation-light moses-tablets ],
+    history: %w[ moses-tablets creation-light ],
+    wisdom: %w[ creation-light sermon-on-the-mount ascension ],
+    prophets: %w[ ascension creation-light crucifixion ],
+    gospels: %w[ sermon-on-the-mount prodigal-son crucifixion resurrection ],
+    acts: %w[ pentecost ],
+    letters: %w[ resurrection pentecost crucifixion sermon-on-the-mount ],
+    revelation: %w[ ascension resurrection ]
+  }.freeze
+  PASSAGE_GROUPS = {
+    law: %w[ Gen Exod Lev Num Deut ],
+    history: %w[ Josh Judg Ruth 1Sam 2Sam 1Kgs 2Kgs 1Chr 2Chr Ezra Neh Esth ],
+    wisdom: %w[ Job Ps Prov Eccl Song ],
+    gospels: %w[ Matt Mark Luke John ],
+    acts: %w[ Acts ],
+    revelation: %w[ Rev ]
+  }.flat_map { |group, codes| codes.map { |c| [ c, group ] } }.to_h.freeze
+  NT_LETTERS = Set.new(%w[ Rom 1Cor 2Cor Gal Eph Phil Col 1Thess 2Thess 1Tim 2Tim Titus Phlm Heb Jas 1Pet 2Pet 1John 2John 3John Jude ]).freeze
+
+  def self.for_passage(osis, date)
+    group = PASSAGE_GROUPS[osis.to_s] || (NT_LETTERS.include?(osis.to_s) ? :letters : :prophets)
+    keys = PASSAGE_ART.fetch(group).select { |k| IMAGES.key?(k) }
+    keys = IMAGES.keys if keys.empty?
+    IMAGES.fetch(keys[date.jd % keys.size])
+  end
+
   # The /faith intro's picture.
   def self.intro = IMAGES.fetch(DATA.fetch("intro"))
 
