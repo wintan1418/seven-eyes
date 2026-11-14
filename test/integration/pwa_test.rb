@@ -52,6 +52,6 @@ class PwaTest < ActionDispatch::IntegrationTest
 
   test "every page carries the offline-badge wrapper" do
     get root_path
-    assert_select "[data-controller~=offline] .ps-offline-badge"
+    assert_select "[data-controller~=offline] .ps-net-dot"
   end
 end

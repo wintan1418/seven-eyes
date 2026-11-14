@@ -41,7 +41,7 @@ class OfflineStartPresentTest < ApplicationSystemTestCase
 
     go_offline
     visit root_path # the home page itself comes from the device
-    assert_selector ".ps-offline-badge", text: /offline/i
+    assert_selector ".ps-net-dot.is-offline"
     assert_selector ".hm-actions", text: /Quick Present is ready offline/i
     within(".hm-study-grid") do
       assert_selector ".hm-study.is-offline-ready", text: /Sunday.*Available offline/m
@@ -106,7 +106,7 @@ class OfflineStartPresentTest < ApplicationSystemTestCase
 
     go_offline
     visit study_path(@recent) # a recent study, opened from the device
-    assert_selector ".ps-offline-badge", text: /reading from your downloads/i
+    assert_selector ".ps-net-dot.is-offline[aria-label*='reading from your downloads']"
     wait_for_reader_js
     find(".ui-appbar [data-action~='search#open']").click
     within(".ps-search-panel") do

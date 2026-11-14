@@ -43,7 +43,7 @@ const NEW_STUDY = "[data-action~='new-study#open'], form.ui-menu-new-form button
 // controller), and says in the drawer when there are none.
 
 export default class extends Controller {
-  static targets = ["badge", "label", "sync"]
+  static targets = ["badge", "label", "sync", "dot"]
 
   connect() {
     this._update = () => this.render()
@@ -91,7 +91,7 @@ export default class extends Controller {
   }
 
   async recheck() {
-    if (!this.hasBadgeTarget || this.badgeTarget.hidden) return
+    if (!this.isOffline()) return
     clearTimeout(this._probeTimer)
     if (await this.probe()) {
       this._serverReachable = true
@@ -116,21 +116,25 @@ export default class extends Controller {
     }
   }
 
+  // The connection is a small dot at the top right: green online, red
+  // offline (the founder found an "Offline" label annoying). Only a live
+  // follow-along session still says so in words, since the congregation's
+  // phones stop following.
   async render() {
     const online = !this.isOffline()
-    if (this.hasBadgeTarget) this.badgeTarget.hidden = online
     clearTimeout(this._probeTimer)
     if (!online) this._probeTimer = setTimeout(() => this.recheck(), PROBE_EVERY_MS)
-    clearTimeout(this._compactTimer)
-    if (!online && this.hasLabelTarget) {
-      const have = (await downloadedBibles()).length > 0
-      const live = document.querySelector(".ps-root.is-live-session")
-      this.labelTarget.textContent = live
-        ? "Offline · live follow-along paused"
-        : (have ? "Offline · reading from your downloads" : "Offline")
-      // Say it once in full, then keep out of Scripture's way.
-      if (!live) this._compactTimer = setTimeout(() => { this.labelTarget.textContent = "Offline" }, 6000)
+    if (this.hasDotTarget) {
+      const have = online ? false : (await downloadedBibles()).length > 0
+      const text = online ? "Online" : (have ? "Offline · reading from your downloads" : "Offline")
+      this.dotTarget.classList.toggle("is-online", online)
+      this.dotTarget.classList.toggle("is-offline", !online)
+      this.dotTarget.setAttribute("aria-label", text)
+      this.dotTarget.title = text
     }
+    const live = !online && document.querySelector(".ps-root.is-live-session")
+    if (this.hasBadgeTarget) this.badgeTarget.hidden = !live
+    if (live && this.hasLabelTarget) this.labelTarget.textContent = "Offline · live follow-along paused"
     this.renderSync()
   }
 

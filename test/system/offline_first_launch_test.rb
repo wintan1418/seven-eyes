@@ -125,7 +125,7 @@ class OfflineFirstLaunchTest < ApplicationSystemTestCase
     visit reading_plans_path
     assert_link href: reading_plan_path(plan) # the list itself, from the device
     visit reading_plan_path(plan) # never opened on this device, saved by the warm-up
-    assert_selector ".ps-offline-badge", text: /offline/i # the page's scripts are running
+    assert_selector ".ps-net-dot.is-offline" # the page's scripts are running
     within("##{ActionView::RecordIdentifier.dom_id(today)}") { click_on "Mark done" }
     assert_selector ".ps-sync-pill", text: "1 change waiting to sync"
     click_on "Begin today's reading"

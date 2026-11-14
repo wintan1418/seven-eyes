@@ -5,9 +5,10 @@ require "application_system_test_case"
 # background) and navigator.onLine can stay false. The badge now asks the
 # server when the page comes back into view (and every 15 s while shown) and
 # clears as soon as it answers.
-class OfflineBadgeClearsTest < ApplicationSystemTestCase
-  test "the offline badge clears when the server answers, even if the browser still says offline" do
+class OfflineBadgeClearsTest < ApplicationSystemTestCase # the connection dot (was the "Offline" badge)
+  test "the connection dot turns red offline and green again when the server answers, even if the browser still says offline" do
     visit root_path
+    assert_selector ".ps-net-dot.is-online", visible: true
     assert_selector ".ps-offline-badge", visible: :hidden
 
     # The device says it's offline, and keeps saying so (a stale web view).
@@ -15,14 +16,15 @@ class OfflineBadgeClearsTest < ApplicationSystemTestCase
       Object.defineProperty(Navigator.prototype, "onLine", { configurable: true, get: () => false })
       window.dispatchEvent(new Event("offline"))
     JS
-    assert_selector ".ps-offline-badge", visible: true
+    assert_selector ".ps-net-dot.is-offline", visible: true
+    assert_selector ".ps-offline-badge", visible: :hidden # no "Offline" label any more
 
     # Back in the app: the page regains focus, checks the server, and clears.
     page.execute_script(%(window.dispatchEvent(new Event("focus"))))
-    assert_selector ".ps-offline-badge", visible: :hidden, wait: 6
+    assert_selector ".ps-net-dot.is-online", visible: true, wait: 6
 
     # A real "offline" event brings it back.
     page.execute_script(%(window.dispatchEvent(new Event("offline"))))
-    assert_selector ".ps-offline-badge", visible: true
+    assert_selector ".ps-net-dot.is-offline", visible: true
   end
 end
