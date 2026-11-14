@@ -3,6 +3,11 @@ import { downloadedBibles, clearPersonal } from "../lib/offline/store"
 import { pendingCount, flushOutbox, subscribe } from "../lib/offline/outbox"
 import { clearSavedPages } from "../lib/offline/page"
 import { openQuickPresent, networkDown } from "../lib/offline/ready"
+import { markNetworkFine } from "../lib/offline/network"
+
+// While the badge shows, how often to ask the server whether we're back.
+const PROBE_EVERY_MS = 15000
+const PROBE_TIMEOUT_MS = 4000
 
 // The calm offline layer on every page (wrapper near the top of <body>):
 //   • a badge while the device is offline — "Offline · reading from your
@@ -45,12 +50,20 @@ export default class extends Controller {
     this._onSubmit = (e) => this._maybeSignOut(e)
     this._onClick = (e) => this._guard(e)
     this._onToast = (e) => this.toast(e.detail?.message)
+    this._onOffline = () => { this._serverReachable = false; this.render() }
     window.addEventListener("online", this._update)
-    window.addEventListener("offline", this._update)
+    window.addEventListener("offline", this._onOffline)
     document.addEventListener("submit", this._onSubmit, true)
     document.addEventListener("click", this._onClick, true)
     window.addEventListener("offline:toast", this._onToast)
     window.addEventListener("offline:prepared", this._update)
+    // Inside the apps the browser's "online" event often never comes (the
+    // connection returned while the app was in the background), so check
+    // again whenever the page comes back into view.
+    this._onVisible = () => { if (!document.hidden) this.recheck() }
+    document.addEventListener("visibilitychange", this._onVisible)
+    window.addEventListener("pageshow", this._onVisible)
+    window.addEventListener("focus", this._onVisible)
     this._unsubscribe = subscribe((m) => this._onMessage(m))
     this.render()
     this.renderSync()
@@ -58,17 +71,56 @@ export default class extends Controller {
 
   disconnect() {
     window.removeEventListener("online", this._update)
-    window.removeEventListener("offline", this._update)
+    window.removeEventListener("offline", this._onOffline)
     document.removeEventListener("submit", this._onSubmit, true)
     document.removeEventListener("click", this._onClick, true)
     window.removeEventListener("offline:toast", this._onToast)
     window.removeEventListener("offline:prepared", this._update)
+    document.removeEventListener("visibilitychange", this._onVisible)
+    window.removeEventListener("pageshow", this._onVisible)
+    window.removeEventListener("focus", this._onVisible)
+    clearTimeout(this._probeTimer)
     this._unsubscribe?.()
   }
 
+  // Offline as far as we can tell: the browser says so and the server hasn't
+  // answered a check since the last "offline" event. A successful check wins
+  // over a stale navigator.onLine (web views don't always update it).
+  isOffline() {
+    return navigator.onLine === false && !this._serverReachable
+  }
+
+  async recheck() {
+    if (!this.hasBadgeTarget || this.badgeTarget.hidden) return
+    clearTimeout(this._probeTimer)
+    if (await this.probe()) {
+      this._serverReachable = true
+      markNetworkFine()
+      flushOutbox().catch(() => {})
+      this.render()
+    } else {
+      this._probeTimer = setTimeout(() => this.recheck(), PROBE_EVERY_MS)
+    }
+  }
+
+  async probe() {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS)
+    try {
+      const res = await fetch(`/up?t=${Date.now()}`, { cache: "no-store", signal: controller.signal })
+      return res.ok
+    } catch {
+      return false
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+
   async render() {
-    const online = navigator.onLine
+    const online = !this.isOffline()
     if (this.hasBadgeTarget) this.badgeTarget.hidden = online
+    clearTimeout(this._probeTimer)
+    if (!online) this._probeTimer = setTimeout(() => this.recheck(), PROBE_EVERY_MS)
     clearTimeout(this._compactTimer)
     if (!online && this.hasLabelTarget) {
       const have = (await downloadedBibles()).length > 0
