@@ -6,8 +6,8 @@
 
 /* Badge + sync pill: centred under the app bar, never over its buttons. */
 .ps-offline-host {
-  position: fixed; top: calc(var(--appbar-h) + 8px + env(safe-area-inset-top)); left: 50%;
-  transform: translateX(-50%); z-index: 40; pointer-events: none;
+  position: fixed; top: calc(var(--appbar-h) + 8px + env(safe-area-inset-top)); left: 0; right: 0;
+  z-index: 40; pointer-events: none; /* no transform: the connection dot inside is fixed to the screen */
   display: flex; flex-direction: column; align-items: center; gap: 6px;
 }
 .ps-offline-host .ps-offline-badge {
@@ -96,3 +96,18 @@ a.ui-toggle { text-decoration: none; }
 .ui-offline-qp-status { margin: 0; font: 500 14px/1.4 var(--ui-font); color: var(--ui-fg-muted); }
 .ui-offline-qp[data-ready="true"] .ui-offline-qp-status { color: var(--ui-accent); font-weight: 600; }
 .ui-offline-qp .ui-btn { flex: 0 0 auto; }
+
+/* Connection dot: top right, green online, red offline. The tap target is
+   bigger than the dot so its title/label can be read with a long-press. */
+.ps-net-dot {
+  position: fixed; z-index: 41; pointer-events: auto;
+  top: calc(var(--appbar-h) + 10px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right));
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #2f9e5a; box-shadow: 0 0 0 2px var(--ui-bg, #fff), 0 0 6px rgba(47, 158, 90, 0.55);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.ps-net-dot.is-offline { background: #d23b2e; box-shadow: 0 0 0 2px var(--ui-bg, #fff), 0 0 6px rgba(210, 59, 46, 0.6); }
+/* Inside the apps the native bar is the app bar: sit just under it. */
+body.hotwire-native .ps-net-dot { top: calc(8px + env(safe-area-inset-top)); right: 8px; }
+body:has(.ps-root.is-output) .ps-net-dot, body:has(.ps-root.is-presenting) .ps-net-dot { display: none; }
+@media (prefers-reduced-motion: reduce) { .ps-net-dot { transition: none; } }

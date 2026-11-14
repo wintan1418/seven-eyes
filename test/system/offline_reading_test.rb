@@ -40,7 +40,7 @@ class OfflineReadingTest < ApplicationSystemTestCase
     assert_selector ".ps-verse-text", text: "KJV John 3:1"
 
     go_offline
-    assert_selector ".ps-offline-badge", text: /reading from your downloads/i
+    assert_selector ".ps-net-dot.is-offline[aria-label*='reading from your downloads']"
 
     find(".rd-chapter-nav .rd-fab.next").click
     assert_selector ".ps-verse-text", text: "KJV John 4:2"

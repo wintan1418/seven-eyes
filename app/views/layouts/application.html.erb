@@ -72,8 +72,10 @@
         light/dark switch; hidden wherever an app bar already has one, and on
         the projector / stage screens. %>
     <%= render "shared/theme_toggle", extra_class: "ui-theme-float" %>
-    <%# Offline badge, "N changes waiting to sync", "needs internet" messages. %>
+    <%# Connection dot (green online, red offline), "N changes waiting to sync",
+        "needs internet" messages. %>
     <div class="ps-offline-host" data-controller="offline">
+      <span class="ps-net-dot is-online" data-offline-target="dot" role="status" aria-label="Online" title="Online"></span>
       <div class="ps-offline-badge" data-offline-target="badge" role="status" hidden>
         <%= icon(:offline) %><span data-offline-target="label">Offline</span>
       </div>
