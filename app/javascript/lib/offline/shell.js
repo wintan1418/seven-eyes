@@ -83,7 +83,9 @@ const STYLE = `
 
 // A whole page. `assets` = { css, js } — the app's own bundle, when cached:
 // with it Turbo keeps driving visits (and the Hotwire Native apps stay happy).
-export function page({ title, body, assets = {}, owner = "guest" }) {
+// `online` = the real page this one stands in for; lib/offline/shell_return
+// goes there as soon as the server answers again.
+export function page({ title, body, assets = {}, owner = "guest", online = "/read" }) {
   return "<!doctype html><html lang='en' data-theme='auto'><head><meta charset='utf-8'>" +
     "<meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'>" +
     `<title>${esc(title)}</title>` +
@@ -91,7 +93,7 @@ export function page({ title, body, assets = {}, owner = "guest" }) {
     (assets.css ? `<link rel='stylesheet' href='${esc(assets.css)}'>` : "") +
     `<style>${STYLE}</style>` +
     (assets.js ? `<script type='module' src='${esc(assets.js)}'></script>` : "") +
-    `</head><body class='ofr' data-theme='auto' data-offline-owner='${esc(owner)}' data-offline-shell>${body}</body></html>`
+    `</head><body class='ofr' data-theme='auto' data-offline-owner='${esc(owner)}' data-offline-shell data-online-href='${esc(online)}'>${body}</body></html>`
 }
 
 const LINKS = [ [ "/read", "Bible" ], [ "/", "Home" ], [ "/reading_plans", "Plans" ], [ "/offline", "Offline Bibles" ] ]
@@ -131,7 +133,8 @@ export function renderChapter({ bible, downloaded, books, osis, chapter, verses,
     `<div class='ofr-verses' data-offline-reader>${text}</div>` +
     links("/read") +
     `</main><nav class='ofr-nav' aria-label='Chapters'>${nav(prev, "&#8249; Previous", "prev")}${nav(next, "Next &#8250;", "next")}</nav>`
-  return page({ title: `${name} ${chapter} · BiblioRata (offline)`, body, assets, owner })
+  const online = `/read?ref=${encodeURIComponent(`${name} ${chapter}`)}${code ? `&t=${encodeURIComponent(code)}` : ""}`
+  return page({ title: `${name} ${chapter} · BiblioRata (offline)`, body, assets, owner, online })
 }
 
 // Every book, Old and New Testament, each opening onto its chapter grid.
@@ -151,7 +154,7 @@ export function renderBooks({ bible, books, assets, owner }) {
     section("Old Testament", list.filter((b) => b.position <= 39)) +
     section("New Testament", list.filter((b) => b.position > 39)) +
     links() + `</main>`
-  return page({ title: "Books · BiblioRata (offline)", body, assets, owner })
+  return page({ title: "Books · BiblioRata (offline)", body, assets, owner, online: "/read" })
 }
 
 // No Bible on the device yet (it downloads by itself the first time the app
@@ -183,5 +186,5 @@ export function renderOffline({ path = "/", tab = false, assets, owner }) {
     `<p>${lead} Your Bible, and the pages you&rsquo;ve opened before, keep working without a connection.</p>` +
     links(path) +
     `<p><a href='${esc(path)}'>Try again</a></p></main>`
-  return page({ title: "Offline · BiblioRata", body, assets, owner })
+  return page({ title: "Offline · BiblioRata", body, assets, owner, online: path })
 }
