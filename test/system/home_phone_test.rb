@@ -1,9 +1,9 @@
 require "application_system_test_case"
 
-# The home on a phone: greeting and one search box, the verse of the day over
-# a painting (reflection folded), Continue reading, today's plan, quick
-# actions, the glossary slider, three studies then "Show all". Laptops get
-# two columns at the top and the slider three across.
+# The home on a phone: the Today hero (greeting, the verse of the day over a
+# painting, Begin today), one search box and quick actions, the Continue rail,
+# the glossary slider, three studies then "Show all". Laptops get the rail
+# four across and the slider three across.
 class HomePhoneTest < ApplicationSystemTestCase
   APP_UA = "BiblioRata/1.0.4; NativeBridge; Hotwire Native Android; Turbo Native Android; " \
            "Mozilla/5.0 (Linux; Android 16; wv) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
@@ -28,21 +28,22 @@ class HomePhoneTest < ApplicationSystemTestCase
     5.times { |i| users(:one).studies.create!(name: "Study #{i}", pane_count: 1) }
   end
 
-  test "a phone gets the verse, the slider, three studies and Show all; the prayer unfolds" do
+  test "a phone gets the verse, the slider, three studies and Show all" do
     sign_in
     phone
     visit root_path
 
-    assert_selector ".hm-hello h1", text: /Good (morning|afternoon|evening)/
-    within(".hm-verse") do
-      assert_selector ".hm-verse-text", text: @word.verse_text
-      assert_no_selector ".hm-reflect-prayer", visible: true
-      find(".hm-reflect summary").click
-      assert_selector ".hm-reflect-prayer", text: "Lord, keep us. Amen.", visible: true
+    assert_selector ".hm-today-hello", text: /Good (morning|afternoon|evening)/
+    within(".hm-today") do
+      assert_selector ".hm-today-text", text: @word.verse_text
+      assert_link "Begin today"
     end
-    # The phone gets the small picture.
-    src = page.evaluate_script("document.querySelector('.hm-verse-art img').currentSrc")
+    # The phone gets the small picture, and the hero runs edge to edge.
+    src = page.evaluate_script("document.querySelector('.hm-today-art img').currentSrc")
     assert_match(/-800[-.]/, src)
+    hero = find(".hm-today").rect
+    assert_equal 0, hero.x.round
+    assert_equal 390, hero.width.round
 
     assert_selector ".hm-actions .hm-action", count: 4, visible: true
     assert_selector ".hm-glossary .hm-gl-slide", count: 3, visible: true
@@ -80,15 +81,14 @@ class HomePhoneTest < ApplicationSystemTestCase
 
   test "Read the chapter opens the reader at today's verse" do
     sign_in
-    within(".hm-verse") { click_on "Read the chapter" }
+    within(".hm-today") { click_on "Read the chapter" }
     assert_selector ".ps-verse.is-focus", text: "Seeded #{DailyWord::REFERENCES.first}", wait: 5
   end
 
-  test "a laptop gets two columns at the top and the slider three across" do
+  test "a laptop gets the Continue rail and the slider in rows, no swiping needed" do
     sign_in
-    hero = find(".hm-verse").rect
-    side = find(".hm-side").rect
-    assert_operator side.x, :>, hero.x + hero.width - 1, "Continue / plan sit beside the verse"
+    cards = all(".hm-continue-block .hm-rail > *", visible: true).first(4).map { |c| c.rect.y.round }
+    assert_equal 1, cards.uniq.size
     slides = all(".hm-gl-slide", visible: true).first(3).map { |s| s.rect.y.round }
     assert_equal 1, slides.uniq.size
     assert_no_button "Show all", visible: true
@@ -99,9 +99,9 @@ class HomePhoneTest < ApplicationSystemTestCase
     page.driver.browser.execute_cdp("Network.setUserAgentOverride", userAgent: APP_UA)
     phone
     visit root_path
-    assert_selector ".hm-root.is-guest .hm-verse"
+    assert_selector ".hm-root.is-guest .hm-today .hm-begin"
     assert_selector ".hm-resume", text: /Start reading/i
-    assert_selector ".hm-join", text: /Create a free account to keep notes, highlights and reading plans/
+    assert_selector ".hm-join", text: /Your streak, notes and plans on every device/
     assert_no_selector ".ui-tabbar", visible: true # the app has its own
     assert_no_selector ".ps-landing"
   ensure
@@ -120,6 +120,6 @@ class HomePhoneTest < ApplicationSystemTestCase
     fill_in "email_address", with: users(:one).email_address
     fill_in "password", with: "password"
     click_on "Sign In"
-    assert_selector ".hm-hello"
+    assert_selector ".hm-today"
   end
 end

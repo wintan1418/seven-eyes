@@ -52,7 +52,8 @@
 
     <% if @faith_term %>
       <div class="ld-glossary">
-        <%= render "faith_terms/slider", terms: @faith_slides, roots: @faith_slide_roots, total: @faith_total, everywhere: true %>
+        <%= render "faith_terms/slider", terms: @faith_slides, roots: @faith_slide_roots, total: @faith_total, everywhere: true,
+                   title: "Words of the faith" %>
       </div>
     <% end %>
 

@@ -1,0 +1,44 @@
+<%# Pastor mode — This Sunday leads Home: the service being prepared (the most
+    recent study with a preach queue), its order of service at a glance, what
+    still needs doing, and one tap to open it, present it or get it ready
+    offline. sunday_card (JS) adds what only this device knows: whether "Get
+    ready for Sunday" has saved it here. locals: sunday (ThisSunday) %>
+<% study = sunday.study %>
+<% counts = sunday.counts %>
+<section class="hm-sunday" aria-labelledby="hm-sunday-title"
+         data-controller="sunday-card" data-sunday-card-url-value="<%= study_path(study) %>">
+  <div class="hm-sunday-head">
+    <p class="hm-sunday-eyebrow"><span aria-hidden="true">✠</span> <%= sunday.date == DailyWord.today_date ? "Today" : "This Sunday" %> &middot; <%= l(sunday.date, format: "%-d %B") %></p>
+    <h2 class="hm-sunday-title" id="hm-sunday-title"><%= illuminated(study.name) %></h2>
+    <p class="hm-sunday-counts">
+      <%= [ (pluralize(counts[:scripture], "scripture") if counts[:scripture].positive?),
+            (pluralize(counts[:song], "song") if counts[:song].positive?),
+            (pluralize(counts[:slides], "slide item") if counts[:slides].positive?) ].compact.join(" · ") %>
+    </p>
+  </div>
+
+  <ol class="hm-sunday-order" aria-label="Order of service">
+    <% sunday.shown.each do |item| %>
+      <li class="hm-sunday-item is-<%= item.kind %>">
+        <span class="hm-sunday-kind"><%= ThisSunday.kind_label(item) %></span>
+        <span class="hm-sunday-name"><%= ThisSunday.item_title(item) %></span>
+      </li>
+    <% end %>
+    <% if sunday.more.positive? %>
+      <li class="hm-sunday-more">and <%= sunday.more %> more</li>
+    <% end %>
+  </ol>
+
+  <ul class="hm-sunday-checks" aria-label="Ready for Sunday?">
+    <% sunday.checks.each do |check| %>
+      <li class="is-<%= check.state %>"><%= icon(check.state == :ok ? :check : :help) %><span><%= check.text %></span></li>
+    <% end %>
+    <li class="is-device" data-sunday-card-target="device" hidden><%= icon(:offline) %><span data-sunday-card-target="deviceText"></span></li>
+  </ul>
+
+  <div class="hm-sunday-actions">
+    <%= link_to study_path(study, queue: 1), class: "hm-sunday-btn" do %><%= icon(:queue) %> Open service<% end %>
+    <%= link_to study_path(study, present: 1), class: "hm-sunday-btn is-primary", data: { turbo_prefetch: false } do %><%= icon(:presentation) %> Present<% end %>
+    <%= link_to study_path(study, ready: 1), class: "hm-sunday-btn", data: { turbo_prefetch: false } do %><%= icon(:download) %> Get ready<span class="hm-wide-only"> for Sunday</span><% end %>
+  </div>
+</section>

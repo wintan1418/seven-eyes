@@ -35,7 +35,9 @@
 @import "./ui/pages.css";
 @import "./ui/daily_word.css";
 @import "./ui/faith.css";
-@import "./ui/home.css"; /* the home page: greeting, verse of the day, plan, quick actions */
+@import "./ui/illuminated.css"; /* gold leaf, illuminated initials, chapter headings, time-of-day tint */
+@import "./ui/home.css"; /* the home page: Today hero, Continue rail, For you, This Sunday */
+@import "./ui/today.css"; /* the Today flow (/today/begin) */
 @import "./ui/faith_admin.css"; /* glossary review desk: Rewrite with AI */
 @import "./ui/native.css";
 @import "./ui/offline.css";

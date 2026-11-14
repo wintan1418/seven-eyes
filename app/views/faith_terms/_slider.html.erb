@@ -7,10 +7,16 @@
 <% eager_first = local_assigns.fetch(:eager_first, true) %>
 <section class="hm-glossary<%= " is-everywhere" if everywhere %>" aria-labelledby="hm-glossary-title"
          data-controller="shatter-slider" data-shatter-slider-interval-value="5000">
-  <div class="hm-glossary-head">
-    <h2 class="ui-label" id="hm-glossary-title">Glossary of the Faith</h2>
-    <%= link_to "All #{total}", faith_terms_path, class: "hm-glossary-all" %>
-  </div>
+  <% if local_assigns[:title] %>
+    <%# Home: a chapter heading (illuminated look). %>
+    <%= illuminated_heading(local_assigns[:title], id: "hm-glossary-title",
+                        aside: link_to("All #{total}", faith_terms_path, class: "il-heading-link")) %>
+  <% else %>
+    <div class="hm-glossary-head">
+      <h2 class="ui-label" id="hm-glossary-title">Glossary of the Faith</h2>
+      <%= link_to "All #{total}", faith_terms_path, class: "hm-glossary-all" %>
+    </div>
+  <% end %>
   <div class="hm-glossary-track" data-shatter-slider-target="track" tabindex="0"
        aria-roledescription="carousel" aria-label="Words of the faith — swipe to see more">
     <% terms.each_with_index do |term, i| %>

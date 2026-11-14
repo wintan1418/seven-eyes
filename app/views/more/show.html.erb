@@ -31,6 +31,22 @@
       </div>
     </section>
 
+    <% if authenticated? %>
+      <%# Pastor mode: "This Sunday" (the next service, its readiness, Present) leads Home. %>
+      <section class="ui-menu-section" aria-label="Pastor mode">
+        <% on = current_user.pastor_mode? %>
+        <%= button_to preferences_path, method: :patch, params: { pastor_mode: !on }, class: "ui-switch-row",
+              form: { class: "contents" }, role: "switch", "aria-checked": on.to_s, data: { turbo: false } do %>
+          <span class="ui-switch-icon" aria-hidden="true"><%= icon(:presentation) %></span>
+          <span class="ui-switch-text">
+            <b>Pastor mode</b>
+            <small>This Sunday's order of service, readiness and Present at the top of Home</small>
+          </span>
+          <span class="ui-switch<%= ' is-on' if on %>" aria-hidden="true"><span></span></span>
+        <% end %>
+      </section>
+    <% end %>
+
     <nav class="ui-menu-section ui-menu-links" aria-label="Offline">
       <% if authenticated? %>
         <button type="button" class="ui-menu-item" data-controller="quick-present" data-action="quick-present#open">

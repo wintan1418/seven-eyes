@@ -1,0 +1,138 @@
+<% content_for :title, "Today · BiblioRata" %>
+<%# Today — the guided daily flow, full screen and calm: one step at a time,
+    swipe or Next (today_flow controller; a horizontal scroll-snap track, so
+    it also works by plain swiping, and every step is readable without JS).
+    I The verse (Listen) · II The passage · III Reflection · IV Word of the
+    faith · V Prayer · Amen (marks today done → DailyCompletion; offline it
+    waits in the outbox, guests keep it on the device). Saved by the service
+    worker for offline use. Styles: ui/today.css + ui/illuminated.css. %>
+<% steps = @flow.steps %>
+<% word = @word %>
+<% numerals = %w[I II III IV V VI] %>
+<% labels = { verse: "The verse", passage: "The passage", reflection: "Reflection", word: "Word of the faith", prayer: "Prayer", amen: "Amen" } %>
+<div class="tf-root" data-daypart="<%= @daypart.key %>"
+     data-controller="today-flow"
+     data-today-flow-date-value="<%= DailyWord.today_date.iso8601 %>"
+     data-today-flow-signed-in-value="<%= authenticated?.present? %>"
+     data-today-flow-dates-value="<%= (@status&.dates || []).first(60).map(&:iso8601).to_json %>"
+     data-action="keydown@window->today-flow#key">
+  <div class="tf-art" aria-hidden="true">
+    <%= faith_art_picture(@art, sizes: "100vw", loading: "eager", phone_small: true) %>
+  </div>
+
+  <header class="tf-bar">
+    <%= link_to root_path, class: "tf-close", aria: { label: "Close Today" }, title: "Close" do %><%= icon(:x) %><% end %>
+    <ol class="tf-progress" aria-label="Steps">
+      <% steps.each_with_index do |step, i| %>
+        <li class="tf-seg<%= ' is-on' if i.zero? %>" data-today-flow-target="seg">
+          <button type="button" class="tf-seg-btn" data-action="today-flow#jump" data-index="<%= i %>"
+                  aria-label="Step <%= i + 1 %>: <%= labels[step] %>"></button>
+        </li>
+      <% end %>
+    </ol>
+    <span class="tf-count" data-today-flow-target="count" aria-live="polite">1 of <%= steps.size %></span>
+  </header>
+
+  <div class="tf-track" data-today-flow-target="track" tabindex="-1">
+    <% steps.each_with_index do |step, i| %>
+      <section class="tf-step is-<%= step %>" data-today-flow-target="step" data-step="<%= step %>"
+               aria-labelledby="tf-<%= step %>-title" aria-roledescription="step">
+        <div class="tf-sheet">
+          <div class="tf-eyebrow<%= ' tf-sr' if step == :amen %>">
+            <span class="tf-numeral" aria-hidden="true"><%= numerals[i] %></span><span class="tf-rule" aria-hidden="true"></span>
+            <h1 class="tf-title" id="tf-<%= step %>-title"><%= labels[step] %></h1>
+          </div>
+          <% case step %>
+          <% when :verse %>
+            <div class="tf-verse-wrap" data-controller="reader">
+              <blockquote class="tf-verse<%= ' is-long' if word.verse_text.length > 220 %>">
+                <span class="ps-verse-text"><%= illuminated(word.verse_text) %></span>
+              </blockquote>
+              <p class="tf-ref"><%= word.reference %> <span>&middot; <%= word.translation_code %></span></p>
+              <button type="button" class="tf-listen" data-reader-target="button" data-action="reader#toggle"
+                      aria-label="Listen to the verse" title="Listen"><%= icon(:listen) %></button>
+              <span class="tf-listen-label">Listen</span>
+            </div>
+          <% when :passage %>
+            <p class="tf-sub"><%= @flow.passage_label %></p>
+            <div class="tf-passage" data-controller="reader">
+              <% @flow.passage.each do |verse| %>
+                <p class="tf-pv<%= ' is-focus' if verse.focus %>"><sup><%= verse.number %></sup> <span class="ps-verse-text"><%= verse.text %></span></p>
+              <% end %>
+              <div class="tf-passage-foot">
+                <button type="button" class="tf-chip" data-reader-target="button" data-action="reader#toggle" title="Listen to the passage"><%= icon(:listen) %></button>
+                <%= link_to read_path(ref: word.chapter_label, t: word.translation_code), class: "tf-chip is-link", data: { turbo_prefetch: false } do %>
+                  <%= icon(:book) %> Read all of <%= word.chapter_label %>
+                <% end %>
+              </div>
+            </div>
+          <% when :reflection %>
+            <p class="tf-prose"><%= illuminated(word.reflection) %></p>
+            <div class="tf-ai">
+              <span>Written with AI from the passage</span>
+              <%= render "shared/ai_report", kind: "daily_word", key: "today_flow_#{word.date.iso8601}",
+                         context: word.reference, excerpt: [ word.reflection, word.prayer ].join("\n\n") %>
+            </div>
+          <% when :word %>
+            <% term = @flow.term %>
+            <% root = @flow.root %>
+            <div class="tf-term">
+              <p class="tf-term-name"><%= term.name %></p>
+              <% if root %>
+                <p class="tf-rootword">
+                  <span class="tf-lemma" lang="<%= @root_lang %>"><%= root.lemma.presence || root.strongs %></span>
+                  <span class="tf-root-meta">
+                    <% if root.translit.present? %><i><%= root.translit %></i> &middot; <% end %><%= root.language.to_s.capitalize %> &middot; <%= root.strongs %>
+                  </span>
+                  <% if @flow.root_meaning %><span class="tf-root-mean">&ldquo;<%= @flow.root_meaning %>&rdquo;</span><% end %>
+                </p>
+              <% end %>
+              <p class="tf-prose is-short"><%= term.short_definition %></p>
+              <%= link_to faith_term_path(term), class: "tf-chip is-link" do %>More on <%= term.name.downcase %> <%= icon(:chevron_right) %><% end %>
+            </div>
+          <% when :prayer %>
+            <p class="tf-prayer"><%= word.prayer %></p>
+            <p class="tf-hint">Pray it slowly, in your own words if you like.</p>
+          <% when :amen %>
+            <div class="tf-amen" data-today-flow-target="amen">
+              <div class="tf-seal" aria-hidden="true">
+                <svg class="tf-seal-ring" viewBox="0 0 120 120">
+                  <circle class="tf-seal-track" cx="60" cy="60" r="52" />
+                  <circle class="tf-seal-fill" cx="60" cy="60" r="52" pathLength="100" data-today-flow-target="ring" />
+                </svg>
+                <span class="tf-seal-num" data-today-flow-target="streak">✠</span>
+              </div>
+              <div class="tf-amen-ask" data-today-flow-target="ask">
+                <p class="tf-amen-lead">So be it.</p>
+                <button type="button" class="tf-amen-btn" data-action="today-flow#amen" data-today-flow-target="amenButton">Amen</button>
+                <p class="tf-hint">Marks today done<%= " on this device" unless authenticated? %>.</p>
+              </div>
+              <div class="tf-amen-done" data-today-flow-target="done" hidden tabindex="-1">
+                <p class="tf-amen-title">Today is done</p>
+                <p class="tf-amen-streak" data-today-flow-target="streakText" role="status"></p>
+                <% unless authenticated? %>
+                  <p class="tf-keep"><%= link_to "Create a free account", new_registration_path %> to keep your streak on every device.</p>
+                <% end %>
+                <div class="tf-amen-actions">
+                  <%= link_to root_path, class: "tf-chip is-primary" do %><%= icon(:home) %> Back to Home<% end %>
+                  <%= link_to read_path(ref: word.chapter_label, t: word.translation_code), class: "tf-chip", data: { turbo_prefetch: false } do %>
+                    <%= icon(:book) %> Read the whole chapter
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+  </div>
+
+  <footer class="tf-nav">
+    <button type="button" class="tf-back" data-action="today-flow#prev" data-today-flow-target="prev" disabled>
+      <%= icon(:chevron_left) %><span>Back</span>
+    </button>
+    <button type="button" class="tf-next" data-action="today-flow#next" data-today-flow-target="next">
+      <span data-today-flow-target="nextLabel">Next</span><%= icon(:chevron_right) %>
+    </button>
+  </footer>
+</div>

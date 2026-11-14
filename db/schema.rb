@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_13_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_14_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -106,6 +106,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_170000) do
     t.integer "votes", default: 0, null: false
     t.index ["from_book_id", "from_chapter", "from_verse"], name: "index_xrefs_on_from_location"
     t.index ["to_book_id"], name: "index_cross_references_on_to_book_id"
+  end
+
+  create_table "daily_completions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.date "date", null: false
+    t.datetime "created_at", null: false
+    t.index ["user_id", "date"], name: "index_daily_completions_on_user_id_and_date", unique: true
   end
 
   create_table "daily_words", force: :cascade do |t|
@@ -549,6 +556,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_170000) do
     t.datetime "tour_completed_at"
     t.datetime "updated_at", null: false
     t.boolean "reviewer", default: false, null: false
+    t.boolean "pastor_mode"
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
@@ -577,6 +585,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_170000) do
   add_foreign_key "commentaries", "books"
   add_foreign_key "cross_references", "books", column: "from_book_id"
   add_foreign_key "cross_references", "books", column: "to_book_id"
+  add_foreign_key "daily_completions", "users"
   add_foreign_key "highlights", "users"
   add_foreign_key "highlights", "verses"
   add_foreign_key "live_sessions", "studies"

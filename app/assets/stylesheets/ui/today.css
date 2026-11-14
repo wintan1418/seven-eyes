@@ -1,0 +1,238 @@
+/* ==========================================================================
+   Today — the guided daily flow (today_flows/show, today_flow controller).
+   Full screen and calm: a slim bar (close · progress · 1 of 6), one step at a
+   time in a horizontal scroll-snap track, Back / Next at the bottom. The
+   step reads on the theme's own page colour (contrast stays the theme's);
+   the day's painting only washes the top of the screen, tinted by the hour.
+   ========================================================================== */
+
+body > .tf-root {
+  position: relative;
+  height: 100vh; height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden; background: var(--ui-bg); color: var(--ui-fg); font-family: var(--ui-font);
+}
+body:has(.tf-root) .ui-theme-float { display: none; }
+body:has(.tf-root) .ps-net-dot { top: calc(64px + env(safe-area-inset-top)); }
+
+.tf-art {
+  position: absolute; inset: 0 0 auto; height: 52vh; z-index: 0; pointer-events: none; overflow: hidden;
+  opacity: 0.2; -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 100%);
+}
+.tf-art .ft-art, .tf-art img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; filter: sepia(0.5) saturate(0.7); }
+[data-theme="candlelight"] .tf-art { opacity: 0.26; }
+[data-theme="paper"] .tf-art { opacity: 0.12; }
+.tf-root::before { /* the hour's light */
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(110% 60% at 80% 0%, var(--dp-glow-a, transparent), transparent 65%);
+}
+
+/* Bar ------------------------------------------------------------------------------ */
+.tf-bar {
+  position: relative; z-index: 2; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+  padding: calc(8px + env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 8px max(10px, env(safe-area-inset-left));
+}
+.tf-close {
+  display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 999px;
+  color: var(--ui-fg-muted); text-decoration: none;
+}
+.tf-close:hover { background: var(--ui-surface); color: var(--ui-fg); }
+.tf-close svg { width: 22px; height: 22px; }
+.tf-progress { list-style: none; display: flex; gap: 5px; margin: 0; padding: 0; }
+.tf-seg { flex: 1 1 0; }
+.tf-seg-btn {
+  display: block; width: 100%; height: 22px; padding: 0; border: 0; background: none; cursor: pointer; position: relative;
+}
+.tf-seg-btn::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 9px; height: 4px; border-radius: 99px;
+  background: var(--ui-border); transition: background 0.3s ease;
+}
+.tf-seg.is-on .tf-seg-btn::before { background: var(--il-leaf-ink); }
+.tf-seg-btn:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: 6px; }
+.tf-count { font: 600 12px var(--ui-font); color: var(--ui-fg-subtle); font-variant-numeric: tabular-nums; min-width: 44px; text-align: right; }
+body.hotwire-native .tf-close { visibility: hidden; } /* the native bar has Back */
+
+/* Track and steps --------------------------------------------------------------------- */
+.tf-track {
+  position: relative; z-index: 1; display: flex; overflow-x: auto; overflow-y: hidden; outline: none;
+  scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none;
+}
+.tf-track::-webkit-scrollbar { display: none; }
+.tf-step {
+  flex: 0 0 100%; min-width: 0; overflow-y: auto; scroll-snap-align: start; scroll-snap-stop: always;
+  display: flex; -webkit-overflow-scrolling: touch;
+}
+.tf-sheet {
+  width: 100%; max-width: 38rem; margin: auto; padding: 18px 26px 36px;
+  display: flex; flex-direction: column; justify-content: center; gap: 18px; min-height: 100%;
+}
+@media (min-width: 768px) { .tf-sheet { padding: 32px 40px 48px; gap: 22px; } }
+
+.tf-eyebrow { display: flex; align-items: center; gap: 12px; margin: 0; font: 600 11.5px/1.2 var(--ui-font); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ui-fg-subtle); }
+.tf-numeral {
+  font: 600 24px/1 "Cinzel", Georgia, serif; letter-spacing: 0.04em;
+  background: var(--il-leaf-ink); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+}
+.tf-rule { flex: 0 0 34px; height: 1px; background: linear-gradient(90deg, var(--il-gold-soft), transparent); }
+.tf-title { margin: 0; font: 600 14px/1.2 "Cinzel", Georgia, serif; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ui-accent); }
+.tf-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.tf-sub { margin: -8px 0 0; font: 500 calc(17px * var(--reader-scale, 1)) / 1.3 var(--reader-font); color: var(--ui-fg-muted); }
+
+/* I · The verse */
+.tf-verse-wrap { display: grid; gap: 16px; justify-items: start; }
+.tf-verse {
+  margin: 0; font: 400 31px/1.38 "EB Garamond", Georgia, serif; color: var(--ui-fg); text-wrap: pretty;
+}
+.tf-verse.is-long { font-size: 25px; }
+@media (min-width: 768px) { .tf-verse { font-size: 40px; } .tf-verse.is-long { font-size: 31px; } }
+.tf-verse .is-drop .il-initial { font-size: 3.1em; }
+.tf-root .tf-verse .il-initial, .tf-root .tf-prose .il-initial { background-image: var(--il-leaf-ink); filter: none; }
+.tf-ref { margin: 0; font: 600 14.5px var(--ui-font); color: var(--ui-accent); letter-spacing: 0.02em; }
+.tf-ref span { font-weight: 500; color: var(--ui-fg-subtle); }
+.tf-listen {
+  display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--ui-border-strong); background: var(--ui-elevated); color: var(--ui-accent); font: 600 16px var(--ui-font);
+  box-shadow: var(--ui-shadow-sm);
+}
+.tf-listen svg { width: 24px; height: 24px; }
+.tf-listen.is-on { background: var(--ui-accent); color: var(--ui-accent-fg); border-color: var(--ui-accent); }
+.tf-listen:focus-visible, .tf-chip:focus-visible, .tf-amen-btn:focus-visible, .tf-next:focus-visible, .tf-back:focus-visible, .tf-close:focus-visible {
+  outline: 2px solid var(--ui-focus); outline-offset: 3px;
+}
+.tf-listen-label { margin-top: -10px; font: 500 12px var(--ui-font); color: var(--ui-fg-subtle); }
+.tf-verse-wrap { grid-template-columns: auto 1fr; }
+.tf-verse-wrap > .tf-verse, .tf-verse-wrap > .tf-ref { grid-column: 1 / -1; }
+.tf-verse-wrap > .tf-listen { grid-column: 1; }
+.tf-verse-wrap > .tf-listen-label { grid-column: 2; align-self: center; margin: 0; }
+
+/* II · The passage */
+.tf-passage { display: grid; gap: 2px; }
+.tf-pv {
+  margin: 0; padding: 3px 0; font: 400 calc(18px * var(--reader-scale, 1)) / 1.6 var(--reader-font); color: var(--ui-fg-muted);
+}
+.tf-pv sup { font: 600 11px var(--ui-font); color: var(--ui-vnum); vertical-align: 0.5em; margin-right: 2px; }
+.tf-pv.is-focus {
+  color: var(--ui-fg); margin: 4px -14px; padding: 8px 14px; border-radius: 12px;
+  background: linear-gradient(90deg, var(--il-gold-faint), transparent 85%);
+  box-shadow: inset 2px 0 0 var(--il-gold);
+}
+.tf-passage-foot { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.tf-chip {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; min-width: 44px; padding: 0 16px;
+  border: 1px solid var(--ui-border); border-radius: 999px; background: var(--ui-elevated); color: var(--ui-fg);
+  font: 600 14px var(--ui-font); text-decoration: none; cursor: pointer;
+}
+.tf-chip svg { width: 17px; height: 17px; color: var(--ui-accent); }
+.tf-chip[data-reader-target] { padding: 0; width: 44px; }
+.tf-chip:hover { background: var(--ui-surface); }
+.tf-chip.is-primary { background: var(--ui-accent); border-color: var(--ui-accent); color: var(--ui-accent-fg); }
+.tf-chip.is-primary svg { color: inherit; }
+.tf-chip.is-primary:hover { background: var(--ui-accent-hover); }
+
+/* III · Reflection */
+.tf-prose { margin: 0; font: 400 calc(20px * var(--reader-scale, 1)) / 1.65 var(--reader-font); color: var(--ui-fg); text-wrap: pretty; }
+.tf-prose.is-drop .il-initial { font-size: 3.3em; margin-top: 0.08em; }
+.tf-prose.is-short { font-size: calc(18px * var(--reader-scale, 1)); color: var(--ui-fg-muted); }
+.tf-ai { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font: 400 12px var(--ui-font); color: var(--ui-fg-subtle); }
+.tf-ai .ps-ai-report { margin: 0; }
+
+/* IV · Word of the faith */
+.tf-term { display: grid; gap: 14px; justify-items: start; }
+.tf-term-name {
+  margin: 0; font: 600 40px/1.05 "Cinzel", "EB Garamond", Georgia, serif; letter-spacing: 0.02em; color: var(--ui-fg);
+}
+.tf-rootword { display: grid; gap: 4px; margin: 0; padding: 14px 18px; border-radius: 16px; background: var(--ui-surface); box-shadow: inset 0 0 0 1px var(--ui-border); }
+.tf-lemma { font: 400 38px/1.15 "Noto Serif", "SBL Greek", "Gentium Plus", "EB Garamond", Georgia, serif; color: var(--ui-accent); }
+.tf-lemma[lang="he"] { direction: rtl; justify-self: start; }
+.tf-root-meta { font: 500 13px var(--ui-font); color: var(--ui-fg-muted); }
+.tf-root-meta i { font: italic 500 15px var(--reader-font); color: var(--ui-fg); }
+.tf-root-mean { font: italic 400 calc(16px * var(--reader-scale, 1)) / 1.45 var(--reader-font); color: var(--ui-fg); }
+
+/* V · Prayer */
+.tf-prayer {
+  margin: 0; padding-left: 18px; border-left: 2px solid var(--il-gold);
+  font: italic 400 calc(23px * var(--reader-scale, 1)) / 1.55 var(--reader-font); color: var(--ui-fg); text-wrap: pretty;
+}
+.tf-hint { margin: 0; font: 400 13.5px/1.45 var(--ui-font); color: var(--ui-fg-subtle); }
+
+/* Amen and the seal ---------------------------------------------------------------------- */
+.tf-amen { position: relative; display: grid; justify-items: center; gap: 22px; text-align: center; padding-top: 8px; }
+.tf-amen::before { /* the gold light */
+  content: ""; position: absolute; left: 50%; top: 80px; width: 420px; height: 420px; margin: -210px 0 0 -210px; z-index: -1;
+  border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle, rgba(246, 214, 140, 0.55), rgba(232, 190, 100, 0.18) 45%, transparent 70%);
+}
+.tf-root.is-complete .tf-amen::before { opacity: 0.8; }
+.tf-seal { position: relative; width: 160px; height: 160px; }
+.tf-seal-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+.tf-seal-track { fill: none; stroke: var(--ui-border); stroke-width: 6; }
+.tf-seal-fill { fill: none; stroke: var(--il-gold); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 100 100; stroke-dashoffset: 100; opacity: 0; }
+.tf-root.is-complete .tf-seal-fill { opacity: 1; }
+.tf-seal-num {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font: 600 52px/1 "Cinzel", Georgia, serif;
+  background: var(--il-leaf-ink); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+}
+.tf-amen-ask, .tf-amen-done { display: grid; gap: 14px; justify-items: center; }
+.tf-amen-ask[hidden], .tf-amen-done[hidden] { display: none; }
+.tf-amen-done:focus { outline: none; }
+.tf-amen-lead { margin: 0; font: italic 400 calc(22px * var(--reader-scale, 1)) / 1.4 var(--reader-font); color: var(--ui-fg-muted); }
+.tf-amen-btn {
+  min-width: 220px; min-height: 60px; padding: 0 36px; border: 0; border-radius: 999px; cursor: pointer;
+  background: linear-gradient(170deg, #f9e7ad 0%, #e6c26c 38%, #c99a3e 72%, #b58630 100%); color: #2a1906;
+  font: 600 22px/1 "Cinzel", Georgia, serif; letter-spacing: 0.12em;
+  box-shadow: 0 1px 0 rgba(255, 246, 214, 0.75) inset, 0 -2px 0 rgba(110, 70, 10, 0.25) inset, 0 10px 26px rgba(120, 80, 20, 0.28);
+}
+.tf-amen-btn:active { transform: scale(0.98); }
+.tf-amen-title { margin: 0; font: 500 calc(32px * var(--reader-scale, 1)) / 1.15 var(--reader-font); color: var(--ui-fg); }
+.tf-amen-streak { margin: -6px 0 0; font: 500 15px var(--ui-font); color: var(--ui-accent); }
+.tf-amen-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 4px; }
+.tf-keep { margin: 0; font: 400 14px/1.5 var(--ui-font); color: var(--ui-fg-muted); }
+.tf-keep a { color: var(--ui-accent); font-weight: 600; }
+
+/* Nav ------------------------------------------------------------------------------------ */
+.tf-nav {
+  position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 10px max(18px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  border-top: 1px solid color-mix(in srgb, var(--ui-border) 60%, transparent);
+  background: color-mix(in srgb, var(--ui-bg) 88%, transparent);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+@media (min-width: 768px) { .tf-nav { justify-content: center; gap: 24px; border-top: 0; background: none; } }
+.tf-back, .tf-next {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 48px; border-radius: 999px; cursor: pointer; font: 600 15px var(--ui-font);
+}
+.tf-back { padding: 0 16px 0 10px; border: 0; background: none; color: var(--ui-fg-muted); }
+.tf-back:disabled { opacity: 0.35; cursor: default; }
+.tf-back svg, .tf-next svg { width: 19px; height: 19px; }
+.tf-next { padding: 0 18px 0 26px; min-width: 140px; justify-content: center; border: 0; background: var(--ui-fg); color: var(--ui-bg); }
+.tf-next:hover { background: color-mix(in srgb, var(--ui-fg) 86%, var(--ui-bg)); }
+.tf-next[hidden] { display: none; }
+.tf-root.is-complete .tf-nav { visibility: hidden; }
+
+/* Motion --------------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .tf-step .tf-sheet > * { animation: tf-rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .tf-step .tf-sheet > *:nth-child(2) { animation-delay: 0.06s; }
+  .tf-step .tf-sheet > *:nth-child(3) { animation-delay: 0.12s; }
+  .tf-step .tf-sheet > *:nth-child(n + 4) { animation-delay: 0.18s; }
+  .tf-seal-fill { transition: stroke-dashoffset 1.6s cubic-bezier(0.3, 0.7, 0.2, 1) 0.15s; }
+  .tf-amen::before { transition: opacity 1.4s ease; }
+  .tf-root.is-celebrating .tf-amen::before { animation: tf-bloom 2.6s ease-out both; }
+  .tf-root.is-celebrating .tf-seal-num { animation: tf-pop 0.9s 0.9s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+  .tf-root.is-celebrating .tf-amen-done { animation: tf-rise 0.7s 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .tf-root.is-celebrating .tf-seal::after { /* motes of gold rising */
+    content: ""; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; border-radius: 50%;
+    box-shadow: -40px 10px 0 0 #e9c46d, 36px 0 0 0 #f6dc96, -12px 30px 0 -1px #d7ad55, 54px 26px 0 -1px #e9c46d, -58px -6px 0 -1px #f6dc96, 18px 40px 0 0 #d7ad55;
+    animation: tf-motes 2.4s 0.4s ease-out both;
+  }
+  .tf-seg-btn::before { transition: background 0.3s ease; }
+}
+@keyframes tf-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes tf-bloom { 0% { opacity: 0; transform: scale(0.4); } 40% { opacity: 1; } 100% { opacity: 0.8; transform: scale(1); } }
+@keyframes tf-pop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+@keyframes tf-motes { from { opacity: 0; transform: translateY(20px); } 30% { opacity: 1; } to { opacity: 0; transform: translateY(-90px); } }
+@media (prefers-reduced-motion: reduce) {
+  .tf-track { scroll-behavior: auto; }
+  .tf-seal-fill, .tf-amen::before { transition: none; }
+}

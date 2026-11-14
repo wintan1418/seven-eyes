@@ -227,3 +227,18 @@ application.register("faith-rewriter", FaithRewriterController)
 
 import ShatterSliderController from "./shatter_slider_controller"
 application.register("shatter-slider", ShatterSliderController)
+
+import TodayHeroController from "./today_hero_controller"
+application.register("today-hero", TodayHeroController)
+
+import TodayResumeController from "./today_resume_controller"
+application.register("today-resume", TodayResumeController)
+
+import TodayFlowController from "./today_flow_controller"
+application.register("today-flow", TodayFlowController)
+
+import ParallaxController from "./parallax_controller"
+application.register("parallax", ParallaxController)
+
+import SundayCardController from "./sunday_card_controller"
+application.register("sunday-card", SundayCardController)

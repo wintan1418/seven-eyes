@@ -29,8 +29,8 @@ class DailyWordSystemTest < ApplicationSystemTestCase
     fill_in "email_address", with: users(:one).email_address
     fill_in "password", with: "password"
     click_on "Sign In"
-    assert_selector ".hm-verse"
-    within(".hm-verse") { click_on "Share" }
+    assert_selector ".hm-today"
+    within(".hm-today-open") { click_on "Share" }
     assert_selector ".ps-share-host.is-open"
   end
 end

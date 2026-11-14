@@ -13,4 +13,27 @@ class UserTest < ActiveSupport::TestCase
       name ? assert_equal(name, got, email) : assert_nil(got, email)
     end
   end
+
+  test "pastor mode follows what the account does until the reader chooses" do
+    user = users(:one)
+    assert_not user.pastor_mode?, "a reader who has never lined up a service"
+
+    study = user.studies.create!(name: "Sunday", pane_count: 1)
+    study.setlist_items.create!(kind: :song, title: "Amazing Grace", body: "Amazing grace")
+    assert User.find(user.id).pastor_mode?, "a service queue makes a preacher"
+
+    user.update!(pastor_mode: false)
+    assert_not User.find(user.id).pastor_mode?, "their own choice wins"
+
+    other = users(:two)
+    other.update!(pastor_mode: true)
+    assert other.pastor_mode?
+  end
+
+  test "having gone live makes a preacher too" do
+    user = users(:two)
+    study = user.studies.create!(name: "Live", pane_count: 1)
+    LiveSession.create!(study:, code: "ABC123")
+    assert User.find(user.id).pastor_mode?
+  end
 end

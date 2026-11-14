@@ -51,7 +51,7 @@ class OfflineStartPresentTest < ApplicationSystemTestCase
     assert_selector ".ui-offline-toast", text: /needs internet to open/i
     assert_current_path root_path
     page.save_screenshot(SHOTS.join("offline_home_studies.png").to_s)
-    page.execute_script("document.querySelector('.hm-head').scrollIntoView({ block: 'start' })")
+    page.execute_script("document.querySelector('.hm-tools').scrollIntoView({ block: 'start' })")
     page.save_screenshot(SHOTS.join("offline_home_present_offline.png").to_s)
 
     timings = present_john_316 { find(".hm-present").click }
@@ -82,7 +82,7 @@ class OfflineStartPresentTest < ApplicationSystemTestCase
     prepare_device
     go_offline
     visit root_path
-    find(".hm-section-head button", text: "New study").click
+    find(".hm-studies .il-heading-link", text: "New study").click
     assert_selector ".ps-root.is-preaching", wait: 5
     assert_selector ".ps-preach-jump input:focus"
     assert_no_selector ".ui-offline-toast.is-on", text: /new studies need/i

@@ -1,0 +1,88 @@
+<%# Today — the hero. Full-bleed Bible painting (FaithArt, chosen by date),
+    the day and greeting, today's verse with an illuminated initial, and one
+    button into the guided daily flow (/today/begin). Once today is done the
+    button gives way to "Today is done ✓ · streak N", Read the whole chapter
+    and Share. today_hero (JS) keeps this right on a saved/offline copy and for
+    guests (device days, lib/today_state.js), and re-tints for the hour.
+    locals: word (DailyWord or nil), art (FaithArt::Image), guest, status
+    (DailyCompletion::Status or nil for guests), daypart (Daypart::Part),
+    fixed (the clock was stubbed with ?at=) %>
+<% name = current_user&.greeting_name unless guest %>
+<% done = status&.done_today %>
+<% streak = status&.streak.to_i %>
+<% text = word&.verse_text || "Open thou mine eyes, that I may behold wondrous things out of thy law." %>
+<% reference = word&.reference || "Psalms 119:18" %>
+<% code = word&.translation_code || "KJV" %>
+<section class="hm-today<%= ' is-done' if done %>" aria-labelledby="hm-today-title"
+         data-controller="today-hero<%= ' daily-word' if word %>"
+         data-today-hero-dates-value="<%= (status&.dates || []).first(60).map(&:iso8601).to_json %>"
+         data-today-hero-name-value="<%= name %>"
+         data-today-hero-fixed-value="<%= fixed.present? %>"
+         <%= tag.attributes(data: { daily_word_text_value: word&.share_text(daily_word_url(word)) }) if word %>>
+  <div class="hm-today-art" aria-hidden="true" data-parallax-target="layer">
+    <%= faith_art_picture(art, sizes: "(min-width: 1024px) 1200px, 100vw", loading: "eager", phone_small: true) %>
+  </div>
+  <div class="hm-today-veil" aria-hidden="true"></div>
+
+  <div class="hm-today-inner">
+    <header class="hm-today-head">
+      <p class="hm-today-date">
+        <time datetime="<%= DailyWord.today_date.iso8601 %>"><%= home_today %></time>
+        <span class="hm-today-part" data-today-hero-target="part"><%= daypart.label %></span>
+      </p>
+      <h1 class="hm-today-hello" data-today-hero-target="greeting"><%= daypart.greeting %><%= ", #{name}" if name %>.</h1>
+      <span class="hm-streak<%= ' is-empty' if streak.zero? %>" data-today-hero-target="streak" role="img"
+            aria-label="<%= streak %>-day streak" title="Days in a row you've finished Today"
+            <%= 'hidden' if streak.zero? %>>
+        <%= home_progress_ring([ streak, 7 ].min / 7.0, size: 30, stroke: 3) %>
+        <b data-today-hero-target="streakCount"><%= streak %></b>
+      </span>
+    </header>
+
+    <div class="hm-today-verse">
+      <h2 class="hm-today-label" id="hm-today-title">Verse of the day</h2>
+      <blockquote class="hm-today-text<%= ' is-long' if text.length > 200 %><%= ' is-longer' if text.length > 340 %>">
+        <%= illuminated(text) %>
+      </blockquote>
+      <p class="hm-today-ref"><%= reference %> <span>&middot; <%= code %></span></p>
+    </div>
+
+    <div class="hm-today-open" data-today-hero-target="open" <%= 'hidden' if done %>>
+      <%= link_to today_begin_path, class: "hm-begin", data: { turbo_prefetch: false } do %>
+        <span class="hm-begin-label">Begin today</span><span class="hm-begin-time">&middot; ~<%= TodayFlow::STEP_SECONDS.values.sum.fdiv(60).round %> min</span>
+        <%= icon(:chevron_right) %>
+      <% end %>
+      <div class="hm-today-quiet">
+        <%= link_to read_path(ref: reference, t: code), class: "hm-quiet-link", data: { turbo_prefetch: false } do %>
+          <%= icon(:book) %> Read the chapter
+        <% end %>
+        <% if word %>
+          <button type="button" class="hm-quiet-link" data-action="daily-word#share" aria-label="Share today's verse"><%= icon(:share) %> Share</button>
+          <button type="button" class="hm-quiet-link" data-action="daily-word#copy" data-daily-word-target="copy"
+                  title="Copy the verse, reflection and prayer"><%= icon(:copy) %> Copy</button>
+        <% end %>
+      </div>
+      <p class="hm-today-steps">Verse &middot; passage &middot; reflection &middot; a word of the faith &middot; prayer</p>
+    </div>
+
+    <div class="hm-today-done" data-today-hero-target="done" <%= 'hidden' unless done %>>
+      <p class="hm-done-line" role="status">
+        <span class="hm-done-check" aria-hidden="true"><%= icon(:check) %></span>
+        <span>Today is done</span>
+        <span class="hm-done-streak" data-today-hero-target="doneStreak"><%= streak.positive? ? "· #{streak}-day streak" : "" %></span>
+      </p>
+      <div class="hm-done-actions">
+        <%= link_to read_path(ref: word ? word.chapter_label : "Psalms 119", t: code), class: "hm-done-btn is-primary", data: { turbo_prefetch: false } do %>
+          <%= icon(:book) %> Read the whole chapter
+        <% end %>
+        <% if word %>
+          <button type="button" class="hm-done-btn" data-action="daily-word#share"><%= icon(:share) %> Share today&rsquo;s verse</button>
+        <% end %>
+      </div>
+      <% if guest %>
+        <p class="hm-done-keep"><%= link_to "Create a free account", new_registration_path %> to keep your streak on every device.</p>
+      <% end %>
+    </div>
+  </div>
+  <span class="hm-today-credit" title="<%= art.credit %>"><%= art.artist %>, <i><%= art.title %></i></span>
+</section>
