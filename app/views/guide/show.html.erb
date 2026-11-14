@@ -1,4 +1,10 @@
 <% content_for :title, "Field Guide" %>
+<%# The illustrated Field Guide, in five parts a new reader can follow:
+    getting started · your daily rhythm · reading and studying · preaching and
+    church projection · keyboard shortcuts. Screenshots live in
+    app/assets/images/guide/ (phone shots of the app, small WebP). Saved for
+    offline by the service worker (CORE_PAGES). %>
+<% shot = ->(name, alt, h: 677) { image_tag("guide/#{name}.webp", alt: alt, width: 480, height: h, loading: "lazy", decoding: "async") } %>
 <div class="ps-root ps-tut-root">
   <%= render "studies/app_bar", title: "The Field Guide" %>
   <%= render "studies/menu_sheet" %>
@@ -8,9 +14,9 @@
       <div class="eyebrow">&#9769; &nbsp; A Field Guide To Your Desk &nbsp; &#9769;</div>
       <h1>Everything you can do here</h1>
       <p class="lede">
-        BiblioRata is a quiet desk for the Word — lay passages side by side, trace
-        cross-references, study the original words, and let a careful AI help you see the text in
-        context. Here is the whole desk, tool by tool.
+        BiblioRata is a quiet place for the Word. Read each day, study the original words,
+        and put Scripture on the big screen on Sunday. This guide walks you through it,
+        one step at a time.
       </p>
       <div class="ps-tut-hero-cta">
         <% tour_target = @resume ? study_path(@resume, tour: 1) : root_path %>
@@ -19,33 +25,225 @@
       </div>
     </header>
 
-    <%# 1 — Parallel panes %>
+    <nav class="ps-tut-toc" aria-label="Contents">
+      <div class="ps-tut-toc-title">Contents</div>
+      <ol>
+        <li><a href="#getting-started"><span>Part One</span> Getting started</a></li>
+        <li><a href="#daily-rhythm"><span>Part Two</span> Your daily rhythm</a></li>
+        <li><a href="#reading"><span>Part Three</span> Reading and studying</a></li>
+        <li><a href="#preaching"><span>Part Four</span> Preaching and the big screen</a></li>
+        <li><a href="#shortcuts"><span>Part Five</span> Keyboard shortcuts</a></li>
+      </ol>
+    </nav>
+
+    <%# ===================== PART ONE — Getting started ===================== %>
+    <div class="ps-tut-part" id="getting-started">
+      <div class="eyebrow">Part One</div>
+      <h2>Getting started</h2>
+      <p>Where things are, what an account is for, and how the app keeps working with no data.</p>
+    </div>
+
     <section class="ps-tut-section">
       <div class="ps-tut-copy">
         <div class="ps-tut-kicker">I</div>
-        <h2>Up to four passages, side by side</h2>
-        <p>Compare the same verse across translations — KJV, ASV, BSB, WEB and more — or set different
-           verses next to each other. Tap <span class="kbd">Compare</span> in the top bar
-           to open a second pane, and add up to four.</p>
+        <h3>Five tabs along the bottom</h3>
+        <p>In the BiblioRata app the tabs are <strong>Home</strong>, <strong>Bible</strong>,
+           <strong>Search</strong>, <strong>Plans</strong> and <strong>More</strong>.
+           Home is your day. Bible opens the reader where you left off. Search finds any word.
+           Plans keeps your reading plans. More holds everything else: offline Bibles, settings,
+           this guide.</p>
+        <p>On a phone's web browser you see Home · Bible · Search · More (plans are under More).
+           On a laptop the same things sit in the bar at the top.</p>
       </div>
       <div class="ps-tut-art">
-        <div class="ps-tut-panes">
-          <% [["John III", "KJV"], ["John III", "BSB"]].each do |ref, tr| %>
-            <div class="ps-tut-pane">
-              <div class="ps-tut-pane-head"><span class="num">&#8544;</span> <span class="ref"><%= ref %></span> <span class="tr"><%= tr %></span></div>
-              <div class="ps-tut-pane-body"><span class="v">16</span> For God so loved the world, that he gave his only begotten Son…</div>
-            </div>
+        <div class="ps-tut-tabs" aria-hidden="true">
+          <% [["home", "Home", true], ["book", "Bible", false], ["search", "Search", false], ["calendar", "Plans", false], ["more", "More", false]].each do |ic, label, on| %>
+            <span class="tab<%= ' is-on' if on %>"><%= icon(ic.to_sym) %><b><%= label %></b></span>
           <% end %>
         </div>
       </div>
     </section>
 
-    <%# 2 — Reference lookup %>
     <section class="ps-tut-section reverse">
       <div class="ps-tut-copy">
         <div class="ps-tut-kicker">II</div>
-        <h2>Type a reference the way you say it</h2>
-        <p>The parser understands the natural forms — no rigid syntax to learn.</p>
+        <h3>Read freely &mdash; sign up to save</h3>
+        <p>You can read, search, compare and look up cross-references without an account.
+           To <strong>keep</strong> things &mdash; notes, highlights, your studies, your
+           service queue and songs &mdash; make a free account with your email.</p>
+        <p>Anything you did before signing up comes with you into the new account.
+           Nothing is lost.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-save" aria-hidden="true">
+          <div class="t">Create an account to save</div>
+          <div class="row"><span>&#9998; Notes</span><span>&#9673; Highlights</span><span>&#9776; Studies</span></div>
+          <div class="btn">Sign up &mdash; it&rsquo;s free</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ps-tut-section">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">III</div>
+        <h3>It works with no data</h3>
+        <p>Look for the small dot in the top corner. <strong>Green</strong> means you are online.
+           <strong>Red</strong> means you are offline &mdash; and that is fine.</p>
+        <p>The first time you open the app, the King James Bible downloads by itself. After that
+           you can read and search it with no signal. Pages you have opened once (Home, Today,
+           Plans, Search, the Glossary, this guide) open offline too. Notes and a
+           finished Today are kept on your phone and sync when you are back online.</p>
+        <p>Want more versions offline? Go to <span class="kbd">More &rarr; Offline Bibles</span>.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-net" aria-hidden="true">
+          <div class="line"><span class="dot is-on"></span> Online &mdash; everything works</div>
+          <div class="line"><span class="dot is-off"></span> Offline &mdash; reading from your downloads</div>
+          <div class="note">&#10003; KJV saved on this device &middot; changes sync later</div>
+        </div>
+      </div>
+    </section>
+
+    <%# ===================== PART TWO — Your daily rhythm ===================== %>
+    <div class="ps-tut-part" id="daily-rhythm">
+      <div class="eyebrow">Part Two</div>
+      <h2>Your daily rhythm</h2>
+      <p>Five quiet minutes a day, a word of the faith, and plans that carry you through the Bible.</p>
+    </div>
+
+    <section class="ps-tut-section reverse">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">IV</div>
+        <h3>Begin today</h3>
+        <p>Home opens with the verse of the day over a classic Bible painting. Press
+           <strong>Begin today</strong>. It takes about five minutes.</p>
+        <p>Home also follows the time of day: a soft dawn light in the morning, clear light at
+           midday and candlelight in the evening, with a greeting to match.</p>
+        <p>Finish Today and the small ring at the top counts your <strong>streak</strong> &mdash;
+           the days in a row you have finished.</p>
+      </div>
+      <div class="ps-tut-art">
+        <figure class="ps-tut-shot"><%= shot.("home", "Home: the verse of the day and the Begin today button", h: 812) %></figure>
+      </div>
+    </section>
+
+    <section class="ps-tut-section">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">V</div>
+        <h3>Six short steps</h3>
+        <ol class="ps-tut-steps">
+          <li><b>The verse.</b> Read it, or tap <strong>Listen</strong> to hear it.</li>
+          <li><b>The passage.</b> The verses around it.</li>
+          <li><b>A reflection.</b> A short thought on the day&rsquo;s word.</li>
+          <li><b>A word of the faith.</b> One word from the Glossary.</li>
+          <li><b>A prayer.</b></li>
+          <li><b>Amen.</b> Your day is marked done.</li>
+        </ol>
+        <p>Use <span class="kbd">Next</span> and <span class="kbd">Back</span> at the bottom.
+           It works offline too.</p>
+      </div>
+      <div class="ps-tut-art">
+        <figure class="ps-tut-shot"><%= shot.("today", "Today, step one: the verse with a Listen button") %></figure>
+      </div>
+    </section>
+
+    <section class="ps-tut-section reverse">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">VI</div>
+        <h3>Continue, For you, and reading plans</h3>
+        <p>Further down Home, <strong>Continue</strong> brings back what you were reading.
+           <strong>For you</strong> suggests a next step from what you actually read.
+           The <strong>Word for today</strong> has the day&rsquo;s passage with a short reflection.</p>
+        <p><strong>Reading plans</strong> pace a book, the New Testament, the year, or your own
+           path. Tick each day done and the ring fills up.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-plan" aria-hidden="true">
+          <div class="ring"><span>62%</span></div>
+          <div>
+            <div class="t">The Gospel of John</div>
+            <div class="d">Day 13 of 21 &middot; John 13</div>
+            <div class="b">&#10003; Mark today done</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ps-tut-section">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">VII</div>
+        <h3>The Glossary of the Faith</h3>
+        <p>Grace, faith, redemption, righteousness &mdash; the big words of the faith, explained in
+           plain English. Each one shows the Greek or Hebrew word behind it, what it means, a line
+           for new believers, and the key verses to read.</p>
+        <p>On a phone, Home has a slider of these words that moves by itself; tap one to open it.
+           See them all at <span class="kbd">/faith</span>, from A to Z.</p>
+      </div>
+      <div class="ps-tut-art">
+        <figure class="ps-tut-shot"><%= shot.("faith", "The Glossary of the Faith: words of the faith in plain English") %></figure>
+      </div>
+    </section>
+
+    <section class="ps-tut-section reverse">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">VIII</div>
+        <h3>From fellow readers</h3>
+        <p>Home shows short notes from people who read with BiblioRata. Every few seconds one
+           breaks like glass to show the next. Has it helped you? Tap
+           <strong>Share how BiblioRata helps you</strong> and add yours.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-voice" aria-hidden="true">
+          <p>&ldquo;I read with my family every morning now. The five minutes are just right.&rdquo;</p>
+          <span>&mdash; a reader</span>
+        </div>
+      </div>
+    </section>
+
+    <%# ===================== PART THREE — Reading and studying ===================== %>
+    <div class="ps-tut-part" id="reading">
+      <div class="eyebrow">Part Three</div>
+      <h2>Reading and studying</h2>
+      <p>The reader, search, and the study tools that open beside the text.</p>
+    </div>
+
+    <section class="ps-tut-section">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">IX</div>
+        <h3>The Bible reader</h3>
+        <p>One verse per line, in large, clear type. Tap the book name (<span class="kbd">John 3 &#9662;</span>)
+           to pick a book and chapter, or type a reference. Tap the version
+           (<span class="kbd">KJV &#9662;</span>) to switch between KJV, ASV, BSB, WEB and more.</p>
+        <p>Tap <span class="kbd">Aa</span> for text size, the theme (light, sepia, dark or auto)
+           and the verse-per-line layout. The next chapter is at the end of each chapter.</p>
+        <p>Tap any verse for its tools: highlight, note, compare, copy, share, cross-references,
+           word study, commentary and the Rabbi.</p>
+      </div>
+      <div class="ps-tut-art">
+        <figure class="ps-tut-shot"><%= shot.("reader", "The Bible reader on a phone, John 3 with verse 16 marked") %></figure>
+      </div>
+    </section>
+
+    <section class="ps-tut-section reverse">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">X</div>
+        <h3>Search the whole Bible</h3>
+        <p>Type a word or two. Verses that hold <em>all</em> your words come first, with the
+           words highlighted. Choose one book or a version if you like.</p>
+        <p>Tap a result and the <strong>whole chapter</strong> opens at that verse, so you read it
+           in context. Your recent searches stay on your phone, and search works offline in a
+           downloaded Bible.</p>
+      </div>
+      <div class="ps-tut-art">
+        <figure class="ps-tut-shot"><%= shot.("search", "Search results for love your enemies, with the words highlighted") %></figure>
+      </div>
+    </section>
+
+    <section class="ps-tut-section">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">XI</div>
+        <h3>Type a reference the way you say it</h3>
+        <p>The reader understands the natural forms &mdash; no rigid syntax to learn.</p>
         <div class="ps-tut-chips">
           <% %w[Jn\ 3:16 Rom\ 5 1\ Cor\ 13 Ps\ 23 romans\ 5:1-11].each do |r| %>
             <span class="ps-tut-chip"><%= r %></span>
@@ -60,13 +258,32 @@
       </div>
     </section>
 
-    <%# 3 — Cross references %>
+    <section class="ps-tut-section reverse">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">XII</div>
+        <h3>Up to four passages, side by side</h3>
+        <p>Compare the same verse across translations, or set different verses next to each other.
+           Tap <span class="kbd">Compare</span> to open a second pane, and add up to four.
+           <em>Word diff</em> marks where the translations differ.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-panes">
+          <% [["John III", "KJV"], ["John III", "BSB"]].each do |ref, tr| %>
+            <div class="ps-tut-pane">
+              <div class="ps-tut-pane-head"><span class="num">&#8544;</span> <span class="ref"><%= ref %></span> <span class="tr"><%= tr %></span></div>
+              <div class="ps-tut-pane-body"><span class="v">16</span> For God so loved the world, that he gave his only begotten Son…</div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </section>
+
     <section class="ps-tut-section">
       <div class="ps-tut-copy">
-        <div class="ps-tut-kicker">III</div>
-        <h2>Cross-references, one click away</h2>
-        <p>Tap a verse, then <strong>More → Cross-references</strong> to open the Treasury of Scripture
-           Knowledge, strongest links first. Open any reference with one tap.</p>
+        <div class="ps-tut-kicker">XIII</div>
+        <h3>Cross-references, one tap away</h3>
+        <p>Tap a verse, then <strong>Cross-references</strong>. You get the Treasury of Scripture
+           Knowledge, strongest links first. Each one opens its whole chapter at the verse.</p>
       </div>
       <div class="ps-tut-art">
         <div class="ps-tut-drawer">
@@ -78,16 +295,32 @@
       </div>
     </section>
 
-    <%# 4 — AI Rabbi (featured) %>
-    <section class="ps-tut-section reverse ps-tut-feature">
+    <section class="ps-tut-section reverse">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">XIV</div>
+        <h3>Study the original words</h3>
+        <p>Tap a verse and choose <strong>Word study</strong>. In the King James text each word
+           shows its Hebrew or Greek root: the Strong&rsquo;s number, how to say it, what it means,
+           and where else it is used. Turn on <em>Word study (Strong&rsquo;s, KJV)</em> under
+           <span class="kbd">Aa</span> to see the roots right in the text.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-lex">
+          <div class="word">loved <span class="g">&#945;&#947;&#945;&#960;&#940;&#969; &middot; G25</span></div>
+          <div class="def">agapaō — to love, to welcome, to be fond of; of God's redeeming love.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ps-tut-section ps-tut-feature">
       <div class="ps-tut-copy">
         <div class="ps-tut-kicker">&#10018;</div>
-        <h2>Ask the AI Rabbi</h2>
+        <h3>Ask the AI Rabbi</h3>
         <p>Select a phrase or tap a verse and choose <strong>Rabbi</strong>. It reads the
            <em>whole chapter</em> and the verse's cross-references before answering, and stays under
            strict rules of sound interpretation: context first, Scripture interprets Scripture,
-           never beyond what is written. It cites references — the verse wording always comes from
-           our own translations, never the model.</p>
+           never beyond what is written. It cites references &mdash; the verse wording always comes
+           from our own translations, never the model.</p>
       </div>
       <div class="ps-tut-art">
         <div class="ps-tut-rabbi">
@@ -103,13 +336,12 @@
       </div>
     </section>
 
-    <%# 5 — AI Find a verse %>
-    <section class="ps-tut-section">
+    <section class="ps-tut-section reverse">
       <div class="ps-tut-copy">
-        <div class="ps-tut-kicker">IV</div>
-        <h2>Find a verse from a thought</h2>
+        <div class="ps-tut-kicker">XV</div>
+        <h3>Find a verse from a thought</h3>
         <p>Describe a half-remembered idea and the assistant returns matching passages, every one
-           validated against our text. Open it from <span class="kbd">More → Find a verse by idea</span>.</p>
+           checked against our text. Open it from <span class="kbd">More &rarr; Find a verse by idea</span>.</p>
       </div>
       <div class="ps-tut-art">
         <div class="ps-tut-find">
@@ -119,44 +351,16 @@
       </div>
     </section>
 
-    <%# 6 — Original-language study %>
-    <section class="ps-tut-section reverse">
-      <div class="ps-tut-copy">
-        <div class="ps-tut-kicker">V</div>
-        <h2>Study the original words</h2>
-        <p>In the King James text, tap any word for its Strong's number, transliteration, definition
-           and every occurrence. Turn on <em>Lemma (Strong's)</em> in the View menu to see the
-           transliteration beneath each tagged word, and <em>Word diff</em> to highlight where two
-           translations differ.</p>
-      </div>
-      <div class="ps-tut-art">
-        <div class="ps-tut-lex">
-          <div class="word">loved <span class="g">&#945;&#947;&#945;&#960;&#940;&#969; &middot; G25</span></div>
-          <div class="def">agapaō — to love, to welcome, to be fond of; of God's redeeming love.</div>
-        </div>
-      </div>
-    </section>
-
-    <%# 7 — More tools grid %>
     <section class="ps-tut-more">
-      <h2 class="ps-tut-more-title">And at hand whenever you need them</h2>
+      <h3 class="ps-tut-more-title">And at hand whenever you need them</h3>
       <div class="ps-tut-more-grid">
         <% [
-             ["&#128220;", "Commentary", "Matthew Henry's exposition, opened beside the text from the 📜 in each pane."],
-             ["&#9998;", "Highlights & notes", "Four colours, with a study note attached to each highlight; ✎ marks the ones with notes."],
-             ["&#9906;", "Full-Bible search", "Find any phrase across the whole text and jump straight to it."],
-             ["&#9658;", "Read aloud", "Have a passage read by the browser — no network, no cost."],
+             ["&#9998;", "Highlights & notes", "Tap a verse to highlight it in one of four colours or write a note. Notes save as you type (sign in to keep them)."],
+             ["&#9658;", "Listen", "Tap ► and the chapter is read aloud. It keeps playing with your screen off and runs on into the next chapter."],
+             ["&#128220;", "Commentary", "Matthew Henry's commentary on the verse, from the verse's tools."],
              ["&#9680;", "Memorize mode", "Blank the words, then tap to reveal — for scripture-memory drills."],
-             ["&#128272;", "Preach mode", "Project verse-by-verse, fused 1–3 per slide, with large auto-fit text. The reference (e.g. “John 3:16 · KJV”) shows across the top so the congregation always knows the passage. ⧉ Project opens a second-screen output window; ⌗ Stage adds a confidence monitor (NEXT verse big, plus a clock); ✦ Screen sets the projector's theme and text size."],
-             ["&#10038;", "Emphasise a word", "Land on the minister's key word — “peace”, “grace” — and make it glow on the projector and on every following phone. Tap ✷ Emphasise, then tap the words on the verse; tap again to release."],
-             ["&#9875;", "Teaching anchor", "Pin your main passage with the ⚓ under Text, then snap straight back to exactly where you paused — the H key or ⌂ — no matter how many cross-references you detoured through."],
-             ["&#9835;", "Preach queue", "Line up the whole service — scriptures, songs, thoughts, and pictures (announcement slides, up to 5 MB) — then step through it in order. Queue several scriptures at once by separating them with commas (John 3:16, Rom 8:28, Ps 23). Blank lines split lyrics into stanza slides. Pick a hymn from the built-in public-domain hymnal or reuse a song you've queued before, so you never retype lyrics."],
-             ["&#9634;", "Blank screen", "Snap the projector to a calm holding screen before the service and between segments — the Blank button, or the . key. Cue the next verse underneath, then tap again to bring it back."],
-             ["&#10148;", "Quick chase + AI search", "In the Go box, type what the preacher called (rom 8:28) — or describe it (“the walls of Jericho”) and the AI offers the matching passages to put up. ⟲ Back (or B) returns to where you were — exact verse, exact stanza."],
-             ["&#9742;", "Phone remote", "Pair a phone by secret QR and drive the projection from anywhere in the room — next, previous, chase."],
-             ["&#9737;", "Go Live", "The congregation scans a QR and the Scripture follows the pulpit on their phones — live, no account needed. When you end, they get “tonight's scriptures” to keep reading."],
-             ["&#10070;", "Reading plans", "Pace a book, the NT, the year, or your own path — and tick each day done."],
-             ["&#9776;", "Reading view", "Text size, candle/day theme, sync-scroll — all in the View menu."]
+             ["&#8645;", "Sync scroll", "With passages side by side, scroll one and the others follow."],
+             ["&#8681;", "Offline Bibles", "Save more versions to your device under More → Offline Bibles."]
            ].each do |icon, title, desc| %>
           <div class="ps-tut-more-card">
             <span class="orn"><%= icon.html_safe %></span>
@@ -167,11 +371,217 @@
       </div>
     </section>
 
+    <%# ===================== PART FOUR — Preaching ===================== %>
+    <div class="ps-tut-part" id="preaching">
+      <div class="eyebrow">Part Four</div>
+      <h2>Preaching and the big screen</h2>
+      <p>For pastors and church media teams. It all works without Wi-Fi once you are ready.</p>
+    </div>
+
+    <section class="ps-tut-section">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">XVI</div>
+        <h3>Present &mdash; even offline</h3>
+        <p>Tap <span class="kbd">Preach</span> in the reader to put the passage on the projector,
+           verse by verse, in large type that fits the screen. The reference (&ldquo;John 3:16 &middot;
+           KJV&rdquo;) shows so everyone knows where you are.</p>
+        <p>No signal? <strong>Present offline</strong> (on Home and in More) opens a ready study
+           straight away. Type a reference in the Go box and it shows.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-screen" aria-hidden="true">
+          <div class="ref">John 3:16 &middot; KJV</div>
+          <div class="words">For God so loved the world, that he gave his only begotten Son&hellip;</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ps-tut-section reverse">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">XVII</div>
+        <h3>The operator console</h3>
+        <p>On a laptop, Preach opens a console like EasyWorship. On the left is the
+           <strong>Service</strong> &mdash; your order of items. In the middle,
+           <strong>Preview</strong> (what&rsquo;s next) and <strong>Live</strong> (what the people
+           see). Below sits a library: Scriptures, Songs, Presentations, Pictures, Word study and
+           Looks.</p>
+        <p>Click an item to preview it. Press <span class="kbd">L</span> or <strong>Go live</strong>
+           to put it on the screen. Press <span class="kbd">F</span> for Focus &mdash; the full slide.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-console" aria-hidden="true">
+          <div class="col svc"><b>Service</b><i>Welcome</i><i class="on">Psalm 23</i><i>Amazing Grace</i><i>John 3:16</i></div>
+          <div class="col"><b class="pv">Preview</b><div class="mini">The LORD is my shepherd</div></div>
+          <div class="col"><b class="lv">&#9679; Live</b><div class="mini is-live">Welcome</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ps-tut-section">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">XVIII</div>
+        <h3>Phones follow along</h3>
+        <p>Press <strong>Go Live</strong> and show the QR code. People scan it and the Scripture
+           follows the pulpit on their phones &mdash; no account needed. When you end, they get
+           &ldquo;tonight&rsquo;s scriptures&rdquo; to keep reading.</p>
+        <p><strong>&#8983; Stage</strong> opens a screen for the preacher: the next verse big, plus
+           a clock. <strong>&#9742; Remote</strong> pairs your phone by a secret QR so you can move
+           the slides from anywhere in the room.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-live" aria-hidden="true">
+          <div class="qr"></div>
+          <div><div class="t">Join live</div><div class="code">bibliorata &middot; K7Q2</div><div class="d">Follow the sermon on your phone</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ps-tut-section reverse">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">XIX</div>
+        <h3>Looks and live buttons</h3>
+        <p><strong>&#10022; Looks</strong> gives you thirteen slide designs &mdash; Royal Blue,
+           Stained Glass, Night Sky, Dawn and more &mdash; or your own picture, video and church logo.</p>
+        <p>The live buttons: <strong>Black</strong> (a black screen), <strong>Clear</strong>
+           (hide the words, keep the background), <strong>Logo</strong>, a countdown
+           <strong>Timer</strong> and an <strong>Alert</strong> across the bottom.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-looks" aria-hidden="true">
+          <span class="lk royal">For God so loved the world</span>
+          <span class="lk night">04:59 &middot; Service starts in</span>
+          <span class="bar"><em class="on">Black</em><em>Clear</em><em>Logo</em><em>Timer</em><em>Alert</em></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="ps-tut-section">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">XX</div>
+        <h3>The song bank</h3>
+        <p>Pick a hymn from the built-in public-domain hymnal or one of your own songs. Paste words
+           with labels like <em>[Verse 1]</em> and <em>[Chorus]</em>, set the order
+           (&ldquo;V1 C V2 C&rdquo;), and each part becomes a slide. The labels are only for you;
+           the screen shows just the words.</p>
+        <p>Tap <strong>Save to my songs</strong> so you never type it again. Group songs into
+           collections. It all works offline.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-song" aria-hidden="true">
+          <div class="flow"><span>V1</span><span class="c">C</span><span>V2</span><span class="c">C</span></div>
+          <div class="lbl">[Chorus]</div>
+          <div class="words">How great Thou art, how great Thou art&hellip;</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ps-tut-section reverse">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">XXI</div>
+        <h3>Slides for every part of the service</h3>
+        <p>The tools above the Service list add:</p>
+        <ul class="ps-tut-steps">
+          <li><b>Scriptures</b> &mdash; several verses on one slide, each in its own version.</li>
+          <li><b>Presentation</b> &mdash; a PDF or pictures. They stay on your device.</li>
+          <li><b>Seminar</b> &mdash; title, points, picture and quote slides, with speaker notes.</li>
+          <li><b>Root word</b> &mdash; press <span class="kbd">W</span> to show the Hebrew or Greek
+              word behind the verse on screen: &ldquo;the Greek word here is agap&#275;&hellip;&rdquo;</li>
+        </ul>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-lex" aria-hidden="true">
+          <div class="word">agapē <span class="g">&#7936;&#947;&#940;&#960;&#951; &middot; G26</span></div>
+          <div class="def">ah-GAH-pay — love; the self-giving love of God.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ps-tut-section">
+      <div class="ps-tut-copy">
+        <div class="ps-tut-kicker">XXII</div>
+        <h3>This Sunday, ready ahead of time</h3>
+        <p>Turn on <strong>Pastor mode</strong> in More and Home leads with
+           <strong>This Sunday</strong>: your service, its order, what still needs doing, and three
+           buttons &mdash; Open service, Present, Get ready.</p>
+        <p><strong>Get ready for Sunday</strong> saves the Bibles, passages, songs and screens on
+           this device, so you can preach with no Wi-Fi.</p>
+        <p><strong>Templates</strong> start a new service from last week&rsquo;s shape, and
+           <strong>Order</strong> gives you the order of service to share on WhatsApp or print.</p>
+      </div>
+      <div class="ps-tut-art">
+        <div class="ps-tut-sunday" aria-hidden="true">
+          <div class="eb">&#10016; This Sunday &middot; 22 November</div>
+          <div class="t">Sunday Worship</div>
+          <div class="d">3 scriptures &middot; 4 songs &middot; <span>&#10003; Ready</span></div>
+          <div class="btns"><span>Open service</span><span>Present</span><span>Get ready</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ps-tut-more">
+      <h3 class="ps-tut-more-title">More help in the pulpit</h3>
+      <div class="ps-tut-more-grid">
+        <% [
+             ["&#10148;", "Quick chase + AI search", "In the Go box, type what the preacher called (rom 8:28) — or describe it (“the walls of Jericho”) and pick from the passages offered. Results go to Preview first."],
+             ["&#10558;", "One press back", "⟲ Back (or B) returns to where you were — exact verse, exact stanza."],
+             ["&#9875;", "Teaching anchor", "Pin your main passage with ⚓, then the H key brings you straight back to it."],
+             ["&#10038;", "Emphasise a word", "Make the key word — “peace”, “grace” — glow on the projector and on every following phone."],
+             ["&#9707;", "Parallel on screen", "P shows two translations of the verse at once."],
+             ["&#9776;", "Queue several at once", "Type John 3:16, Rom 8:28, Ps 23 and all three join the service."]
+           ].each do |icon, title, desc| %>
+          <div class="ps-tut-more-card">
+            <span class="orn"><%= icon.html_safe %></span>
+            <span class="t"><%= title %></span>
+            <span class="d"><%= desc %></span>
+          </div>
+        <% end %>
+      </div>
+    </section>
+
+    <%# ===================== PART FIVE — Keyboard shortcuts ===================== %>
+    <div class="ps-tut-part" id="shortcuts">
+      <div class="eyebrow">Part Five</div>
+      <h2>Keyboard shortcuts</h2>
+      <p>For laptops. In preach mode, press <span class="kbd">?</span> any time to see them all.</p>
+    </div>
+
+    <section class="ps-tut-keys">
+      <div class="ps-tut-keys-card">
+        <h3>While reading</h3>
+        <dl>
+          <div><dt><kbd>&#8984;/Ctrl</kbd>+<kbd>K</kbd> or <kbd>/</kbd></dt><dd>Pick a passage</dd></div>
+          <div><dt><kbd>1</kbd>&ndash;<kbd>4</kbd></dt><dd>Choose a pane</dd></div>
+          <div><dt><kbd>&#8984;/Ctrl</kbd>+<kbd>S</kbd></dt><dd>Save your notes now</dd></div>
+          <div><dt><kbd>&#8984;/Ctrl</kbd>+<kbd>D</kbd></dt><dd>Copy the reference into the next empty pane</dd></div>
+          <div><dt><kbd>X</kbd></dt><dd>Open the tools for the chosen verse</dd></div>
+          <div><dt><kbd>Esc</kbd></dt><dd>Close a drawer</dd></div>
+        </dl>
+      </div>
+      <div class="ps-tut-keys-card">
+        <h3>While preaching</h3>
+        <dl>
+          <div><dt><kbd>&rarr;</kbd> <kbd>Space</kbd> / <kbd>&larr;</kbd></dt><dd>Next / previous verse</dd></div>
+          <div><dt><kbd>G</kbd> or <kbd>/</kbd></dt><dd>Go to a reference or search</dd></div>
+          <div><dt><kbd>L</kbd></dt><dd>Go live with what&rsquo;s in Preview</dd></div>
+          <div><dt><kbd>N</kbd></dt><dd>Preview the next item</dd></div>
+          <div><dt><kbd>F</kbd></dt><dd>Console &#8644; Focus</dd></div>
+          <div><dt><kbd>B</kbd> / <kbd>H</kbd></dt><dd>Back / home to the teaching text</dd></div>
+          <div><dt><kbd>1</kbd>&ndash;<kbd>3</kbd></dt><dd>Verses per slide</dd></div>
+          <div><dt><kbd>W</kbd></dt><dd>Root word of the verse on screen</dd></div>
+          <div><dt><kbd>.</kbd> <kbd>C</kbd> <kbd>O</kbd></dt><dd>Black &middot; Clear &middot; Logo</dd></div>
+          <div><dt><kbd>T</kbd> <kbd>A</kbd></dt><dd>Timer &middot; Alert</dd></div>
+          <div><dt><kbd>Q</kbd></dt><dd>Into the Service list</dd></div>
+          <div><dt><kbd>?</kbd></dt><dd>All the shortcuts</dd></div>
+        </dl>
+      </div>
+    </section>
+
     <footer class="ps-tut-foot">
       <div class="rule-orn"><span class="line"></span><span>&#10086;</span><span class="line"></span></div>
       <% tour_target = @resume ? study_path(@resume, tour: 1) : root_path %>
       <%= link_to "&#9737; &nbsp; Take the interactive tour".html_safe, tour_target, class: "cta" %>
       <%= link_to "Begin at your desk", root_path, class: "cta secondary", style: "text-decoration:none;" %>
+      <p class="ps-tut-foot-new"><%= link_to "See what&rsquo;s new &rarr;".html_safe, whats_new_path %></p>
     </footer>
   </div>
 </div>

@@ -26,7 +26,7 @@
 //     asks with a "warm" message, lib/offline/warm.js), it saves the app's core
 //     pages — /read (and the study it lands on), /, /today/begin (the Today
 //     flow), /reading_plans (+ each
-//     plan and its study), /more, /offline, /search, /faith — and the page
+//     plan and its study), /more, /offline, /search, /faith, /guide — and the page
 //     that registered it, which it wasn't controlling yet. One online visit
 //     is enough for the apps' tabs to open with no data.
 //   • With nothing saved, no page is a dead end: /read opens the last study,
@@ -59,12 +59,12 @@ const PUBLIC_PAGE = /^\/p\/[^/]+\/?$/
 const STUDY_PAGE = /^\/studies\/\d+$/
 const OWN_PAGES = [
   /^\/$/, /^\/read$/, /^\/more$/, /^\/offline$/, /^\/search$/, /^\/faith$/, /^\/faith\/[\w-]+$/,
-  /^\/reading_plans$/, /^\/reading_plans\/\d+$/, /^\/today\/begin$/
+  /^\/reading_plans$/, /^\/reading_plans\/\d+$/, /^\/today\/begin$/, /^\/guide$/
 ]
 // The apps' tab start pages: always something usable offline, never the 503.
 const TAB_PAGES = [ "/", "/read", "/reading_plans", "/more", "/search", "/offline", "/faith" ]
 // Saved as soon as the worker controls the app, and refreshed while online.
-const CORE_PAGES = [ "/read", "/", "/today/begin", "/reading_plans", "/more", "/offline", "/search", "/faith" ]
+const CORE_PAGES = [ "/read", "/", "/today/begin", "/reading_plans", "/more", "/offline", "/search", "/faith", "/guide" ]
 const QUERY_FREE = [ "/read", "/search" ] // keyed without their ?parameters
 const WARM_EVERY_MS = 6 * 60 * 60 * 1000
 const MAX_WARM_PLANS = 8

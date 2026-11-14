@@ -17,4 +17,17 @@ class WhatsNewTest < ActionDispatch::IntegrationTest
     end
     assert_select ".ps-news[data-whats-new-version-value=?]", WhatsNewController::VERSION
   end
+
+  test "November 2026 comes first, newest at the top, above the earlier cards" do
+    get whats_new_path
+    titles = [ "Begin today &mdash; five quiet minutes", "The Glossary of the Faith",
+               "A Bible reader like the book", "Five tabs in the app",
+               "Works offline from the first launch", "Pastor mode &mdash; This Sunday",
+               "From fellow readers", "Sliders that break like glass" ]
+    titles.each { |t| assert_includes response.body, t }
+    assert_select ".news-release", text: "November 2026"
+    latest = response.body.index("news-grid--latest")
+    assert latest < response.body.index("A calmer, modern reader"), "the new cards sit above the older ones"
+    assert_select ".news-grid--latest .news-card", 8
+  end
 end

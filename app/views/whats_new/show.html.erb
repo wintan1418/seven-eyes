@@ -17,6 +17,96 @@
     <p class="sub">Built for the pulpit, the projection desk, and every phone in the pews.</p>
   </header>
 
+  <%# ===== November 2026 — newest first ===== %>
+  <h2 class="news-release" id="november-2026"><span>November 2026</span></h2>
+  <div class="news-grid news-grid--latest">
+
+    <section class="news-card c-gold news-card--today">
+      <div class="mock mock-shot"><%= image_tag "guide/home.webp", alt: "", width: 480, height: 812, loading: "lazy", decoding: "async" %></div>
+      <h2><span class="orn">&#10022;</span> Begin today &mdash; five quiet minutes</h2>
+      <p>Home now opens like an illuminated Bible: the verse of the day over a classic painting,
+         with a greeting for the time of day. Press <b>Begin today</b> for six short steps &mdash;
+         the verse (tap Listen to hear it), the passage, a reflection, a word of the faith, a
+         prayer and Amen. Finish and the ring keeps your <b>daily streak</b>.</p>
+    </section>
+
+    <section class="news-card c-rubric news-card--glossary">
+      <div class="mock mock-shot"><%= image_tag "guide/faith.webp", alt: "", width: 480, height: 677, loading: "lazy", decoding: "async" %></div>
+      <h2><span class="orn">&#10070;</span> The Glossary of the Faith</h2>
+      <p>Grace, faith, redemption, righteousness &mdash; the big words of the faith in plain
+         English, with the Greek or Hebrew word behind each one, a line for new believers and the
+         key verses to read. Find them at <b>/faith</b>, or swipe through them on Home. Every
+         word is reviewed by the pastor before it is shown.</p>
+    </section>
+
+    <section class="news-card c-ink news-card--kjv">
+      <div class="mock mock-shot"><%= image_tag "guide/reader.webp", alt: "", width: 480, height: 677, loading: "lazy", decoding: "async" %></div>
+      <h2><span class="orn">&#167;</span> A Bible reader like the book</h2>
+      <p>One verse per line in large, clear type, the chapter tools on the chapter line and the
+         next chapter at the end. <b>Search</b> now has its own tab: verses holding all your words
+         come first, highlighted, and a tap opens the <b>whole chapter at your verse</b>.</p>
+    </section>
+
+    <section class="news-card c-cobalt news-card--tabs">
+      <div class="mock mock-tabs" aria-hidden="true">
+        <% [[:home, "Home"], [:book, "Bible"], [:search, "Search"], [:calendar, "Plans"], [:more, "More"]].each_with_index do |(ic, label), i| %>
+          <span class="<%= 'on' if i.zero? %>"><%= icon(ic) %><b><%= label %></b></span>
+        <% end %>
+      </div>
+      <h2><span class="orn">&#9776;</span> Five tabs in the app</h2>
+      <p>The BiblioRata app (version 1.0.5) has a tab bar: <b>Home &middot; Bible &middot; Search
+         &middot; Plans &middot; More</b>. Your reading plans are one tap away, and the Bible tab
+         opens where you left off.</p>
+    </section>
+
+    <section class="news-card c-sage news-card--offline">
+      <div class="mock mock-net" aria-hidden="true">
+        <span><i class="on"></i> Online</span>
+        <span><i class="off"></i> Reading from your downloads</span>
+      </div>
+      <h2><span class="orn">&#9851;</span> Works offline from the first launch</h2>
+      <p>The first time you open the app, the King James Bible downloads by itself and the main
+         pages are saved. With no data you can still read, search, plan and do Today &mdash; your
+         changes sync when you are back. A small dot in the corner shows it:
+         <b>green</b> online, <b>red</b> offline.</p>
+    </section>
+
+    <section class="news-card c-ochre news-card--sunday">
+      <div class="mock mock-sunday" aria-hidden="true">
+        <div class="eb">&#10016; This Sunday</div>
+        <div class="t">Sunday Worship</div>
+        <div class="d">3 scriptures &middot; 4 songs &middot; &#10003; Ready</div>
+        <div class="b"><span>Open service</span><span>Present</span><span>Get ready</span></div>
+      </div>
+      <h2><span class="orn">&#10016;</span> Pastor mode &mdash; This Sunday</h2>
+      <p>For pastors, Home now leads with <b>This Sunday</b>: your next service, its order, what
+         still needs doing, and one tap to open it, present it, or get it ready to preach with no
+         Wi-Fi. Turn Pastor mode on or off in More.</p>
+    </section>
+
+    <section class="news-card c-rose news-card--voices">
+      <div class="mock mock-voice" aria-hidden="true">
+        <p>&ldquo;The five minutes each morning are just right.&rdquo;</p>
+        <span>&mdash; a reader</span>
+      </div>
+      <h2><span class="orn">&#10087;</span> From fellow readers</h2>
+      <p>Short notes from people who read with BiblioRata now appear on Home and on the welcome
+         page. Has it helped you? Tap <b>Share how BiblioRata helps you</b> and add yours.</p>
+    </section>
+
+    <section class="news-card c-cobalt news-card--shatter">
+      <div class="mock mock-shatter" aria-hidden="true">
+        <span class="pane"></span><span class="crack"></span>
+      </div>
+      <h2><span class="orn">&#10022;</span> Sliders that break like glass</h2>
+      <p>The glossary and the readers&rsquo; notes now move as sliders. Every few seconds the
+         card cracks and falls away in pieces to show the next one. Swipe any time; if your phone
+         is set to reduce motion, they simply slide.</p>
+    </section>
+  </div>
+
+  <h2 class="news-release" id="earlier"><span>Earlier</span></h2>
+
   <div class="news-grid">
 
     <%# 00 — The new reader (YouVersion-style redesign) %>
