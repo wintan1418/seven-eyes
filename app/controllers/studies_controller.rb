@@ -51,6 +51,8 @@ class StudiesController < ApplicationController
     precache = request.headers["X-Offline-Precache"].present?
     @study.touch_opened! unless precache
     @studies = authenticated? ? current_user.studies.recent : []
+    # ?verse=2-4 (search results, key verses): mark those verses in pane I.
+    @focus_verses = ChapterFocus.clean(params[:verse])
     # A returning reader with a shelf of studies is a happy one — offer the
     # testimonial widget (the gem throttles: max 2 auto-prompts, 180 days apart).
     testimonial_prompt! if authenticated? && @studies.size >= 2 && !precache
@@ -124,9 +126,9 @@ class StudiesController < ApplicationController
     @query = params[:q].to_s
     @translation = Translation.find_by(id: params[:translation_id]) ||
                    Translation.find_by(code: "KJV") || Translation.first
-    @results = @translation ? Verse.search(@query, translation: @translation) : Verse.none
+    result = ScriptureSearch.call(@query, translation: @translation, scope: params[:scope])
     render partial: "studies/search_results",
-           locals: { study: @study, query: @query, results: @results, translation: @translation }
+           locals: { study: @study, query: @query, result:, translation: @translation }
   end
 
   def commentary

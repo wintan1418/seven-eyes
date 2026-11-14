@@ -1,0 +1,75 @@
+<% content_for :title, "Search · BiblioRata" %>
+<%# /search — Bible search, phone-first (the apps' Search tab). The form
+    re-renders only the results frame; offline (or on dead data) the
+    search_page controller searches a downloaded Bible instead and draws the
+    same list. Results open the reader at the whole chapter, verse marked. %>
+<div class="ps-root ui-more-page sr-page" data-controller="search-page"
+     data-search-page-recent-key-value="ps:recent-searches">
+  <%= render "studies/app_bar", title: "Search" %>
+  <%= render "studies/menu_sheet" %>
+
+  <main class="sr-main">
+    <%= form_with url: search_path, method: :get, class: "sr-form",
+          data: { turbo_frame: "search_results", turbo_action: "advance",
+                  search_page_target: "form", action: "submit->search-page#submit" } do %>
+      <label class="sr-box">
+        <%= icon(:search) %>
+        <%= search_field_tag :q, @query, class: "sr-input", placeholder: "Search the Bible — e.g. dew rain",
+              autocomplete: "off", autocapitalize: "none", spellcheck: "false", enterkeyhint: "search",
+              "aria-label": "Words to search for", autofocus: @query.blank?,
+              data: { search_page_target: "input", action: "input->search-page#typing" } %>
+      </label>
+      <div class="sr-filters">
+        <label class="sr-select">
+          <span class="ui-sr-only">Books</span>
+          <%= select_tag :in, search_scope_options(@scope), data: { search_page_target: "scope" },
+                "aria-label": "Books to search" %>
+          <%= icon(:chevron_down) %>
+        </label>
+        <label class="sr-select is-version">
+          <span class="ui-sr-only">Translation</span>
+          <%= select_tag :t, options_for_select(Translation.available.map { |t| [ t.code, t.code, { data: { id: t.id }, title: t.display_name } ] }, @translation&.code),
+                data: { search_page_target: "translation" }, "aria-label": "Translation" %>
+          <%= icon(:chevron_down) %>
+        </label>
+        <button type="submit" class="ui-btn is-primary sr-go">Search</button>
+      </div>
+    <% end %>
+
+    <section class="sr-recent" data-search-page-target="recent" hidden>
+      <div class="sr-recent-head">
+        <span class="ui-label">Recent searches</span>
+        <button type="button" class="sr-recent-clear" data-action="search-page#clearRecent">Clear</button>
+      </div>
+      <ul class="sr-recent-list" data-search-page-target="recentList"></ul>
+    </section>
+
+    <%= turbo_frame_tag "search_results", class: "sr-results", data: { search_page_target: "results" } do %>
+      <% if @result.blank? %>
+        <div class="sr-empty" data-search-empty>
+          <%= icon(:search, css: "ui-icon is-xl") %>
+          <p>Type a word or two &mdash; <em>dew rain</em>, <em>love your enemies</em>.</p>
+          <p class="sr-empty-note">Verses holding every word come first. Works offline with a downloaded Bible.</p>
+        </div>
+      <% else %>
+        <div class="sr-summary" data-search-summary><%= search_summary(@result, @translation) %></div>
+        <ol class="sr-list">
+          <% @result.hits.each_with_index do |hit, i| %>
+            <% if hit.tier == :partial && @result.words.size > 1 && (i.zero? || @result.hits[i - 1].tier != :partial) %>
+              <li class="sr-divider">With some of the words</li>
+            <% end %>
+            <li class="sr-hit">
+              <%= link_to read_path(ref: hit.reference, t: @translation.code), class: "sr-open",
+                    data: { turbo_frame: "_top", open_ref: hit.reference, translation_id: @translation.id,
+                            action: "click->search-page#open" } do %>
+                <span class="sr-ref"><%= hit.reference %></span>
+                <span class="sr-text"><%= hit.highlighted %></span>
+              <% end %>
+            </li>
+          <% end %>
+        </ol>
+      <% end %>
+    <% end %>
+  </main>
+  <%= render "shared/tab_bar", current: :search %>
+</div>

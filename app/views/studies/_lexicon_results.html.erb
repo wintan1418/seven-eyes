@@ -44,9 +44,7 @@
           <div class="ps-xref-text"><%= truncate(verse.text, length: 150) %></div>
           <div class="ps-xref-actions">
             <% study.panes.each do |pane| %>
-              <%= button_to "▸ #{pane_numeral(pane.position)}", study_pane_path(study, pane),
-                    method: :patch, params: { pane: { reference: ref } }, class: "ps-xref-load",
-                    form: { data: { turbo_frame: pane.frame_id }, style: "display:contents;" } %>
+              <%= open_in_pane_button(study, pane, ref) %>
             <% end %>
           </div>
         </div>

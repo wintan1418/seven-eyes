@@ -1,5 +1,7 @@
 # /read — "open my Bible". The mobile apps' Bible tab starts here: it lands on
 # the reader you were last in, or a fresh one at John 3, signed in or not.
+# /read?ref=Deut+32:2&t=KJV (search results) opens that reader at the whole
+# chapter, scrolled to the verse and marked (ChapterFocus + verse-focus).
 class ReadController < ApplicationController
   allow_unauthenticated_access
 
@@ -12,7 +14,16 @@ class ReadController < ApplicationController
              with: -> { redirect_to root_path, alert: "Please wait a moment and try again." }
 
   def show
-    redirect_to(authenticated? ? latest_or_new_user_study : guest_study || new_guest_study)
+    study = authenticated? ? latest_or_new_user_study : guest_study || new_guest_study
+    return redirect_to(study) if params[:ref].blank?
+
+    focus = ChapterFocus.call(params[:ref].to_s.first(80))
+    pane = study.panes.first
+    attrs = { reference: focus.reference }
+    translation = Translation.available.find_by(code: params[:t].to_s.upcase.presence)
+    attrs[:translation] = translation if translation
+    pane&.update(attrs)
+    redirect_to study_path(study, verse: focus.verses)
   end
 
   private

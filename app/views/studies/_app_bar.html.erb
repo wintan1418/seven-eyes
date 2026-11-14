@@ -1,5 +1,6 @@
-<%# The app bar. In a study: ☰ · brand · [Passage ▾] [Version ▾] · search, plus
-    Aa / Compare / Preach / More on wider screens. Elsewhere: ☰ · brand · title.
+<%# The app bar. In a study: ☰ · brand · [Passage ▾] [Version ▾] · search · Aa, plus
+    Compare / Preach / More on wider screens. On a phone only the chips, search
+    and Aa show (ui/reader_phone.css), like a Bible app. Elsewhere: ☰ · brand · title.
     locals: study (optional), title (optional) %>
 <% study = local_assigns[:study] %>
 <% primary = study&.panes&.first %>
@@ -34,7 +35,7 @@
       <button type="button" class="ui-iconbtn" data-action="search#open" data-native-action="search" aria-label="Search the Bible"
               title="Search the Bible" data-tour="search"><%= icon(:search) %></button>
       <%= render "shared/theme_toggle" %>
-      <button type="button" class="ui-iconbtn is-wide-only" data-action="sheets#open" data-sheets-id-param="settings"
+      <button type="button" class="ui-iconbtn ui-appbar-aa" data-action="sheets#open" data-sheets-id-param="settings"
               data-native-action="settings" aria-label="Reading settings" title="Text size, theme and reading options" data-shot="settings"
               data-tour="view"><%= icon(:type) %></button>
       <% if study.pane_count > 1 %>

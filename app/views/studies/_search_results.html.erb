@@ -1,26 +1,33 @@
-<%# locals: study, query, results, translation %>
+<%# The reader's search sheet results. locals: study, query, result (ScriptureSearch::Result), translation
+    Ranked like the /search page: the words as typed side by side, then every
+    word, then some of them — Bible order inside each. Tapping a verse opens
+    its whole chapter in the pane, scrolled to it and marked (verse-focus).
+    OFFLINE: search_controller draws the same cards from a downloaded Bible. %>
 <%= turbo_frame_tag "verse_search_results", class: "ps-ai-results" do %>
-  <% if query.blank? %>
-    <div class="ps-ai-hint">Type a word or phrase &mdash; results appear here, ranked by relevance.</div>
-  <% elsif results.empty? %>
-    <div class="ps-ai-hint">No matches for &ldquo;<%= truncate(query, length: 60) %>&rdquo; in <%= translation&.code %>. Try fewer or different words.</div>
+  <% if result.blank? %>
+    <div class="ps-ai-hint">Type a word or phrase &mdash; verses holding every word come first.</div>
   <% else %>
-    <div class="ps-ai-resultcount"><%= pluralize(results.size, "verse") %> in <%= translation&.code %> &middot; &ldquo;<%= truncate(query, length: 50) %>&rdquo;</div>
-    <% results.each do |verse| %>
-      <% ref = "#{verse.book.name} #{verse.chapter}:#{verse.verse_number}" %>
-      <div class="ps-xref">
-        <div class="ps-xref-head">
-          <div class="ps-xref-ref"><%= ref %></div>
-        </div>
-        <div class="ps-xref-text"><%= truncate(verse.text, length: 180) %></div>
-        <div class="ps-xref-actions">
-          <% study.panes.each do |pane| %>
-            <%= button_to "▸ #{pane_numeral(pane.position)}", study_pane_path(study, pane),
-                  method: :patch, params: { pane: { reference: ref, translation_id: translation&.id } }, class: "ps-xref-load",
-                  form: { data: { turbo_frame: pane.frame_id }, style: "display:contents;" } %>
+    <div class="ps-ai-resultcount sr-summary"><%= search_summary(result, translation) %></div>
+    <% primary = study.panes.first %>
+    <ol class="sr-list">
+      <% result.hits.each_with_index do |hit, i| %>
+        <% if hit.tier == :partial && result.words.size > 1 && (i.zero? || result.hits[i - 1].tier != :partial) %>
+          <li class="sr-divider">With some of the words</li>
+        <% end %>
+        <li class="sr-hit">
+          <%= open_in_pane_button(study, primary, hit.reference, translation: translation, css: "sr-open") do %>
+            <span class="sr-ref"><%= hit.reference %></span>
+            <span class="sr-text"><%= hit.highlighted %></span>
           <% end %>
-        </div>
-      </div>
-    <% end %>
+          <% if study.pane_count > 1 %>
+            <div class="ps-xref-actions">
+              <% study.panes.each do |pane| %>
+                <%= open_in_pane_button(study, pane, hit.reference, translation: translation) %>
+              <% end %>
+            </div>
+          <% end %>
+        </li>
+      <% end %>
+    </ol>
   <% end %>
 <% end %>

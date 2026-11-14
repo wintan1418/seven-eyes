@@ -47,7 +47,8 @@
     <% prev_ref = neighbor_reference(content.book, content.first_chapter, :prev) %>
     <% next_ref = neighbor_reference(content.book, content.last_chapter, :next) %>
     <% book_name, chapter_number = chapter_heading(content) %>
-    <div class="ps-verses">
+    <%# focus: verses to mark and centre ("2" / "2-4", verse-focus controller). %>
+    <div class="ps-verses"<% if local_assigns[:focus].present? %> data-verse-focus="<%= local_assigns[:focus] %>"<% end %>>
       <div class="rd-column">
         <header class="ref-title rd-chapter-head">
           <span class="rd-book"><%= book_name %></span>
@@ -118,6 +119,25 @@
               <%= icon(:prayer) %> Prayer
             </button>
           </div>
+          <%# Phones: previous / next at the end of the chapter (no arrows over the text). %>
+          <% if prev_ref || next_ref %>
+            <nav class="rd-pager" aria-label="Previous and next chapter">
+              <% if prev_ref %>
+                <%= button_to study_pane_path(study, pane), method: :patch, params: { pane: { reference: prev_ref } },
+                      class: "rd-pager-btn is-prev", title: "Previous chapter (#{prev_ref})",
+                      form: { data: { turbo_frame: pane.frame_id }, class: "rd-pager-form" } do %>
+                  <%= icon(:chevron_left) %><span><%= prev_ref %></span>
+                <% end %>
+              <% end %>
+              <% if next_ref %>
+                <%= button_to study_pane_path(study, pane), method: :patch, params: { pane: { reference: next_ref } },
+                      class: "rd-pager-btn is-next", title: "Next chapter (#{next_ref})",
+                      form: { data: { turbo_frame: pane.frame_id }, class: "rd-pager-form is-next" } do %>
+                  <span><%= next_ref %></span><%= icon(:chevron_right) %>
+                <% end %>
+              <% end %>
+            </nav>
+          <% end %>
           <% if next_ref %>
             <%= button_to study_pane_path(study, pane), method: :patch,
                   params: { pane: { reference: next_ref } },

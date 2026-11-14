@@ -121,6 +121,9 @@ application.register("screen-live", ScreenLiveController)
 import ScreenLookController from "./screen_look_controller"
 application.register("screen-look", ScreenLookController)
 
+import SearchPageController from "./search_page_controller"
+application.register("search-page", SearchPageController)
+
 import SearchController from "./search_controller"
 application.register("search", SearchController)
 
@@ -169,9 +172,6 @@ application.register("sunday-ready", SundayReadyController)
 import SyncScrollController from "./sync_scroll_controller"
 application.register("sync-scroll", SyncScrollController)
 
-import TabBarController from "./tab_bar_controller"
-application.register("tab-bar", TabBarController)
-
 import ThemeController from "./theme_controller"
 application.register("theme", ThemeController)
 
@@ -183,6 +183,9 @@ application.register("translation-picker", TranslationPickerController)
 
 import VerseActionsController from "./verse_actions_controller"
 application.register("verse-actions", VerseActionsController)
+
+import VerseFocusController from "./verse_focus_controller"
+application.register("verse-focus", VerseFocusController)
 
 import VerseLinesController from "./verse_lines_controller"
 application.register("verse-lines", VerseLinesController)

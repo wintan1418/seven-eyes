@@ -1,0 +1,88 @@
+/* ==========================================================================
+   The phone reader, like a Bible app (< 768px). One compact top bar —
+   [Passage ▾] [Version ▾] · search · Aa — a small chapter line with the
+   listen / focus / notes tools beside it, one verse per line with its number
+   in front, and previous / next at the end of the chapter instead of arrows
+   over the text. Laptops keep the reader as it was. Preach, projector and
+   stage are untouched (.is-presenting / .is-output).
+   ========================================================================== */
+
+/* One verse per line (Reading settings → Layout). Default on phones; on a
+   phone the verse-lines controller sets .is-verse-paragraphs to opt out. */
+.ps-root.is-verse-lines:not(.is-presenting, .is-output) .ps-verse {
+  display: block; margin: 0 -8px 0.35em; padding: 1px 8px;
+}
+.ps-root.is-verse-lines:not(.is-presenting, .is-output) .ps-verses .ps-vnum {
+  vertical-align: baseline; font: 600 0.66em/1 var(--ui-font); margin: 0 0.5em 0 0;
+  color: var(--ui-fg-subtle); font-variant-numeric: tabular-nums;
+}
+
+/* The Aa button: phones and laptops (tablets reach it through More). */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .ui-appbar .ui-appbar-aa { display: none; }
+}
+
+@media (max-width: 767px) {
+  .ps-root:not(.is-presenting, .is-output, .is-verse-paragraphs) .ps-verse {
+    display: block; margin: 0 -8px 0.35em; padding: 1px 8px;
+  }
+  .ps-root:not(.is-presenting, .is-output, .is-verse-paragraphs) .ps-verses .ps-vnum {
+    vertical-align: baseline; font: 600 0.66em/1 var(--ui-font); margin: 0 0.5em 0 0;
+    color: var(--ui-fg-subtle); font-variant-numeric: tabular-nums;
+  }
+  .ps-root:not(.is-presenting, .is-output) .ps-verses { line-height: 1.6; }
+
+  /* Top bar: no ☰ / wordmark / theme; the passage + version chips lead. */
+  .ps-root.rd-app:not(.is-presenting, .is-output) .ui-appbar {
+    grid-template-columns: minmax(0, 1fr) auto; gap: 2px;
+    padding-left: max(8px, env(safe-area-inset-left));
+  }
+  .ps-root.rd-app:not(.is-presenting, .is-output) .ui-appbar-start { display: none; }
+  .ps-root.rd-app:not(.is-presenting, .is-output) .ui-appbar-center { justify-content: flex-start; gap: 0; }
+  .ps-root.rd-app:not(.is-presenting, .is-output) .ui-appbar .ui-theme-toggle { display: none; }
+  .ps-root.rd-app:not(.is-presenting, .is-output) .ui-appbar .ui-chip.is-passage {
+    font-weight: 600; min-width: 0; max-width: 100%;
+  }
+  .ps-root.rd-app:not(.is-presenting, .is-output) .ui-appbar .ui-chip-label {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* A small chapter line, tools on the right of it — no big heading stack. */
+  .ps-root.rd-app:not(.is-presenting, .is-output, .is-compare) .rd-column { position: relative; padding: 12px 0 32px; }
+  .ps-root.rd-app:not(.is-presenting, .is-output, .is-compare) .rd-chapter-head {
+    flex-direction: row; align-items: center; justify-content: flex-start; gap: 0.35em;
+    min-height: 36px; margin: 0 0 10px; padding-right: 116px; text-align: left;
+  }
+  .ps-root.rd-app:not(.is-presenting, .is-output, .is-compare) .rd-chapter-head :is(.rd-book, .rd-chapter-num) {
+    margin: 0; font: 600 13px/1.2 var(--ui-font); letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ui-fg-subtle);
+  }
+  .ps-root.rd-app:not(.is-presenting, .is-output, .is-compare) .rd-chapter-head .rd-trans { display: none; }
+  .ps-root.rd-app:not(.is-presenting, .is-output, .is-compare) .rd-chapter-tools {
+    position: absolute; top: 12px; right: -8px; margin: 0; gap: 0;
+  }
+  .ps-root.rd-app:not(.is-presenting, .is-output) .rd-chapter-tools .ps-pane-tool { width: 38px; height: 36px; }
+
+  /* Previous / next at the end of the chapter; the floating arrows go (swipe
+     still clicks them). */
+  .rd-pager { display: flex; gap: 10px; }
+  .rd-pager-form { flex: 1 1 0; min-width: 0; margin: 0; }
+  .rd-pager-form.is-next:only-child { margin-left: auto; flex: 0 1 50%; }
+  .rd-pager-btn {
+    display: flex; align-items: center; gap: 2px; width: 100%; min-height: 48px; padding: 0 8px;
+    border: 1px solid var(--ui-border); border-radius: 14px; background: var(--ui-surface);
+    color: var(--ui-fg); font: 600 14px var(--ui-font); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .rd-pager-btn:active { background: var(--ui-surface-2, var(--ui-surface)); }
+  .rd-pager-btn.is-next { justify-content: flex-end; }
+  .rd-pager-btn span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rd-pager-btn svg { flex: 0 0 auto; width: 20px; height: 20px; color: var(--ui-fg-muted); }
+  .ps-pane:has(.rd-pager) .rd-next-form { display: none; }
+  .ps-root.rd-app .ps-pane:has(.rd-pager) .rd-chapter-nav { display: none; }
+  .ps-root:not(.is-presenting, .is-output) .rd-chapter-end { margin-top: 28px; padding-top: 18px; gap: 14px; }
+}
+
+.rd-pager { display: none; }
+@media (max-width: 767px) {
+  .ps-root:not(.is-presenting, .is-output) .rd-pager { display: flex; }
+}

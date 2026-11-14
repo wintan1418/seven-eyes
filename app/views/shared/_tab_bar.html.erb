@@ -1,0 +1,25 @@
+<%# Phone tab bar (under 768px), like a Bible app: Home · Bible · Search · More.
+    The apps have their own native tab bar (body.hotwire-native hides this).
+    locals: current (:home / :bible / :search / :more), reader (on the study page) %>
+<% current = local_assigns[:current] %>
+<% reader = local_assigns[:reader] %>
+<nav class="ui-tabbar" data-chrome aria-label="Sections">
+  <%= link_to root_path, class: "ui-tab#{' is-current' if current == :home}", aria: { current: ("page" if current == :home) } do %>
+    <%= icon(:home) %><span>Home</span>
+  <% end %>
+  <% if reader %>
+    <button type="button" class="ui-tab<%= ' is-current' if current == :bible %>" aria-current="<%= 'page' if current == :bible %>"
+            data-action="sheets#open" data-sheets-id-param="passage"><%= icon(:book) %><span>Bible</span></button>
+  <% else %>
+    <%= link_to read_path, class: "ui-tab#{' is-current' if current == :bible}" do %><%= icon(:book) %><span>Bible</span><% end %>
+  <% end %>
+  <%= link_to search_path, class: "ui-tab#{' is-current' if current == :search}", aria: { current: ("page" if current == :search) } do %>
+    <%= icon(:search) %><span>Search</span>
+  <% end %>
+  <% if reader %>
+    <button type="button" class="ui-tab" data-action="sheets#open" data-sheets-id-param="more"
+            data-tour="more-tab"><%= icon(:more) %><span>More</span></button>
+  <% else %>
+    <%= link_to more_path, class: "ui-tab#{' is-current' if current == :more}" do %><%= icon(:more) %><span>More</span><% end %>
+  <% end %>
+</nav>

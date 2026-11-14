@@ -1,0 +1,124 @@
+/* ==========================================================================
+   Bible search — the /search page (.sr-page) and the reader's search sheet
+   share the result list: reference, the verse with its matched words marked.
+   Plus the "open at verse" mark in the reader (verse-focus controller).
+   ========================================================================== */
+
+/* Result list (page + sheet) ------------------------------------------------ */
+.sr-summary {
+  margin: 18px 4px 6px; font: 500 14px/1.4 var(--ui-font); color: var(--ui-fg-muted);
+}
+.sr-list { list-style: none; margin: 0; padding: 0; }
+.sr-hit { border-bottom: 1px solid var(--ui-border); }
+.sr-hit:last-child { border-bottom: 0; }
+.sr-open {
+  display: block; width: 100%; padding: 14px 4px; border: 0; background: none; text-align: left;
+  color: var(--ui-fg); text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  border-radius: 10px;
+}
+.sr-open:hover { background: var(--ui-surface); }
+.sr-open:active { background: var(--ui-surface-2, var(--ui-surface)); }
+.sr-open:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: -2px; }
+.sr-ref { display: block; margin-bottom: 3px; font: 600 15px/1.3 var(--ui-font); color: var(--ui-accent); }
+.sr-text { display: block; font: 400 17px/1.55 var(--reader-font); color: var(--ui-fg); }
+.sr-text mark {
+  background: var(--hl-ochre); color: inherit; font-weight: 600; border-radius: 3px; padding: 0 1px;
+}
+.sr-divider {
+  padding: 20px 4px 4px; font: 600 12px var(--ui-font); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ui-fg-subtle);
+}
+
+/* Inside the reader's search sheet (the panel sets every font to the UI face). */
+.ps-root:not(.is-presenting, .is-output) .ps-search-panel .sr-text,
+.ps-root:not(.is-presenting, .is-output) .ps-search-panel .sr-text * { font-family: var(--reader-font); }
+.ps-root:not(.is-presenting, .is-output) .ps-search-panel .sr-text { font-size: 16px; }
+.ps-root:not(.is-presenting, .is-output) .ps-search-panel .sr-summary {
+  margin: 4px 16px 2px; font: 500 13px/1.4 var(--ui-font); text-transform: none; letter-spacing: normal; color: var(--ui-fg-muted);
+}
+.ps-root:not(.is-presenting, .is-output) .ps-search-panel .sr-list { padding: 0 12px 24px; }
+.ps-root:not(.is-presenting, .is-output) .ps-search-panel .sr-hit .ps-xref-actions { padding: 0 4px 12px; }
+
+/* The /search page ------------------------------------------------------------ */
+.sr-page { background: var(--ui-bg); color: var(--ui-fg); }
+.sr-main {
+  max-width: 640px; margin: 0 auto; font-family: var(--ui-font);
+  padding: 12px max(16px, env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+.sr-form { display: flex; flex-direction: column; gap: 10px; }
+.sr-box {
+  display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 14px;
+  border: 1px solid var(--ui-border-strong, var(--ui-border)); border-radius: 14px; background: var(--ui-elevated, var(--ui-bg));
+  color: var(--ui-fg-subtle);
+}
+.sr-box:focus-within { border-color: var(--ui-accent); box-shadow: 0 0 0 3px var(--ui-accent-soft); }
+.sr-box svg { width: 20px; height: 20px; flex: 0 0 auto; }
+.sr-input {
+  flex: 1 1 auto; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent;
+  font: 400 17px var(--ui-font); color: var(--ui-fg);
+}
+.sr-input::placeholder { color: var(--ui-fg-subtle); }
+.sr-input::-webkit-search-cancel-button { cursor: pointer; }
+.sr-filters { display: flex; gap: 8px; align-items: center; }
+.sr-select {
+  position: relative; flex: 1 1 auto; min-width: 0; display: flex; align-items: center;
+}
+.sr-select.is-version { flex: 0 0 92px; }
+.sr-select select {
+  appearance: none; -webkit-appearance: none; width: 100%; height: 40px; padding: 0 30px 0 14px;
+  border: 1px solid var(--ui-border); border-radius: 999px; background: var(--ui-surface);
+  font: 500 15px var(--ui-font); color: var(--ui-fg); text-overflow: ellipsis;
+}
+.sr-select svg {
+  position: absolute; right: 10px; width: 16px; height: 16px; pointer-events: none; color: var(--ui-fg-muted);
+}
+.sr-go { flex: 0 0 auto; height: 40px; min-height: 40px; padding: 0 18px; border-radius: 999px; }
+
+.sr-recent { margin-top: 18px; }
+.sr-recent-head { display: flex; align-items: center; justify-content: space-between; margin: 0 4px 4px; }
+.sr-recent-clear {
+  border: 0; background: none; padding: 6px 4px; font: 500 14px var(--ui-font); color: var(--ui-accent); cursor: pointer;
+}
+.sr-recent-list { list-style: none; margin: 0; padding: 0; }
+.sr-recent-item {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; width: 100%;
+  padding: 12px 4px; border: 0; border-bottom: 1px solid var(--ui-border); background: none; text-align: left;
+  font: 400 16px var(--ui-font); color: var(--ui-fg); cursor: pointer;
+}
+.sr-recent-q { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sr-recent-meta { flex: 0 0 auto; font-size: 13px; color: var(--ui-fg-subtle); }
+
+.sr-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 48px 12px; text-align: center;
+  color: var(--ui-fg-muted); font: 400 16px/1.5 var(--ui-font);
+}
+.sr-empty .ui-icon { color: var(--ui-fg-subtle); margin-bottom: 6px; }
+.sr-empty p { margin: 0; }
+.sr-empty-note { font-size: 14px; color: var(--ui-fg-subtle); }
+.sr-recent:not([hidden]) + .sr-results .sr-empty { display: none; }
+
+@media (max-width: 767px) {
+  .sr-main { padding-bottom: calc(var(--tabbar-h) + 24px); }
+}
+body.hotwire-native .sr-main { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+
+/* Open at verse: a soft wash that fades, then a quiet mark that stays ------- */
+.ps-root:not(.is-presenting, .is-output) .ps-verse.is-focus {
+  background: color-mix(in srgb, var(--ui-accent) 7%, transparent);
+  box-decoration-break: clone; -webkit-box-decoration-break: clone;
+  border-radius: 6px;
+  transition: background-color 1.4s ease;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-verse.is-focus.is-focus-flash {
+  background: color-mix(in srgb, var(--ui-accent) 20%, transparent);
+  transition: none;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-verse.is-focus .ps-vnum { color: var(--ui-accent); }
+/* A marked range reads as one block (verse per line). */
+.ps-root:not(.is-presenting, .is-output) .ps-verse.is-focus:has(+ .ps-verse.is-focus) {
+  margin-bottom: 0; padding-bottom: 0.35em; border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-verse.is-focus + .ps-verse.is-focus { border-top-left-radius: 0; border-top-right-radius: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .ps-root:not(.is-presenting, .is-output) .ps-verse.is-focus { transition: none; }
+}

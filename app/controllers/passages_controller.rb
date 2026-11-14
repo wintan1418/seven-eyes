@@ -25,15 +25,17 @@ class PassagesController < ApplicationController
     end
   end
 
-  # "Open in Parallel Scripture" — load this passage into a workspace and go.
+  # "Open in BiblioRata" — load this passage into a workspace and go. A verse
+  # (or a few) opens as its whole chapter, scrolled to the verse and marked.
   def open
     parsed = parse_slug
     return redirect_to(root_path) unless parsed&.valid?
 
     translation = resolve_translation
+    focus = ChapterFocus.call(parsed.label)
     study = target_study(parsed.label)
-    study.panes.first&.update(reference: parsed.label, translation:)
-    redirect_to study_path(study)
+    study.panes.first&.update(reference: focus.reference, translation:)
+    redirect_to study_path(study, verse: focus.verses)
   end
 
   private
