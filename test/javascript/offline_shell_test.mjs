@@ -99,3 +99,17 @@ test("not offline, on a dead network, in the screens, after a failure, or once r
   assert.equal(autoBibleToDownload({ manifest, downloaded: [], lastFailedAt: now - 1000, now }), null)
   assert.equal(autoBibleToDownload({ manifest, downloaded: [], lastFailedAt: now - AUTO_RETRY_MS, now }).code, "KJV")
 })
+
+import { renderPane } from "../../app/javascript/lib/offline/pane_renderer.js"
+
+test("an offline-drawn pane carries the phone pager and the verse focus, like the server's", () => {
+  const book = { osis: "John", name: "John", chapters: 21, position: 43 }
+  const html = renderPane({
+    studyId: 1, paneId: 2, position: 0, compare: false, token: "t", reference: "John 3",
+    translation: { id: 1, code: "KJV", name: "King James Version", display_name: "King James Version" },
+    translations: [], downloaded: [ { code: "KJV" } ], books: [ book ], highlights: [], icon: () => "", focus: "2-4"
+  }, { ok: true, book, parsed: { chapter: 3, verseStart: null }, verses: [ { id: 9, chapter: 3, num: 1, text: "x" } ] })
+  assert.match(html, /<div class="ps-verses" data-verse-focus="2-4">/)
+  assert.match(html, /<nav class="rd-pager" aria-label="Previous and next chapter"><form[^>]*class="rd-pager-form"[^>]*>.*?class="rd-pager-btn is-prev"[^>]*><span>John 2<\/span>/)
+  assert.match(html, /class="rd-pager-form is-next".*?class="rd-pager-btn is-next"[^>]*><span>John 4<\/span>/)
+})

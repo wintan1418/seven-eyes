@@ -30,6 +30,7 @@ class OfflineFirstLaunchTest < ApplicationSystemTestCase
     wait_for_saved_page(study_path) # saved although the worker didn't control its load
     wait_for_saved_page(root_path)
     wait_for_saved_page(more_path)
+    wait_for_saved_page(search_path)
     wait_for_bible("KJV") # downloaded by itself — nobody pressed Download
 
     go_offline
@@ -48,6 +49,13 @@ class OfflineFirstLaunchTest < ApplicationSystemTestCase
 
     visit more_path
     assert_no_text "You appear to be offline"
+
+    # The Search tab, and a result's /read?ref=… link, with no signal.
+    visit search_path
+    assert_selector ".sr-page .sr-input"
+    visit read_path(ref: "John 4:2", t: "KJV")
+    assert_current_path study_path
+    assert_selector ".ps-verse-text", text: "KJV John 4:2"
 
     # Guests have no plans to save: a calm page that links to what works.
     visit reading_plans_path

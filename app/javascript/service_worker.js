@@ -64,6 +64,7 @@ const OWN_PAGES = [
 const TAB_PAGES = [ "/", "/read", "/reading_plans", "/more", "/search", "/offline", "/faith" ]
 // Saved as soon as the worker controls the app, and refreshed while online.
 const CORE_PAGES = [ "/read", "/", "/reading_plans", "/more", "/offline", "/search", "/faith" ]
+const QUERY_FREE = [ "/read", "/search" ] // keyed without their ?parameters
 const WARM_EVERY_MS = 6 * 60 * 60 * 1000
 const MAX_WARM_PLANS = 8
 const PANE_PATH = /^\/studies\/(\d+)\/panes\/(\d+)$/
@@ -177,7 +178,9 @@ function pageKey(url) {
     else if (url.searchParams.get("stage") === "1") key.searchParams.set("stage", "1")
     return key.href
   }
-  if (url.search) return null
+  // /read?ref=…&t=… (open at a verse) and /search?q=… are /read and /search
+  // offline: the device answers them (offlineAnswer, the search_page controller).
+  if (url.search && !QUERY_FREE.includes(path)) return null
   if (PUBLIC_PAGE.test(path) || OWN_PAGES.some((re) => re.test(path))) return new URL(path, url.origin).href
   return null
 }
@@ -265,6 +268,20 @@ async function savedStudyUrl() {
   return null
 }
 
+// /read?ref=Deut 32:2&t=KJV offline: the saved study, opening at that verse
+// (?open=…&tid=…, read by the verse-focus controller).
+async function studyAt(study, params) {
+  const url = new URL(study, self.location.origin)
+  const ref = (params.get("ref") || "").trim()
+  if (!ref) return url.href
+  url.searchParams.set("open", ref.slice(0, 80))
+  const code = (params.get("t") || "").toUpperCase()
+  const manifest = code ? await storedManifest().catch(() => null) : null
+  const t = manifest?.translations?.find((x) => x.code === code)
+  if (t) url.searchParams.set("tid", String(t.id))
+  return url.href
+}
+
 const hasBible = async () => (await downloadedBibles().catch(() => [])).length > 0
 
 // Can the device open this page by itself (beyond a saved copy of it)?
@@ -279,7 +296,7 @@ async function offlineAnswer(request, path) {
   const isStudy = STUDY_PAGE.test(path) && !/[?&](output|stage)=1\b/.test(new URL(request.url).search)
   if (path === "/read") {
     const study = await savedStudyUrl()
-    if (study) return Response.redirect(new URL(study, self.location.origin).href, 302)
+    if (study) return Response.redirect(await studyAt(study, new URL(request.url).searchParams), 302)
     return Response.redirect(new URL(SHELL_ROOT, self.location.origin).href, 302)
   }
   if (isStudy && await hasBible()) return Response.redirect(new URL(`${SHELL_ROOT}?from=study`, self.location.origin).href, 302)

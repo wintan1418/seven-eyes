@@ -9,7 +9,9 @@
 //     (pane[reference], select pane[translation_id]), .ps-verses .rd-column,
 //   .ps-verse[data-osis][data-chapter][data-verse-num]
 //     > a.ps-vnum + span.ps-verse-text[data-verse-id][data-offset-base]
-//   prev/next chapter button_to forms, the notes form.
+//   prev/next chapter button_to forms (the floating arrows, the phone pager
+//   .rd-pager and "Next" at the chapter end), data-verse-focus when asked,
+//   the notes form.
 // If you change the pane partial, change this too.
 //
 // Not reproduced offline: Strong's word links (the bundles carry no tokens)
@@ -202,7 +204,14 @@ function okBody(ctx, c) {
   const commentaryUrl = `/studies/${ctx.studyId}/commentary?${query({ chapter: parsed.chapter, osis: book.osis })}`
   const nextInner = (ref) => `<span class="rd-next-label">Next</span><span class="rd-next-ref">${esc(ref)}</span>${ctx.icon("chevron_right")}`
 
-  return `<div class="ps-verses"><div class="rd-column">` +
+  const focus = /^\d+(-\d+)?$/.test(String(ctx.focus || "")) ? ` data-verse-focus="${esc(ctx.focus)}"` : ""
+  const pager = (prevRef || nextRef)
+    ? `<nav class="rd-pager" aria-label="Previous and next chapter">` +
+      (prevRef ? paneButton(ctx, { reference: prevRef, cls: "rd-pager-btn is-prev", title: `Previous chapter (${prevRef})`, formClass: "rd-pager-form", inner: `${ctx.icon("chevron_left")}<span>${esc(prevRef)}</span>` }) : "") +
+      (nextRef ? paneButton(ctx, { reference: nextRef, cls: "rd-pager-btn is-next", title: `Next chapter (${nextRef})`, formClass: "rd-pager-form is-next", inner: `<span>${esc(nextRef)}</span>${ctx.icon("chevron_right")}` }) : "") +
+      `</nav>`
+    : ""
+  return `<div class="ps-verses"${focus}><div class="rd-column">` +
     `<header class="ref-title rd-chapter-head"><span class="rd-book">${esc(book.name)}</span><span class="rd-chapter-num">${esc(number)}</span><span class="tag rd-trans">${esc(t.display_name)}</span></header>` +
     `<div class="rule" aria-hidden="true"></div>` +
     `<div class="rd-chapter-tools" data-chrome>` +
@@ -217,6 +226,7 @@ function okBody(ctx, c) {
       `<button type="button" class="ui-btn is-quiet" title="Share this passage as a picture" data-action="pane#share" data-osis="${esc(book.osis)}" data-chapter="${parsed.chapter}" data-verse-start="${esc(parsed.verseStart ?? "")}" data-verse-end="${esc(vEnd)}">${ctx.icon("image")} Share</button>` +
       `<button type="button" class="ui-btn is-quiet" title="A prayer from this chapter, to share" data-action="pane#prayer" data-osis="${esc(book.osis)}" data-chapter="${parsed.chapter}">${ctx.icon("prayer")} Prayer</button>` +
     `</div>` +
+    pager +
     (nextRef ? paneButton(ctx, { reference: nextRef, cls: "rd-next-chapter", title: "Next chapter", formClass: "rd-next-form", inner: nextInner(nextRef) }) : "") +
     `</footer></div></div>` +
     `<nav class="rd-chapter-nav" data-chrome aria-label="Chapters">` +

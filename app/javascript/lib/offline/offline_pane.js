@@ -66,7 +66,8 @@ export async function renderOfflinePane({ studyId, paneId, reference, translatio
   return renderPane({
     studyId, paneId, position: Number(context.position) || 0, compare: !!context.compare, token,
     reference: reference || "", translation: translation && { ...translation, vulgate: !!translation.vulgate },
-    translations: manifest.translations || [], downloaded, books: manifest.books || [], highlights, icon
+    translations: manifest.translations || [], downloaded, books: manifest.books || [], highlights, icon,
+    focus: context.focus || null
   }, result)
 }
 
