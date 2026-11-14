@@ -91,6 +91,14 @@ class OfflineFirstLaunchTest < ApplicationSystemTestCase
     visit read_path
     assert_selector ".ofr-title", text: "John 3"
     assert_selector ".ofr-verse-text", text: "KJV John 3:1"
+
+    # Data comes back: the offline copy doesn't linger — it goes to the real
+    # reader, same chapter.
+    go_online
+    assert_no_selector "[data-offline-shell]", wait: 20
+    assert_selector ".ps-pane .ps-verses", wait: 10
+    assert_match %r{/studies/\d+}, page.current_url
+    assert_selector ".ps-verse", text: "KJV John 3:1", wait: 10
   end
 
   test "a signed-in reader's plans, each plan and today's reading open offline without visiting them first" do
