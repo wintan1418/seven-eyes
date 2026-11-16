@@ -217,11 +217,16 @@ async function networkFirst(event, key) {
   const request = event.request
   const path = new URL(key).pathname
   const cached = await caches.open(PAGES_CACHE).then((c) => c.match(key)).catch(() => null)
-  // "Present offline" (?saved=1), or a network known to be dead: the saved
-  // copy at once, refreshed in the background when there is a network.
+  // "Present offline" (?saved=1), or a network known to be slow: the saved
+  // copy at once, refreshed in the background — but only a copy of the
+  // version running now, or no network at all. A copy saved before the last
+  // deploy would open the old app (its old screens), so with any network the
+  // fresh page is fetched instead (the saved copy still answers below if
+  // the request hangs).
   const slow = await networkSlowStored().catch(() => false)
-  if (cached && (slow || new URL(request.url).searchParams.get("saved") === "1")) {
-    if (!slow) event.waitUntil(fetch(request).then((fresh) => savePage(fresh)).catch(() => {}))
+  const offline = self.navigator?.onLine === false
+  if (cached && (offline || ((slow || new URL(request.url).searchParams.get("saved") === "1") && await isCurrentPage(cached)))) {
+    if (!offline) event.waitUntil(fetch(request).then((fresh) => savePage(fresh)).catch(() => {}))
     return cached
   }
 
@@ -461,6 +466,19 @@ async function staleWhileRevalidate(request, cacheName, event) {
   }).catch(() => cached || Response.error())
   if (event) keepAlive(event, fetchPromise)
   return cached || fetchPromise
+}
+
+// Was this saved page made by the version deployed now? (Its app JS/CSS are
+// the ones this worker was built with.) Unknown versions (dev) count as current.
+async function isCurrentPage(response) {
+  const current = (CONFIG.assets || []).map((u) => u.split("?")[0])
+  if (!current.length) return true
+  try {
+    const used = assetUrls(await response.clone().text()).filter((u) => /^\/assets\/application-/.test(u)).map((u) => u.split("?")[0])
+    return used.length > 0 && used.every((u) => current.includes(u))
+  } catch (_) {
+    return false
+  }
 }
 
 // Asset URLs a saved page refers to.
