@@ -98,7 +98,8 @@ export default class extends Controller {
       this.wordsTarget.textContent = pick ? pick.querySelector(".txt")?.textContent || "" : stanza.textContent
     } else if (verses.length) {
       screen.dataset.kind = "scripture"
-      const group = Number(this.root.querySelector("[data-preach-group].is-on")?.dataset.preachGroup || 1)
+      // A range (Gen 2:1-3) goes up as one slide; otherwise the bar's 1–3.
+      const group = Number(this._list.dataset.span) || Number(this.root.querySelector("[data-preach-group].is-on")?.dataset.preachGroup || 1)
       verses.slice(0, group).forEach((v) => {
         const line = document.createElement("span")
         line.className = "cx-mini-verse"

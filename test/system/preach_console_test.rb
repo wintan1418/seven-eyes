@@ -311,7 +311,94 @@ class PreachConsoleTest < ApplicationSystemTestCase
     assert_selector ".cx-state-what", text: "Psalms 23:4"
   end
 
+  # Trello: EasyWorship lets an operator shift-click several verses into one
+  # slide, and suggests verses while typing; the Word study and Logo screens
+  # spilled out of the Live miniature over the console.
+  test "several verses on one slide: shift-click a range, ctrl-click verses apart, a typed range" do
+    resize_to(1366, 768)
+    start_preaching
+
+    find(".cx-find-input").fill_in(with: "John 3")
+    assert_selector ".ps-verse-list .vrow", count: 8
+    find(".ps-verse-list .vrow[data-num='14'] .pick").click
+    find(".ps-verse-list .vrow[data-num='16'] .pick").click(:shift)
+    assert_selector ".ps-console-preview .what", text: "John 3:14-16"
+    assert_selector ".ps-verse-list .vrow.is-picked", count: 3
+    assert_selector ".cx-mini-words .cx-mini-verse", count: 3
+    press("l")
+    assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current", count: 3, wait: 5
+    assert_selector ".cx-state-what", text: "John 3:14–16"
+    assert_selector ".cx-live-list .cx-line.is-live", count: 3
+
+    # Verses apart: one scripture slide.
+    find(".ps-verse-list .vrow[data-num='15'] .pick").click
+    # Ctrl+click (⌘ on a Mac, where Ctrl+click is the right button).
+    find(".ps-verse-list .vrow[data-num='17'] .pick").click(RUBY_PLATFORM.include?("darwin") ? :meta : :control)
+    assert_selector ".ps-console-preview .what", text: "John 3:15, 17"
+    find(".ps-preach-bar .cx-golive").click
+    assert_selector ".ps-root.is-slide [data-preach-slide]", text: /perish, but have eternal life.*might be saved/m, wait: 5
+
+    # A typed range goes up whole; the next single verse is one verse again.
+    find(".cx-find-input").fill_in(with: "ps 23:1-3")
+    find(".cx-find-input").send_keys([ :shift, :enter ])
+    assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-osis='Ps']", count: 3, wait: 5
+    find(".cx-find-input").fill_in(with: "John 3:16")
+    find(".cx-find-input").send_keys([ :shift, :enter ])
+    assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-osis='John']", count: 1, wait: 5
+    assert_selector "[data-preach-group='1'].is-on"
+  end
+
+  test "words that aren't a reference list matching verses as you type; Enter previews the first" do
+    resize_to(1366, 768)
+    start_preaching
+
+    find(".cx-find-input").fill_in(with: "green pastures")
+    assert_selector ".ps-verse-list[data-mode='search'] .vrow.is-strong", count: 1, wait: 5
+    assert_selector ".ps-verse-list .vrow .ref", text: "Psalms 23:2"
+    assert_selector ".ps-verse-list .vrow mark", text: /green/i
+    find(".cx-find-input").send_keys(:enter)
+    assert_selector ".ps-console-preview .what", text: "Psalms 23:2"
+    assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-osis='John']" # still on screen
+    # Double-click a match: live.
+    find(".cx-find-input").fill_in(with: "condemn the world")
+    find(".ps-verse-list[data-mode='search'] .vrow", text: "John 3:17", wait: 5).find(".pick").double_click
+    assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-verse-num='17']", wait: 5
+  end
+
+  test "a word study and the logo stay inside the Live miniature" do
+    resize_to(1366, 768)
+    start_preaching
+
+    verse = JOHN_3[16]
+    body = { v: 1, s: "G26", lang: "greek", lemma: "ἀγάπη", translit: "agapē", say: "ah-GAH-pay", gloss: "love",
+             english: "loved", reference: "John 3:16", translation: "KJV", verse:, mark: [ 11, 16 ], n: 116, layout: "verse" }.to_json
+    page.execute_script(<<~JS, body)
+      window.dispatchEvent(new CustomEvent("setlist:present", { detail: { kind: "slide", itemKind: "word", title: "Word study: agapē — John 3:16", body: arguments[0] } }))
+    JS
+    assert_selector ".ps-preach-slide .rw-slide .rw-lemma", text: "ἀγάπη"
+    assert_inside_screen(".ps-preach-slide .rw-slide")
+    assert_inside_screen(".ps-preach-slide .rw-verse")
+    assert_selector ".cx-live-list .cx-line.is-word", text: /agapē.*love/
+    assert_no_selector ".cx-live-list", text: "{"
+    shot "1366-word-study-live"
+
+    find(".ps-live-btn", text: /logo/i).click
+    assert_selector ".cx-state[data-cx-state='logo']"
+    assert_selector ".ps-screen-logo", visible: true
+    assert_inside_screen(".ps-screen-logo")
+    assert_inside_screen(".cx-screen-veil .note")
+    assert_no_selector ".ps-preach-slide .rw-slide", visible: true
+    shot "1366-logo-live"
+  end
+
   private
+
+  def assert_inside_screen(selector)
+    screen = find(".cx-screen").evaluate_script("(r => [r.left, r.top, r.right, r.bottom])(this.getBoundingClientRect())")
+    box = find(selector, visible: :all).evaluate_script("(r => [r.left, r.top, r.right, r.bottom])(this.getBoundingClientRect())")
+    inside = box[0] >= screen[0] - 1 && box[1] >= screen[1] - 1 && box[2] <= screen[2] + 1 && box[3] <= screen[3] + 1
+    assert inside, "#{selector} spills out of the Live miniature: #{box.inspect} vs #{screen.inspect}"
+  end
 
   # A key to whatever has focus (the page itself when nothing does).
   def press(*keys)

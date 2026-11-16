@@ -50,7 +50,7 @@ export default class extends Controller {
     if (/^\d+$/.test(raw)) { this._hint(`↵ Verse ${raw} of the chapter on screen`, "ok"); return }
     const local = localCheck(raw)
     if (local?.ok) this._hint(`↵ ${local.label || local.chapter_reference} — Enter to preview, Shift+Enter to put it on the screen`, "ok")
-    else if (local) this._hint(`↵ Search the Scriptures for “${raw}” — results go to Preview`, "search")
+    else if (local) this._hint(`Matching verses list below as you type — click to preview, double-click to go live · ↓ to walk them · Enter previews the first`, "search")
     else this._hint("↵ Enter to look it up", "wait")
   }
 
@@ -77,7 +77,9 @@ export default class extends Controller {
     if (!raw) { this.inputTarget.focus(); return }
     await warmLocal()
     const reference = this._reference(raw)
+    const found = reference ? null : this._topMatch(raw)
     if (reference) window.dispatchEvent(new CustomEvent("preview:load", { detail: { kind: "scripture", reference, source: "library" } }))
+    else if (found) found.click()
     else this._viaGoBox(raw, { live: false })
     this._done()
   }
@@ -91,10 +93,12 @@ export default class extends Controller {
       window.dispatchEvent(new CustomEvent("preach:command", { detail: { action: "verse", value: Number(raw) } }))
     } else {
       const reference = this._reference(raw)
+      const found = reference ? null : this._topMatch(raw)
       if (reference) {
         window.dispatchEvent(new CustomEvent("preview:load", { detail: { kind: "scripture", reference, source: "library" } }))
         window.dispatchEvent(new CustomEvent("preview:golive"))
-      } else this._viaGoBox(raw, { live: true })
+      } else if (found) found.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }))
+      else this._viaGoBox(raw, { live: true })
     }
     this._done()
   }
@@ -117,6 +121,14 @@ export default class extends Controller {
     }
     const local = localCheck(raw)
     return local?.ok ? (local.label || local.chapter_reference) : null
+  }
+
+  // The first verse in the as-you-type list holding every word typed (the
+  // list must be for this text). None: the Go box path (the study assistant).
+  _topMatch(raw) {
+    const list = this.root.querySelector(".ps-verse-list[data-mode='search']")
+    if (!list || list.dataset.query !== raw) return null
+    return list.querySelector(".vrow.is-strong .pick")
   }
 
   // What the device can't read goes through the Go box (presentation
