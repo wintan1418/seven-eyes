@@ -11,8 +11,13 @@ function settle(force = false) {
     document.body.scrollLeft = 0
     window.scrollTo(0, window.scrollY)
   }
+  // The Bible text scrolls in its own box: back to its left edge too (Safari
+  // keeps a sideways offset from the middle of the rotation).
+  document.querySelectorAll(".ps-verses, .ps-workspace, .ps-shell").forEach((box) => { if (box.scrollLeft) box.scrollLeft = 0 })
 }
 
 window.addEventListener("resize", () => requestAnimationFrame(() => settle()), { passive: true })
-window.addEventListener("orientationchange", () => setTimeout(() => settle(true), 250), { passive: true })
-screen.orientation?.addEventListener?.("change", () => setTimeout(() => settle(true), 250))
+// Safari settles its layout a moment after the rotation: check twice.
+const afterTurn = () => { setTimeout(() => settle(true), 250); setTimeout(() => settle(true), 700) }
+window.addEventListener("orientationchange", afterTurn, { passive: true })
+screen.orientation?.addEventListener?.("change", afterTurn)

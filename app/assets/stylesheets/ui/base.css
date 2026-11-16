@@ -190,6 +190,11 @@ body {
    itself clips anything wider (clip, not hidden: sticky bars keep working). */
 :is(.ps-ai-drawer, .ps-search-drawer, .ps-xref-host, .ps-rabbi-host):not(.is-open),
 .ps-root:not(.is-preaching) .ps-setlist-host:not(.is-open) { overflow: hidden; }
+/* The reading box scrolls up and down only: a sideways offset Safari keeps
+   from the middle of a rotation would leave the text off centre. And iPad
+   Safari doesn't enlarge the text by itself in landscape. */
+.ps-root .ps-verses { overflow-x: hidden; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 html { overflow-x: hidden; } /* older Safari: html only, so the body never becomes a scroll box */
 @supports (overflow: clip) {
   html, body { overflow-x: clip; }

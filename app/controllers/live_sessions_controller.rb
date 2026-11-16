@@ -70,7 +70,16 @@ class LiveSessionsController < ApplicationController
   def recap
     live = LiveSession.find_by(code: LiveSession.normalize_code(params[:code]))
     return head :not_found unless live&.recap_available?
-    render partial: "live_sessions/recap", locals: { live: live }, layout: false
+    respond_to do |format|
+      format.html { render partial: "live_sessions/recap", locals: { live: live }, layout: false }
+      # Home's "Your church" card on a follower's phone: the day and the scriptures.
+      format.json do
+        render json: {
+          ok: true, date: live.created_at.in_time_zone("Africa/Lagos").to_date.iso8601, ended: live.ended?,
+          passages: live.passages.map { |e| { label: e["label"], url: open_passage_path(PassageSlug.slug_for(osis: e["osis"], chapter: e["chapter"])) } }
+        }
+      end
+    end
   end
 
   private

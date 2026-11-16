@@ -189,6 +189,20 @@ class LiveSessionsTest < ActionDispatch::IntegrationTest
     assert_select ".ps-live-recap li a[href=?]", open_passage_path("john-4"), text: "John 4"
   end
 
+  test "the recap as JSON for a follower's Home (Your church card)" do
+    study = users(:one).studies.create!(name: "Sunday", pane_count: 1)
+    live = study.live_sessions.create!(osis: "John", chapter: 3, translation_code: "KJV")
+    live.log_passage!
+    get live_session_recap_path(live.code, format: :json)
+    assert_response :success
+    body = response.parsed_body
+    assert body["ok"]
+    assert_equal [ { "label" => "John 3", "url" => open_passage_path("john-3") } ], body["passages"]
+    assert_match(/\A\d{4}-\d{2}-\d{2}\z/, body["date"])
+    get live_session_recap_path("ZZZZZZ", format: :json)
+    assert_response :not_found
+  end
+
   test "an ended session's farewell lists tonight's scriptures" do
     study = users(:one).studies.create!(name: "Sunday", pane_count: 1)
     live = study.live_sessions.create!(osis: "John", chapter: 3, translation_code: "KJV")

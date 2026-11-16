@@ -35,6 +35,17 @@
         <%= render "studies/home/actions", guest:, resume: @resume %>
       </div>
 
+      <%# Your church: the scriptures of the live service this phone last followed
+          (only for people who followed one; filled on the device). %>
+      <section class="hm-church" data-controller="last-service" hidden aria-labelledby="hm-church-title">
+        <%= illuminated_heading("Your church", id: "hm-church-title") %>
+        <div class="hm-church-card">
+          <p class="hm-church-when" data-last-service-target="when"></p>
+          <ol class="hm-church-list" data-last-service-target="list"></ol>
+          <p class="hm-church-note">Keep reading what was preached &mdash; tap a passage.</p>
+        </div>
+      </section>
+
       <%= render "studies/home/continue", resume: @resume, guest:, plan: @active_plan, progress: @plan_progress,
                  studies: @studies %>
 

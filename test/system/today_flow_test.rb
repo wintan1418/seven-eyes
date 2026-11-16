@@ -62,7 +62,9 @@ class TodayFlowSystemTest < ApplicationSystemTestCase
     assert_selector ".hm-today-done", text: /Today is done.*2-day streak/m
     assert_link "Read the whole chapter"
     assert_no_link "Begin today"
-    assert_selector ".hm-streak b", text: "2"
+    assert_selector ".hm-beads-note", text: "2-day streak"
+    assert_selector ".hm-beads .hm-bead.is-on", minimum: 2
+    assert_selector ".hm-beads .hm-bead.is-today.is-on"
   end
 
   test "pausing part-way: Home offers to pick up where you paused" do

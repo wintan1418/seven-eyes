@@ -31,6 +31,15 @@
         <span class="hm-today-part" data-today-hero-target="part"><%= daypart.label %></span>
       </p>
       <h1 class="hm-today-hello" data-today-hero-target="greeting"><%= daypart.greeting %><%= ", #{name}" if name %>.</h1>
+      <%# The last seven days as gilt beads: filled for a finished Today, today's
+          bead glows until it's done; seven in a row gild the whole string. %>
+      <% week = (0..6).map { |i| DailyWord.today_date - (6 - i) } %>
+      <% done_days = (status&.dates || []).to_set %>
+      <p class="hm-beads<%= ' is-full' if week.all? { |d| done_days.include?(d) } %>" data-today-hero-target="beads"
+         aria-label="<%= week.count { |d| done_days.include?(d) } %> of the last 7 days">
+        <% week.each_with_index do |d, i| %><i class="hm-bead<%= ' is-on' if done_days.include?(d) %><%= ' is-today' if i == 6 %>" data-date="<%= d.iso8601 %>" title="<%= d.strftime('%A') %>"></i><% end %>
+        <span class="hm-beads-note" data-today-hero-target="beadsNote"><%= streak.positive? ? "#{streak}-day streak" : "Begin a streak today" %></span>
+      </p>
       <span class="hm-streak<%= ' is-empty' if streak.zero? %>" data-today-hero-target="streak" role="img"
             aria-label="<%= streak %>-day streak" title="Days in a row you've finished Today"
             <%= 'hidden' if streak.zero? %>>
