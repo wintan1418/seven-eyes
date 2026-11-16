@@ -296,19 +296,40 @@ class PreachConsoleTest < ApplicationSystemTestCase
     shot "1060-tablet"
   end
 
-  test "Present offline (?present=1) opens the console with the Go box ready: Enter puts the verse up" do
+  # A church tester: Present opened the console with the Go box floating over
+  # Preview — "this should not be showing at the entrance". The console types
+  # references in its own library box, so that is where the cursor goes.
+  test "Present (?present=1) opens the console ready to type in the library box, with no Go box over Preview" do
     resize_to(1366, 768)
     sign_in
     visit study_path(@study)
     wait_for_reader_js
     mark_console_tour_seen
     visit "#{study_path(@study)}?present=1"
-    assert_selector ".ps-root.is-console .ps-preach-jump input:focus", wait: 5
+    assert_selector ".ps-root.is-console .cx-find-input:focus", wait: 5
+    assert_no_selector ".ps-preach-jump", visible: true
     # The study's own passage lands first (preach opens a lone verse as its chapter).
     assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-verse-num='16']", wait: 5
-    find(".ps-preach-jump input").send_keys("ps 23:4", :enter)
+    find(".cx-find-input").fill_in(with: "ps 23:4")
+    assert_text "Shift+Enter to put it on the screen", wait: 5
+    find(".cx-find-input").send_keys([ :shift, :enter ])
     assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-osis='Ps'][data-verse-num='4']", wait: 5
     assert_selector ".cx-state-what", text: "Psalms 23:4"
+
+    # Every piece sits on its slot (none left in the toolbar row), and the
+    # last toolbar buttons stay clear of Exit.
+    %w[service preview livetools screen].each do |slot|
+      assert_match(/\A\d+px\z/, page.evaluate_script("getComputedStyle(document.querySelector('.ps-root')).getPropertyValue('--cx-#{slot}-y').trim()"))
+    end
+    tools = page.evaluate_script(<<~JS)
+      (() => {
+        const exit = document.querySelector(".ps-exit-presentation").getBoundingClientRect()
+        const last = [ ...document.querySelectorAll(".ps-preach-bar .ps-bar-group.is-help .ps-preach-tool") ]
+          .filter((b) => b.offsetParent).map((b) => b.getBoundingClientRect().right)
+        return { exit: exit.left, last: Math.max(...last) }
+      })()
+    JS
+    assert_operator tools["last"], :<=, tools["exit"]
   end
 
   # Trello: EasyWorship lets an operator shift-click several verses into one

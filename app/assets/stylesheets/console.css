@@ -110,7 +110,7 @@
 /* ---------- toolbar: the preach bar, along the top ---------- */
 .ps-root.is-console .ps-preach-bar {
   top: 0; bottom: auto; height: var(--cx-bar-h); z-index: 30;
-  padding: 0 116px 0 10px; gap: 6px; justify-content: flex-start;
+  padding: 0 122px 0 10px; gap: 6px; justify-content: flex-start;
   background: #0e0a06; border-top: 0; border-bottom: 1px solid var(--cx-line-2); box-shadow: none;
   font-family: var(--cx-ui);
 }
@@ -132,6 +132,12 @@
 }
 .ps-root.is-console .ps-bar-group.is-golive { border-left: 0; margin-left: 2px; padding-left: 4px; }
 .ps-root.is-console .ps-bar-group.is-help { margin-left: auto; }
+/* A narrower laptop (or a live session's "following" chip) must not push the
+   last buttons under Exit: when the bar runs out of room (cx-bar-tight, set by
+   the console controller) the other-screens and help buttons drop to icons,
+   their names kept as tooltips. Focus ⇄ Console keeps its name. */
+.ps-root.is-console.cx-bar-tight .ps-bar-group:is(.is-outputs, .is-help) .ps-preach-tool:not(.cx-view-toggle) .lbl { display: none; }
+.ps-root.is-console.cx-bar-tight .ps-bar-group:is(.is-outputs, .is-help) .ps-preach-tool:not(.cx-view-toggle) { min-width: 34px; justify-content: center; }
 .ps-root.is-console .ps-preach-bar .ps-preach-tool {
   flex: none; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   min-width: 52px; min-height: 0; height: 46px; padding: 4px 8px;
