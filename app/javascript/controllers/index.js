@@ -248,3 +248,6 @@ application.register("sunday-card", SundayCardController)
 
 import ReadMoreController from "./read_more_controller"
 application.register("read-more", ReadMoreController)
+
+import LastServiceController from "./last_service_controller"
+application.register("last-service", LastServiceController)

@@ -14,6 +14,9 @@ export default class extends Controller {
   static values = { code: String, passageUrl: String, recapUrl: String, ended: Boolean }
 
   connect() {
+    // Remember the service this phone followed: Home shows its scriptures
+    // for the week after ("Your church", last_service controller).
+    try { localStorage.setItem("br:last-service", JSON.stringify({ code: this.codeValue, at: Date.now() })) } catch (_) {}
     if (this.endedValue) return
     this._autoFollow = true
     this._consumer = createConsumer()

@@ -8,7 +8,7 @@ import { todayStatus, lagosHour, daypart, greeting } from "../lib/today_state"
 // (lib/today_state.js), and the hour's tint + greeting follow the Lagos clock
 // (unless the page was opened with ?at= for a design review).
 export default class extends Controller {
-  static targets = [ "open", "done", "streak", "streakCount", "doneStreak", "greeting", "part" ]
+  static targets = [ "open", "done", "streak", "streakCount", "doneStreak", "greeting", "part", "beads", "beadsNote", "art" ]
   static values = { dates: Array, name: String, fixed: Boolean }
 
   connect() {
@@ -16,10 +16,14 @@ export default class extends Controller {
     this.refresh()
     this._onShow = () => { if (!document.hidden) this.refresh() }
     document.addEventListener("visibilitychange", this._onShow)
+    // The painting drifts only while the hero is on screen (no work below the fold).
+    this._seen = new IntersectionObserver(([ e ]) => this.element.classList.toggle("is-offscreen", !e.isIntersecting))
+    this._seen.observe(this.element)
   }
 
   disconnect() {
     document.removeEventListener("visibilitychange", this._onShow)
+    this._seen?.disconnect()
   }
 
   tint() {
@@ -49,5 +53,14 @@ export default class extends Controller {
     }
     if (this.hasStreakCountTarget) this.streakCountTarget.textContent = status.streak
     if (this.hasDoneStreakTarget) this.doneStreakTarget.textContent = status.streak > 0 ? `· ${status.streak}-day streak` : ""
+    if (this.hasBeadsTarget) {
+      const done = new Set(status.dates)
+      const beads = Array.from(this.beadsTarget.querySelectorAll(".hm-bead"))
+      beads.forEach((b) => b.classList.toggle("is-on", done.has(b.dataset.date)))
+      const count = beads.filter((b) => b.classList.contains("is-on")).length
+      this.beadsTarget.classList.toggle("is-full", count === beads.length)
+      this.beadsTarget.setAttribute("aria-label", `${count} of the last 7 days`)
+      if (this.hasBeadsNoteTarget) this.beadsNoteTarget.textContent = status.streak > 0 ? `${status.streak}-day streak` : "Begin a streak today"
+    }
   }
 }

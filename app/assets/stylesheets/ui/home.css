@@ -133,7 +133,8 @@ body > .ps-root.hm-root { height: 100vh; height: 100dvh; display: flex; flex-dir
 }
 .hm-begin-time { font-weight: 500; color: #4a3210; }
 /* Tablets in landscape: the buttons keep their words on one line. */
-.hm-begin, .hm-sunday-btn { white-space: nowrap; }
+.hm-begin { white-space: nowrap; }
+@media (min-width: 768px) { .hm-sunday-btn { white-space: nowrap; } }
 .hm-begin svg { width: 20px; height: 20px; margin-left: 2px; }
 .hm-begin::after { /* one slow sheen across the leaf */
   content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -584,3 +585,60 @@ a.hm-fy-card:focus-visible, .hm-fy-cta:focus-visible { outline: 2px solid var(--
   font: 600 13px var(--ui-font); color: var(--ui-accent); text-decoration: underline; text-underline-offset: 3px;
 }
 .hm-voice-more:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: 4px; }
+
+/* The painting breathes: a very slow drift and push-in, like a camera over an
+   old master (one transform on one layer; paused off screen, never with
+   reduced motion). */
+@keyframes hm-drift {
+  from { transform: scale(1.03) translate3d(-1.2%, 0.6%, 0); }
+  to { transform: scale(1.11) translate3d(1.4%, -1.4%, 0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hm-today-art img { animation: hm-settle 1.8s cubic-bezier(0.2, 0.7, 0.2, 1) both, hm-drift 48s 1.8s ease-in-out infinite alternate; }
+  .hm-today.is-offscreen .hm-today-art img { animation-play-state: paused; }
+}
+
+/* The last seven days: gilt beads on a thread. */
+.hm-beads { grid-column: 1 / -1; display: flex; align-items: center; gap: 7px; margin: 10px 0 0; position: relative; }
+.hm-bead {
+  position: relative; width: 11px; height: 11px; border-radius: 999px; flex: none;
+  background: rgba(255, 240, 210, 0.08); box-shadow: inset 0 0 0 1.5px rgba(233, 196, 109, 0.55);
+  transition: background 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
+}
+.hm-bead + .hm-bead::before { /* the thread between beads */
+  content: ""; position: absolute; right: 100%; top: 50%; width: 7px; height: 1px; background: rgba(233, 196, 109, 0.35);
+}
+.hm-bead.is-on {
+  background: radial-gradient(circle at 35% 30%, #fff1c4 0%, #e9c46d 45%, #a97a26 100%);
+  box-shadow: 0 0 0 1px rgba(110, 70, 10, 0.35), 0 0 8px rgba(233, 196, 109, 0.45);
+}
+.hm-bead.is-today:not(.is-on) { box-shadow: inset 0 0 0 1.5px #e9c46d; }
+@media (prefers-reduced-motion: no-preference) {
+  .hm-bead.is-today:not(.is-on) { animation: hm-bead-glow 2.4s ease-in-out infinite; }
+  .hm-today.is-offscreen .hm-bead { animation-play-state: paused; }
+}
+@keyframes hm-bead-glow { 50% { box-shadow: inset 0 0 0 1.5px #e9c46d, 0 0 10px rgba(233, 196, 109, 0.6); } }
+.hm-beads.is-full .hm-bead { transform: scale(1.1); }
+.hm-beads.is-full .hm-bead + .hm-bead::before { background: #e9c46d; }
+.hm-beads-note { margin-left: 6px; font: 600 12px var(--ui-font); letter-spacing: 0.04em; color: rgba(255, 238, 206, 0.85); }
+.hm-beads.is-full .hm-beads-note { color: #f3d68b; }
+
+/* Your church: last service's scriptures, from the follower's phone. */
+.hm-church { margin-top: 34px; min-width: 0; }
+@media (min-width: 768px) { .hm-church { margin-top: 48px; } }
+.hm-church-card {
+  position: relative; padding: 20px 22px; border-radius: 20px; background: var(--ui-elevated);
+  box-shadow: var(--ui-shadow-sm), inset 0 0 0 1px var(--ui-border); overflow: hidden;
+}
+.hm-church-card::before { content: ""; position: absolute; left: 22px; right: 22px; top: 0; height: 2px; background: var(--il-leaf-ink); opacity: 0.7; }
+.hm-church-when { margin: 0 0 10px; font: 600 11.5px var(--ui-font); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ui-fg-muted); }
+.hm-church-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.hm-church-list a {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px;
+  background: var(--ui-surface); color: var(--ui-fg); text-decoration: none; font: 500 16px var(--reader-font, Georgia, serif);
+  box-shadow: inset 0 0 0 1px var(--il-gold-faint);
+}
+.hm-church-list a:hover { background: var(--ui-surface-2); }
+.hm-church-note { margin: 12px 0 0; font: 400 13px var(--ui-font); color: var(--ui-fg-muted); }
+/* The beads tell the streak now; the old ring stays in the markup for older saved pages. */
+.hm-today .hm-streak { display: none !important; }
