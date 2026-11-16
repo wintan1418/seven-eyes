@@ -1986,6 +1986,7 @@ export default class extends Controller {
 
     this._mirrorRefs.set(key, wanted)
     this._afterFade = null
+    const before = { reference: refInput.value, translation: transSelect?.value }
     refInput.value = reference
     if (transSelect && translation) transSelect.value = String(translation)
     // Mark this submit as the projector mirroring the console, not an edit:
@@ -1999,8 +2000,21 @@ export default class extends Controller {
       refInput.form.appendChild(flag)
     }
     this._loadsPending++
-    this._onceLoaded(pane, () => {
+    this._onceLoaded(pane, (ok) => {
       this._loadsPending = Math.max(0, this._loadsPending - 1)
+      if (!ok) {
+        // The load failed (a dropped connection, a Bible half-downloaded):
+        // forget it, so the next state fetches it again instead of looking
+        // "already loaded" and leaving the old verse on the screen for good.
+        if (this._mirrorRefs.get(key) === wanted) this._mirrorRefs.delete(key)
+        if (refInput.isConnected && refInput.value === reference) refInput.value = before.reference
+        if (transSelect?.isConnected && translation && transSelect.value === String(translation)) transSelect.value = before.translation
+        clearTimeout(this._retryLoad)
+        this._retryLoad = setTimeout(() => {
+          if (this._loadsPending === 0 && this._latestState) this._applyState(this._latestState)
+        }, 800)
+        return
+      }
       if (this._loadsPending === 0 && this._latestState) this._applyState(this._latestState)
     })
     this._submitPane(pane, { mirror: true })
