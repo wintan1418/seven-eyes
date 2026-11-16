@@ -14,7 +14,11 @@
           <svg class="hm-voice-mark" viewBox="0 0 48 36" aria-hidden="true" focusable="false">
             <path d="M0 36V22.5C0 9.8 6.6 2.3 19.2 0l2 4.6C14 6.6 10.6 10.9 10.2 17.4H20V36H0Zm27.4 0V22.5C27.4 9.8 34 2.3 46.6 0l2 4.6c-7.2 2-10.6 6.3-11 12.8h9.8V36H27.4Z"/>
           </svg>
-          <blockquote><%= t.best_line.presence || truncate(t.body, length: 160) %></blockquote>
+          <%# The whole testimony: a long one shows its first lines and a "Read all" that opens it in place. %>
+          <div class="hm-voice-text" data-controller="read-more">
+            <blockquote data-read-more-target="text"><%= t.body.presence || t.best_line %></blockquote>
+            <button type="button" class="hm-voice-more" data-read-more-target="button" data-action="read-more#toggle" hidden>Read all</button>
+          </div>
           <figcaption>
             <span class="hm-voice-avatar" aria-hidden="true"><%= (t.name.presence || "A").strip[0].upcase %></span>
             <span>

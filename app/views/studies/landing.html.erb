@@ -92,7 +92,10 @@
           <% @testimonials.each_with_index do |t, i| %>
             <figure class="ld-voice" data-shatter-slider-target="slide"
                     aria-roledescription="slide" aria-label="<%= i + 1 %> of <%= @testimonials.size %>">
-              <blockquote>&ldquo;<%= t.best_line.presence || truncate(t.body, length: 160) %>&rdquo;</blockquote>
+              <div class="hm-voice-text" data-controller="read-more">
+                <blockquote data-read-more-target="text">&ldquo;<%= t.body.presence || t.best_line %>&rdquo;</blockquote>
+                <button type="button" class="hm-voice-more" data-read-more-target="button" data-action="read-more#toggle" hidden>Read all</button>
+              </div>
               <figcaption>
                 <span class="ld-voice-avatar" aria-hidden="true"><%= (t.name.presence || "A").strip[0].upcase %></span>
                 <span>

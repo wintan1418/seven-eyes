@@ -245,3 +245,6 @@ application.register("parallax", ParallaxController)
 
 import SundayCardController from "./sunday_card_controller"
 application.register("sunday-card", SundayCardController)
+
+import ReadMoreController from "./read_more_controller"
+application.register("read-more", ReadMoreController)

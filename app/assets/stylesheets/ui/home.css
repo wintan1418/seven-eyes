@@ -571,3 +571,16 @@ a.hm-fy-card:focus-visible, .hm-fy-cta:focus-visible { outline: 2px solid var(--
 .hm-voices-cta a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .hm-voices-cta a:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: 6px; }
 .hm-empty-link { border: 0; padding: 0; background: none; cursor: pointer; font: 600 14px var(--ui-font); color: var(--ui-accent); }
+
+/* A testimony in full: the first lines, then "Read all" opens the rest in
+   place (read-more controller). Shared by Home and the landing page. */
+.hm-voice-text { flex: 1 1 auto; display: grid; align-content: start; gap: 8px; min-width: 0; }
+.hm-voice-text blockquote, .ld-voice .hm-voice-text blockquote {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 6; line-clamp: 6; overflow: hidden;
+}
+.hm-voice-text.is-open blockquote { display: block; -webkit-line-clamp: unset; line-clamp: none; overflow: visible; }
+.hm-voice-more {
+  justify-self: start; padding: 2px 0; border: 0; background: none; cursor: pointer;
+  font: 600 13px var(--ui-font); color: var(--ui-accent); text-decoration: underline; text-underline-offset: 3px;
+}
+.hm-voice-more:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: 4px; }
