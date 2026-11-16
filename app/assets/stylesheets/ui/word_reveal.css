@@ -1,0 +1,111 @@
+/* ============================================================================
+   Hold a word, see the original (word_reveal controller). A small card that
+   rises under the selected word: the Hebrew or Greek in its own script, how
+   to say it, what it means. Fixed to the viewport at --wr-x / --wr-y (set by
+   the controller); the little arrow points back at the word (--wr-arrow).
+   The script fonts are the bundled root-word faces (root_words.css).
+   ========================================================================== */
+.wr-card {
+  --wr-gold: var(--il-gold, #c9a14a);
+  position: fixed;
+  left: var(--wr-x, 12px);
+  top: var(--wr-y, 12px);
+  z-index: 70;
+  width: min(300px, calc(100vw - 24px));
+  padding: 12px 14px 10px;
+  border-radius: 14px;
+  background: var(--ui-elevated, #fff);
+  color: var(--ui-fg, #1d1b16);
+  border: 1px solid var(--ui-border, rgba(0, 0, 0, 0.08));
+  border-top: 2px solid var(--wr-gold);
+  box-shadow: var(--ui-shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.18));
+  font-family: var(--ui-font, system-ui, sans-serif);
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+  transform-origin: var(--wr-arrow, 50%) top;
+  transition: opacity 160ms ease, transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: auto;
+}
+.wr-card.is-above { transform: translateY(-6px) scale(0.98); transform-origin: var(--wr-arrow, 50%) bottom; }
+.wr-card.is-in { opacity: 1; transform: none; }
+
+/* The arrow: a rotated square on the edge facing the word. */
+.wr-card::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--wr-arrow, 50%) - 6px);
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  border: inherit;
+  border-width: 0;
+  transform: rotate(45deg);
+}
+.wr-card.is-below::before { top: -7px; border-top: 2px solid var(--wr-gold); border-left: 1px solid var(--ui-border, rgba(0, 0, 0, 0.08)); }
+.wr-card.is-above::before { bottom: -7px; border-bottom: 1px solid var(--ui-border, rgba(0, 0, 0, 0.08)); border-right: 1px solid var(--ui-border, rgba(0, 0, 0, 0.08)); }
+
+.wr-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-fg-muted, #6b6457);
+}
+.wr-lang { color: var(--wr-gold); font-weight: 600; }
+.wr-num { font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+
+.wr-lemma {
+  margin: 4px 0 2px;
+  font-family: "RW Hebrew", "RW Greek", "Noto Serif", "Times New Roman", serif;
+  font-size: 34px;
+  line-height: 1.25;
+  color: var(--ui-fg, #1d1b16);
+}
+.wr-card.is-hebrew .wr-lemma { text-align: right; font-size: 38px; }
+
+.wr-say {
+  font-family: "RW Greek", "Source Serif 4", Georgia, serif;
+  font-size: 15px;
+  color: var(--ui-fg-muted, #6b6457);
+}
+.wr-say b { color: var(--ui-fg, #1d1b16); font-weight: 600; font-style: italic; }
+
+.wr-gloss {
+  margin: 6px 0 0;
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.wr-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ui-border, rgba(0, 0, 0, 0.08));
+}
+.wr-count { font-size: 12px; line-height: 1.3; color: var(--ui-fg-subtle, #8a8273); min-width: 0; }
+.wr-more {
+  flex: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 12px;
+  min-height: 32px;
+  background: var(--ui-accent-soft, rgba(201, 161, 74, 0.15));
+  color: var(--ui-fg, #1d1b16);
+  font: 600 13px/1 var(--ui-font, system-ui, sans-serif);
+  cursor: pointer;
+}
+.wr-more:hover { background: var(--ui-accent, #c9a14a); color: var(--ui-accent-fg, #fff); }
+.wr-more:focus-visible { outline: 2px solid var(--ui-focus, var(--wr-gold)); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wr-card, .wr-card.is-above { transition: opacity 120ms linear; transform: none; }
+}
+
+/* Never on the projector or while presenting. */
+body:has(.ps-root.is-presenting) .wr-card, body:has(.ps-root.is-output) .wr-card { display: none; }

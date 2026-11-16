@@ -251,3 +251,6 @@ application.register("read-more", ReadMoreController)
 
 import LastServiceController from "./last_service_controller"
 application.register("last-service", LastServiceController)
+
+import WordRevealController from "./word_reveal_controller"
+application.register("word-reveal", WordRevealController)
