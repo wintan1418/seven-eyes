@@ -782,3 +782,61 @@ html body:has(.ps-root.is-console) .ps-offline-host { top: auto; bottom: 14px; l
 }
 .ps-root.is-console.is-preaching.is-slide[data-look] .ps-preach-slide { padding: var(--ps-ref-band) var(--safe-x) var(--safe-y) !important; }
 .ps-root.is-console.is-preaching .ps-look-bg { z-index: 19 !important; overflow: hidden; }
+.ps-root.is-console .ps-verse-list .vrow.is-found .pick { grid-template-columns: 9.5em minmax(0, 1fr); }
+
+/* ---------- a word study on the Live miniature ----------
+   root_words.css sizes the projected word slide from the window (vw, with px
+   floors for a real projector). In the console the slide is a small 16:9 box,
+   so the same proportions come from the box (cqw) — the miniature is the
+   projector, small, and nothing spills over the console. */
+.ps-root.ps-root.ps-root.is-console.is-preaching.is-slide .ps-preach-slide:has(.rw-slide) {
+  overflow: hidden; padding: calc(var(--cx-screen-h, 225px) * 0.06) calc(var(--cx-screen-w, 400px) * 0.05) !important;
+}
+.ps-root.is-console .ps-preach-slide .rw-slide {
+  --rw-size: var(--rw-fit);
+  max-width: 100%; gap: calc(3.2cqw * var(--rw-fit)) calc(4.5cqw * var(--rw-fit));
+}
+.ps-root.is-console .ps-preach-slide .rw-slide .rw-ref.slide-title { font-size: calc(1.5cqw * var(--rw-size)); }
+.ps-root.is-console .ps-preach-slide .rw-slide .rw-verse.slide-stanza { font-size: calc(3.1cqw * var(--rw-size)); }
+.ps-root.is-console .ps-preach-slide .rw-word { padding-left: calc(3.5cqw * var(--rw-fit)); }
+.ps-root.is-console .ps-preach-slide .rw-word .rw-eyebrow.slide-title { font-size: calc(1.35cqw * var(--rw-size)); }
+.ps-root.is-console .ps-preach-slide .rw-word .rw-lemma { font-size: calc(8.6cqw * var(--rw-size)); }
+.ps-root.is-console .ps-preach-slide .rw-slide.is-word .rw-word .rw-lemma { font-size: calc(14cqw * var(--rw-size)); }
+.ps-root.is-console .ps-preach-slide .rw-word .rw-translit { font-size: calc(3.3cqw * var(--rw-size)); }
+.ps-root.is-console .ps-preach-slide .rw-word .rw-say { font-size: calc(1.9cqw * var(--rw-size)); }
+.ps-root.is-console .ps-preach-slide .rw-word .rw-rule { width: calc(7cqw * var(--rw-size)); }
+.ps-root.is-console .ps-preach-slide .rw-word .rw-gloss { font-size: calc(2.9cqw * var(--rw-size)); }
+.ps-root.is-console .ps-preach-slide .rw-word .rw-note { font-size: calc(1.9cqw * var(--rw-size)); }
+.ps-root.is-console .ps-preach-slide .rw-word .rw-meta { font-size: calc(1.15cqw * var(--rw-size)); }
+.ps-root.is-console .ps-preach-slide .rw-word .rw-foot { font-size: calc(1.6cqw * var(--rw-size)); }
+/* The word study's line in the Live list. */
+.cx-live-list .cx-line.is-word .tag { font-family: "RW Hebrew", "RW Greek", "Noto Serif", serif; font-size: 15px; }
+
+/* ---------- Clear / Logo / Countdown on the Live miniature ----------
+   The miniature shows what the room sees, as the projector draws it
+   (slide_themes.css): the words step aside, the look's background stays,
+   the logo or countdown sits on it — sized from the miniature (cq units).
+   The veil becomes a caption along the bottom instead of a cover over words. */
+.ps-root.is-console.is-preaching:is(.screen-clear, .screen-logo, .screen-countdown) :is(.ps-workspace, .ps-preach-slide, .ps-preach-ref) {
+  visibility: hidden;
+}
+.ps-root.is-console.is-preaching.screen-logo .ps-screen-logo,
+.ps-root.is-console.is-preaching.screen-countdown .ps-screen-countdown {
+  display: flex; position: fixed; z-index: 23; overflow: hidden;
+  flex-direction: column; align-items: center; justify-content: center; gap: 3cqh;
+  padding: 7cqh 7cqw; box-sizing: border-box; text-align: center;
+}
+.ps-root.is-console .ps-screen-logo .logo-img { max-width: 64cqw; max-height: 46cqh; }
+.ps-root.is-console .ps-screen-logo .logo-name { font-size: 5.6cqw; }
+.ps-root.is-console .ps-screen-logo.has-img .logo-name { font-size: 3.4cqw; }
+.ps-root.is-console .ps-screen-logo .logo-line { font-size: 2.6cqw; }
+.ps-root.is-console .ps-screen-logo .logo-orn { font-size: 14cqh; }
+.ps-root.is-console .ps-screen-countdown .cd-head { font-size: 3.4cqw; }
+.ps-root.is-console .ps-screen-countdown .cd-digits { font-size: min(30cqh, 22cqw); }
+.ps-root.is-console .cx-screen-veil:is([data-mode="clear"], [data-mode="logo"], [data-mode="countdown"]) {
+  justify-content: flex-end; gap: 2px; padding: 0 4% 8px;
+  background: linear-gradient(180deg, transparent 58%, rgba(10, 7, 4, 0.82));
+}
+.ps-root.is-console .cx-screen-veil:is([data-mode="clear"], [data-mode="logo"], [data-mode="countdown"]) .word { font-size: 11px; letter-spacing: 0.2em; }
+.ps-root.is-console .cx-screen-veil .note { max-width: 100%; text-wrap: balance; }
+.ps-root.is-console .cx-screen-veil:is([data-mode="clear"], [data-mode="logo"], [data-mode="countdown"]) .note { font-size: 11px; line-height: 1.3; }

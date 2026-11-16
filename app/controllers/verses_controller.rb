@@ -13,6 +13,7 @@ class VersesController < ApplicationController
       osis: parsed.osis,
       chapter: parsed.chapter,
       verse_start: parsed.verse_start,
+      verse_end: (parsed.verse_end if parsed.verse_end && parsed.verse_end != parsed.verse_start && parsed.chapter_end == parsed.chapter),
       chapter_reference: "#{parsed.book_name} #{parsed.chapter}",
       label: parsed.label
     }

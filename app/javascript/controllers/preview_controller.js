@@ -1,7 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 import { warmLocal, localState } from "../lib/offline/local_pane"
 import { referenceLabel } from "../lib/offline/reference_parser"
-import { bookText } from "../lib/offline/store"
+import { bookText, allBookTexts, storedManifest } from "../lib/offline/store"
+import { rankVerses, queryWords } from "../lib/scripture_search"
 import { chapterVerses } from "../lib/offline/pane_renderer"
 import { quickFetch } from "../lib/offline/network"
 import { queueKey } from "../lib/offline/setlist_state"
@@ -9,6 +10,7 @@ import { songSlides } from "../lib/song_sheet"
 import { richPreviewNodes } from "../lib/slides/rich_slides"
 import { wordFromDetail } from "../lib/root_words"
 import { renderPreviewWord } from "../lib/root_word_slide"
+import { DEFAULTS as SET_DEFAULTS, setLabel } from "../lib/slides/scripture_set"
 
 // Preview → Live, EasyWorship-style, on the operator screen only (never on the
 // ?output=1 projector or the ?stage=1 pulpit screen). Lives on .ps-root.
@@ -27,6 +29,9 @@ import { renderPreviewWord } from "../lib/root_word_slide"
 const PREVIEW_FIRST_KEY = "ps-preview-first"
 const CHAPTER_TIMEOUT_MS = 2000
 const PREVIEW_MAX_VERSES = 6
+const RANGE_MAX = 6 // presentation_controller's: a range this long goes up as one slide
+const SEARCH_DELAY_MS = 180
+const SEARCH_LIMIT = 30
 
 export default class extends Controller {
   static targets = [ "console", "liveLabel", "queueLive", "previewCard", "previewLabel", "previewText", "queuePreview",
@@ -76,6 +81,7 @@ export default class extends Controller {
   // follows from IndexedDB a moment later.
   load(detail) {
     if (!detail || !this.hasPreviewCardTarget) return
+    if (detail.source !== "list") this._clearPicks()
     const preview = { ...detail }
     if (preview.kind === "scripture") {
       const p = localState().parse?.(preview.reference || "")
@@ -97,6 +103,7 @@ export default class extends Controller {
     if (!this._visible()) window.dispatchEvent(new CustomEvent("setlist:open"))
 
     this.previewTextTarget.classList.remove("is-deck")
+    this.previewTextTarget.dataset.span = ""
     if (preview.kind === "scripture") this._paintScripture(preview, this._previewSeq)
     else this._paintSlide(preview)
   }
@@ -113,6 +120,9 @@ export default class extends Controller {
     const first = p.verseStart ?? 1
     const last = p.openEnded ? Infinity : (p.verseEnd ?? p.verseStart ?? Infinity)
     const verses = chapter.verses.filter((v) => v.num >= first && v.num <= last)
+    // A range goes up as one slide: the console's miniature shows all of it.
+    const range = p.verseStart != null && verses.length > 1 && verses.length <= RANGE_MAX && !p.openEnded
+    this.previewTextTarget.dataset.span = range ? String(verses.length) : ""
     const shown = verses.slice(0, PREVIEW_MAX_VERSES)
     const nodes = shown.map((v) => {
       const span = el("span", "v")
@@ -122,7 +132,9 @@ export default class extends Controller {
     if (verses.length > shown.length) nodes.push(el("span", "muted", `… ${verses.length - shown.length} more verse${verses.length - shown.length === 1 ? "" : "s"}`))
     if (chapter.foreign) nodes.push(el("span", "muted tag", chapter.foreign))
     this.previewTextTarget.replaceChildren(...(nodes.length ? nodes : [ el("span", "muted", "No such verse in this chapter") ]))
-    this._showList(chapter, { focus: p.verseStart })
+    // Picked from the search matches: the matches stay (a double-click's second
+    // click must land on the same row; the next pick is one click away).
+    if (preview.source !== "found") this._showList(chapter, { focus: p.verseStart })
   }
 
   // A song / thought: every slide in projection order (EasyWorship's slide
@@ -315,9 +327,15 @@ export default class extends Controller {
 
   async _typed(raw) {
     const text = (raw || "").trim()
+    clearTimeout(this._searchTimer)
     if (!text || /^\d+$/.test(text)) return
     const p = localState().parse?.(text)
-    if (!p?.valid) return
+    if (!p?.valid) {
+      // Words, not a reference: the matching verses list as you type.
+      this._typedSeq = (this._typedSeq || 0) + 1
+      this._searchTimer = setTimeout(() => this._searchTyped(text), SEARCH_DELAY_MS)
+      return
+    }
     const seq = (this._typedSeq = (this._typedSeq || 0) + 1)
     const chapter = await this._chapter(text)
     if (seq !== this._typedSeq || !chapter) return
@@ -328,7 +346,8 @@ export default class extends Controller {
     if (!this.hasVerseListTarget) return
     if (pinned) this._listPinnedAt = performance.now()
     const p = chapter.parsed
-    const same = this._list && this._list.osis === p.osis && this._list.chapter === p.chapter && this._list.code === chapter.code
+    delete this.verseListTarget.dataset.mode
+    const same = !this._list?.search && this._list && this._list.osis === p.osis && this._list.chapter === p.chapter && this._list.code === chapter.code
     this._list = { osis: p.osis, chapter: p.chapter, code: chapter.code, bookName: p.bookName }
     this.verseListTitleTarget.textContent = `${p.bookName} ${p.chapter}${chapter.translation ? ` · ${chapter.translation}` : ""}`
     if (!same) {
@@ -363,7 +382,7 @@ export default class extends Controller {
   }
 
   _paintListMarks() {
-    if (!this._list || !this.hasVerseRowsTarget) return
+    if (!this._list || this._list.search || !this.hasVerseRowsTarget) return
     const live = this._liveInList() ? this._live : null
     const pp = this._preview?.kind === "scripture" ? this._preview.parsed : null
     const previewHere = pp && pp.osis === this._list.osis && pp.chapter === this._list.chapter ? pp : null
@@ -385,16 +404,80 @@ export default class extends Controller {
     return this.hasVerseRowsTarget ? this.verseRowsTarget.querySelector(`.vrow[data-num="${num}"]`) : null
   }
 
+  // Click previews a verse. EasyWorship's multi-select: Shift+click previews
+  // every verse from the last one clicked to this one ("Gen 2:1-3", one
+  // slide); Ctrl/⌘+click adds or removes single verses — side by side they
+  // make a range, apart they make a scripture slide ("Gen 2:1, 5").
   pickVerse(event) {
-    const label = event.currentTarget.closest(".vrow")?.dataset.label
-    if (label) this.load({ kind: "scripture", reference: label, source: "list" })
+    const row = event.currentTarget.closest(".vrow")
+    if (!row?.dataset.label) return
+    const n = Number(row.dataset.num)
+    if (event.shiftKey && this._pickAnchor != null && this._pickChapter === this._listKey()) {
+      event.preventDefault()
+      const [ a, b ] = [ Math.min(this._pickAnchor, n), Math.max(this._pickAnchor, n) ]
+      this._picks = new Set(Array.from({ length: b - a + 1 }, (_, i) => a + i))
+    } else if ((event.ctrlKey || event.metaKey) && this._pickChapter === this._listKey() && this._picks?.size) {
+      event.preventDefault()
+      if (this._picks.has(n) && this._picks.size > 1) this._picks.delete(n)
+      else this._picks.add(n)
+      this._pickAnchor = n
+    } else {
+      this._picks = new Set([ n ])
+      this._pickAnchor = n
+      this._pickChapter = this._listKey()
+    }
+    this._loadPicks()
   }
 
+  // Double-click: the selection (or just this verse) straight to the screen.
   liveVerse(event) {
-    const label = event.currentTarget.closest(".vrow")?.dataset.label
-    if (!label) return
-    this.load({ kind: "scripture", reference: label, source: "list" })
+    const row = event.currentTarget.closest(".vrow")
+    if (!row?.dataset.label) return
+    if (!this._picks?.has(Number(row.dataset.num))) {
+      this._picks = new Set([ Number(row.dataset.num) ])
+      this._pickAnchor = Number(row.dataset.num)
+      this._pickChapter = this._listKey()
+    }
+    this._loadPicks()
     this.goLive()
+  }
+
+  _listKey() {
+    return this._list ? `${this._list.osis}|${this._list.chapter}|${this._list.code}` : null
+  }
+
+  _clearPicks() {
+    this._picks = null
+    this._pickAnchor = null
+    this.hasVerseRowsTarget && this.verseRowsTarget.querySelectorAll(".vrow.is-picked").forEach((r) => r.classList.remove("is-picked"))
+  }
+
+  // The picked verses into Preview: one verse, a range, or (verses apart) a
+  // scripture slide with all of them.
+  _loadPicks() {
+    const nums = Array.from(this._picks || []).sort((a, b) => a - b)
+    if (!nums.length || !this._list) return
+    const { bookName, chapter } = this._list
+    this.verseRowsTarget.querySelectorAll(".vrow").forEach((r) => r.classList.toggle("is-picked", nums.length > 1 && this._picks.has(Number(r.dataset.num))))
+    const first = nums[0]
+    const last = nums[nums.length - 1]
+    if (last - first + 1 === nums.length) {
+      const reference = `${bookName} ${chapter}:${first}${last > first ? `-${last}` : ""}`
+      this.load({ kind: "scripture", reference, source: "list" })
+      if (nums.length > RANGE_MAX) this._hintLong(nums.length)
+      return
+    }
+    const verses = nums.map((n) => {
+      const row = this._rowFor(n)
+      return { c: chapter, n, text: row?.querySelector(".txt")?.textContent || "" }
+    })
+    const label = `${bookName} ${chapter}:${compactNums(nums)}`
+    const data = { ...SET_DEFAULTS, refs: [ { reference: label, label, translation: this._list.code || null, verses } ] }
+    this.load({ kind: "slide", itemKind: "scripture_set", label, title: setLabel(data) || label, body: "", rich: { type: "set", data }, source: "list" })
+  }
+
+  _hintLong(count) {
+    this.previewLabelTarget.textContent += ` · ${count} verses — ${RANGE_MAX} or fewer go up as one slide; Next walks the rest`
   }
 
   queueVerse(event) {
@@ -421,6 +504,102 @@ export default class extends Controller {
       event.stopPropagation()
       window.dispatchEvent(new CustomEvent("setlist:add", { detail: { kind: "scripture", reference: row.dataset.label } }))
     }
+  }
+
+  // ---- search as you type ----------------------------------------------------------------
+  // Words that aren't a reference ("neither male nor female") list the
+  // matching verses at once — the downloaded Bible first (no network), the
+  // server's search when this Bible isn't on the device. Ranked like the
+  // Search page: the words side by side, then all of them, then some.
+  // Click previews, double-click goes live; Enter in the box previews the
+  // first verse holding every word (console_library).
+
+  async _searchTyped(text) {
+    if (!this.hasVerseListTarget || !queryWords(text).length) return
+    const seq = this._typedSeq
+    const found = (await this._searchDevice(text)) || (await this._searchServer(text))
+    if (seq !== this._typedSeq || !found) return
+    this._showFound(text, found)
+  }
+
+  async _searchDevice(text) {
+    try {
+      const local = await warmLocal()
+      const downloaded = local.downloaded || []
+      if (!downloaded.length) return null
+      const t = local.translations?.find((x) => String(x.id) === String(this._translationId()))
+      const code = (t && downloaded.find((d) => d.code === t.code)?.code) || null
+      if (!code && navigator.onLine !== false) return null // the server has this translation
+      const pick = code || downloaded[0].code
+      this._bibles ||= new Map()
+      if (!this._bibles.has(pick)) {
+        const [ records, manifest ] = await Promise.all([ allBookTexts(pick), storedManifest() ])
+        const canon = manifest?.canon || []
+        this._bibles.set(pick, { records, names: new Map(canon.map((b) => [ b.osis, b.name ])), order: new Map(canon.map((b, i) => [ b.osis, i ])) })
+      }
+      const bible = this._bibles.get(pick)
+      const { hits } = rankVerses(bible.records, text, { order: bible.order, limit: SEARCH_LIMIT })
+      return {
+        translation: pick,
+        hits: hits.map((h) => ({ reference: `${bible.names.get(h.osis) || h.osis} ${h.chapter}:${h.num}`, text: h.text, parts: h.parts, tier: h.tier }))
+      }
+    } catch { return null }
+  }
+
+  async _searchServer(text) {
+    try {
+      const url = `/search.json?q=${encodeURIComponent(text)}&translation=${encodeURIComponent(this._translationId() || "")}`
+      const { res, body } = await quickFetch(url, { headers: { Accept: "application/json" } }, { timeoutMs: CHAPTER_TIMEOUT_MS, read: "json" })
+      if (!res.ok || !body?.ok) return null
+      return { translation: body.translation, hits: body.hits || [] }
+    } catch { return null }
+  }
+
+  _showFound(text, { translation, hits }) {
+    this._listPinnedAt = performance.now()
+    this._list = { search: text }
+    this._clearPicks()
+    this.verseListTarget.dataset.mode = "search"
+    this.verseListTarget.dataset.query = text
+    const strong = hits.filter((h) => h.tier !== "partial").length
+    this.verseListTitleTarget.textContent = hits.length
+      ? `${strong ? `${strong}${hits.length >= SEARCH_LIMIT && strong === hits.length ? "+" : ""}` : "No"} verse${strong === 1 ? "" : "s"} with “${text}”${strong < hits.length ? ` · then some of the words` : ""}${translation ? ` · ${translation}` : ""}`
+      : `No verses with “${text}”${translation ? ` · ${translation}` : ""} — Enter asks the study assistant`
+    this.verseRowsTarget.replaceChildren(...hits.map((h) => {
+      const row = el("li", "vrow is-found")
+      row.classList.toggle("is-strong", h.tier !== "partial")
+      row.dataset.label = h.reference
+      const pick = el("button", "pick")
+      pick.type = "button"
+      pick.dataset.action = "click->preview#pickFound dblclick->preview#liveFound keydown->preview#rowKey"
+      pick.title = `${h.reference} — click to preview, double-click to go live`
+      const txt = el("span", "txt")
+      if (h.parts?.length) h.parts.forEach((part) => txt.append(part.mark ? el("mark", null, part.text) : document.createTextNode(part.text)))
+      else markWords(txt, h.text, text)
+      pick.append(el("span", "ref", h.reference), txt)
+      const add = el("button", "add", "+")
+      add.type = "button"
+      add.dataset.action = "preview#queueVerse"
+      add.title = `Add ${h.reference} to the queue`
+      row.append(pick, add)
+      return row
+    }))
+    this.verseListTarget.hidden = false
+    this.verseRowsTarget.scrollTop = 0
+    this._paintQueueButtons()
+  }
+
+  pickFound(event) {
+    const row = event.currentTarget.closest(".vrow")
+    if (!row?.dataset.label) return
+    this.verseRowsTarget.querySelectorAll(".vrow.is-found.is-preview").forEach((r) => r.classList.remove("is-preview"))
+    row.classList.add("is-preview")
+    this.load({ kind: "scripture", reference: row.dataset.label, source: "found" })
+  }
+
+  liveFound(event) {
+    this.pickFound(event)
+    this.goLive()
   }
 
   // ---- chapter text: the downloaded Bible first, the server only if it must ---------------
@@ -492,4 +671,29 @@ function visibleIn(row, box) {
   const r = row.getBoundingClientRect()
   const b = box.getBoundingClientRect()
   return r.top >= b.top && r.bottom <= b.bottom
+}
+
+// [1, 2, 3, 5] → "1-3, 5"
+function compactNums(nums) {
+  const out = []
+  for (let i = 0; i < nums.length; i++) {
+    let j = i
+    while (j + 1 < nums.length && nums[j + 1] === nums[j] + 1) j++
+    out.push(j > i ? `${nums[i]}-${nums[j]}` : `${nums[i]}`)
+    i = j
+  }
+  return out.join(", ")
+}
+
+// The typed words marked in a verse (server results come as plain text).
+function markWords(node, text, query) {
+  const words = queryWords(query).map((w) => w.stem.replace(/[^a-z]/gi, "")).filter((w) => w.length > 2)
+  if (!words.length) { node.textContent = text; return }
+  const re = new RegExp(`\\b(${words.join("|")})[a-z]*`, "gi")
+  let last = 0
+  for (const m of text.matchAll(re)) {
+    node.append(document.createTextNode(text.slice(last, m.index)), el("mark", null, m[0]))
+    last = m.index + m[0].length
+  }
+  node.append(document.createTextNode(text.slice(last)))
 }

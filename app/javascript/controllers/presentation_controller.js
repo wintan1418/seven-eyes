@@ -54,6 +54,9 @@ const AUTOFIT_MAX_ITERS = 24
 const AUTOFIT_MIN_PX = 18
 const SCREEN_PREFS_KEY = "ps-screen-prefs"
 const GROUP_MAX = 3 // the preach bar offers 1–3 verses per slide
+// A called range ("Gen 2:1-3", or a range picked in the console's verse list)
+// goes up as one slide, EasyWorship-style, up to this many verses.
+const RANGE_MAX = 6
 const ESC_CONFIRM_MS = 1500
 const LOAD_TIMEOUT_MS = 10_000 // a pane load that never answers stops blocking
 const CHECK_TIMEOUT_MS = 1500 // the server's reference check, for what the device can't read
@@ -73,6 +76,7 @@ export default class extends Controller {
   initialize() {
     this._preachIndex = 0
     this._groupSize = 1
+    this._chosenGroup = 1 // the bar's 1–3 choice; a range slide overrides it until the next chase
     this._slide = null // {title, body, arrangement, stanzas, labels, index} while a song/thought is projected
     this._history = [] // where we were before each chase/queue/AI jump — for ⟲ Back
     this._blank = false // projector held on a calm blank screen (between segments)
@@ -261,6 +265,7 @@ export default class extends Controller {
     this._unbindKeys()
     this._unbindSwipe()
     this._groupSize = 1
+    this._chosenGroup = 1
     this._history = []
     this._blank = false
     this._anchor = null
@@ -304,7 +309,7 @@ export default class extends Controller {
   setGroup(event) {
     event?.preventDefault?.()
     const n = parseInt(event.params?.size || event.currentTarget?.dataset?.preachGroup || "1", 10)
-    this._groupSize = Math.max(1, Math.min(GROUP_MAX, n))
+    this._groupSize = this._chosenGroup = Math.max(1, Math.min(GROUP_MAX, n))
     this._syncGroupButtons()
     this._transition(() => {})
   }
@@ -673,12 +678,13 @@ export default class extends Controller {
       window.dispatchEvent(new CustomEvent("preview:load", { detail: { kind: "scripture", reference, source: "go" } }))
       return
     }
-    this._loadPassage(parsed.chapter_reference, parsed.verse_start, { remember, label: remember ? (parsed.label || raw) : null })
+    this._loadPassage(parsed.chapter_reference, parsed.verse_start, { remember, label: remember ? (parsed.label || raw) : null, verseEnd: parsed.verse_end })
   }
 
   // Load a whole chapter through the presented pane's own Turbo Frame form,
   // then land on the given verse. Shared by chase, the queue, and AI finds.
-  _loadPassage(chapterReference, verseStart, { remember = true, label = undefined } = {}) {
+  // `verseEnd`: a range ("Gen 2:1-3") — all of it on one slide (≤ RANGE_MAX verses).
+  _loadPassage(chapterReference, verseStart, { remember = true, label = undefined, verseEnd = null } = {}) {
     const pane = this.element.querySelector(".ps-pane.is-presented")
     const input = pane?.querySelector("input[name='pane[reference]']")
     if (!input) return
@@ -702,6 +708,9 @@ export default class extends Controller {
         this._setSplitIndex(pane, idx)
       } else {
         this._preachIndex = idx
+        const span = verseStart && verseEnd > verseStart ? verseEnd - verseStart + 1 : 0
+        this._groupSize = span && span <= RANGE_MAX ? span : this._chosenGroup
+        this._syncGroupButtons()
       }
       this._paint()
       requestAnimationFrame(() => this._autoFit())
@@ -2035,7 +2044,7 @@ export default class extends Controller {
 
     // If only the emphasis changed (operator tapped a word), re-glow in place
     // instead of fading the whole verse — no flicker on the projector.
-    const nextGroup = Math.max(1, Math.min(GROUP_MAX, msg.group || 1))
+    const nextGroup = Math.max(1, Math.min(RANGE_MAX, msg.group || 1))
     const nextIndex = msg.index || 0
     const pairedNow = this.element.querySelector(".ps-pane.is-paired")
     const sameSpot = this._preachIndex === nextIndex && this._groupSize === nextGroup &&
@@ -2534,7 +2543,7 @@ export default class extends Controller {
         const n = parseInt(e.key, 10)
         if (n > GROUP_MAX) return
         e.preventDefault()
-        this._groupSize = n
+        this._groupSize = this._chosenGroup = n
         this._syncGroupButtons()
         this._transition(() => {})
       }

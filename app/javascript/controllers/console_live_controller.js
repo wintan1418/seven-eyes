@@ -93,7 +93,7 @@ export default class extends Controller {
     if (!this.hasListTarget) return
     const rows = state.slide ? this._slideRows(state.slide) : this._verseRows()
     const signature = state.slide
-      ? `slide|${state.slide.title}|${state.slide.body}|${state.slide.arrangement}|${state.slide.image}|${JSON.stringify(state.slide.rich || null)}`
+      ? `slide|${state.slide.title}|${state.slide.body}|${state.slide.arrangement}|${state.slide.image}|${JSON.stringify(state.slide.rich || null)}|${state.slide.word?.s || ""}`
       : `verses|${state.reference}|${state.translation}|${rows.length}|${rows[0]?.key}`
     if (signature !== this._signature) {
       this._signature = signature
@@ -131,6 +131,13 @@ export default class extends Controller {
   }
 
   _slideRows(slide) {
+    // A word study: one line — the word, how it's said, what it means (its
+    // body is the study as JSON, never shown as it is).
+    if (slide.word) {
+      const w = slide.word
+      const text = [ w.translit && `${w.translit}${w.say ? ` (${w.say})` : ""}`, w.gloss, w.english && `“${w.english}”`, w.reference ].filter(Boolean).join(" · ")
+      return [ { key: "word", n: 0, tag: w.lemma || w.s || "ℵ", text: text || "Word study", action: "slide", word: true } ]
+    }
     if (slide.rich) {
       return (richSlides(slide.rich) || []).map((s, i) => ({ key: `r${i}`, n: i, tag: s.label || String(i + 1), text: s.text, action: "slide" }))
     }
@@ -140,7 +147,7 @@ export default class extends Controller {
   }
 
   _row(r) {
-    const li = el("li", "cx-line")
+    const li = el("li", r.word ? "cx-line is-word" : "cx-line")
     li.dataset.n = String(r.n)
     const btn = el("button", "pick")
     btn.type = "button"

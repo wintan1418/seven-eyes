@@ -16,6 +16,16 @@ class ReferenceCheckTest < ActionDispatch::IntegrationTest
     assert_equal "Romans 8", data["chapter_reference"]
   end
 
+  test "a range in one chapter says where it ends (it goes up as one slide); across chapters it doesn't" do
+    get reference_check_path(q: "rom 8:28-30")
+    data = JSON.parse(response.body)
+    assert_equal [ 28, 30 ], data.values_at("verse_start", "verse_end")
+    get reference_check_path(q: "rom 8:28")
+    assert_nil JSON.parse(response.body)["verse_end"]
+    get reference_check_path(q: "rom 8:28-9:2")
+    assert_nil JSON.parse(response.body)["verse_end"]
+  end
+
   test "a whole-chapter call has no landing verse" do
     get reference_check_path(q: "romans 8")
     data = JSON.parse(response.body)

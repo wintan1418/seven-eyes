@@ -53,6 +53,20 @@ class SearchPageTest < ActionDispatch::IntegrationTest
     assert_select ".sr-summary", text: /No verses containing rain/
   end
 
+  test "JSON for the preach console's search as you type: ranked, the translation by id too" do
+    get search_path(q: "dew rain", translation: @kjv.id, format: :json)
+    assert_response :success
+    body = response.parsed_body
+    assert body["ok"]
+    assert_equal "KJV", body["translation"]
+    assert_equal [ "Deuteronomy 32:2", "Job 38:28", "Job 38:26" ], body["hits"].map { |h| h["reference"] }
+    assert_equal [ "all", "all", "partial" ], body["hits"].map { |h| h["tier"] }
+    assert_equal({ "osis" => "Job", "chapter" => 38, "num" => 28 }, body["hits"][1].slice("osis", "chapter", "num"))
+    # A reference is not redirected for JSON.
+    get search_path(q: "Job 38:28", format: :json)
+    assert_response :success
+  end
+
   test "inside the apps the native bar shows the title Search and no web tab bar is drawn over it" do
     get search_path, headers: ANDROID
     assert_select "body.hotwire-native"
@@ -108,5 +122,4 @@ class SearchPageTest < ActionDispatch::IntegrationTest
     assert_not_empty links
     links.each { |a| assert_equal "false", a["data-turbo-prefetch"] }
   end
-
 end

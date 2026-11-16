@@ -49,6 +49,7 @@ export function localCheck(raw) {
   if (!p.valid || !local.books.has(p.osis)) return { ok: false }
   return {
     ok: true, osis: p.osis, chapter: p.chapter, verse_start: p.verseStart,
+    verse_end: p.verseEnd && p.verseEnd !== p.verseStart && !p.openEnded && (p.chapterEnd ?? p.chapter) === p.chapter ? p.verseEnd : null,
     chapter_reference: `${p.bookName} ${p.chapter}`, label: referenceLabel(p), local: true
   }
 }
