@@ -3,7 +3,7 @@
 # public/scenes/<key>.webp (1200px wide, greyscale, ~110 KB max).
 #
 # Rule: only files that Commons marks as PUBLIC DOMAIN may be added (check the licence on the
-# file page). No grisly/gory plates: this sits behind Scripture read by families and churches.
+# file page).
 #
 # To add a picture: download the file from Commons, convert it (e.g.
 #   magick in.jpg -colorspace Gray -resize 1200x -blur 0x0.9 -strip tmp.png && cwebp -q 50 tmp.png -o public/scenes/<key>.webp),
@@ -65,6 +65,15 @@ scenes:
     chapter: 7
     verse: 19
     commons_url: "https://commons.wikimedia.org/wiki/File:007.The_Great_Flood.jpg"
+    licence: Public domain
+  - key: gen-07-world-destroyed-by-water
+    title: "The World Is Destroyed by Water"
+    plate: 6
+    ref: "Genesis 7:23"
+    osis: "Gen"
+    chapter: 7
+    verse: 23
+    commons_url: "https://commons.wikimedia.org/wiki/File:006.The_World_Is_Destroyed_by_Water.jpg"
     licence: Public domain
   - key: gen-08-dove-sent-from-the-ark
     title: "A Dove Is Sent Forth from the Ark"
@@ -480,6 +489,15 @@ scenes:
     verse: 1
     commons_url: "https://commons.wikimedia.org/wiki/File:045._An_Angel_Appears_to_the_Israelites.jpg"
     licence: Public domain
+  - key: judg-04-jael-kills-sisera
+    title: "Jael Kills Sisera"
+    plate: 52
+    ref: "Judges 4:21"
+    osis: "Judg"
+    chapter: 4
+    verse: 21
+    commons_url: "https://commons.wikimedia.org/wiki/File:052.Jael_Kills_Sisera.jpg"
+    licence: Public domain
   - key: judg-05-deborahs-song
     title: "Deborah Praises Jael"
     plate: null
@@ -506,6 +524,15 @@ scenes:
     chapter: 7
     verse: 22
     commons_url: "https://commons.wikimedia.org/wiki/File:055.The_Midianites_Are_Routed.jpg"
+    licence: Public domain
+  - key: judg-09-death-of-gideons-sons
+    title: "The Death of Gideon's Sons"
+    plate: 56
+    ref: "Judges 9:5"
+    osis: "Judg"
+    chapter: 9
+    verse: 5
+    commons_url: "https://commons.wikimedia.org/wiki/File:056.The_Death_of_Gideon's_Sons.jpg"
     licence: Public domain
   - key: judg-09-death-of-abimelech
     title: "The Death of Abimelech"
@@ -579,6 +606,33 @@ scenes:
     verse: 30
     commons_url: "https://commons.wikimedia.org/wiki/File:064.The_Death_of_Samson.jpg"
     licence: Public domain
+  - key: judg-19-levite-finds-the-woman
+    title: "A Levite Finds a Woman's Corpse"
+    plate: 65
+    ref: "Judges 19:27"
+    osis: "Judg"
+    chapter: 19
+    verse: 27
+    commons_url: "https://commons.wikimedia.org/wiki/File:065.A_Levite_Finds_a_Woman's_Corpse.jpg"
+    licence: Public domain
+  - key: judg-19-levite-carries-the-body
+    title: "The Levite Carries the Woman's Body Away"
+    plate: 66
+    ref: "Judges 19:28"
+    osis: "Judg"
+    chapter: 19
+    verse: 28
+    commons_url: "https://commons.wikimedia.org/wiki/File:066.The_Levite_Carries_the_Woman's_Body_Away.jpg"
+    licence: Public domain
+  - key: judg-21-benjaminites-take-wives
+    title: "The Benjaminites Take the Virgins of Jabesh-gilead"
+    plate: 67
+    ref: "Judges 21:21"
+    osis: "Judg"
+    chapter: 21
+    verse: 21
+    commons_url: "https://commons.wikimedia.org/wiki/File:067.The_Benjaminites_Take_the_Virgins_of_Jabesh-gilead.jpg"
+    licence: Public domain
   - key: ruth-01-naomi-and-her-daughters-in-law
     title: "Naomi and Her Daughters-in-Law"
     plate: 68
@@ -614,6 +668,24 @@ scenes:
     chapter: 10
     verse: 1
     commons_url: "https://commons.wikimedia.org/wiki/File:070A.Samuel_Blesses_Saul.jpg"
+    licence: Public domain
+  - key: 1sam-15-death-of-agag
+    title: "The Death of Agag"
+    plate: 71
+    ref: "1 Samuel 15:33"
+    osis: "1Sam"
+    chapter: 15
+    verse: 33
+    commons_url: "https://commons.wikimedia.org/wiki/File:071.The_Death_of_Agag.jpg"
+    licence: Public domain
+  - key: 1sam-17-david-slays-goliath
+    title: "David Slays Goliath"
+    plate: null
+    ref: "1 Samuel 17:51"
+    osis: "1Sam"
+    chapter: 17
+    verse: 51
+    commons_url: "https://commons.wikimedia.org/wiki/File:071A.David_Slays_Goliath.jpg"
     licence: Public domain
   - key: 1sam-18-saul-attacks-david
     title: "Saul Attempts to Kill David"
@@ -669,6 +741,15 @@ scenes:
     verse: 4
     commons_url: "https://commons.wikimedia.org/wiki/File:076.The_Death_of_Saul.jpg"
     licence: Public domain
+  - key: 1sam-31-jabesh-gilead-recovers-saul
+    title: "Jabesh-Gileadites Recover the Bodies of Saul and His Sons"
+    plate: 77
+    ref: "1 Samuel 31:12"
+    osis: "1Sam"
+    chapter: 31
+    verse: 12
+    commons_url: "https://commons.wikimedia.org/wiki/File:077.Jabesh-Gileadites_Recover_the_Bodies_of_Saul_and_His_Sons.jpg"
+    licence: Public domain
   - key: 2sam-02-combat-at-gibeon
     title: "Combat between Soldiers of Ish-bosheth and David"
     plate: 78
@@ -677,6 +758,15 @@ scenes:
     chapter: 2
     verse: 16
     commons_url: "https://commons.wikimedia.org/wiki/File:078.Combat_between_Soldiers_of_Ish-bosheth_and_David.jpg"
+    licence: Public domain
+  - key: 2sam-12-david-attacks-rabbah
+    title: "David Attacks the Ammonites"
+    plate: 79
+    ref: "2 Samuel 12:31"
+    osis: "2Sam"
+    chapter: 12
+    verse: 31
+    commons_url: "https://commons.wikimedia.org/wiki/File:079.David_Attacks_the_Ammonites.jpg"
     licence: Public domain
   - key: 2sam-18-death-of-absalom
     title: "The Death of Absalom"
@@ -696,6 +786,15 @@ scenes:
     verse: 33
     commons_url: "https://commons.wikimedia.org/wiki/File:081.David_Mourns_the_Death_of_Absalom.jpg"
     licence: Public domain
+  - key: 2sam-21-rizpah
+    title: "Rizpah’s Kindness toward the Dead"
+    plate: 82
+    ref: "2 Samuel 21:10"
+    osis: "2Sam"
+    chapter: 21
+    verse: 10
+    commons_url: "https://commons.wikimedia.org/wiki/File:082.Rizpah’s_Kindness_toward_the_Dead.jpg"
+    licence: Public domain
   - key: 2sam-21-abishai-saves-david
     title: "Abishai Saves David's Life"
     plate: 83
@@ -704,6 +803,15 @@ scenes:
     chapter: 21
     verse: 17
     commons_url: "https://commons.wikimedia.org/wiki/File:083.Abishai_Saves_David's_Life.jpg"
+    licence: Public domain
+  - key: 2sam-24-plague-of-jerusalem
+    title: "The Plague of Jerusalem"
+    plate: null
+    ref: "2 Samuel 24:16"
+    osis: "2Sam"
+    chapter: 24
+    verse: 16
+    commons_url: "https://commons.wikimedia.org/wiki/File:102A.The_Plague_of_Jerusalem.jpg"
     licence: Public domain
   - key: 1kgs-03-judgment-of-solomon
     title: "The Judgment of Solomon"
@@ -759,6 +867,15 @@ scenes:
     verse: 23
     commons_url: "https://commons.wikimedia.org/wiki/File:089.Elijah_Raises_the_Son_of_the_Widow_of_Zarephath.jpg"
     licence: Public domain
+  - key: 1kgs-18-prophets-of-baal-slain
+    title: "The Prophets of Baal Are Slaughtered"
+    plate: 90
+    ref: "1 Kings 18:40"
+    osis: "1Kgs"
+    chapter: 18
+    verse: 40
+    commons_url: "https://commons.wikimedia.org/wiki/File:090.The_Prophets_of_Baal_Are_Slaughtered.jpg"
+    licence: Public domain
   - key: 1kgs-19-elijah-fed-by-an-angel
     title: "Elijah Is Nourished by an Angel"
     plate: 91
@@ -767,6 +884,15 @@ scenes:
     chapter: 19
     verse: 5
     commons_url: "https://commons.wikimedia.org/wiki/File:091.Elijah_Is_Nourished_by_an_Angel.jpg"
+    licence: Public domain
+  - key: 1kgs-20-syrians-defeated
+    title: "The Israelites Slaughter the Syrians"
+    plate: 92
+    ref: "1 Kings 20:29"
+    osis: "1Kgs"
+    chapter: 20
+    verse: 29
+    commons_url: "https://commons.wikimedia.org/wiki/File:092.The_Israelites_Slaughter_the_Syrians.jpg"
     licence: Public domain
   - key: 1kgs-22-death-of-ahab
     title: "The Death of Ahab"
@@ -795,6 +921,24 @@ scenes:
     verse: 11
     commons_url: "https://commons.wikimedia.org/wiki/File:095.Elijah_Ascends_to_Heaven_in_a_Chariot_of_Fire.jpg"
     licence: Public domain
+  - key: 2kgs-02-children-and-the-bears
+    title: "Some Children Are Destroyed by Bears"
+    plate: 95
+    ref: "2 Kings 2:24"
+    osis: "2Kgs"
+    chapter: 2
+    verse: 24
+    commons_url: "https://commons.wikimedia.org/wiki/File:095.Some_Children_Are_Destroyed_by_Bears.jpg"
+    licence: Public domain
+  - key: 2kgs-06-famine-in-samaria
+    title: "A Famine in Samaria"
+    plate: 96
+    ref: "2 Kings 6:25"
+    osis: "2Kgs"
+    chapter: 6
+    verse: 25
+    commons_url: "https://commons.wikimedia.org/wiki/File:096.A_Famine_in_Samaria.jpg"
+    licence: Public domain
   - key: 2kgs-09-death-of-jezebel
     title: "The Death of Jezebel"
     plate: 97
@@ -803,6 +947,15 @@ scenes:
     chapter: 9
     verse: 33
     commons_url: "https://commons.wikimedia.org/wiki/File:097.The_Death_of_Jezebel.jpg"
+    licence: Public domain
+  - key: 2kgs-09-jezebels-remains
+    title: "Jehu's Companions Find Jezebel's Remains"
+    plate: 98
+    ref: "2 Kings 9:35"
+    osis: "2Kgs"
+    chapter: 9
+    verse: 35
+    commons_url: "https://commons.wikimedia.org/wiki/File:098.Jehu's_Companions_Find_Jezebel's_Remains.jpg"
     licence: Public domain
   - key: 2kgs-11-death-of-athaliah
     title: "The Death of Athaliah"
@@ -813,6 +966,15 @@ scenes:
     verse: 16
     commons_url: "https://commons.wikimedia.org/wiki/File:099.The_Death_of_Athaliah.jpg"
     licence: Public domain
+  - key: 2kgs-17-lions-in-samaria
+    title: "Foreign Nations Are Slain by Lions in Samaria"
+    plate: 100
+    ref: "2 Kings 17:25"
+    osis: "2Kgs"
+    chapter: 17
+    verse: 25
+    commons_url: "https://commons.wikimedia.org/wiki/File:100.Foreign_Nations_Are_Slain_by_Lions_in_Samaria.jpg"
+    licence: Public domain
   - key: 2kgs-19-sennacheribs-army-destroyed
     title: "Sennacherib's Army Is Destroyed"
     plate: 101
@@ -821,6 +983,24 @@ scenes:
     chapter: 19
     verse: 35
     commons_url: "https://commons.wikimedia.org/wiki/File:101.Sennacherib's_Army_Is_Destroyed.jpg"
+    licence: Public domain
+  - key: 2kgs-25-zedekiahs-sons-slain
+    title: "Zedekiah's Sons Are Slaughtered before His Eyes"
+    plate: 102
+    ref: "2 Kings 25:7"
+    osis: "2Kgs"
+    chapter: 25
+    verse: 7
+    commons_url: "https://commons.wikimedia.org/wiki/File:102.Zedekiah's_Sons_Are_Slaughtered_before_His_Eyes.jpg"
+    licence: Public domain
+  - key: 2chr-20-ammon-and-moab-destroyed
+    title: "The Ammonite and Moabite Armies Are Destroyed"
+    plate: 103
+    ref: "2 Chronicles 20:24"
+    osis: "2Chr"
+    chapter: 20
+    verse: 24
+    commons_url: "https://commons.wikimedia.org/wiki/File:103.The_Ammonite_and_Moabite_Armies_Are_Destroyed.jpg"
     licence: Public domain
   - key: ezra-01-cyrus-restores-temple-vessels
     title: "Cyrus Restores the Vessels of the Temple"
@@ -1109,6 +1289,15 @@ scenes:
     chapter: 2
     verse: 14
     commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89475072).jpg"
+    licence: Public domain
+  - key: matt-02-massacre-of-the-innocents
+    title: "The Massacre of the Innocents"
+    plate: null
+    ref: "Matthew 2:16"
+    osis: "Matt"
+    chapter: 2
+    verse: 16
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89475211).jpg"
     licence: Public domain
   - key: matt-03-john-the-baptist-preaching
     title: "Saint John the Baptist Preaching in the Wilderness"
@@ -1776,68 +1965,3 @@ scenes:
     verse: 10
     commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89486509).jpg"
     licence: Public domain
-
-excluded:
-  - title: "The World Is Destroyed by Water"
-    commons_url: "https://commons.wikimedia.org/wiki/File:006.The_World_Is_Destroyed_by_Water.jpg"
-    reason: "graphic: heaped mass of drowning naked bodies (the gentler Flood plate 007 is kept)"
-  - title: "Jael Kills Sisera"
-    commons_url: "https://commons.wikimedia.org/wiki/File:052.Jael_Kills_Sisera.jpg"
-    reason: "grisly (tent peg through the head)"
-  - title: "The Death of Gideon's Sons"
-    commons_url: "https://commons.wikimedia.org/wiki/File:056.The_Death_of_Gideon's_Sons.jpg"
-    reason: "field of slaughtered corpses"
-  - title: "A Levite Finds a Woman's Corpse"
-    commons_url: "https://commons.wikimedia.org/wiki/File:065.A_Levite_Finds_a_Woman's_Corpse.jpg"
-    reason: "corpse of an abused woman"
-  - title: "The Levite Carries the Woman's Body Away"
-    commons_url: "https://commons.wikimedia.org/wiki/File:066.The_Levite_Carries_the_Woman's_Body_Away.jpg"
-    reason: "corpse of an abused woman"
-  - title: "The Benjaminites Take the Virgins of Jabesh-gilead"
-    commons_url: "https://commons.wikimedia.org/wiki/File:067.The_Benjaminites_Take_the_Virgins_of_Jabesh-gilead.jpg"
-    reason: "depicts the forcible abduction of women; unsuitable as a family background"
-  - title: "The Death of Agag"
-    commons_url: "https://commons.wikimedia.org/wiki/File:071.The_Death_of_Agag.jpg"
-    reason: "execution scene (Agag hewn in pieces)"
-  - title: "David Slays Goliath"
-    commons_url: "https://commons.wikimedia.org/wiki/File:071A.David_Slays_Goliath.jpg"
-    reason: "David holds up Goliath's severed head (trophy head)"
-  - title: "Jabesh-Gileadites Recover the Bodies of Saul and His Sons"
-    commons_url: "https://commons.wikimedia.org/wiki/File:077.Jabesh-Gileadites_Recover_the_Bodies_of_Saul_and_His_Sons.jpg"
-    reason: "corpses hanging from the city wall"
-  - title: "David Attacks the Ammonites"
-    commons_url: "https://commons.wikimedia.org/wiki/File:079.David_Attacks_the_Ammonites.jpg"
-    reason: "captives crushed under saws/harrows (2 Sam 12:31), piled bodies"
-  - title: "Rizpah’s Kindness toward the Dead"
-    commons_url: "https://commons.wikimedia.org/wiki/File:082.Rizpah’s_Kindness_toward_the_Dead.jpg"
-    reason: "hanged corpses with carrion birds and beasts"
-  - title: "The Prophets of Baal Are Slaughtered"
-    commons_url: "https://commons.wikimedia.org/wiki/File:090.The_Prophets_of_Baal_Are_Slaughtered.jpg"
-    reason: "mass slaughter, bodies thrown from a cliff"
-  - title: "The Israelites Slaughter the Syrians"
-    commons_url: "https://commons.wikimedia.org/wiki/File:092.The_Israelites_Slaughter_the_Syrians.jpg"
-    reason: "massacre with piled corpses"
-  - title: "Some Children Are Destroyed by Bears"
-    commons_url: "https://commons.wikimedia.org/wiki/File:095.Some_Children_Are_Destroyed_by_Bears.jpg"
-    reason: "children mauled by bears"
-  - title: "A Famine in Samaria"
-    commons_url: "https://commons.wikimedia.org/wiki/File:096.A_Famine_in_Samaria.jpg"
-    reason: "starving and dead bodies strewn on steps (cannibalism narrative)"
-  - title: "Jehu's Companions Find Jezebel's Remains"
-    commons_url: "https://commons.wikimedia.org/wiki/File:098.Jehu's_Companions_Find_Jezebel's_Remains.jpg"
-    reason: "dismembered remains eaten by dogs"
-  - title: "Foreign Nations Are Slain by Lions in Samaria"
-    commons_url: "https://commons.wikimedia.org/wiki/File:100.Foreign_Nations_Are_Slain_by_Lions_in_Samaria.jpg"
-    reason: "people being mauled by lions"
-  - title: "Zedekiah's Sons Are Slaughtered before His Eyes"
-    commons_url: "https://commons.wikimedia.org/wiki/File:102.Zedekiah's_Sons_Are_Slaughtered_before_His_Eyes.jpg"
-    reason: "execution of children"
-  - title: "The Plague of Jerusalem"
-    commons_url: "https://commons.wikimedia.org/wiki/File:102A.The_Plague_of_Jerusalem.jpg"
-    reason: "heaps of plague dead, including children"
-  - title: "The Ammonite and Moabite Armies Are Destroyed"
-    commons_url: "https://commons.wikimedia.org/wiki/File:103.The_Ammonite_and_Moabite_Armies_Are_Destroyed.jpg"
-    reason: "valley piled with corpses"
-  - title: "The Massacre of the Innocents"
-    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89475211).jpg"
-    reason: "soldiers killing infants"
