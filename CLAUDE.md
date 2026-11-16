@@ -267,6 +267,13 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   `GET /root_words/:osis/:ch/:v`; offline = `RootWordPack` (`/root_words/pack`, ~2.3 MB gz, KJV
   tokens + lexicon) in IndexedDB (`lib/offline/word_pack.js`, books store code `~strongs`),
   saved on entering preach. Fonts: bundled OFL subsets in `app/assets/fonts/root_words/`.
+- **Hold a word, see the original** (Nov 2026) — in the reader, a one-word selection (long-press on
+  touch, double-click with a mouse) raises a card under the word: Hebrew/Greek lemma, transliteration,
+  say-it, short meaning, KJV count, "Word study →" (`lexicon:open`). `word_reveal` controller on
+  `.ps-root` (rides the native selection, so the highlighter bar is untouched; the card goes below the
+  word, clear of the touch bar), pure logic in `lib/word_reveal.js` (node-tested), data via
+  `verseRootWords` (device word pack, then `/root_words/:osis/:ch/:v`), any translation through the
+  KJV tokens. Aa → "Original words" (localStorage `ps:word-reveal`). Styles `ui/word_reveal.css`.
 - **Operator console** (Nov 2026) — preach mode's default layout ≥1100×560: toolbar on top (the
   same `.ps-preach-bar`, grouped: state pill LIVE/BLACK/CLEARED/LOGO · Prev/Next · Go live · Back ·
   screen · other screens · help), Service (the queue) left, Preview and Live as true 16:9
