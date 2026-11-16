@@ -132,6 +132,8 @@ body > .ps-root.hm-root { height: 100vh; height: 100dvh; display: flex; flex-dir
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .hm-begin-time { font-weight: 500; color: #4a3210; }
+/* Tablets in landscape: the buttons keep their words on one line. */
+.hm-begin, .hm-sunday-btn { white-space: nowrap; }
 .hm-begin svg { width: 20px; height: 20px; margin-left: 2px; }
 .hm-begin::after { /* one slow sheen across the leaf */
   content: ""; position: absolute; inset: 0; pointer-events: none;

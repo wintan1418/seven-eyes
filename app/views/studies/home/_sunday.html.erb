@@ -60,6 +60,6 @@
   <div class="hm-sunday-actions">
     <%= link_to study_path(study, queue: 1), class: "hm-sunday-btn" do %><%= icon(:queue) %> Open service<% end %>
     <%= link_to study_path(study, present: 1), class: "hm-sunday-btn is-primary", data: { turbo_prefetch: false } do %><%= icon(:presentation) %> Present<% end %>
-    <%= link_to study_path(study, ready: 1), class: "hm-sunday-btn", data: { turbo_prefetch: false } do %><%= icon(:download) %> Get ready<span class="hm-wide-only"> for Sunday</span><% end %>
+    <%= link_to study_path(study, ready: 1), class: "hm-sunday-btn", data: { turbo_prefetch: false } do %><%= icon(:download) %><span>Get ready<span class="hm-wide-only"> for Sunday</span></span><% end %>
   </div>
 </section>
