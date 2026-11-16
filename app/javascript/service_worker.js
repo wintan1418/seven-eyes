@@ -139,7 +139,8 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(referenceCheck(request, url))
     return
   }
-  if (url.pathname.startsWith("/assets/")) {
+  // Scene pictures behind the reader: kept once shown, so they show offline.
+  if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/scenes/")) {
     event.respondWith(cacheFirst(request, STATIC_CACHE, event))
     return
   }

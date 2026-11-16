@@ -42,6 +42,10 @@
                 title="Show transliteration + Strong's number under each tagged word (KJV)">
           <%= icon(:word) %><span class="nm">Word study (Strong&rsquo;s, KJV)</span><span class="sw" aria-hidden="true"></span>
         </button>
+        <button type="button" class="ui-toggle" aria-pressed="true" data-scene-target="button" data-action="scene#toggle"
+                title="A faint engraving behind the text of what is happening in the passage (Gustave Doré's Bible)">
+          <%= icon(:image) %><span class="nm">Scene pictures</span><span class="sw" aria-hidden="true"></span>
+        </button>
       </div>
 
       <%= render "studies/voice_setting" %>

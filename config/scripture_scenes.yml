@@ -1,0 +1,1843 @@
+# Scripture scene pictures: faint background engravings shown behind the chapter being read.
+# Every image is a Gustave Doré Bible engraving (1866) from Wikimedia Commons, processed to
+# public/scenes/<key>.webp (1200px wide, greyscale, ~110 KB max).
+#
+# Rule: only files that Commons marks as PUBLIC DOMAIN may be added (check the licence on the
+# file page). No grisly/gory plates: this sits behind Scripture read by families and churches.
+#
+# To add a picture: download the file from Commons, convert it (e.g.
+#   magick in.jpg -colorspace Gray -resize 1200x -blur 0x0.9 -strip tmp.png && cwebp -q 50 tmp.png -o public/scenes/<key>.webp),
+# then add an entry below in Bible order. key = <osis lowercase>-<chapter, 2 digits (3 for Ps)>-<slug>.
+# verse may be null when the picture belongs to the whole chapter. plate = Doré plate number
+# from the Commons "Doré's English Bible" file name (null if not numbered there).
+
+scenes:
+  - key: gen-01-creation-of-light
+    title: "The Creation of Light"
+    plate: 1
+    ref: "Genesis 1:3"
+    osis: "Gen"
+    chapter: 1
+    verse: 3
+    commons_url: "https://commons.wikimedia.org/wiki/File:001.The_Creation_of_Light.jpg"
+    licence: Public domain
+  - key: gen-02-creation-of-eve
+    title: "The Creation of Eve"
+    plate: 2
+    ref: "Genesis 2:22"
+    osis: "Gen"
+    chapter: 2
+    verse: 22
+    commons_url: "https://commons.wikimedia.org/wiki/File:002.The_Creation_of_Eve.jpg"
+    licence: Public domain
+  - key: gen-03-driven-out-of-eden
+    title: "Adam and Eve Are Driven out of Eden"
+    plate: 3
+    ref: "Genesis 3:24"
+    osis: "Gen"
+    chapter: 3
+    verse: 24
+    commons_url: "https://commons.wikimedia.org/wiki/File:003.Adam_and_Eve_Are_Driven_out_of_Eden.jpg"
+    licence: Public domain
+  - key: gen-04-cain-and-abel-offerings
+    title: "Cain and Abel Offer Their Sacrifices"
+    plate: 4
+    ref: "Genesis 4:4"
+    osis: "Gen"
+    chapter: 4
+    verse: 4
+    commons_url: "https://commons.wikimedia.org/wiki/File:004.Cain_and_Abel_Offer_Their_Sacrifices.jpg"
+    licence: Public domain
+  - key: gen-04-cain-slays-abel
+    title: "Cain Slays Abel"
+    plate: 5
+    ref: "Genesis 4:8"
+    osis: "Gen"
+    chapter: 4
+    verse: 8
+    commons_url: "https://commons.wikimedia.org/wiki/File:005.Cain_Slays_Abel.jpg"
+    licence: Public domain
+  - key: gen-07-the-great-flood
+    title: "The Great Flood"
+    plate: 7
+    ref: "Genesis 7:19"
+    osis: "Gen"
+    chapter: 7
+    verse: 19
+    commons_url: "https://commons.wikimedia.org/wiki/File:007.The_Great_Flood.jpg"
+    licence: Public domain
+  - key: gen-08-dove-sent-from-the-ark
+    title: "A Dove Is Sent Forth from the Ark"
+    plate: 8
+    ref: "Genesis 8:8"
+    osis: "Gen"
+    chapter: 8
+    verse: 8
+    commons_url: "https://commons.wikimedia.org/wiki/File:008.A_Dove_Is_Sent_Forth_from_the_Ark.jpg"
+    licence: Public domain
+  - key: gen-09-noah-curses-canaan
+    title: "Noah Curses Ham and Canaan"
+    plate: 9
+    ref: "Genesis 9:25"
+    osis: "Gen"
+    chapter: 9
+    verse: 25
+    commons_url: "https://commons.wikimedia.org/wiki/File:009.Noah_Curses_Ham_and_Canaan.jpg"
+    licence: Public domain
+  - key: gen-11-tower-of-babel
+    title: "The Tower of Babel"
+    plate: 10
+    ref: "Genesis 11:4"
+    osis: "Gen"
+    chapter: 11
+    verse: 4
+    commons_url: "https://commons.wikimedia.org/wiki/File:010.The_Tower_of_Babel.jpg"
+    licence: Public domain
+  - key: gen-12-abraham-goes-to-canaan
+    title: "Abraham Goes to the Land of Canaan"
+    plate: 11
+    ref: "Genesis 12:5"
+    osis: "Gen"
+    chapter: 12
+    verse: 5
+    commons_url: "https://commons.wikimedia.org/wiki/File:011.Abraham_Goes_to_the_Land_of_Canaan.jpg"
+    licence: Public domain
+  - key: gen-18-abraham-and-three-angels
+    title: "Abraham and the Three Angels"
+    plate: 12
+    ref: "Genesis 18:2"
+    osis: "Gen"
+    chapter: 18
+    verse: 2
+    commons_url: "https://commons.wikimedia.org/wiki/File:012.Abraham_and_the_Three_Angels.jpg"
+    licence: Public domain
+  - key: gen-19-lot-flees-sodom
+    title: "Lot Flees as Sodom and Gomorrah Burn"
+    plate: 13
+    ref: "Genesis 19:24"
+    osis: "Gen"
+    chapter: 19
+    verse: 24
+    commons_url: "https://commons.wikimedia.org/wiki/File:013.Lot_Flees_as_Sodom_and_Gomorrah_Burn.jpg"
+    licence: Public domain
+  - key: gen-21-hagar-sent-away
+    title: "Abraham Sends Hagar and Ishmael Away"
+    plate: 14
+    ref: "Genesis 21:14"
+    osis: "Gen"
+    chapter: 21
+    verse: 14
+    commons_url: "https://commons.wikimedia.org/wiki/File:014.Abraham_Sends_Hagar_and_Ishmael_Away.jpg"
+    licence: Public domain
+  - key: gen-21-hagar-in-the-wilderness
+    title: "Hagar and Ishmael in the Wilderness"
+    plate: 15
+    ref: "Genesis 21:17"
+    osis: "Gen"
+    chapter: 21
+    verse: 17
+    commons_url: "https://commons.wikimedia.org/wiki/File:015.Hagar_and_Ishmael_in_the_Wilderness.jpg"
+    licence: Public domain
+  - key: gen-22-testing-of-abraham
+    title: "The Testing of Abraham's Faith"
+    plate: 16
+    ref: "Genesis 22:11"
+    osis: "Gen"
+    chapter: 22
+    verse: 11
+    commons_url: "https://commons.wikimedia.org/wiki/File:016.The_Testing_of_Abraham's_Faith.jpg"
+    licence: Public domain
+  - key: gen-23-burial-of-sarah
+    title: "The Burial of Sarah"
+    plate: 17
+    ref: "Genesis 23:19"
+    osis: "Gen"
+    chapter: 23
+    verse: 19
+    commons_url: "https://commons.wikimedia.org/wiki/File:017.The_Burial_of_Sarah.jpg"
+    licence: Public domain
+  - key: gen-24-rebekah-at-the-well
+    title: "Eliezer and Rebekah at the Well"
+    plate: 18
+    ref: "Genesis 24:18"
+    osis: "Gen"
+    chapter: 24
+    verse: 18
+    commons_url: "https://commons.wikimedia.org/wiki/File:018.Eliezer_and_Rebekah_at_the_Well.jpg"
+    licence: Public domain
+  - key: gen-24-isaac-meets-rebekah
+    title: "The Meeting of Isaac and Rebekah"
+    plate: 19
+    ref: "Genesis 24:64"
+    osis: "Gen"
+    chapter: 24
+    verse: 64
+    commons_url: "https://commons.wikimedia.org/wiki/File:019.The_Meeting_of_Isaac_and_Rebekah.jpg"
+    licence: Public domain
+  - key: gen-27-isaac-blesses-jacob
+    title: "Isaac Blesses Jacob"
+    plate: 20
+    ref: "Genesis 27:27"
+    osis: "Gen"
+    chapter: 27
+    verse: 27
+    commons_url: "https://commons.wikimedia.org/wiki/File:020.Isaac_Blesses_Jacob.jpg"
+    licence: Public domain
+  - key: gen-28-jacobs-dream
+    title: "Jacob's Dream"
+    plate: 21
+    ref: "Genesis 28:12"
+    osis: "Gen"
+    chapter: 28
+    verse: 12
+    commons_url: "https://commons.wikimedia.org/wiki/File:021.Jacob's_Dream.jpg"
+    licence: Public domain
+  - key: gen-29-jacob-meets-rachel
+    title: "Jacob Tends Laban's Flocks and Meets Rachel"
+    plate: 22
+    ref: "Genesis 29:10"
+    osis: "Gen"
+    chapter: 29
+    verse: 10
+    commons_url: "https://commons.wikimedia.org/wiki/File:022.Jacob_Tends_Laban's_Flocks_and_Meets_Rachel.jpg"
+    licence: Public domain
+  - key: gen-32-jacob-prays
+    title: "Jacob Prays for Protection"
+    plate: 23
+    ref: "Genesis 32:9"
+    osis: "Gen"
+    chapter: 32
+    verse: 9
+    commons_url: "https://commons.wikimedia.org/wiki/File:023.Jacob_Prays_for_Protection.jpg"
+    licence: Public domain
+  - key: gen-32-jacob-wrestles-the-angel
+    title: "Jacob Wrestles with the Angel"
+    plate: 24
+    ref: "Genesis 32:24"
+    osis: "Gen"
+    chapter: 32
+    verse: 24
+    commons_url: "https://commons.wikimedia.org/wiki/File:024.Jacob_Wrestles_with_the_Angel.jpg"
+    licence: Public domain
+  - key: gen-33-jacob-and-esau-meet
+    title: "Jacob and Esau Meet"
+    plate: 25
+    ref: "Genesis 33:4"
+    osis: "Gen"
+    chapter: 33
+    verse: 4
+    commons_url: "https://commons.wikimedia.org/wiki/File:025.Jacob_and_Esau_Meet.jpg"
+    licence: Public domain
+  - key: gen-37-joseph-sold-by-brothers
+    title: "Joseph Is Sold by His Brothers"
+    plate: 26
+    ref: "Genesis 37:28"
+    osis: "Gen"
+    chapter: 37
+    verse: 28
+    commons_url: "https://commons.wikimedia.org/wiki/File:026.Joseph_Is_Sold_by_His_Brothers.jpg"
+    licence: Public domain
+  - key: gen-41-joseph-interprets-dreams
+    title: "Joseph Interprets Pharaoh's Dream"
+    plate: 27
+    ref: "Genesis 41:25"
+    osis: "Gen"
+    chapter: 41
+    verse: 25
+    commons_url: "https://commons.wikimedia.org/wiki/File:027.Joseph_Interprets_Pharaoh's_Dream.jpg"
+    licence: Public domain
+  - key: gen-45-joseph-reveals-himself
+    title: "Joseph Reveals Himself to His Brothers"
+    plate: 28
+    ref: "Genesis 45:3"
+    osis: "Gen"
+    chapter: 45
+    verse: 3
+    commons_url: "https://commons.wikimedia.org/wiki/File:028.Joseph_Reveals_Himself_to_His_Brothers.jpg"
+    licence: Public domain
+  - key: gen-46-jacob-goes-to-egypt
+    title: "Jacob Goes to Egypt"
+    plate: 29
+    ref: "Genesis 46:6"
+    osis: "Gen"
+    chapter: 46
+    verse: 6
+    commons_url: "https://commons.wikimedia.org/wiki/File:029.Jacob_Goes_to_Egypt.jpg"
+    licence: Public domain
+  - key: exod-02-moses-on-the-nile
+    title: "The Child Moses on the Nile"
+    plate: 30
+    ref: "Exodus 2:3"
+    osis: "Exod"
+    chapter: 2
+    verse: 3
+    commons_url: "https://commons.wikimedia.org/wiki/File:030.The_Child_Moses_on_the_Nile.jpg"
+    licence: Public domain
+  - key: exod-02-finding-of-moses
+    title: "The Finding of Moses"
+    plate: 31
+    ref: "Exodus 2:5"
+    osis: "Exod"
+    chapter: 2
+    verse: 5
+    commons_url: "https://commons.wikimedia.org/wiki/File:031.The_Finding_of_Moses.jpg"
+    licence: Public domain
+  - key: exod-07-moses-and-aaron-before-pharaoh
+    title: "Moses and Aaron Appear before Pharaoh"
+    plate: 32
+    ref: "Exodus 7:10"
+    osis: "Exod"
+    chapter: 7
+    verse: 10
+    commons_url: "https://commons.wikimedia.org/wiki/File:032.Moses_and_Aaron_Appear_before_Pharaoh.jpg"
+    licence: Public domain
+  - key: exod-09-plague-on-livestock
+    title: "The Fifth Plague. Livestock Disease"
+    plate: 33
+    ref: "Exodus 9:3"
+    osis: "Exod"
+    chapter: 9
+    verse: 3
+    commons_url: "https://commons.wikimedia.org/wiki/File:033.The_Fifth_Plague._Livestock_Disease.jpg"
+    licence: Public domain
+  - key: exod-10-plague-of-darkness
+    title: "The Ninth Plague. Darkness"
+    plate: 34
+    ref: "Exodus 10:22"
+    osis: "Exod"
+    chapter: 10
+    verse: 22
+    commons_url: "https://commons.wikimedia.org/wiki/File:034.The_Ninth_Plague._Darkness.jpg"
+    licence: Public domain
+  - key: exod-12-death-of-the-firstborn
+    title: "The Firstborn of the Egyptians Are Slain"
+    plate: 35
+    ref: "Exodus 12:29"
+    osis: "Exod"
+    chapter: 12
+    verse: 29
+    commons_url: "https://commons.wikimedia.org/wiki/File:035.The_Firstborn_of_the_Egyptians_Are_Slain.jpg"
+    licence: Public domain
+  - key: exod-12-egyptians-urge-moses-to-go
+    title: "The Egyptians Ask Moses to Depart"
+    plate: 36
+    ref: "Exodus 12:31"
+    osis: "Exod"
+    chapter: 12
+    verse: 31
+    commons_url: "https://commons.wikimedia.org/wiki/File:036.The_Egyptians_Ask_Moses_to_Depart.jpg"
+    licence: Public domain
+  - key: exod-14-egyptians-drown-in-the-sea
+    title: "The Egyptians Drown in the Sea"
+    plate: 37
+    ref: "Exodus 14:28"
+    osis: "Exod"
+    chapter: 14
+    verse: 28
+    commons_url: "https://commons.wikimedia.org/wiki/File:037.The_Egyptians_Drown_in_the_Sea.jpg"
+    licence: Public domain
+  - key: exod-19-giving-of-the-law
+    title: "The Giving of the Law on Mount Sinai"
+    plate: 38
+    ref: "Exodus 19:18"
+    osis: "Exod"
+    chapter: 19
+    verse: 18
+    commons_url: "https://commons.wikimedia.org/wiki/File:038.The_Giving_of_the_Law_on_Mount_Sinai.jpg"
+    licence: Public domain
+  - key: exod-32-moses-breaks-the-tablets
+    title: "Moses Breaks the Tables of the Law"
+    plate: null
+    ref: "Exodus 32:19"
+    osis: "Exod"
+    chapter: 32
+    verse: 19
+    commons_url: "https://commons.wikimedia.org/wiki/File:041A.Moses_Breaks_the_Tables_of_the_Law.jpg"
+    licence: Public domain
+  - key: exod-34-moses-comes-down-from-sinai
+    title: "Moses Comes Down from Mount Sinai"
+    plate: 39
+    ref: "Exodus 34:29"
+    osis: "Exod"
+    chapter: 34
+    verse: 29
+    commons_url: "https://commons.wikimedia.org/wiki/File:039.Moses_Comes_Down_from_Mount_Sinai.jpg"
+    licence: Public domain
+  - key: num-13-spies-return
+    title: "The Spies Return from the Promised Land"
+    plate: null
+    ref: "Numbers 13:26"
+    osis: "Num"
+    chapter: 13
+    verse: 26
+    commons_url: "https://commons.wikimedia.org/wiki/File:041B.The_Spies_Return_from_the_Promised_Land.jpg"
+    licence: Public domain
+  - key: num-16-korah-dathan-abiram
+    title: "The Death of Korah, Dathan, and Abiram"
+    plate: 40
+    ref: "Numbers 16:32"
+    osis: "Num"
+    chapter: 16
+    verse: 32
+    commons_url: "https://commons.wikimedia.org/wiki/File:040.The_Death_of_Korah,_Dathan,_and_Abiram.jpg"
+    licence: Public domain
+  - key: num-20-moses-strikes-the-rock
+    title: "Moses Strikes the Rock at Horeb"
+    plate: 41
+    ref: "Numbers 20:11"
+    osis: "Num"
+    chapter: 20
+    verse: 11
+    commons_url: "https://commons.wikimedia.org/wiki/File:041.Moses_Strikes_the_Rock_at_Horeb.jpg"
+    licence: Public domain
+  - key: num-21-bronze-serpent
+    title: "The Bronze Serpent"
+    plate: 42
+    ref: "Numbers 21:9"
+    osis: "Num"
+    chapter: 21
+    verse: 9
+    commons_url: "https://commons.wikimedia.org/wiki/File:042.The_Bronze_Serpent.jpg"
+    licence: Public domain
+  - key: num-22-balaam-and-the-angel
+    title: "An Angel Appears to Balaam"
+    plate: 43
+    ref: "Numbers 22:31"
+    osis: "Num"
+    chapter: 22
+    verse: 31
+    commons_url: "https://commons.wikimedia.org/wiki/File:043.An_Angel_Appears_to_Balaam.jpg"
+    licence: Public domain
+  - key: josh-03-crossing-the-jordan
+    title: "The Israelites Cross the Jordan River"
+    plate: 44
+    ref: "Joshua 3:17"
+    osis: "Josh"
+    chapter: 3
+    verse: 17
+    commons_url: "https://commons.wikimedia.org/wiki/File:044._The_Israelites_Cross_the_Jordan_River.jpg"
+    licence: Public domain
+  - key: josh-06-walls-of-jericho
+    title: "The Walls of Jericho Fall Down"
+    plate: 46
+    ref: "Joshua 6:20"
+    osis: "Josh"
+    chapter: 6
+    verse: 20
+    commons_url: "https://commons.wikimedia.org/wiki/File:046.The_Walls_of_Jericho_Fall_Down.jpg"
+    licence: Public domain
+  - key: josh-06-joshua-spares-rahab
+    title: "Joshua Spares Rahab"
+    plate: 47
+    ref: "Joshua 6:23"
+    osis: "Josh"
+    chapter: 6
+    verse: 23
+    commons_url: "https://commons.wikimedia.org/wiki/File:047.Joshua_Spares_Rahab.jpg"
+    licence: Public domain
+  - key: josh-07-achan-stoned
+    title: "Achan Is Stoned to Death"
+    plate: 48
+    ref: "Joshua 7:25"
+    osis: "Josh"
+    chapter: 7
+    verse: 25
+    commons_url: "https://commons.wikimedia.org/wiki/File:048.Achan_Is_Stoned_to_Death.jpg"
+    licence: Public domain
+  - key: josh-08-burning-of-ai
+    title: "Joshua Burns the Town of Ai"
+    plate: 49
+    ref: "Joshua 8:19"
+    osis: "Josh"
+    chapter: 8
+    verse: 19
+    commons_url: "https://commons.wikimedia.org/wiki/File:049.Joshua_Burns_the_Town_of_Ai.jpg"
+    licence: Public domain
+  - key: josh-10-amorites-destroyed
+    title: "The Army of the Amorites Is Destroyed"
+    plate: 50
+    ref: "Joshua 10:11"
+    osis: "Josh"
+    chapter: 10
+    verse: 11
+    commons_url: "https://commons.wikimedia.org/wiki/File:050.The_Army_of_the_Amorites_Is_Destroyed.jpg"
+    licence: Public domain
+  - key: josh-10-sun-stands-still
+    title: "Joshua Commands the Sun to Stand Still"
+    plate: 51
+    ref: "Joshua 10:12"
+    osis: "Josh"
+    chapter: 10
+    verse: 12
+    commons_url: "https://commons.wikimedia.org/wiki/File:051.Joshua_Commands_the_Sun_to_Stand_Still.jpg"
+    licence: Public domain
+  - key: judg-02-angel-at-bochim
+    title: "An Angel Appears to the Israelites"
+    plate: 45
+    ref: "Judges 2:1"
+    osis: "Judg"
+    chapter: 2
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:045._An_Angel_Appears_to_the_Israelites.jpg"
+    licence: Public domain
+  - key: judg-05-deborahs-song
+    title: "Deborah Praises Jael"
+    plate: null
+    ref: "Judges 5:1"
+    osis: "Judg"
+    chapter: 5
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:Deborah_Praises_Jael_(89397429).jpg"
+    licence: Public domain
+  - key: judg-07-gideon-chooses-300
+    title: "Gideon Chooses 300 Soldiers"
+    plate: 54
+    ref: "Judges 7:6"
+    osis: "Judg"
+    chapter: 7
+    verse: 6
+    commons_url: "https://commons.wikimedia.org/wiki/File:054.Gideon_Chooses_300_Soldiers.jpg"
+    licence: Public domain
+  - key: judg-07-midianites-routed
+    title: "The Midianites Are Routed"
+    plate: 55
+    ref: "Judges 7:22"
+    osis: "Judg"
+    chapter: 7
+    verse: 22
+    commons_url: "https://commons.wikimedia.org/wiki/File:055.The_Midianites_Are_Routed.jpg"
+    licence: Public domain
+  - key: judg-09-death-of-abimelech
+    title: "The Death of Abimelech"
+    plate: 57
+    ref: "Judges 9:53"
+    osis: "Judg"
+    chapter: 9
+    verse: 53
+    commons_url: "https://commons.wikimedia.org/wiki/File:057.The_Death_of_Abimelech.jpg"
+    licence: Public domain
+  - key: judg-11-jephthahs-daughter
+    title: "Jephthah's Daughter Comes to Meet Her Father"
+    plate: 58
+    ref: "Judges 11:34"
+    osis: "Judg"
+    chapter: 11
+    verse: 34
+    commons_url: "https://commons.wikimedia.org/wiki/File:058.Jephthah's_Daughter_Comes_to_Meet_Her_Father.jpg"
+    licence: Public domain
+  - key: judg-11-mourning-jephthahs-daughter
+    title: "Israelite Women Mourn with Jephthah's Daughter"
+    plate: 59
+    ref: "Judges 11:38"
+    osis: "Judg"
+    chapter: 11
+    verse: 38
+    commons_url: "https://commons.wikimedia.org/wiki/File:059.Israelite_Women_Mourn_with_Jephthah's_Daughter.jpg"
+    licence: Public domain
+  - key: judg-14-samson-slays-a-lion
+    title: "Samson Slays a Lion"
+    plate: 60
+    ref: "Judges 14:6"
+    osis: "Judg"
+    chapter: 14
+    verse: 6
+    commons_url: "https://commons.wikimedia.org/wiki/File:060.Samson_Slays_a_Lion.jpg"
+    licence: Public domain
+  - key: judg-15-samson-and-the-jawbone
+    title: "Samson Destroys the Philistines with an Ass' Jawbone"
+    plate: 61
+    ref: "Judges 15:15"
+    osis: "Judg"
+    chapter: 15
+    verse: 15
+    commons_url: "https://commons.wikimedia.org/wiki/File:061.Samson_Destroys_the_Philistines_with_an_Ass'_Jawbone.jpg"
+    licence: Public domain
+  - key: judg-16-samson-carries-gaza-gates
+    title: "Samson Carries away the Gates of Gaza"
+    plate: 62
+    ref: "Judges 16:3"
+    osis: "Judg"
+    chapter: 16
+    verse: 3
+    commons_url: "https://commons.wikimedia.org/wiki/File:062.Samson_Carries_away_the_Gates_of_Gaza.jpg"
+    licence: Public domain
+  - key: judg-16-samson-and-delilah
+    title: "Samson and Delilah"
+    plate: 63
+    ref: "Judges 16:19"
+    osis: "Judg"
+    chapter: 16
+    verse: 19
+    commons_url: "https://commons.wikimedia.org/wiki/File:063.Samson_and_Delilah.jpg"
+    licence: Public domain
+  - key: judg-16-death-of-samson
+    title: "The Death of Samson"
+    plate: 64
+    ref: "Judges 16:30"
+    osis: "Judg"
+    chapter: 16
+    verse: 30
+    commons_url: "https://commons.wikimedia.org/wiki/File:064.The_Death_of_Samson.jpg"
+    licence: Public domain
+  - key: ruth-01-naomi-and-her-daughters-in-law
+    title: "Naomi and Her Daughters-in-Law"
+    plate: 68
+    ref: "Ruth 1:14"
+    osis: "Ruth"
+    chapter: 1
+    verse: 14
+    commons_url: "https://commons.wikimedia.org/wiki/File:068.Naomi_and_Her_Daughters-in-Law.jpg"
+    licence: Public domain
+  - key: ruth-02-ruth-and-boaz
+    title: "Ruth and Boaz"
+    plate: 69
+    ref: "Ruth 2:5"
+    osis: "Ruth"
+    chapter: 2
+    verse: 5
+    commons_url: "https://commons.wikimedia.org/wiki/File:069.Ruth_and_Boaz.jpg"
+    licence: Public domain
+  - key: 1sam-06-ark-returned-to-beth-shemesh
+    title: "The Ark Is Returned to Beth-shemesh"
+    plate: 70
+    ref: "1 Samuel 6:13"
+    osis: "1Sam"
+    chapter: 6
+    verse: 13
+    commons_url: "https://commons.wikimedia.org/wiki/File:070.The_Ark_Is_Returned_to_Beth-shemesh.jpg"
+    licence: Public domain
+  - key: 1sam-10-samuel-blesses-saul
+    title: "Samuel Blesses Saul"
+    plate: null
+    ref: "1 Samuel 10:1"
+    osis: "1Sam"
+    chapter: 10
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:070A.Samuel_Blesses_Saul.jpg"
+    licence: Public domain
+  - key: 1sam-18-saul-attacks-david
+    title: "Saul Attempts to Kill David"
+    plate: 72
+    ref: "1 Samuel 18:11"
+    osis: "1Sam"
+    chapter: 18
+    verse: 11
+    commons_url: "https://commons.wikimedia.org/wiki/File:072.Saul_Attempts_to_Kill_David.jpg"
+    licence: Public domain
+  - key: 1sam-19-david-escapes-through-window
+    title: "David Escapes through a Window"
+    plate: 73
+    ref: "1 Samuel 19:12"
+    osis: "1Sam"
+    chapter: 19
+    verse: 12
+    commons_url: "https://commons.wikimedia.org/wiki/File:073.David_Escapes_through_a_Window.jpg"
+    licence: Public domain
+  - key: 1sam-20-david-and-jonathan
+    title: "David and Jonathan"
+    plate: null
+    ref: "1 Samuel 20:42"
+    osis: "1Sam"
+    chapter: 20
+    verse: 42
+    commons_url: "https://commons.wikimedia.org/wiki/File:073A.David_and_Jonathan.jpg"
+    licence: Public domain
+  - key: 1sam-24-david-spares-saul
+    title: "David Shows Saul How He Spared His Life"
+    plate: 74
+    ref: "1 Samuel 24:8"
+    osis: "1Sam"
+    chapter: 24
+    verse: 8
+    commons_url: "https://commons.wikimedia.org/wiki/File:074.David_Shows_Saul_How_He_Spared_His_Life.jpg"
+    licence: Public domain
+  - key: 1sam-28-saul-and-the-witch-of-endor
+    title: "Saul and the Witch of Endor"
+    plate: 75
+    ref: "1 Samuel 28:14"
+    osis: "1Sam"
+    chapter: 28
+    verse: 14
+    commons_url: "https://commons.wikimedia.org/wiki/File:075.Saul_and_the_Witch_of_Endor.jpg"
+    licence: Public domain
+  - key: 1sam-31-death-of-saul
+    title: "The Death of Saul"
+    plate: 76
+    ref: "1 Samuel 31:4"
+    osis: "1Sam"
+    chapter: 31
+    verse: 4
+    commons_url: "https://commons.wikimedia.org/wiki/File:076.The_Death_of_Saul.jpg"
+    licence: Public domain
+  - key: 2sam-02-combat-at-gibeon
+    title: "Combat between Soldiers of Ish-bosheth and David"
+    plate: 78
+    ref: "2 Samuel 2:16"
+    osis: "2Sam"
+    chapter: 2
+    verse: 16
+    commons_url: "https://commons.wikimedia.org/wiki/File:078.Combat_between_Soldiers_of_Ish-bosheth_and_David.jpg"
+    licence: Public domain
+  - key: 2sam-18-death-of-absalom
+    title: "The Death of Absalom"
+    plate: 80
+    ref: "2 Samuel 18:9"
+    osis: "2Sam"
+    chapter: 18
+    verse: 9
+    commons_url: "https://commons.wikimedia.org/wiki/File:080.The_Death_of_Absalom.jpg"
+    licence: Public domain
+  - key: 2sam-18-david-mourns-absalom
+    title: "David Mourns the Death of Absalom"
+    plate: 81
+    ref: "2 Samuel 18:33"
+    osis: "2Sam"
+    chapter: 18
+    verse: 33
+    commons_url: "https://commons.wikimedia.org/wiki/File:081.David_Mourns_the_Death_of_Absalom.jpg"
+    licence: Public domain
+  - key: 2sam-21-abishai-saves-david
+    title: "Abishai Saves David's Life"
+    plate: 83
+    ref: "2 Samuel 21:17"
+    osis: "2Sam"
+    chapter: 21
+    verse: 17
+    commons_url: "https://commons.wikimedia.org/wiki/File:083.Abishai_Saves_David's_Life.jpg"
+    licence: Public domain
+  - key: 1kgs-03-judgment-of-solomon
+    title: "The Judgment of Solomon"
+    plate: 84
+    ref: "1 Kings 3:25"
+    osis: "1Kgs"
+    chapter: 3
+    verse: 25
+    commons_url: "https://commons.wikimedia.org/wiki/File:084.The_Judgment_of_Solomon.jpg"
+    licence: Public domain
+  - key: 1kgs-05-cedars-for-the-temple
+    title: "Cedars Are Cut Down for the Jerusalem Temple"
+    plate: 85
+    ref: "1 Kings 5:6"
+    osis: "1Kgs"
+    chapter: 5
+    verse: 6
+    commons_url: "https://commons.wikimedia.org/wiki/File:085.Cedars_Are_Cut_Down_for_the_Jerusalem_Temple.jpg"
+    licence: Public domain
+  - key: 1kgs-10-queen-of-sheba
+    title: "Solomon Receives the Queen of Sheba"
+    plate: 86
+    ref: "1 Kings 10:2"
+    osis: "1Kgs"
+    chapter: 10
+    verse: 2
+    commons_url: "https://commons.wikimedia.org/wiki/File:086.Solomon_Receives_the_Queen_of_Sheba.jpg"
+    licence: Public domain
+  - key: 1kgs-11-solomon-in-old-age
+    title: "King Solomon in Old Age"
+    plate: 87
+    ref: "1 Kings 11:4"
+    osis: "1Kgs"
+    chapter: 11
+    verse: 4
+    commons_url: "https://commons.wikimedia.org/wiki/File:087.King_Solomon_in_Old_Age.jpg"
+    licence: Public domain
+  - key: 1kgs-13-prophet-slain-by-lion
+    title: "The Disobedient Prophet Is Slain by a Lion"
+    plate: 88
+    ref: "1 Kings 13:24"
+    osis: "1Kgs"
+    chapter: 13
+    verse: 24
+    commons_url: "https://commons.wikimedia.org/wiki/File:088.The_Disobedient_Prophet_Is_Slain_by_a_Lion.jpg"
+    licence: Public domain
+  - key: 1kgs-17-elijah-raises-widows-son
+    title: "Elijah Raises the Son of the Widow of Zarephath"
+    plate: 89
+    ref: "1 Kings 17:23"
+    osis: "1Kgs"
+    chapter: 17
+    verse: 23
+    commons_url: "https://commons.wikimedia.org/wiki/File:089.Elijah_Raises_the_Son_of_the_Widow_of_Zarephath.jpg"
+    licence: Public domain
+  - key: 1kgs-19-elijah-fed-by-an-angel
+    title: "Elijah Is Nourished by an Angel"
+    plate: 91
+    ref: "1 Kings 19:5"
+    osis: "1Kgs"
+    chapter: 19
+    verse: 5
+    commons_url: "https://commons.wikimedia.org/wiki/File:091.Elijah_Is_Nourished_by_an_Angel.jpg"
+    licence: Public domain
+  - key: 1kgs-22-death-of-ahab
+    title: "The Death of Ahab"
+    plate: 93
+    ref: "1 Kings 22:35"
+    osis: "1Kgs"
+    chapter: 22
+    verse: 35
+    commons_url: "https://commons.wikimedia.org/wiki/File:093.The_Death_of_Ahab.jpg"
+    licence: Public domain
+  - key: 2kgs-01-fire-on-ahaziahs-messengers
+    title: "Elijah Destroys the Messengers of Ahaziah"
+    plate: 94
+    ref: "2 Kings 1:10"
+    osis: "2Kgs"
+    chapter: 1
+    verse: 10
+    commons_url: "https://commons.wikimedia.org/wiki/File:094.Elijah_Destroys_the_Messengers_of_Ahaziah.jpg"
+    licence: Public domain
+  - key: 2kgs-02-elijah-taken-to-heaven
+    title: "Elijah Ascends to Heaven in a Chariot of Fire"
+    plate: 95
+    ref: "2 Kings 2:11"
+    osis: "2Kgs"
+    chapter: 2
+    verse: 11
+    commons_url: "https://commons.wikimedia.org/wiki/File:095.Elijah_Ascends_to_Heaven_in_a_Chariot_of_Fire.jpg"
+    licence: Public domain
+  - key: 2kgs-09-death-of-jezebel
+    title: "The Death of Jezebel"
+    plate: 97
+    ref: "2 Kings 9:33"
+    osis: "2Kgs"
+    chapter: 9
+    verse: 33
+    commons_url: "https://commons.wikimedia.org/wiki/File:097.The_Death_of_Jezebel.jpg"
+    licence: Public domain
+  - key: 2kgs-11-death-of-athaliah
+    title: "The Death of Athaliah"
+    plate: 99
+    ref: "2 Kings 11:16"
+    osis: "2Kgs"
+    chapter: 11
+    verse: 16
+    commons_url: "https://commons.wikimedia.org/wiki/File:099.The_Death_of_Athaliah.jpg"
+    licence: Public domain
+  - key: 2kgs-19-sennacheribs-army-destroyed
+    title: "Sennacherib's Army Is Destroyed"
+    plate: 101
+    ref: "2 Kings 19:35"
+    osis: "2Kgs"
+    chapter: 19
+    verse: 35
+    commons_url: "https://commons.wikimedia.org/wiki/File:101.Sennacherib's_Army_Is_Destroyed.jpg"
+    licence: Public domain
+  - key: ezra-01-cyrus-restores-temple-vessels
+    title: "Cyrus Restores the Vessels of the Temple"
+    plate: 104
+    ref: "Ezra 1:7"
+    osis: "Ezra"
+    chapter: 1
+    verse: 7
+    commons_url: "https://commons.wikimedia.org/wiki/File:104.Cyrus_Restores_the_Vessels_of_the_Temple.jpg"
+    licence: Public domain
+  - key: ezra-03-rebuilding-the-temple
+    title: "The Rebuilding of the Temple Is Begun"
+    plate: 105
+    ref: "Ezra 3:10"
+    osis: "Ezra"
+    chapter: 3
+    verse: 10
+    commons_url: "https://commons.wikimedia.org/wiki/File:105.The_Rebuilding_of_the_Temple_Is_Begun.jpg"
+    licence: Public domain
+  - key: ezra-07-artaxerxes-decree
+    title: "Artaxerxes Grants Freedom to the Jews"
+    plate: 106
+    ref: "Ezra 7:13"
+    osis: "Ezra"
+    chapter: 7
+    verse: 13
+    commons_url: "https://commons.wikimedia.org/wiki/File:106.Artaxerxes_Grants_Freedom_to_the_Jews.jpg"
+    licence: Public domain
+  - key: ezra-09-ezra-in-prayer
+    title: "Ezra Kneels in Prayer"
+    plate: 107
+    ref: "Ezra 9:5"
+    osis: "Ezra"
+    chapter: 9
+    verse: 5
+    commons_url: "https://commons.wikimedia.org/wiki/File:107.Ezra_Kneels_in_Prayer.jpg"
+    licence: Public domain
+  - key: neh-02-nehemiah-views-the-walls
+    title: "Nehemiah Views the Ruins of Jerusalem's Walls"
+    plate: 108
+    ref: "Nehemiah 2:13"
+    osis: "Neh"
+    chapter: 2
+    verse: 13
+    commons_url: "https://commons.wikimedia.org/wiki/File:108.Nehemiah_Views_the_Ruins_of_Jerusalem's_Walls.jpg"
+    licence: Public domain
+  - key: neh-08-ezra-reads-the-law
+    title: "Ezra Reads the Law to the People"
+    plate: 109
+    ref: "Nehemiah 8:3"
+    osis: "Neh"
+    chapter: 8
+    verse: 3
+    commons_url: "https://commons.wikimedia.org/wiki/File:109.Ezra_Reads_the_Law_to_the_People.jpg"
+    licence: Public domain
+  - key: esth-01-queen-vashti-refuses
+    title: "Queen Vashti Refuses to Obey Ahasuerus' Command"
+    plate: 114
+    ref: "Esther 1:12"
+    osis: "Esth"
+    chapter: 1
+    verse: 12
+    commons_url: "https://commons.wikimedia.org/wiki/File:114.Queen_Vashti_Refuses_to_Obey_Ahasuerus'_Command.jpg"
+    licence: Public domain
+  - key: esth-05-esther-before-the-king
+    title: "Esther Before the King"
+    plate: 115
+    ref: "Esther 5:2"
+    osis: "Esth"
+    chapter: 5
+    verse: 2
+    commons_url: "https://commons.wikimedia.org/wiki/File:115.Esther_Before_the_King.jpg"
+    licence: Public domain
+  - key: esth-06-triumph-of-mordecai
+    title: "The Triumph of Mordecai"
+    plate: 116
+    ref: "Esther 6:11"
+    osis: "Esth"
+    chapter: 6
+    verse: 11
+    commons_url: "https://commons.wikimedia.org/wiki/File:116.The_Triumph_of_Mordecai.jpg"
+    licence: Public domain
+  - key: esth-07-esther-accuses-haman
+    title: "Esther Accuses Haman"
+    plate: 117
+    ref: "Esther 7:6"
+    osis: "Esth"
+    chapter: 7
+    verse: 6
+    commons_url: "https://commons.wikimedia.org/wiki/File:117.Esther_Accuses_Haman.jpg"
+    licence: Public domain
+  - key: job-01-job-hears-of-his-losses
+    title: "Job Hears of His Misfortunes"
+    plate: 118
+    ref: "Job 1:14"
+    osis: "Job"
+    chapter: 1
+    verse: 14
+    commons_url: "https://commons.wikimedia.org/wiki/File:118.Job_Hears_of_His_Misfortunes.jpg"
+    licence: Public domain
+  - key: job-02-job-and-his-friends
+    title: "Job Speaks with His Friends"
+    plate: 119
+    ref: "Job 2:13"
+    osis: "Job"
+    chapter: 2
+    verse: 13
+    commons_url: "https://commons.wikimedia.org/wiki/File:119.Job_Speaks_with_His_Friends.jpg"
+    licence: Public domain
+  - key: isa-01-the-prophet-isaiah
+    title: "The Prophet Isaiah"
+    plate: 120
+    ref: "Isaiah 1:1"
+    osis: "Isa"
+    chapter: 1
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:120.The_Prophet_Isaiah.jpg"
+    licence: Public domain
+  - key: isa-13-destruction-of-babylon
+    title: "Isaiah's Vision of the Destruction of Babylon"
+    plate: 121
+    ref: "Isaiah 13:19"
+    osis: "Isa"
+    chapter: 13
+    verse: 19
+    commons_url: "https://commons.wikimedia.org/wiki/File:121.Isaiah's_Vision_of_the_Destruction_of_Babylon.jpg"
+    licence: Public domain
+  - key: isa-27-destruction-of-leviathan
+    title: "The Destruction of Leviathan"
+    plate: 122
+    ref: "Isaiah 27:1"
+    osis: "Isa"
+    chapter: 27
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:122.The_Destruction_of_Leviathan.jpg"
+    licence: Public domain
+  - key: jer-01-the-prophet-jeremiah
+    title: "The Prophet Jeremiah"
+    plate: 123
+    ref: "Jeremiah 1:1"
+    osis: "Jer"
+    chapter: 1
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:123.The_Prophet_Jeremiah.jpg"
+    licence: Public domain
+  - key: jer-36-baruch-writes-jeremiahs-words
+    title: "Baruch Writes Jeremiah's Prophecies"
+    plate: 123
+    ref: "Jeremiah 36:4"
+    osis: "Jer"
+    chapter: 36
+    verse: 4
+    commons_url: "https://commons.wikimedia.org/wiki/File:123.Baruch_Writes_Jeremiah's_Prophecies.jpg"
+    licence: Public domain
+  - key: lam-01-mourning-over-jerusalem
+    title: "People Mourn over the Destruction of Jerusalem"
+    plate: 124
+    ref: "Lamentations 1:1"
+    osis: "Lam"
+    chapter: 1
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:124.People_Mourn_over_the_Destruction_of_Jerusalem.jpg"
+    licence: Public domain
+  - key: ezek-01-the-prophet-ezekiel
+    title: "The Prophet Ezekiel"
+    plate: 126
+    ref: "Ezekiel 1:1"
+    osis: "Ezek"
+    chapter: 1
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:126.The_Prophet_Ezekiel.jpg"
+    licence: Public domain
+  - key: ezek-37-valley-of-dry-bones
+    title: "The Vision of the Valley of Dry Bones"
+    plate: null
+    ref: "Ezekiel 37:1"
+    osis: "Ezek"
+    chapter: 37
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89468902).jpg"
+    licence: Public domain
+  - key: dan-01-daniel-among-the-exiles
+    title: "Daniel among the Exiles"
+    plate: 128
+    ref: "Daniel 1:1"
+    osis: "Dan"
+    chapter: 1
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:128.Daniel_among_the_Exiles.jpg"
+    licence: Public domain
+  - key: dan-03-the-fiery-furnace
+    title: "Shadrach, Meshach and Abednego in the Furnace"
+    plate: 129
+    ref: "Daniel 3:23"
+    osis: "Dan"
+    chapter: 3
+    verse: 23
+    commons_url: "https://commons.wikimedia.org/wiki/File:129.Shadrach,_Meshach_and_Abednego_in_the_Furnace.jpg"
+    licence: Public domain
+  - key: dan-05-writing-on-the-wall
+    title: "Daniel Interprets the Writing on the Wall"
+    plate: 130
+    ref: "Daniel 5:25"
+    osis: "Dan"
+    chapter: 5
+    verse: 25
+    commons_url: "https://commons.wikimedia.org/wiki/File:130.Daniel_Interprets_the_Writing_on_the_Wall.jpg"
+    licence: Public domain
+  - key: dan-06-daniel-in-the-lions-den
+    title: "Daniel in the Lions' Den"
+    plate: 131
+    ref: "Daniel 6:16"
+    osis: "Dan"
+    chapter: 6
+    verse: 16
+    commons_url: "https://commons.wikimedia.org/wiki/File:131.Daniel_in_the_Lions'_Den.jpg"
+    licence: Public domain
+  - key: dan-07-vision-of-four-beasts
+    title: "Daniel's Vision of the Four Beasts"
+    plate: 132
+    ref: "Daniel 7:3"
+    osis: "Dan"
+    chapter: 7
+    verse: 3
+    commons_url: "https://commons.wikimedia.org/wiki/File:132.Daniel's_Vision_of_the_Four_Beasts.jpg"
+    licence: Public domain
+  - key: amos-01-the-prophet-amos
+    title: "The Prophet Amos"
+    plate: 136
+    ref: "Amos 1:1"
+    osis: "Amos"
+    chapter: 1
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:136.The_Prophet_Amos.jpg"
+    licence: Public domain
+  - key: jonah-02-jonah-and-the-great-fish
+    title: "Jonah Is Spewed Forth by the Whale"
+    plate: 137
+    ref: "Jonah 2:10"
+    osis: "Jonah"
+    chapter: 2
+    verse: 10
+    commons_url: "https://commons.wikimedia.org/wiki/File:137.Jonah_Is_Spewed_Forth_by_the_Whale.jpg"
+    licence: Public domain
+  - key: jonah-03-jonah-preaches-to-nineveh
+    title: "Jonah Preaches to the Ninevites"
+    plate: 138
+    ref: "Jonah 3:4"
+    osis: "Jonah"
+    chapter: 3
+    verse: 4
+    commons_url: "https://commons.wikimedia.org/wiki/File:138.Jonah_Preaches_to_the_Ninevites.jpg"
+    licence: Public domain
+  - key: mic-07-micah-exhorts-israel
+    title: "Micah Exhorts the Israelites to Repent"
+    plate: 139
+    ref: "Micah 7:1"
+    osis: "Mic"
+    chapter: 7
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:139.Micah_Exhorts_the_Israelites_to_Repent.jpg"
+    licence: Public domain
+  - key: zech-06-four-chariots
+    title: "Zechariah's Vision of Four Chariots"
+    plate: 140
+    ref: "Zechariah 6:1"
+    osis: "Zech"
+    chapter: 6
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:140.Zechariah's_Vision_of_Four_Chariots.jpg"
+    licence: Public domain
+  - key: matt-02-wise-men-guided-by-star
+    title: "The Wise Men Guided by the Star"
+    plate: null
+    ref: "Matthew 2:9"
+    osis: "Matt"
+    chapter: 2
+    verse: 9
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89474948).jpg"
+    licence: Public domain
+  - key: matt-02-flight-into-egypt
+    title: "The Flight into Egypt"
+    plate: null
+    ref: "Matthew 2:14"
+    osis: "Matt"
+    chapter: 2
+    verse: 14
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89475072).jpg"
+    licence: Public domain
+  - key: matt-03-john-the-baptist-preaching
+    title: "Saint John the Baptist Preaching in the Wilderness"
+    plate: null
+    ref: "Matthew 3:1"
+    osis: "Matt"
+    chapter: 3
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89475438).jpg"
+    licence: Public domain
+  - key: matt-03-baptism-of-jesus
+    title: "The Baptism of Jesus"
+    plate: null
+    ref: "Matthew 3:16"
+    osis: "Matt"
+    chapter: 3
+    verse: 16
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89475624).jpg"
+    licence: Public domain
+  - key: matt-04-temptation-of-jesus
+    title: "The Temptation of Jesus"
+    plate: null
+    ref: "Matthew 4:8"
+    osis: "Matt"
+    chapter: 4
+    verse: 8
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89475772).jpg"
+    licence: Public domain
+  - key: matt-04-jesus-teaching-the-people
+    title: "Jesus Teaching the People"
+    plate: null
+    ref: "Matthew 4:23"
+    osis: "Matt"
+    chapter: 4
+    verse: 23
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89475971).jpg"
+    licence: Public domain
+  - key: matt-04-jesus-healing-the-sick
+    title: "Jesus Healing the Sick"
+    plate: null
+    ref: "Matthew 4:24"
+    osis: "Matt"
+    chapter: 4
+    verse: 24
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89476181).jpg"
+    licence: Public domain
+  - key: matt-05-sermon-on-the-mount
+    title: "The Sermon on the Mount"
+    plate: null
+    ref: "Matthew 5:1"
+    osis: "Matt"
+    chapter: 5
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89476389).jpg"
+    licence: Public domain
+  - key: matt-09-jesus-heals-a-mute-man
+    title: "Jesus Heals a Mute Man"
+    plate: null
+    ref: "Matthew 9:32"
+    osis: "Matt"
+    chapter: 9
+    verse: 32
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89476500).jpg"
+    licence: Public domain
+  - key: matt-12-plucking-grain-on-the-sabbath
+    title: "The Disciples Pluck Grain on the Sabbath"
+    plate: null
+    ref: "Matthew 12:1"
+    osis: "Matt"
+    chapter: 12
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89476651).jpg"
+    licence: Public domain
+  - key: matt-14-jesus-walks-on-the-sea
+    title: "Jesus Walks on the Sea"
+    plate: null
+    ref: "Matthew 14:25"
+    osis: "Matt"
+    chapter: 14
+    verse: 25
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89476805).jpg"
+    licence: Public domain
+  - key: matt-15-feeding-the-multitude
+    title: "The Feeding of the Multitude"
+    plate: null
+    ref: "Matthew 15:32"
+    osis: "Matt"
+    chapter: 15
+    verse: 32
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89476956).jpg"
+    licence: Public domain
+  - key: matt-17-transfiguration
+    title: "The Transfiguration"
+    plate: null
+    ref: "Matthew 17:2"
+    osis: "Matt"
+    chapter: 17
+    verse: 2
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89477161).jpg"
+    licence: Public domain
+  - key: matt-17-healing-the-lunatic
+    title: "Jesus Heals the Possessed Boy"
+    plate: null
+    ref: "Matthew 17:15"
+    osis: "Matt"
+    chapter: 17
+    verse: 15
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89477370).jpg"
+    licence: Public domain
+  - key: matt-21-entry-into-jerusalem
+    title: "The Entry of Jesus into Jerusalem"
+    plate: null
+    ref: "Matthew 21:9"
+    osis: "Matt"
+    chapter: 21
+    verse: 9
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89477540).jpg"
+    licence: Public domain
+  - key: matt-22-tribute-money
+    title: "The Tribute Money"
+    plate: null
+    ref: "Matthew 22:21"
+    osis: "Matt"
+    chapter: 22
+    verse: 21
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89477737).jpg"
+    licence: Public domain
+  - key: matt-26-last-supper
+    title: "The Last Supper"
+    plate: null
+    ref: "Matthew 26:20"
+    osis: "Matt"
+    chapter: 26
+    verse: 20
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89478051).jpg"
+    licence: Public domain
+  - key: matt-26-jesus-praying-in-the-garden
+    title: "Jesus Praying in the Garden"
+    plate: null
+    ref: "Matthew 26:39"
+    osis: "Matt"
+    chapter: 26
+    verse: 39
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89478813).jpg"
+    licence: Public domain
+  - key: matt-26-judas-kiss
+    title: "The Judas Kiss"
+    plate: null
+    ref: "Matthew 26:49"
+    osis: "Matt"
+    chapter: 26
+    verse: 49
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89478636).jpg"
+    licence: Public domain
+  - key: matt-26-peter-denies-jesus
+    title: "Peter Denies Jesus"
+    plate: null
+    ref: "Matthew 26:69"
+    osis: "Matt"
+    chapter: 26
+    verse: 69
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89478925).jpg"
+    licence: Public domain
+  - key: matt-27-jesus-mocked
+    title: "Jesus Mocked"
+    plate: null
+    ref: "Matthew 27:30"
+    osis: "Matt"
+    chapter: 27
+    verse: 30
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89478982).jpg"
+    licence: Public domain
+  - key: matt-27-death-of-jesus
+    title: "The Death of Jesus"
+    plate: null
+    ref: "Matthew 27:50"
+    osis: "Matt"
+    chapter: 27
+    verse: 50
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89479023).jpg"
+    licence: Public domain
+  - key: mark-04-jesus-stills-the-storm
+    title: "Jesus Stills the Storm"
+    plate: null
+    ref: "Mark 4:39"
+    osis: "Mark"
+    chapter: 4
+    verse: 39
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89479109).jpg"
+    licence: Public domain
+  - key: mark-10-jesus-blesses-the-children
+    title: "Jesus Blesses the Little Children"
+    plate: null
+    ref: "Mark 10:13"
+    osis: "Mark"
+    chapter: 10
+    verse: 13
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89479213).jpg"
+    licence: Public domain
+  - key: mark-11-cleansing-the-temple
+    title: "Jesus Drives the Money Changers from the Temple"
+    plate: null
+    ref: "Mark 11:15"
+    osis: "Mark"
+    chapter: 11
+    verse: 15
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89479335).jpg"
+    licence: Public domain
+  - key: mark-12-widows-mite
+    title: "The Widow's Mite"
+    plate: null
+    ref: "Mark 12:42"
+    osis: "Mark"
+    chapter: 12
+    verse: 42
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89479480).jpg"
+    licence: Public domain
+  - key: mark-16-angel-at-the-tomb
+    title: "The Angel and the Holy Women at the Tomb"
+    plate: null
+    ref: "Mark 16:5"
+    osis: "Mark"
+    chapter: 16
+    verse: 5
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89479571).jpg"
+    licence: Public domain
+  - key: mark-16-ascension
+    title: "The Ascension"
+    plate: null
+    ref: "Mark 16:19"
+    osis: "Mark"
+    chapter: 16
+    verse: 19
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89479729).jpg"
+    licence: Public domain
+  - key: luke-01-annunciation
+    title: "The Annunciation"
+    plate: null
+    ref: "Luke 1:28"
+    osis: "Luke"
+    chapter: 1
+    verse: 28
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89480043).jpg"
+    licence: Public domain
+  - key: luke-02-nativity
+    title: "The Nativity"
+    plate: null
+    ref: "Luke 2:16"
+    osis: "Luke"
+    chapter: 2
+    verse: 16
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89480279).jpg"
+    licence: Public domain
+  - key: luke-02-jesus-among-the-teachers
+    title: "Jesus Among the Teachers in the Temple"
+    plate: null
+    ref: "Luke 2:46"
+    osis: "Luke"
+    chapter: 2
+    verse: 46
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89480558).jpg"
+    licence: Public domain
+  - key: luke-04-jesus-in-the-synagogue
+    title: "Jesus Preaching in the Synagogue"
+    plate: null
+    ref: "Luke 4:16"
+    osis: "Luke"
+    chapter: 4
+    verse: 16
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89480773).jpg"
+    licence: Public domain
+  - key: luke-05-jesus-preaching-from-the-boat
+    title: "Jesus Preaching at the Sea of Galilee"
+    plate: null
+    ref: "Luke 5:3"
+    osis: "Luke"
+    chapter: 5
+    verse: 3
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89481200).jpg"
+    licence: Public domain
+  - key: luke-05-miraculous-catch-of-fish
+    title: "The Miraculous Catch of Fish"
+    plate: null
+    ref: "Luke 5:6"
+    osis: "Luke"
+    chapter: 5
+    verse: 6
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89480971).jpg"
+    licence: Public domain
+  - key: luke-07-woman-forgiven
+    title: "The Repentant Woman (Mary Magdalene)"
+    plate: null
+    ref: "Luke 7:50"
+    osis: "Luke"
+    chapter: 7
+    verse: 50
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89481384).jpg"
+    licence: Public domain
+  - key: luke-08-raising-jairus-daughter
+    title: "Jesus Raises the Daughter of Jairus"
+    plate: null
+    ref: "Luke 8:54"
+    osis: "Luke"
+    chapter: 8
+    verse: 54
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89481515).jpg"
+    licence: Public domain
+  - key: luke-10-good-samaritan
+    title: "The Good Samaritan"
+    plate: null
+    ref: "Luke 10:33"
+    osis: "Luke"
+    chapter: 10
+    verse: 33
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89481635).jpg"
+    licence: Public domain
+  - key: luke-10-samaritan-at-the-inn
+    title: "The Good Samaritan Arrives at the Inn"
+    plate: null
+    ref: "Luke 10:34"
+    osis: "Luke"
+    chapter: 10
+    verse: 34
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89481730).jpg"
+    licence: Public domain
+  - key: luke-10-martha-and-mary
+    title: "Jesus in the House of Martha and Mary"
+    plate: null
+    ref: "Luke 10:38"
+    osis: "Luke"
+    chapter: 10
+    verse: 38
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89481903).jpg"
+    licence: Public domain
+  - key: luke-15-prodigal-son-returns
+    title: "The Return of the Prodigal Son"
+    plate: null
+    ref: "Luke 15:20"
+    osis: "Luke"
+    chapter: 15
+    verse: 20
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89482051).jpg"
+    licence: Public domain
+  - key: luke-15-prodigal-son-embraced
+    title: "The Prodigal Son in the Arms of His Father"
+    plate: null
+    ref: "Luke 15:20"
+    osis: "Luke"
+    chapter: 15
+    verse: 20
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89482272).jpg"
+    licence: Public domain
+  - key: luke-16-lazarus-and-the-rich-man
+    title: "Lazarus and the Rich Man"
+    plate: null
+    ref: "Luke 16:20"
+    osis: "Luke"
+    chapter: 16
+    verse: 20
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89482442).jpg"
+    licence: Public domain
+  - key: luke-18-pharisee-and-publican
+    title: "The Pharisee and the Publican"
+    plate: null
+    ref: "Luke 18:10"
+    osis: "Luke"
+    chapter: 18
+    verse: 10
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89482647).jpg"
+    licence: Public domain
+  - key: luke-22-agony-in-the-garden
+    title: "The Agony in the Garden"
+    plate: null
+    ref: "Luke 22:41"
+    osis: "Luke"
+    chapter: 22
+    verse: 41
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89482762).jpg"
+    licence: Public domain
+  - key: luke-23-jesus-falls-under-the-cross
+    title: "Jesus Falls under the Cross"
+    plate: null
+    ref: "Luke 23:26"
+    osis: "Luke"
+    chapter: 23
+    verse: 26
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89482940).jpg"
+    licence: Public domain
+  - key: luke-23-darkness-at-the-crucifixion
+    title: "Darkness at the Crucifixion"
+    plate: null
+    ref: "Luke 23:45"
+    osis: "Luke"
+    chapter: 23
+    verse: 45
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89483040).jpg"
+    licence: Public domain
+  - key: luke-24-road-to-emmaus
+    title: "The Road to Emmaus"
+    plate: null
+    ref: "Luke 24:13"
+    osis: "Luke"
+    chapter: 24
+    verse: 13
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89483147).jpg"
+    licence: Public domain
+  - key: john-02-wedding-at-cana
+    title: "The Wedding at Cana"
+    plate: null
+    ref: "John 2:1"
+    osis: "John"
+    chapter: 2
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89483276).jpg"
+    licence: Public domain
+  - key: john-04-woman-at-the-well
+    title: "Jesus and the Woman of Samaria"
+    plate: null
+    ref: "John 4:7"
+    osis: "John"
+    chapter: 4
+    verse: 7
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89483382).jpg"
+    licence: Public domain
+  - key: john-08-woman-taken-in-adultery
+    title: "Jesus and the Woman Taken in Adultery"
+    plate: null
+    ref: "John 8:11"
+    osis: "John"
+    chapter: 8
+    verse: 11
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89483469).jpg"
+    licence: Public domain
+  - key: john-11-raising-of-lazarus
+    title: "The Raising of Lazarus"
+    plate: null
+    ref: "John 11:43"
+    osis: "John"
+    chapter: 11
+    verse: 43
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89483578).jpg"
+    licence: Public domain
+  - key: john-19-jesus-scourged
+    title: "Jesus Scourged"
+    plate: null
+    ref: "John 19:1"
+    osis: "John"
+    chapter: 19
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89483694).jpg"
+    licence: Public domain
+  - key: john-19-crown-of-thorns
+    title: "The Crown of Thorns"
+    plate: null
+    ref: "John 19:2"
+    osis: "John"
+    chapter: 19
+    verse: 2
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89483870).jpg"
+    licence: Public domain
+  - key: john-19-ecce-homo
+    title: "Pilate Presents Jesus to the People"
+    plate: null
+    ref: "John 19:14"
+    osis: "John"
+    chapter: 19
+    verse: 14
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89483941).jpg"
+    licence: Public domain
+  - key: john-19-nailed-to-the-cross
+    title: "Jesus Is Nailed to the Cross"
+    plate: null
+    ref: "John 19:18"
+    osis: "John"
+    chapter: 19
+    verse: 18
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89484137).jpg"
+    licence: Public domain
+  - key: john-19-raising-of-the-cross
+    title: "The Raising of the Cross"
+    plate: null
+    ref: "John 19:18"
+    osis: "John"
+    chapter: 19
+    verse: 18
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89484283).jpg"
+    licence: Public domain
+  - key: john-19-descent-from-the-cross
+    title: "The Descent from the Cross"
+    plate: null
+    ref: "John 19:38"
+    osis: "John"
+    chapter: 19
+    verse: 38
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89484429).jpg"
+    licence: Public domain
+  - key: john-19-body-of-jesus
+    title: "The Body of Jesus Taken Down"
+    plate: null
+    ref: "John 19:40"
+    osis: "John"
+    chapter: 19
+    verse: 40
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89484501).jpg"
+    licence: Public domain
+  - key: john-19-burial-of-jesus
+    title: "The Burial of Jesus"
+    plate: null
+    ref: "John 19:41"
+    osis: "John"
+    chapter: 19
+    verse: 41
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89484603).jpg"
+    licence: Public domain
+  - key: acts-02-pentecost
+    title: "The Descent of the Holy Spirit"
+    plate: null
+    ref: "Acts 2:2"
+    osis: "Acts"
+    chapter: 2
+    verse: 2
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89484689).jpg"
+    licence: Public domain
+  - key: acts-02-apostles-preaching
+    title: "The Apostles Preach the Gospel"
+    plate: null
+    ref: "Acts 2:4"
+    osis: "Acts"
+    chapter: 2
+    verse: 4
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89484816).jpg"
+    licence: Public domain
+  - key: acts-03-peter-and-john-heal-the-lame
+    title: "Peter and John Heal the Lame Man"
+    plate: null
+    ref: "Acts 3:6"
+    osis: "Acts"
+    chapter: 3
+    verse: 6
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89484920).jpg"
+    licence: Public domain
+  - key: acts-07-death-of-stephen
+    title: "The Death of Stephen"
+    plate: null
+    ref: "Acts 7:57"
+    osis: "Acts"
+    chapter: 7
+    verse: 57
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89485178).jpg"
+    licence: Public domain
+  - key: acts-09-road-to-damascus
+    title: "Saul on the Road to Damascus"
+    plate: null
+    ref: "Acts 9:3"
+    osis: "Acts"
+    chapter: 9
+    verse: 3
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89485292).jpg"
+    licence: Public domain
+  - key: acts-10-peter-and-cornelius
+    title: "Peter in the House of Cornelius"
+    plate: null
+    ref: "Acts 10:24"
+    osis: "Acts"
+    chapter: 10
+    verse: 24
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89485361).jpg"
+    licence: Public domain
+  - key: acts-12-peter-freed-from-prison
+    title: "Peter Freed from Prison"
+    plate: null
+    ref: "Acts 12:9"
+    osis: "Acts"
+    chapter: 12
+    verse: 9
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89485423).jpg"
+    licence: Public domain
+  - key: acts-17-paul-at-thessalonica
+    title: "Paul Preaching to the Thessalonians"
+    plate: null
+    ref: "Acts 17:2"
+    osis: "Acts"
+    chapter: 17
+    verse: 2
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89485452).jpg"
+    licence: Public domain
+  - key: acts-19-paul-at-ephesus
+    title: "Paul at Ephesus"
+    plate: null
+    ref: "Acts 19:19"
+    osis: "Acts"
+    chapter: 19
+    verse: 19
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89485605).jpg"
+    licence: Public domain
+  - key: acts-21-paul-seized-in-jerusalem
+    title: "The Crowd Rises against Paul"
+    plate: null
+    ref: "Acts 21:27"
+    osis: "Acts"
+    chapter: 21
+    verse: 27
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89485728).jpg"
+    licence: Public domain
+  - key: acts-27-paul-shipwrecked
+    title: "Paul Shipwrecked on Malta"
+    plate: null
+    ref: "Acts 27:39"
+    osis: "Acts"
+    chapter: 27
+    verse: 39
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89485783).jpg"
+    licence: Public domain
+  - key: rev-01-john-on-patmos
+    title: "Saint John on Patmos"
+    plate: null
+    ref: "Revelation 1:9"
+    osis: "Rev"
+    chapter: 1
+    verse: 9
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89485903).jpg"
+    licence: Public domain
+  - key: rev-06-death-on-the-pale-horse
+    title: "Death on the Pale Horse"
+    plate: null
+    ref: "Revelation 6:8"
+    osis: "Rev"
+    chapter: 6
+    verse: 8
+    commons_url: "https://commons.wikimedia.org/wiki/File:Gustave_Dore_-_Death_on_the_Pale_Horse.png"
+    licence: Public domain
+  - key: rev-12-woman-clothed-with-the-sun
+    title: "The Crowned Virgin: A Vision of John"
+    plate: null
+    ref: "Revelation 12:1"
+    osis: "Rev"
+    chapter: 12
+    verse: 1
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89486085).jpg"
+    licence: Public domain
+  - key: rev-18-babylon-fallen
+    title: "Babylon Fallen"
+    plate: null
+    ref: "Revelation 18:2"
+    osis: "Rev"
+    chapter: 18
+    verse: 2
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89486816).jpg"
+    licence: Public domain
+  - key: rev-20-last-judgment
+    title: "The Last Judgment"
+    plate: null
+    ref: "Revelation 20:11"
+    osis: "Rev"
+    chapter: 20
+    verse: 11
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89486421).jpg"
+    licence: Public domain
+  - key: rev-21-new-jerusalem
+    title: "The New Jerusalem"
+    plate: null
+    ref: "Revelation 21:10"
+    osis: "Rev"
+    chapter: 21
+    verse: 10
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89486509).jpg"
+    licence: Public domain
+
+excluded:
+  - title: "The World Is Destroyed by Water"
+    commons_url: "https://commons.wikimedia.org/wiki/File:006.The_World_Is_Destroyed_by_Water.jpg"
+    reason: "graphic: heaped mass of drowning naked bodies (the gentler Flood plate 007 is kept)"
+  - title: "Jael Kills Sisera"
+    commons_url: "https://commons.wikimedia.org/wiki/File:052.Jael_Kills_Sisera.jpg"
+    reason: "grisly (tent peg through the head)"
+  - title: "The Death of Gideon's Sons"
+    commons_url: "https://commons.wikimedia.org/wiki/File:056.The_Death_of_Gideon's_Sons.jpg"
+    reason: "field of slaughtered corpses"
+  - title: "A Levite Finds a Woman's Corpse"
+    commons_url: "https://commons.wikimedia.org/wiki/File:065.A_Levite_Finds_a_Woman's_Corpse.jpg"
+    reason: "corpse of an abused woman"
+  - title: "The Levite Carries the Woman's Body Away"
+    commons_url: "https://commons.wikimedia.org/wiki/File:066.The_Levite_Carries_the_Woman's_Body_Away.jpg"
+    reason: "corpse of an abused woman"
+  - title: "The Benjaminites Take the Virgins of Jabesh-gilead"
+    commons_url: "https://commons.wikimedia.org/wiki/File:067.The_Benjaminites_Take_the_Virgins_of_Jabesh-gilead.jpg"
+    reason: "depicts the forcible abduction of women; unsuitable as a family background"
+  - title: "The Death of Agag"
+    commons_url: "https://commons.wikimedia.org/wiki/File:071.The_Death_of_Agag.jpg"
+    reason: "execution scene (Agag hewn in pieces)"
+  - title: "David Slays Goliath"
+    commons_url: "https://commons.wikimedia.org/wiki/File:071A.David_Slays_Goliath.jpg"
+    reason: "David holds up Goliath's severed head (trophy head)"
+  - title: "Jabesh-Gileadites Recover the Bodies of Saul and His Sons"
+    commons_url: "https://commons.wikimedia.org/wiki/File:077.Jabesh-Gileadites_Recover_the_Bodies_of_Saul_and_His_Sons.jpg"
+    reason: "corpses hanging from the city wall"
+  - title: "David Attacks the Ammonites"
+    commons_url: "https://commons.wikimedia.org/wiki/File:079.David_Attacks_the_Ammonites.jpg"
+    reason: "captives crushed under saws/harrows (2 Sam 12:31), piled bodies"
+  - title: "Rizpah’s Kindness toward the Dead"
+    commons_url: "https://commons.wikimedia.org/wiki/File:082.Rizpah’s_Kindness_toward_the_Dead.jpg"
+    reason: "hanged corpses with carrion birds and beasts"
+  - title: "The Prophets of Baal Are Slaughtered"
+    commons_url: "https://commons.wikimedia.org/wiki/File:090.The_Prophets_of_Baal_Are_Slaughtered.jpg"
+    reason: "mass slaughter, bodies thrown from a cliff"
+  - title: "The Israelites Slaughter the Syrians"
+    commons_url: "https://commons.wikimedia.org/wiki/File:092.The_Israelites_Slaughter_the_Syrians.jpg"
+    reason: "massacre with piled corpses"
+  - title: "Some Children Are Destroyed by Bears"
+    commons_url: "https://commons.wikimedia.org/wiki/File:095.Some_Children_Are_Destroyed_by_Bears.jpg"
+    reason: "children mauled by bears"
+  - title: "A Famine in Samaria"
+    commons_url: "https://commons.wikimedia.org/wiki/File:096.A_Famine_in_Samaria.jpg"
+    reason: "starving and dead bodies strewn on steps (cannibalism narrative)"
+  - title: "Jehu's Companions Find Jezebel's Remains"
+    commons_url: "https://commons.wikimedia.org/wiki/File:098.Jehu's_Companions_Find_Jezebel's_Remains.jpg"
+    reason: "dismembered remains eaten by dogs"
+  - title: "Foreign Nations Are Slain by Lions in Samaria"
+    commons_url: "https://commons.wikimedia.org/wiki/File:100.Foreign_Nations_Are_Slain_by_Lions_in_Samaria.jpg"
+    reason: "people being mauled by lions"
+  - title: "Zedekiah's Sons Are Slaughtered before His Eyes"
+    commons_url: "https://commons.wikimedia.org/wiki/File:102.Zedekiah's_Sons_Are_Slaughtered_before_His_Eyes.jpg"
+    reason: "execution of children"
+  - title: "The Plague of Jerusalem"
+    commons_url: "https://commons.wikimedia.org/wiki/File:102A.The_Plague_of_Jerusalem.jpg"
+    reason: "heaps of plague dead, including children"
+  - title: "The Ammonite and Moabite Armies Are Destroyed"
+    commons_url: "https://commons.wikimedia.org/wiki/File:103.The_Ammonite_and_Moabite_Armies_Are_Destroyed.jpg"
+    reason: "valley piled with corpses"
+  - title: "The Massacre of the Innocents"
+    commons_url: "https://commons.wikimedia.org/wiki/File:Pismo_Swiete_Starego_i_Nowego_Testamentu._T._2_1874_(89475211).jpg"
+    reason: "soldiers killing infants"

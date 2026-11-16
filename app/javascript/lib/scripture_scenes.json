@@ -1,0 +1,1570 @@
+[
+  {
+    "key": "gen-01-creation-of-light",
+    "title": "The Creation of Light",
+    "ref": "Genesis 1:3",
+    "osis": "Gen",
+    "chapter": 1,
+    "verse": 3
+  },
+  {
+    "key": "gen-02-creation-of-eve",
+    "title": "The Creation of Eve",
+    "ref": "Genesis 2:22",
+    "osis": "Gen",
+    "chapter": 2,
+    "verse": 22
+  },
+  {
+    "key": "gen-03-driven-out-of-eden",
+    "title": "Adam and Eve Are Driven out of Eden",
+    "ref": "Genesis 3:24",
+    "osis": "Gen",
+    "chapter": 3,
+    "verse": 24
+  },
+  {
+    "key": "gen-04-cain-and-abel-offerings",
+    "title": "Cain and Abel Offer Their Sacrifices",
+    "ref": "Genesis 4:4",
+    "osis": "Gen",
+    "chapter": 4,
+    "verse": 4
+  },
+  {
+    "key": "gen-04-cain-slays-abel",
+    "title": "Cain Slays Abel",
+    "ref": "Genesis 4:8",
+    "osis": "Gen",
+    "chapter": 4,
+    "verse": 8
+  },
+  {
+    "key": "gen-07-the-great-flood",
+    "title": "The Great Flood",
+    "ref": "Genesis 7:19",
+    "osis": "Gen",
+    "chapter": 7,
+    "verse": 19
+  },
+  {
+    "key": "gen-08-dove-sent-from-the-ark",
+    "title": "A Dove Is Sent Forth from the Ark",
+    "ref": "Genesis 8:8",
+    "osis": "Gen",
+    "chapter": 8,
+    "verse": 8
+  },
+  {
+    "key": "gen-09-noah-curses-canaan",
+    "title": "Noah Curses Ham and Canaan",
+    "ref": "Genesis 9:25",
+    "osis": "Gen",
+    "chapter": 9,
+    "verse": 25
+  },
+  {
+    "key": "gen-11-tower-of-babel",
+    "title": "The Tower of Babel",
+    "ref": "Genesis 11:4",
+    "osis": "Gen",
+    "chapter": 11,
+    "verse": 4
+  },
+  {
+    "key": "gen-12-abraham-goes-to-canaan",
+    "title": "Abraham Goes to the Land of Canaan",
+    "ref": "Genesis 12:5",
+    "osis": "Gen",
+    "chapter": 12,
+    "verse": 5
+  },
+  {
+    "key": "gen-18-abraham-and-three-angels",
+    "title": "Abraham and the Three Angels",
+    "ref": "Genesis 18:2",
+    "osis": "Gen",
+    "chapter": 18,
+    "verse": 2
+  },
+  {
+    "key": "gen-19-lot-flees-sodom",
+    "title": "Lot Flees as Sodom and Gomorrah Burn",
+    "ref": "Genesis 19:24",
+    "osis": "Gen",
+    "chapter": 19,
+    "verse": 24
+  },
+  {
+    "key": "gen-21-hagar-sent-away",
+    "title": "Abraham Sends Hagar and Ishmael Away",
+    "ref": "Genesis 21:14",
+    "osis": "Gen",
+    "chapter": 21,
+    "verse": 14
+  },
+  {
+    "key": "gen-21-hagar-in-the-wilderness",
+    "title": "Hagar and Ishmael in the Wilderness",
+    "ref": "Genesis 21:17",
+    "osis": "Gen",
+    "chapter": 21,
+    "verse": 17
+  },
+  {
+    "key": "gen-22-testing-of-abraham",
+    "title": "The Testing of Abraham's Faith",
+    "ref": "Genesis 22:11",
+    "osis": "Gen",
+    "chapter": 22,
+    "verse": 11
+  },
+  {
+    "key": "gen-23-burial-of-sarah",
+    "title": "The Burial of Sarah",
+    "ref": "Genesis 23:19",
+    "osis": "Gen",
+    "chapter": 23,
+    "verse": 19
+  },
+  {
+    "key": "gen-24-rebekah-at-the-well",
+    "title": "Eliezer and Rebekah at the Well",
+    "ref": "Genesis 24:18",
+    "osis": "Gen",
+    "chapter": 24,
+    "verse": 18
+  },
+  {
+    "key": "gen-24-isaac-meets-rebekah",
+    "title": "The Meeting of Isaac and Rebekah",
+    "ref": "Genesis 24:64",
+    "osis": "Gen",
+    "chapter": 24,
+    "verse": 64
+  },
+  {
+    "key": "gen-27-isaac-blesses-jacob",
+    "title": "Isaac Blesses Jacob",
+    "ref": "Genesis 27:27",
+    "osis": "Gen",
+    "chapter": 27,
+    "verse": 27
+  },
+  {
+    "key": "gen-28-jacobs-dream",
+    "title": "Jacob's Dream",
+    "ref": "Genesis 28:12",
+    "osis": "Gen",
+    "chapter": 28,
+    "verse": 12
+  },
+  {
+    "key": "gen-29-jacob-meets-rachel",
+    "title": "Jacob Tends Laban's Flocks and Meets Rachel",
+    "ref": "Genesis 29:10",
+    "osis": "Gen",
+    "chapter": 29,
+    "verse": 10
+  },
+  {
+    "key": "gen-32-jacob-prays",
+    "title": "Jacob Prays for Protection",
+    "ref": "Genesis 32:9",
+    "osis": "Gen",
+    "chapter": 32,
+    "verse": 9
+  },
+  {
+    "key": "gen-32-jacob-wrestles-the-angel",
+    "title": "Jacob Wrestles with the Angel",
+    "ref": "Genesis 32:24",
+    "osis": "Gen",
+    "chapter": 32,
+    "verse": 24
+  },
+  {
+    "key": "gen-33-jacob-and-esau-meet",
+    "title": "Jacob and Esau Meet",
+    "ref": "Genesis 33:4",
+    "osis": "Gen",
+    "chapter": 33,
+    "verse": 4
+  },
+  {
+    "key": "gen-37-joseph-sold-by-brothers",
+    "title": "Joseph Is Sold by His Brothers",
+    "ref": "Genesis 37:28",
+    "osis": "Gen",
+    "chapter": 37,
+    "verse": 28
+  },
+  {
+    "key": "gen-41-joseph-interprets-dreams",
+    "title": "Joseph Interprets Pharaoh's Dream",
+    "ref": "Genesis 41:25",
+    "osis": "Gen",
+    "chapter": 41,
+    "verse": 25
+  },
+  {
+    "key": "gen-45-joseph-reveals-himself",
+    "title": "Joseph Reveals Himself to His Brothers",
+    "ref": "Genesis 45:3",
+    "osis": "Gen",
+    "chapter": 45,
+    "verse": 3
+  },
+  {
+    "key": "gen-46-jacob-goes-to-egypt",
+    "title": "Jacob Goes to Egypt",
+    "ref": "Genesis 46:6",
+    "osis": "Gen",
+    "chapter": 46,
+    "verse": 6
+  },
+  {
+    "key": "exod-02-moses-on-the-nile",
+    "title": "The Child Moses on the Nile",
+    "ref": "Exodus 2:3",
+    "osis": "Exod",
+    "chapter": 2,
+    "verse": 3
+  },
+  {
+    "key": "exod-02-finding-of-moses",
+    "title": "The Finding of Moses",
+    "ref": "Exodus 2:5",
+    "osis": "Exod",
+    "chapter": 2,
+    "verse": 5
+  },
+  {
+    "key": "exod-07-moses-and-aaron-before-pharaoh",
+    "title": "Moses and Aaron Appear before Pharaoh",
+    "ref": "Exodus 7:10",
+    "osis": "Exod",
+    "chapter": 7,
+    "verse": 10
+  },
+  {
+    "key": "exod-09-plague-on-livestock",
+    "title": "The Fifth Plague. Livestock Disease",
+    "ref": "Exodus 9:3",
+    "osis": "Exod",
+    "chapter": 9,
+    "verse": 3
+  },
+  {
+    "key": "exod-10-plague-of-darkness",
+    "title": "The Ninth Plague. Darkness",
+    "ref": "Exodus 10:22",
+    "osis": "Exod",
+    "chapter": 10,
+    "verse": 22
+  },
+  {
+    "key": "exod-12-death-of-the-firstborn",
+    "title": "The Firstborn of the Egyptians Are Slain",
+    "ref": "Exodus 12:29",
+    "osis": "Exod",
+    "chapter": 12,
+    "verse": 29
+  },
+  {
+    "key": "exod-12-egyptians-urge-moses-to-go",
+    "title": "The Egyptians Ask Moses to Depart",
+    "ref": "Exodus 12:31",
+    "osis": "Exod",
+    "chapter": 12,
+    "verse": 31
+  },
+  {
+    "key": "exod-14-egyptians-drown-in-the-sea",
+    "title": "The Egyptians Drown in the Sea",
+    "ref": "Exodus 14:28",
+    "osis": "Exod",
+    "chapter": 14,
+    "verse": 28
+  },
+  {
+    "key": "exod-19-giving-of-the-law",
+    "title": "The Giving of the Law on Mount Sinai",
+    "ref": "Exodus 19:18",
+    "osis": "Exod",
+    "chapter": 19,
+    "verse": 18
+  },
+  {
+    "key": "exod-32-moses-breaks-the-tablets",
+    "title": "Moses Breaks the Tables of the Law",
+    "ref": "Exodus 32:19",
+    "osis": "Exod",
+    "chapter": 32,
+    "verse": 19
+  },
+  {
+    "key": "exod-34-moses-comes-down-from-sinai",
+    "title": "Moses Comes Down from Mount Sinai",
+    "ref": "Exodus 34:29",
+    "osis": "Exod",
+    "chapter": 34,
+    "verse": 29
+  },
+  {
+    "key": "num-13-spies-return",
+    "title": "The Spies Return from the Promised Land",
+    "ref": "Numbers 13:26",
+    "osis": "Num",
+    "chapter": 13,
+    "verse": 26
+  },
+  {
+    "key": "num-16-korah-dathan-abiram",
+    "title": "The Death of Korah, Dathan, and Abiram",
+    "ref": "Numbers 16:32",
+    "osis": "Num",
+    "chapter": 16,
+    "verse": 32
+  },
+  {
+    "key": "num-20-moses-strikes-the-rock",
+    "title": "Moses Strikes the Rock at Horeb",
+    "ref": "Numbers 20:11",
+    "osis": "Num",
+    "chapter": 20,
+    "verse": 11
+  },
+  {
+    "key": "num-21-bronze-serpent",
+    "title": "The Bronze Serpent",
+    "ref": "Numbers 21:9",
+    "osis": "Num",
+    "chapter": 21,
+    "verse": 9
+  },
+  {
+    "key": "num-22-balaam-and-the-angel",
+    "title": "An Angel Appears to Balaam",
+    "ref": "Numbers 22:31",
+    "osis": "Num",
+    "chapter": 22,
+    "verse": 31
+  },
+  {
+    "key": "josh-03-crossing-the-jordan",
+    "title": "The Israelites Cross the Jordan River",
+    "ref": "Joshua 3:17",
+    "osis": "Josh",
+    "chapter": 3,
+    "verse": 17
+  },
+  {
+    "key": "josh-06-walls-of-jericho",
+    "title": "The Walls of Jericho Fall Down",
+    "ref": "Joshua 6:20",
+    "osis": "Josh",
+    "chapter": 6,
+    "verse": 20
+  },
+  {
+    "key": "josh-06-joshua-spares-rahab",
+    "title": "Joshua Spares Rahab",
+    "ref": "Joshua 6:23",
+    "osis": "Josh",
+    "chapter": 6,
+    "verse": 23
+  },
+  {
+    "key": "josh-07-achan-stoned",
+    "title": "Achan Is Stoned to Death",
+    "ref": "Joshua 7:25",
+    "osis": "Josh",
+    "chapter": 7,
+    "verse": 25
+  },
+  {
+    "key": "josh-08-burning-of-ai",
+    "title": "Joshua Burns the Town of Ai",
+    "ref": "Joshua 8:19",
+    "osis": "Josh",
+    "chapter": 8,
+    "verse": 19
+  },
+  {
+    "key": "josh-10-amorites-destroyed",
+    "title": "The Army of the Amorites Is Destroyed",
+    "ref": "Joshua 10:11",
+    "osis": "Josh",
+    "chapter": 10,
+    "verse": 11
+  },
+  {
+    "key": "josh-10-sun-stands-still",
+    "title": "Joshua Commands the Sun to Stand Still",
+    "ref": "Joshua 10:12",
+    "osis": "Josh",
+    "chapter": 10,
+    "verse": 12
+  },
+  {
+    "key": "judg-02-angel-at-bochim",
+    "title": "An Angel Appears to the Israelites",
+    "ref": "Judges 2:1",
+    "osis": "Judg",
+    "chapter": 2,
+    "verse": 1
+  },
+  {
+    "key": "judg-05-deborahs-song",
+    "title": "Deborah Praises Jael",
+    "ref": "Judges 5:1",
+    "osis": "Judg",
+    "chapter": 5,
+    "verse": 1
+  },
+  {
+    "key": "judg-07-gideon-chooses-300",
+    "title": "Gideon Chooses 300 Soldiers",
+    "ref": "Judges 7:6",
+    "osis": "Judg",
+    "chapter": 7,
+    "verse": 6
+  },
+  {
+    "key": "judg-07-midianites-routed",
+    "title": "The Midianites Are Routed",
+    "ref": "Judges 7:22",
+    "osis": "Judg",
+    "chapter": 7,
+    "verse": 22
+  },
+  {
+    "key": "judg-09-death-of-abimelech",
+    "title": "The Death of Abimelech",
+    "ref": "Judges 9:53",
+    "osis": "Judg",
+    "chapter": 9,
+    "verse": 53
+  },
+  {
+    "key": "judg-11-jephthahs-daughter",
+    "title": "Jephthah's Daughter Comes to Meet Her Father",
+    "ref": "Judges 11:34",
+    "osis": "Judg",
+    "chapter": 11,
+    "verse": 34
+  },
+  {
+    "key": "judg-11-mourning-jephthahs-daughter",
+    "title": "Israelite Women Mourn with Jephthah's Daughter",
+    "ref": "Judges 11:38",
+    "osis": "Judg",
+    "chapter": 11,
+    "verse": 38
+  },
+  {
+    "key": "judg-14-samson-slays-a-lion",
+    "title": "Samson Slays a Lion",
+    "ref": "Judges 14:6",
+    "osis": "Judg",
+    "chapter": 14,
+    "verse": 6
+  },
+  {
+    "key": "judg-15-samson-and-the-jawbone",
+    "title": "Samson Destroys the Philistines with an Ass' Jawbone",
+    "ref": "Judges 15:15",
+    "osis": "Judg",
+    "chapter": 15,
+    "verse": 15
+  },
+  {
+    "key": "judg-16-samson-carries-gaza-gates",
+    "title": "Samson Carries away the Gates of Gaza",
+    "ref": "Judges 16:3",
+    "osis": "Judg",
+    "chapter": 16,
+    "verse": 3
+  },
+  {
+    "key": "judg-16-samson-and-delilah",
+    "title": "Samson and Delilah",
+    "ref": "Judges 16:19",
+    "osis": "Judg",
+    "chapter": 16,
+    "verse": 19
+  },
+  {
+    "key": "judg-16-death-of-samson",
+    "title": "The Death of Samson",
+    "ref": "Judges 16:30",
+    "osis": "Judg",
+    "chapter": 16,
+    "verse": 30
+  },
+  {
+    "key": "ruth-01-naomi-and-her-daughters-in-law",
+    "title": "Naomi and Her Daughters-in-Law",
+    "ref": "Ruth 1:14",
+    "osis": "Ruth",
+    "chapter": 1,
+    "verse": 14
+  },
+  {
+    "key": "ruth-02-ruth-and-boaz",
+    "title": "Ruth and Boaz",
+    "ref": "Ruth 2:5",
+    "osis": "Ruth",
+    "chapter": 2,
+    "verse": 5
+  },
+  {
+    "key": "1sam-06-ark-returned-to-beth-shemesh",
+    "title": "The Ark Is Returned to Beth-shemesh",
+    "ref": "1 Samuel 6:13",
+    "osis": "1Sam",
+    "chapter": 6,
+    "verse": 13
+  },
+  {
+    "key": "1sam-10-samuel-blesses-saul",
+    "title": "Samuel Blesses Saul",
+    "ref": "1 Samuel 10:1",
+    "osis": "1Sam",
+    "chapter": 10,
+    "verse": 1
+  },
+  {
+    "key": "1sam-18-saul-attacks-david",
+    "title": "Saul Attempts to Kill David",
+    "ref": "1 Samuel 18:11",
+    "osis": "1Sam",
+    "chapter": 18,
+    "verse": 11
+  },
+  {
+    "key": "1sam-19-david-escapes-through-window",
+    "title": "David Escapes through a Window",
+    "ref": "1 Samuel 19:12",
+    "osis": "1Sam",
+    "chapter": 19,
+    "verse": 12
+  },
+  {
+    "key": "1sam-20-david-and-jonathan",
+    "title": "David and Jonathan",
+    "ref": "1 Samuel 20:42",
+    "osis": "1Sam",
+    "chapter": 20,
+    "verse": 42
+  },
+  {
+    "key": "1sam-24-david-spares-saul",
+    "title": "David Shows Saul How He Spared His Life",
+    "ref": "1 Samuel 24:8",
+    "osis": "1Sam",
+    "chapter": 24,
+    "verse": 8
+  },
+  {
+    "key": "1sam-28-saul-and-the-witch-of-endor",
+    "title": "Saul and the Witch of Endor",
+    "ref": "1 Samuel 28:14",
+    "osis": "1Sam",
+    "chapter": 28,
+    "verse": 14
+  },
+  {
+    "key": "1sam-31-death-of-saul",
+    "title": "The Death of Saul",
+    "ref": "1 Samuel 31:4",
+    "osis": "1Sam",
+    "chapter": 31,
+    "verse": 4
+  },
+  {
+    "key": "2sam-02-combat-at-gibeon",
+    "title": "Combat between Soldiers of Ish-bosheth and David",
+    "ref": "2 Samuel 2:16",
+    "osis": "2Sam",
+    "chapter": 2,
+    "verse": 16
+  },
+  {
+    "key": "2sam-18-death-of-absalom",
+    "title": "The Death of Absalom",
+    "ref": "2 Samuel 18:9",
+    "osis": "2Sam",
+    "chapter": 18,
+    "verse": 9
+  },
+  {
+    "key": "2sam-18-david-mourns-absalom",
+    "title": "David Mourns the Death of Absalom",
+    "ref": "2 Samuel 18:33",
+    "osis": "2Sam",
+    "chapter": 18,
+    "verse": 33
+  },
+  {
+    "key": "2sam-21-abishai-saves-david",
+    "title": "Abishai Saves David's Life",
+    "ref": "2 Samuel 21:17",
+    "osis": "2Sam",
+    "chapter": 21,
+    "verse": 17
+  },
+  {
+    "key": "1kgs-03-judgment-of-solomon",
+    "title": "The Judgment of Solomon",
+    "ref": "1 Kings 3:25",
+    "osis": "1Kgs",
+    "chapter": 3,
+    "verse": 25
+  },
+  {
+    "key": "1kgs-05-cedars-for-the-temple",
+    "title": "Cedars Are Cut Down for the Jerusalem Temple",
+    "ref": "1 Kings 5:6",
+    "osis": "1Kgs",
+    "chapter": 5,
+    "verse": 6
+  },
+  {
+    "key": "1kgs-10-queen-of-sheba",
+    "title": "Solomon Receives the Queen of Sheba",
+    "ref": "1 Kings 10:2",
+    "osis": "1Kgs",
+    "chapter": 10,
+    "verse": 2
+  },
+  {
+    "key": "1kgs-11-solomon-in-old-age",
+    "title": "King Solomon in Old Age",
+    "ref": "1 Kings 11:4",
+    "osis": "1Kgs",
+    "chapter": 11,
+    "verse": 4
+  },
+  {
+    "key": "1kgs-13-prophet-slain-by-lion",
+    "title": "The Disobedient Prophet Is Slain by a Lion",
+    "ref": "1 Kings 13:24",
+    "osis": "1Kgs",
+    "chapter": 13,
+    "verse": 24
+  },
+  {
+    "key": "1kgs-17-elijah-raises-widows-son",
+    "title": "Elijah Raises the Son of the Widow of Zarephath",
+    "ref": "1 Kings 17:23",
+    "osis": "1Kgs",
+    "chapter": 17,
+    "verse": 23
+  },
+  {
+    "key": "1kgs-19-elijah-fed-by-an-angel",
+    "title": "Elijah Is Nourished by an Angel",
+    "ref": "1 Kings 19:5",
+    "osis": "1Kgs",
+    "chapter": 19,
+    "verse": 5
+  },
+  {
+    "key": "1kgs-22-death-of-ahab",
+    "title": "The Death of Ahab",
+    "ref": "1 Kings 22:35",
+    "osis": "1Kgs",
+    "chapter": 22,
+    "verse": 35
+  },
+  {
+    "key": "2kgs-01-fire-on-ahaziahs-messengers",
+    "title": "Elijah Destroys the Messengers of Ahaziah",
+    "ref": "2 Kings 1:10",
+    "osis": "2Kgs",
+    "chapter": 1,
+    "verse": 10
+  },
+  {
+    "key": "2kgs-02-elijah-taken-to-heaven",
+    "title": "Elijah Ascends to Heaven in a Chariot of Fire",
+    "ref": "2 Kings 2:11",
+    "osis": "2Kgs",
+    "chapter": 2,
+    "verse": 11
+  },
+  {
+    "key": "2kgs-09-death-of-jezebel",
+    "title": "The Death of Jezebel",
+    "ref": "2 Kings 9:33",
+    "osis": "2Kgs",
+    "chapter": 9,
+    "verse": 33
+  },
+  {
+    "key": "2kgs-11-death-of-athaliah",
+    "title": "The Death of Athaliah",
+    "ref": "2 Kings 11:16",
+    "osis": "2Kgs",
+    "chapter": 11,
+    "verse": 16
+  },
+  {
+    "key": "2kgs-19-sennacheribs-army-destroyed",
+    "title": "Sennacherib's Army Is Destroyed",
+    "ref": "2 Kings 19:35",
+    "osis": "2Kgs",
+    "chapter": 19,
+    "verse": 35
+  },
+  {
+    "key": "ezra-01-cyrus-restores-temple-vessels",
+    "title": "Cyrus Restores the Vessels of the Temple",
+    "ref": "Ezra 1:7",
+    "osis": "Ezra",
+    "chapter": 1,
+    "verse": 7
+  },
+  {
+    "key": "ezra-03-rebuilding-the-temple",
+    "title": "The Rebuilding of the Temple Is Begun",
+    "ref": "Ezra 3:10",
+    "osis": "Ezra",
+    "chapter": 3,
+    "verse": 10
+  },
+  {
+    "key": "ezra-07-artaxerxes-decree",
+    "title": "Artaxerxes Grants Freedom to the Jews",
+    "ref": "Ezra 7:13",
+    "osis": "Ezra",
+    "chapter": 7,
+    "verse": 13
+  },
+  {
+    "key": "ezra-09-ezra-in-prayer",
+    "title": "Ezra Kneels in Prayer",
+    "ref": "Ezra 9:5",
+    "osis": "Ezra",
+    "chapter": 9,
+    "verse": 5
+  },
+  {
+    "key": "neh-02-nehemiah-views-the-walls",
+    "title": "Nehemiah Views the Ruins of Jerusalem's Walls",
+    "ref": "Nehemiah 2:13",
+    "osis": "Neh",
+    "chapter": 2,
+    "verse": 13
+  },
+  {
+    "key": "neh-08-ezra-reads-the-law",
+    "title": "Ezra Reads the Law to the People",
+    "ref": "Nehemiah 8:3",
+    "osis": "Neh",
+    "chapter": 8,
+    "verse": 3
+  },
+  {
+    "key": "esth-01-queen-vashti-refuses",
+    "title": "Queen Vashti Refuses to Obey Ahasuerus' Command",
+    "ref": "Esther 1:12",
+    "osis": "Esth",
+    "chapter": 1,
+    "verse": 12
+  },
+  {
+    "key": "esth-05-esther-before-the-king",
+    "title": "Esther Before the King",
+    "ref": "Esther 5:2",
+    "osis": "Esth",
+    "chapter": 5,
+    "verse": 2
+  },
+  {
+    "key": "esth-06-triumph-of-mordecai",
+    "title": "The Triumph of Mordecai",
+    "ref": "Esther 6:11",
+    "osis": "Esth",
+    "chapter": 6,
+    "verse": 11
+  },
+  {
+    "key": "esth-07-esther-accuses-haman",
+    "title": "Esther Accuses Haman",
+    "ref": "Esther 7:6",
+    "osis": "Esth",
+    "chapter": 7,
+    "verse": 6
+  },
+  {
+    "key": "job-01-job-hears-of-his-losses",
+    "title": "Job Hears of His Misfortunes",
+    "ref": "Job 1:14",
+    "osis": "Job",
+    "chapter": 1,
+    "verse": 14
+  },
+  {
+    "key": "job-02-job-and-his-friends",
+    "title": "Job Speaks with His Friends",
+    "ref": "Job 2:13",
+    "osis": "Job",
+    "chapter": 2,
+    "verse": 13
+  },
+  {
+    "key": "isa-01-the-prophet-isaiah",
+    "title": "The Prophet Isaiah",
+    "ref": "Isaiah 1:1",
+    "osis": "Isa",
+    "chapter": 1,
+    "verse": 1
+  },
+  {
+    "key": "isa-13-destruction-of-babylon",
+    "title": "Isaiah's Vision of the Destruction of Babylon",
+    "ref": "Isaiah 13:19",
+    "osis": "Isa",
+    "chapter": 13,
+    "verse": 19
+  },
+  {
+    "key": "isa-27-destruction-of-leviathan",
+    "title": "The Destruction of Leviathan",
+    "ref": "Isaiah 27:1",
+    "osis": "Isa",
+    "chapter": 27,
+    "verse": 1
+  },
+  {
+    "key": "jer-01-the-prophet-jeremiah",
+    "title": "The Prophet Jeremiah",
+    "ref": "Jeremiah 1:1",
+    "osis": "Jer",
+    "chapter": 1,
+    "verse": 1
+  },
+  {
+    "key": "jer-36-baruch-writes-jeremiahs-words",
+    "title": "Baruch Writes Jeremiah's Prophecies",
+    "ref": "Jeremiah 36:4",
+    "osis": "Jer",
+    "chapter": 36,
+    "verse": 4
+  },
+  {
+    "key": "lam-01-mourning-over-jerusalem",
+    "title": "People Mourn over the Destruction of Jerusalem",
+    "ref": "Lamentations 1:1",
+    "osis": "Lam",
+    "chapter": 1,
+    "verse": 1
+  },
+  {
+    "key": "ezek-01-the-prophet-ezekiel",
+    "title": "The Prophet Ezekiel",
+    "ref": "Ezekiel 1:1",
+    "osis": "Ezek",
+    "chapter": 1,
+    "verse": 1
+  },
+  {
+    "key": "ezek-37-valley-of-dry-bones",
+    "title": "The Vision of the Valley of Dry Bones",
+    "ref": "Ezekiel 37:1",
+    "osis": "Ezek",
+    "chapter": 37,
+    "verse": 1
+  },
+  {
+    "key": "dan-01-daniel-among-the-exiles",
+    "title": "Daniel among the Exiles",
+    "ref": "Daniel 1:1",
+    "osis": "Dan",
+    "chapter": 1,
+    "verse": 1
+  },
+  {
+    "key": "dan-03-the-fiery-furnace",
+    "title": "Shadrach, Meshach and Abednego in the Furnace",
+    "ref": "Daniel 3:23",
+    "osis": "Dan",
+    "chapter": 3,
+    "verse": 23
+  },
+  {
+    "key": "dan-05-writing-on-the-wall",
+    "title": "Daniel Interprets the Writing on the Wall",
+    "ref": "Daniel 5:25",
+    "osis": "Dan",
+    "chapter": 5,
+    "verse": 25
+  },
+  {
+    "key": "dan-06-daniel-in-the-lions-den",
+    "title": "Daniel in the Lions' Den",
+    "ref": "Daniel 6:16",
+    "osis": "Dan",
+    "chapter": 6,
+    "verse": 16
+  },
+  {
+    "key": "dan-07-vision-of-four-beasts",
+    "title": "Daniel's Vision of the Four Beasts",
+    "ref": "Daniel 7:3",
+    "osis": "Dan",
+    "chapter": 7,
+    "verse": 3
+  },
+  {
+    "key": "amos-01-the-prophet-amos",
+    "title": "The Prophet Amos",
+    "ref": "Amos 1:1",
+    "osis": "Amos",
+    "chapter": 1,
+    "verse": 1
+  },
+  {
+    "key": "jonah-02-jonah-and-the-great-fish",
+    "title": "Jonah Is Spewed Forth by the Whale",
+    "ref": "Jonah 2:10",
+    "osis": "Jonah",
+    "chapter": 2,
+    "verse": 10
+  },
+  {
+    "key": "jonah-03-jonah-preaches-to-nineveh",
+    "title": "Jonah Preaches to the Ninevites",
+    "ref": "Jonah 3:4",
+    "osis": "Jonah",
+    "chapter": 3,
+    "verse": 4
+  },
+  {
+    "key": "mic-07-micah-exhorts-israel",
+    "title": "Micah Exhorts the Israelites to Repent",
+    "ref": "Micah 7:1",
+    "osis": "Mic",
+    "chapter": 7,
+    "verse": 1
+  },
+  {
+    "key": "zech-06-four-chariots",
+    "title": "Zechariah's Vision of Four Chariots",
+    "ref": "Zechariah 6:1",
+    "osis": "Zech",
+    "chapter": 6,
+    "verse": 1
+  },
+  {
+    "key": "matt-02-wise-men-guided-by-star",
+    "title": "The Wise Men Guided by the Star",
+    "ref": "Matthew 2:9",
+    "osis": "Matt",
+    "chapter": 2,
+    "verse": 9
+  },
+  {
+    "key": "matt-02-flight-into-egypt",
+    "title": "The Flight into Egypt",
+    "ref": "Matthew 2:14",
+    "osis": "Matt",
+    "chapter": 2,
+    "verse": 14
+  },
+  {
+    "key": "matt-03-john-the-baptist-preaching",
+    "title": "Saint John the Baptist Preaching in the Wilderness",
+    "ref": "Matthew 3:1",
+    "osis": "Matt",
+    "chapter": 3,
+    "verse": 1
+  },
+  {
+    "key": "matt-03-baptism-of-jesus",
+    "title": "The Baptism of Jesus",
+    "ref": "Matthew 3:16",
+    "osis": "Matt",
+    "chapter": 3,
+    "verse": 16
+  },
+  {
+    "key": "matt-04-temptation-of-jesus",
+    "title": "The Temptation of Jesus",
+    "ref": "Matthew 4:8",
+    "osis": "Matt",
+    "chapter": 4,
+    "verse": 8
+  },
+  {
+    "key": "matt-04-jesus-teaching-the-people",
+    "title": "Jesus Teaching the People",
+    "ref": "Matthew 4:23",
+    "osis": "Matt",
+    "chapter": 4,
+    "verse": 23
+  },
+  {
+    "key": "matt-04-jesus-healing-the-sick",
+    "title": "Jesus Healing the Sick",
+    "ref": "Matthew 4:24",
+    "osis": "Matt",
+    "chapter": 4,
+    "verse": 24
+  },
+  {
+    "key": "matt-05-sermon-on-the-mount",
+    "title": "The Sermon on the Mount",
+    "ref": "Matthew 5:1",
+    "osis": "Matt",
+    "chapter": 5,
+    "verse": 1
+  },
+  {
+    "key": "matt-09-jesus-heals-a-mute-man",
+    "title": "Jesus Heals a Mute Man",
+    "ref": "Matthew 9:32",
+    "osis": "Matt",
+    "chapter": 9,
+    "verse": 32
+  },
+  {
+    "key": "matt-12-plucking-grain-on-the-sabbath",
+    "title": "The Disciples Pluck Grain on the Sabbath",
+    "ref": "Matthew 12:1",
+    "osis": "Matt",
+    "chapter": 12,
+    "verse": 1
+  },
+  {
+    "key": "matt-14-jesus-walks-on-the-sea",
+    "title": "Jesus Walks on the Sea",
+    "ref": "Matthew 14:25",
+    "osis": "Matt",
+    "chapter": 14,
+    "verse": 25
+  },
+  {
+    "key": "matt-15-feeding-the-multitude",
+    "title": "The Feeding of the Multitude",
+    "ref": "Matthew 15:32",
+    "osis": "Matt",
+    "chapter": 15,
+    "verse": 32
+  },
+  {
+    "key": "matt-17-transfiguration",
+    "title": "The Transfiguration",
+    "ref": "Matthew 17:2",
+    "osis": "Matt",
+    "chapter": 17,
+    "verse": 2
+  },
+  {
+    "key": "matt-17-healing-the-lunatic",
+    "title": "Jesus Heals the Possessed Boy",
+    "ref": "Matthew 17:15",
+    "osis": "Matt",
+    "chapter": 17,
+    "verse": 15
+  },
+  {
+    "key": "matt-21-entry-into-jerusalem",
+    "title": "The Entry of Jesus into Jerusalem",
+    "ref": "Matthew 21:9",
+    "osis": "Matt",
+    "chapter": 21,
+    "verse": 9
+  },
+  {
+    "key": "matt-22-tribute-money",
+    "title": "The Tribute Money",
+    "ref": "Matthew 22:21",
+    "osis": "Matt",
+    "chapter": 22,
+    "verse": 21
+  },
+  {
+    "key": "matt-26-last-supper",
+    "title": "The Last Supper",
+    "ref": "Matthew 26:20",
+    "osis": "Matt",
+    "chapter": 26,
+    "verse": 20
+  },
+  {
+    "key": "matt-26-jesus-praying-in-the-garden",
+    "title": "Jesus Praying in the Garden",
+    "ref": "Matthew 26:39",
+    "osis": "Matt",
+    "chapter": 26,
+    "verse": 39
+  },
+  {
+    "key": "matt-26-judas-kiss",
+    "title": "The Judas Kiss",
+    "ref": "Matthew 26:49",
+    "osis": "Matt",
+    "chapter": 26,
+    "verse": 49
+  },
+  {
+    "key": "matt-26-peter-denies-jesus",
+    "title": "Peter Denies Jesus",
+    "ref": "Matthew 26:69",
+    "osis": "Matt",
+    "chapter": 26,
+    "verse": 69
+  },
+  {
+    "key": "matt-27-jesus-mocked",
+    "title": "Jesus Mocked",
+    "ref": "Matthew 27:30",
+    "osis": "Matt",
+    "chapter": 27,
+    "verse": 30
+  },
+  {
+    "key": "matt-27-death-of-jesus",
+    "title": "The Death of Jesus",
+    "ref": "Matthew 27:50",
+    "osis": "Matt",
+    "chapter": 27,
+    "verse": 50
+  },
+  {
+    "key": "mark-04-jesus-stills-the-storm",
+    "title": "Jesus Stills the Storm",
+    "ref": "Mark 4:39",
+    "osis": "Mark",
+    "chapter": 4,
+    "verse": 39
+  },
+  {
+    "key": "mark-10-jesus-blesses-the-children",
+    "title": "Jesus Blesses the Little Children",
+    "ref": "Mark 10:13",
+    "osis": "Mark",
+    "chapter": 10,
+    "verse": 13
+  },
+  {
+    "key": "mark-11-cleansing-the-temple",
+    "title": "Jesus Drives the Money Changers from the Temple",
+    "ref": "Mark 11:15",
+    "osis": "Mark",
+    "chapter": 11,
+    "verse": 15
+  },
+  {
+    "key": "mark-12-widows-mite",
+    "title": "The Widow's Mite",
+    "ref": "Mark 12:42",
+    "osis": "Mark",
+    "chapter": 12,
+    "verse": 42
+  },
+  {
+    "key": "mark-16-angel-at-the-tomb",
+    "title": "The Angel and the Holy Women at the Tomb",
+    "ref": "Mark 16:5",
+    "osis": "Mark",
+    "chapter": 16,
+    "verse": 5
+  },
+  {
+    "key": "mark-16-ascension",
+    "title": "The Ascension",
+    "ref": "Mark 16:19",
+    "osis": "Mark",
+    "chapter": 16,
+    "verse": 19
+  },
+  {
+    "key": "luke-01-annunciation",
+    "title": "The Annunciation",
+    "ref": "Luke 1:28",
+    "osis": "Luke",
+    "chapter": 1,
+    "verse": 28
+  },
+  {
+    "key": "luke-02-nativity",
+    "title": "The Nativity",
+    "ref": "Luke 2:16",
+    "osis": "Luke",
+    "chapter": 2,
+    "verse": 16
+  },
+  {
+    "key": "luke-02-jesus-among-the-teachers",
+    "title": "Jesus Among the Teachers in the Temple",
+    "ref": "Luke 2:46",
+    "osis": "Luke",
+    "chapter": 2,
+    "verse": 46
+  },
+  {
+    "key": "luke-04-jesus-in-the-synagogue",
+    "title": "Jesus Preaching in the Synagogue",
+    "ref": "Luke 4:16",
+    "osis": "Luke",
+    "chapter": 4,
+    "verse": 16
+  },
+  {
+    "key": "luke-05-jesus-preaching-from-the-boat",
+    "title": "Jesus Preaching at the Sea of Galilee",
+    "ref": "Luke 5:3",
+    "osis": "Luke",
+    "chapter": 5,
+    "verse": 3
+  },
+  {
+    "key": "luke-05-miraculous-catch-of-fish",
+    "title": "The Miraculous Catch of Fish",
+    "ref": "Luke 5:6",
+    "osis": "Luke",
+    "chapter": 5,
+    "verse": 6
+  },
+  {
+    "key": "luke-07-woman-forgiven",
+    "title": "The Repentant Woman (Mary Magdalene)",
+    "ref": "Luke 7:50",
+    "osis": "Luke",
+    "chapter": 7,
+    "verse": 50
+  },
+  {
+    "key": "luke-08-raising-jairus-daughter",
+    "title": "Jesus Raises the Daughter of Jairus",
+    "ref": "Luke 8:54",
+    "osis": "Luke",
+    "chapter": 8,
+    "verse": 54
+  },
+  {
+    "key": "luke-10-good-samaritan",
+    "title": "The Good Samaritan",
+    "ref": "Luke 10:33",
+    "osis": "Luke",
+    "chapter": 10,
+    "verse": 33
+  },
+  {
+    "key": "luke-10-samaritan-at-the-inn",
+    "title": "The Good Samaritan Arrives at the Inn",
+    "ref": "Luke 10:34",
+    "osis": "Luke",
+    "chapter": 10,
+    "verse": 34
+  },
+  {
+    "key": "luke-10-martha-and-mary",
+    "title": "Jesus in the House of Martha and Mary",
+    "ref": "Luke 10:38",
+    "osis": "Luke",
+    "chapter": 10,
+    "verse": 38
+  },
+  {
+    "key": "luke-15-prodigal-son-returns",
+    "title": "The Return of the Prodigal Son",
+    "ref": "Luke 15:20",
+    "osis": "Luke",
+    "chapter": 15,
+    "verse": 20
+  },
+  {
+    "key": "luke-15-prodigal-son-embraced",
+    "title": "The Prodigal Son in the Arms of His Father",
+    "ref": "Luke 15:20",
+    "osis": "Luke",
+    "chapter": 15,
+    "verse": 20
+  },
+  {
+    "key": "luke-16-lazarus-and-the-rich-man",
+    "title": "Lazarus and the Rich Man",
+    "ref": "Luke 16:20",
+    "osis": "Luke",
+    "chapter": 16,
+    "verse": 20
+  },
+  {
+    "key": "luke-18-pharisee-and-publican",
+    "title": "The Pharisee and the Publican",
+    "ref": "Luke 18:10",
+    "osis": "Luke",
+    "chapter": 18,
+    "verse": 10
+  },
+  {
+    "key": "luke-22-agony-in-the-garden",
+    "title": "The Agony in the Garden",
+    "ref": "Luke 22:41",
+    "osis": "Luke",
+    "chapter": 22,
+    "verse": 41
+  },
+  {
+    "key": "luke-23-jesus-falls-under-the-cross",
+    "title": "Jesus Falls under the Cross",
+    "ref": "Luke 23:26",
+    "osis": "Luke",
+    "chapter": 23,
+    "verse": 26
+  },
+  {
+    "key": "luke-23-darkness-at-the-crucifixion",
+    "title": "Darkness at the Crucifixion",
+    "ref": "Luke 23:45",
+    "osis": "Luke",
+    "chapter": 23,
+    "verse": 45
+  },
+  {
+    "key": "luke-24-road-to-emmaus",
+    "title": "The Road to Emmaus",
+    "ref": "Luke 24:13",
+    "osis": "Luke",
+    "chapter": 24,
+    "verse": 13
+  },
+  {
+    "key": "john-02-wedding-at-cana",
+    "title": "The Wedding at Cana",
+    "ref": "John 2:1",
+    "osis": "John",
+    "chapter": 2,
+    "verse": 1
+  },
+  {
+    "key": "john-04-woman-at-the-well",
+    "title": "Jesus and the Woman of Samaria",
+    "ref": "John 4:7",
+    "osis": "John",
+    "chapter": 4,
+    "verse": 7
+  },
+  {
+    "key": "john-08-woman-taken-in-adultery",
+    "title": "Jesus and the Woman Taken in Adultery",
+    "ref": "John 8:11",
+    "osis": "John",
+    "chapter": 8,
+    "verse": 11
+  },
+  {
+    "key": "john-11-raising-of-lazarus",
+    "title": "The Raising of Lazarus",
+    "ref": "John 11:43",
+    "osis": "John",
+    "chapter": 11,
+    "verse": 43
+  },
+  {
+    "key": "john-19-jesus-scourged",
+    "title": "Jesus Scourged",
+    "ref": "John 19:1",
+    "osis": "John",
+    "chapter": 19,
+    "verse": 1
+  },
+  {
+    "key": "john-19-crown-of-thorns",
+    "title": "The Crown of Thorns",
+    "ref": "John 19:2",
+    "osis": "John",
+    "chapter": 19,
+    "verse": 2
+  },
+  {
+    "key": "john-19-ecce-homo",
+    "title": "Pilate Presents Jesus to the People",
+    "ref": "John 19:14",
+    "osis": "John",
+    "chapter": 19,
+    "verse": 14
+  },
+  {
+    "key": "john-19-nailed-to-the-cross",
+    "title": "Jesus Is Nailed to the Cross",
+    "ref": "John 19:18",
+    "osis": "John",
+    "chapter": 19,
+    "verse": 18
+  },
+  {
+    "key": "john-19-raising-of-the-cross",
+    "title": "The Raising of the Cross",
+    "ref": "John 19:18",
+    "osis": "John",
+    "chapter": 19,
+    "verse": 18
+  },
+  {
+    "key": "john-19-descent-from-the-cross",
+    "title": "The Descent from the Cross",
+    "ref": "John 19:38",
+    "osis": "John",
+    "chapter": 19,
+    "verse": 38
+  },
+  {
+    "key": "john-19-body-of-jesus",
+    "title": "The Body of Jesus Taken Down",
+    "ref": "John 19:40",
+    "osis": "John",
+    "chapter": 19,
+    "verse": 40
+  },
+  {
+    "key": "john-19-burial-of-jesus",
+    "title": "The Burial of Jesus",
+    "ref": "John 19:41",
+    "osis": "John",
+    "chapter": 19,
+    "verse": 41
+  },
+  {
+    "key": "acts-02-pentecost",
+    "title": "The Descent of the Holy Spirit",
+    "ref": "Acts 2:2",
+    "osis": "Acts",
+    "chapter": 2,
+    "verse": 2
+  },
+  {
+    "key": "acts-02-apostles-preaching",
+    "title": "The Apostles Preach the Gospel",
+    "ref": "Acts 2:4",
+    "osis": "Acts",
+    "chapter": 2,
+    "verse": 4
+  },
+  {
+    "key": "acts-03-peter-and-john-heal-the-lame",
+    "title": "Peter and John Heal the Lame Man",
+    "ref": "Acts 3:6",
+    "osis": "Acts",
+    "chapter": 3,
+    "verse": 6
+  },
+  {
+    "key": "acts-07-death-of-stephen",
+    "title": "The Death of Stephen",
+    "ref": "Acts 7:57",
+    "osis": "Acts",
+    "chapter": 7,
+    "verse": 57
+  },
+  {
+    "key": "acts-09-road-to-damascus",
+    "title": "Saul on the Road to Damascus",
+    "ref": "Acts 9:3",
+    "osis": "Acts",
+    "chapter": 9,
+    "verse": 3
+  },
+  {
+    "key": "acts-10-peter-and-cornelius",
+    "title": "Peter in the House of Cornelius",
+    "ref": "Acts 10:24",
+    "osis": "Acts",
+    "chapter": 10,
+    "verse": 24
+  },
+  {
+    "key": "acts-12-peter-freed-from-prison",
+    "title": "Peter Freed from Prison",
+    "ref": "Acts 12:9",
+    "osis": "Acts",
+    "chapter": 12,
+    "verse": 9
+  },
+  {
+    "key": "acts-17-paul-at-thessalonica",
+    "title": "Paul Preaching to the Thessalonians",
+    "ref": "Acts 17:2",
+    "osis": "Acts",
+    "chapter": 17,
+    "verse": 2
+  },
+  {
+    "key": "acts-19-paul-at-ephesus",
+    "title": "Paul at Ephesus",
+    "ref": "Acts 19:19",
+    "osis": "Acts",
+    "chapter": 19,
+    "verse": 19
+  },
+  {
+    "key": "acts-21-paul-seized-in-jerusalem",
+    "title": "The Crowd Rises against Paul",
+    "ref": "Acts 21:27",
+    "osis": "Acts",
+    "chapter": 21,
+    "verse": 27
+  },
+  {
+    "key": "acts-27-paul-shipwrecked",
+    "title": "Paul Shipwrecked on Malta",
+    "ref": "Acts 27:39",
+    "osis": "Acts",
+    "chapter": 27,
+    "verse": 39
+  },
+  {
+    "key": "rev-01-john-on-patmos",
+    "title": "Saint John on Patmos",
+    "ref": "Revelation 1:9",
+    "osis": "Rev",
+    "chapter": 1,
+    "verse": 9
+  },
+  {
+    "key": "rev-06-death-on-the-pale-horse",
+    "title": "Death on the Pale Horse",
+    "ref": "Revelation 6:8",
+    "osis": "Rev",
+    "chapter": 6,
+    "verse": 8
+  },
+  {
+    "key": "rev-12-woman-clothed-with-the-sun",
+    "title": "The Crowned Virgin: A Vision of John",
+    "ref": "Revelation 12:1",
+    "osis": "Rev",
+    "chapter": 12,
+    "verse": 1
+  },
+  {
+    "key": "rev-18-babylon-fallen",
+    "title": "Babylon Fallen",
+    "ref": "Revelation 18:2",
+    "osis": "Rev",
+    "chapter": 18,
+    "verse": 2
+  },
+  {
+    "key": "rev-20-last-judgment",
+    "title": "The Last Judgment",
+    "ref": "Revelation 20:11",
+    "osis": "Rev",
+    "chapter": 20,
+    "verse": 11
+  },
+  {
+    "key": "rev-21-new-jerusalem",
+    "title": "The New Jerusalem",
+    "ref": "Revelation 21:10",
+    "osis": "Rev",
+    "chapter": 21,
+    "verse": 10
+  }
+]
