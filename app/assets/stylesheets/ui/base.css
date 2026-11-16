@@ -180,3 +180,17 @@ body {
 /* Two lines read better in a rounded card than a squashed pill. */
 .ps-toast.is-long { border-radius: 16px; }
 .ps-toast .check { color: inherit; opacity: 0.7; }
+
+/* Tablets: turning the device must never leave the page wider than the
+   screen. The side panels (AI find, search, cross-references, commentary,
+   word study, Rabbi, the service list) wait off the right edge, slid out
+   with a transform; Safari on iPad and some Android tablet browsers count
+   that in the page's width after a rotation and the page slides left.
+   Closed, each panel is clipped by its own full-screen host; and the page
+   itself clips anything wider (clip, not hidden: sticky bars keep working). */
+:is(.ps-ai-drawer, .ps-search-drawer, .ps-xref-host, .ps-rabbi-host):not(.is-open),
+.ps-root:not(.is-preaching) .ps-setlist-host:not(.is-open) { overflow: hidden; }
+html { overflow-x: hidden; } /* older Safari: html only, so the body never becomes a scroll box */
+@supports (overflow: clip) {
+  html, body { overflow-x: clip; }
+}
