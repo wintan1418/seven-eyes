@@ -187,6 +187,9 @@ application.register("verse-focus", VerseFocusController)
 import VerseLinesController from "./verse_lines_controller"
 application.register("verse-lines", VerseLinesController)
 
+import SceneController from "./scene_controller"
+application.register("scene", SceneController)
+
 import VerseSelectController from "./verse_select_controller"
 application.register("verse-select", VerseSelectController)
 

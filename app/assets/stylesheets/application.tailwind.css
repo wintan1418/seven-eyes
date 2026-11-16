@@ -30,6 +30,7 @@
 @import "./ui/sheet.css";
 @import "./ui/actions.css";
 @import "./ui/mobile.css";
+@import "./ui/scene.css"; /* scene pictures behind the reader (scene controller) */
 @import "./ui/reader_phone.css"; /* phone reader like a Bible app: verse lines, compact bar, pager */
 @import "./ui/search.css"; /* /search page, search sheet results, open-at-verse mark */
 @import "./ui/pages.css";

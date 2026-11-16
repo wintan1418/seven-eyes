@@ -85,6 +85,23 @@
         </ul>
       </section>
 
+      <section class="mb-6" id="scenes">
+        <h2 class="mb-2 font-display text-xs uppercase tracking-[0.22em] text-rubric">Scene pictures in the reader</h2>
+        <p class="mb-3 text-sm text-sepia">
+          The faint pictures behind the Bible text are Gustave Dor&eacute;&rsquo;s engravings for the Bible (1866),
+          public domain, served from our own site. Each is marked public domain on its Wikimedia Commons page.
+          Turn them off in Reading settings (Aa) &rarr; Scene pictures.
+        </p>
+        <ul class="space-y-1 text-sm">
+          <% ScriptureScenes.all.each do |scene| %>
+            <li>
+              <strong><%= scene.title %></strong> (<%= scene.ref %>) &mdash; Gustave Dor&eacute;, 1866.
+              <%= scene.licence %>. <a href="<%= scene.commons_url %>" rel="noopener">Wikimedia Commons</a>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+
       <section class="mb-2">
         <h2 class="mb-2 font-display text-xs uppercase tracking-[0.22em] text-rubric">Commentary</h2>
         <p class="text-sm">

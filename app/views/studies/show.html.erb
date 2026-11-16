@@ -7,7 +7,7 @@
 <% output_window = params[:output] == "1" || params[:stage] == "1" %>
 <% content_for :title, "Bible · BiblioRata" %>
 <div class="ps-root rd-app<%= ' is-output' if output_window %><%= ' is-compare' if @study.pane_count > 1 %>"
-     data-controller="ai-search search xref commentary lexicon rabbi <%= 'tour ' unless output_window || hotwire_native_app? %>shortcuts auth-gate new-study font-size presentation preview diff interlinear live setlist song-bank remote reader-header verse-lines<%= " console" unless output_window %>"
+     data-controller="ai-search search xref commentary lexicon rabbi <%= 'tour ' unless output_window || hotwire_native_app? %>shortcuts auth-gate new-study font-size presentation preview diff interlinear live setlist song-bank remote reader-header verse-lines scene<%= " console" unless output_window %>"
      data-live-url-value="<%= study_live_path(@study) %>"
      data-live-active-code-value="<%= LiveSession.current_for(@study)&.code unless output_window %>"
      data-remote-url-value="<%= study_remote_path(@study) %>"
