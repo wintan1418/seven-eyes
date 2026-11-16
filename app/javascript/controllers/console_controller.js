@@ -62,7 +62,8 @@ export default class extends Controller {
     this.element.querySelectorAll(".cx [data-cx-mount]").forEach((m) => this._mounts.observe(m, { childList: true }))
     this._listeners = {
       "preview:changed": (e) => this._previewChanged(e.detail),
-      "preach:state": () => this._syncGoLive()
+      "preach:state": () => this._syncGoLive(),
+      "console:find": () => this._find()
     }
     Object.entries(this._listeners).forEach(([ name, fn ]) => window.addEventListener(name, fn))
     this._tab = "scripture"
@@ -74,6 +75,7 @@ export default class extends Controller {
     this._mq?.removeEventListener?.("change", this._onMq)
     this._classes?.disconnect()
     this._resizeObs?.disconnect()
+    this._settleTimers?.forEach(clearTimeout)
     this._forms?.disconnect()
     this._mounts?.disconnect()
     this._words?.disconnect()
@@ -82,7 +84,7 @@ export default class extends Controller {
     this.element.removeEventListener("focusin", this._onFocusIn)
     document.removeEventListener("pointerdown", this._onPointer, true)
     Object.entries(this._listeners || {}).forEach(([ name, fn ]) => window.removeEventListener(name, fn))
-    this.element.classList.remove("is-console", "cx-adding")
+    this.element.classList.remove("is-console", "cx-adding", "cx-bar-tight")
   }
 
   // ---- console ⇄ focus ---------------------------------------------------------------
@@ -129,9 +131,8 @@ export default class extends Controller {
       // The queue is always on show in the console.
       window.dispatchEvent(new CustomEvent("setlist:open"))
       this._measure()
+      this._settle()
       this._syncGoLive()
-      // Quick Present opens preach on the Go box: the relayout drops its focus.
-      requestAnimationFrame(() => this.element.querySelector(".ps-preach-jump:not([hidden]) input")?.focus())
     }
     window.dispatchEvent(new CustomEvent(on ? "console:on" : "console:off"))
     // The live verse / slide refits to the room it has now.
@@ -139,6 +140,21 @@ export default class extends Controller {
   }
 
   // ---- geometry ------------------------------------------------------------------------
+
+  // The console can open while the page is still busy (fonts, a Bible
+  // downloading, a slow machine): measure again a few times as it settles, and
+  // watch the slots that are on the page now, so no piece is left where the
+  // browser first dropped it.
+  _settle() {
+    this._settleTimers?.forEach(clearTimeout)
+    this._settleTimers = [ 150, 500, 1200, 2500 ].map((ms) => setTimeout(() => this._measure(), ms))
+    document.fonts?.ready?.then(() => this._measure())
+    this._resizeObs?.disconnect()
+    this.element.querySelectorAll(".cx [data-cx-slot]").forEach((slot) => this._resizeObs?.observe(slot))
+    // The bar's left end grows when a live session's chips appear.
+    const left = this.element.querySelector(".ps-preach-bar-left")
+    if (left) this._resizeObs?.observe(left)
+  }
 
   _measure() {
     if (!this._on) return
@@ -148,12 +164,25 @@ export default class extends Controller {
       this.element.querySelectorAll(".cx [data-cx-slot]").forEach((slot) => {
         const name = slot.dataset.cxSlot
         const r = slot.getBoundingClientRect()
+        if (!r.width && !r.height && style.getPropertyValue(`--cx-${name}-w`)) return // hidden for now: keep its last place
         style.setProperty(`--cx-${name}-x`, `${Math.round(r.left)}px`)
         style.setProperty(`--cx-${name}-y`, `${Math.round(r.top)}px`)
         style.setProperty(`--cx-${name}-w`, `${Math.round(r.width)}px`)
         style.setProperty(`--cx-${name}-h`, `${Math.round(r.height)}px`)
       })
+      this._fitBar()
     })
+  }
+
+  // Names on the last toolbar buttons only while they fit before Exit.
+  _fitBar() {
+    const root = this.element
+    const exit = root.querySelector(".ps-exit-presentation")
+    const tools = [ ...root.querySelectorAll(".ps-preach-bar .ps-bar-group.is-help .ps-preach-tool") ]
+    if (!exit || !tools.length) return
+    const clear = () => Math.max(...tools.filter((b) => b.offsetParent).map((b) => b.getBoundingClientRect().right)) <= exit.getBoundingClientRect().left - 4
+    root.classList.remove("cx-bar-tight")
+    if (!clear()) root.classList.add("cx-bar-tight")
   }
 
   // ---- tabs ------------------------------------------------------------------------------
@@ -316,6 +345,15 @@ export default class extends Controller {
     this.closeAdd()
   }
 
+  // The library's reference box (G, /, and Present on arrival).
+  _find() {
+    if (!this._on) return
+    this._select("scripture")
+    const input = this.element.querySelector(".cx-find-input")
+    input?.focus()
+    input?.select()
+  }
+
   // ---- keys ---------------------------------------------------------------------------------
 
   _key(event) {
@@ -339,10 +377,7 @@ export default class extends Controller {
     if (this._on && (event.key === "g" || event.key === "G" || event.key === "/") && !this._modalOpen()) {
       event.preventDefault()
       event.stopPropagation()
-      this._select("scripture")
-      const input = this.element.querySelector(".cx-find-input")
-      input?.focus()
-      input?.select()
+      this._find()
     }
   }
 

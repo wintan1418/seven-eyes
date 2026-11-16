@@ -85,7 +85,8 @@ class OfflineStartPresentTest < ApplicationSystemTestCase
     visit root_path
     find(".hm-studies .il-heading-link", text: "New study").click
     assert_selector ".ps-root.is-preaching", wait: 5
-    assert_selector ".ps-preach-jump input:focus"
+    # Ready to type: the console's library box (Focus view and phones: the Go box).
+    assert_selector ".ps-root.is-console .cx-find-input:focus, .ps-preach-jump input:focus"
     assert_no_selector ".ui-offline-toast.is-on", text: /new studies need/i
     assert_equal "Quick Present", Study.find(current_path[%r{\d+}]).name
   end

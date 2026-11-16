@@ -146,8 +146,8 @@ export default class extends Controller {
     }
   }
 
-  // ?present=1 ("Present offline" / Quick Present): straight into preach mode
-  // with the Go box open. ?saved=1 means the page came from the device's saved
+  // ?present=1 ("Present offline" / Quick Present): straight into preach mode,
+  // ready to type a reference (the console's library box, else the Go box). ?saved=1 means the page came from the device's saved
   // copy: the projector and stage windows open from theirs too.
   _presentOnArrival() {
     const params = new URLSearchParams(window.location.search)
@@ -161,7 +161,12 @@ export default class extends Controller {
     requestAnimationFrame(() => {
       if (!this.element.isConnected || this.element.classList.contains("is-preaching")) return
       this.start({}) // no click: the default pane
-      this.openJump()
+      // The console (laptop) has its own reference box under Preview, so the
+      // Go box doesn't open over it; Focus view and phones get the Go box.
+      requestAnimationFrame(() => {
+        if (this.element.classList.contains("is-console")) window.dispatchEvent(new CustomEvent("console:find"))
+        else this.openJump()
+      })
     })
   }
 
