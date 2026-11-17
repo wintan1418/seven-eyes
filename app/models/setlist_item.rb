@@ -19,6 +19,9 @@
 #               (lib/root_words.js), title "Word study: agapáō — John 3:16"
 class SetlistItem < ApplicationRecord
   belongs_to :study
+  # A queue picture kept on our own server when the picture host (Cloudinary)
+  # is unavailable; media_url then points at this file.
+  has_one_attached :picture_file
 
   enum :kind, { scripture: 0, song: 1, thought: 2, picture: 3, scripture_set: 4, presentation: 5, seminar: 6, word: 7 }
 

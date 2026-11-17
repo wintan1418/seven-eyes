@@ -74,14 +74,44 @@ class SetlistItemsTest < ActionDispatch::IntegrationTest
     assert_equal %w[B], study.setlist_items.in_order.map(&:title)
   end
 
-  test "a picture upload without hosting configured shows the friendly error" do
+  test "a picture uploads to our own server when no picture host is configured" do
     study = owner_study
-    file = Rack::Test::UploadedFile.new(StringIO.new("fake"), "image/png", original_filename: "slide.png")
-    assert_no_difference -> { SetlistItem.count } do
+    file = Rack::Test::UploadedFile.new(StringIO.new("fake png"), "image/png", original_filename: "slide.png")
+    assert_difference -> { SetlistItem.count }, 1 do
       post study_setlist_items_path(study), params: { setlist_item: { kind: "picture", title: "Harvest", image: file } }
     end
     assert_response :success
-    assert_select ".ps-setlist-form .err", text: /hosting isn't configured/
+    item = study.setlist_items.picture.last
+    assert item.picture_file.attached?
+    assert_match %r{\A/rails/active_storage/blobs/}, item.media_url
+    assert_select ".ps-setlist-item img.thumb[src=?]", item.media_url
+  end
+
+  test "when the picture host refuses (account disabled) the picture is kept on our server" do
+    study = owner_study
+    file = Rack::Test::UploadedFile.new(StringIO.new("fake png"), "image/png", original_filename: "slide.png")
+    configured = PictureUpload.method(:configured?)
+    uploader = Cloudinary::Uploader.method(:upload)
+    PictureUpload.define_singleton_method(:configured?) { true }
+    Cloudinary::Uploader.define_singleton_method(:upload) { |*| raise CloudinaryException, "cloud_name is disabled" }
+    begin
+      post study_setlist_items_path(study), params: { setlist_item: { kind: "picture", title: "PRAYER", image: file } }
+    ensure
+      PictureUpload.define_singleton_method(:configured?, configured)
+      Cloudinary::Uploader.define_singleton_method(:upload, uploader)
+    end
+    item = study.setlist_items.picture.last
+    assert_equal "PRAYER", item.title
+    assert item.picture_file.attached?
+  end
+
+  test "a non-image file is still refused with a friendly message" do
+    study = owner_study
+    file = Rack::Test::UploadedFile.new(StringIO.new("hello"), "text/plain", original_filename: "notes.txt")
+    assert_no_difference -> { SetlistItem.count } do
+      post study_setlist_items_path(study), params: { setlist_item: { kind: "picture", title: "Notes", image: file } }
+    end
+    assert_select ".ps-setlist-form .err", text: /isn't a picture/
   end
 
   test "a stored picture renders with its thumbnail and slide data" do

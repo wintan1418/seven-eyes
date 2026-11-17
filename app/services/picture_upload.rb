@@ -10,7 +10,7 @@ class PictureUpload
   MAX_BYTES = 5.megabytes
   FOLDER = "bibliorata/queue".freeze
 
-  Result = Struct.new(:ok, :url, :public_id, :error, keyword_init: true) do
+  Result = Struct.new(:ok, :url, :public_id, :error, :blob, keyword_init: true) do
     def ok? = ok
   end
 
@@ -60,18 +60,38 @@ class PictureUpload
     return err(:missing) if @file.blank? || !@file.respond_to?(:tempfile)
     return err(:not_image) unless @file.content_type.to_s.start_with?("image/")
     return err(:too_large) if @file.size.to_i > MAX_BYTES
-    return err(:no_config) unless self.class.configured?
+    return store_locally unless self.class.configured?
 
-    res = upload
-    Result.new(ok: true, url: res["secure_url"], public_id: res["public_id"])
-  rescue => e
-    Rails.logger.error("[PictureUpload] #{e.class}: #{e.message}")
-    err(:api)
+    begin
+      res = upload
+      Result.new(ok: true, url: res["secure_url"], public_id: res["public_id"])
+    rescue => e
+      # The host refused (e.g. "cloud_name is disabled"): keep the picture on
+      # our own server so the service can still show it.
+      Rails.logger.error("[PictureUpload] #{e.class}: #{e.message} — storing locally")
+      store_locally
+    end
   end
 
   private
 
   def err(code) = Result.new(ok: false, error: code)
+
+  # Saved with Active Storage on this server. The blob is attached to the
+  # queue item by the controller (SetlistItem#picture_file).
+  def store_locally
+    @file.tempfile.rewind
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io: @file.tempfile,
+      filename: @file.original_filename.presence || "picture",
+      content_type: @file.content_type
+    )
+    url = Rails.application.routes.url_helpers.rails_blob_path(blob, only_path: true)
+    Result.new(ok: true, url: url, public_id: nil, blob: blob)
+  rescue => e
+    Rails.logger.error("[PictureUpload] local store failed: #{e.class}: #{e.message}")
+    err(:api)
+  end
 
   # Network seam — overridden in tests. The incoming transformation caps what
   # Cloudinary stores, so even a huge photo lands as a projector-sized asset.
