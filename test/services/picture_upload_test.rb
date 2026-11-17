@@ -35,9 +35,12 @@ class PictureUploadTest < ActiveSupport::TestCase
     assert_equal :too_large, FakeUpload.call(file_upload(size: PictureUpload::MAX_BYTES + 1)).error
   end
 
-  test "a missing file and missing config are reported" do
+  test "a missing file is reported; without a picture host the file is kept on our server" do
     assert_equal :missing, FakeUpload.call(nil).error
-    assert_equal :no_config, PictureUpload.call(file_upload).error # test env is never configured
+    result = PictureUpload.call(file_upload) # test env never has a picture host
+    assert result.ok?
+    assert result.blob.present?
+    assert_match %r{\A/rails/active_storage/blobs/}, result.url
   end
 
   test "every error code has a human message" do

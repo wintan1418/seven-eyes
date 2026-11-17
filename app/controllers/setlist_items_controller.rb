@@ -34,12 +34,16 @@ class SetlistItemsController < ApplicationController
       error ||= begin
         upload = PictureUpload.call(params.dig(:setlist_item, :image))
         attrs = attrs.merge(media_url: upload.url, media_public_id: upload.public_id) if upload.ok?
+        attrs = attrs.merge(picture_file: upload.blob) if upload.ok? && upload.blob
         PictureUpload.message_for(upload.error) unless upload.ok?
       end
       return render_error(attrs, error) if error
     end
     item = @study.setlist_items.create(attrs)
-    @errored = item unless item.persisted?
+    unless item.persisted?
+      @errored = item
+      attrs[:picture_file]&.purge_later # don't keep a file nobody can see
+    end
     render_setlist
   end
 
@@ -59,6 +63,7 @@ class SetlistItemsController < ApplicationController
     end
     if item.update(attrs) && was_picture && !item.picture?
       PictureUpload.purge(old_public_id) # the picture left the queue
+      item.picture_file.purge_later if item.picture_file.attached?
     end
     render_setlist
   end
