@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { listenOptions } from "./listen_options_controller"
 
 // The Audio Bible. Preferred path: cached server-narrated chapter audio played
 // through a real <audio> element — it keeps playing when the phone locks or the
@@ -7,6 +8,7 @@ import { Controller } from "@hotwired/stimulus"
 // current one plays). Fallback path (no key, quota, failure): the old on-device
 // speech synthesis, which reads the visible verses in the foreground only.
 let active = null // one narration at a time across panes
+let opener = null // the pane whose Listen button opened the Listen sheet
 
 // One <audio> element for the whole page, reused for every chapter. iOS only
 // lets an element that was started by a tap keep playing (and auto-advance)
@@ -44,10 +46,18 @@ export default class extends Controller {
     // one behind a reset button.
     this._onFrameRender = (e) => { if (e.target === this.element) this.stop() }
     this.element.addEventListener("turbo:frame-render", this._onFrameRender)
+    // Play from the Listen sheet starts the pane that opened it.
+    this._onListenPlay = () => { if (opener === this) { opener = null; this.start() } }
+    window.addEventListener("listen:play", this._onListenPlay)
+    // A new speed applies straight away to what's playing.
+    this._onListenOptions = (e) => { if (this._audio) this._audio.playbackRate = Number(e.detail.rate) || 1 }
+    window.addEventListener("listen:options", this._onListenOptions)
   }
 
   disconnect() {
     this.element.removeEventListener("turbo:frame-render", this._onFrameRender)
+    window.removeEventListener("listen:play", this._onListenPlay)
+    window.removeEventListener("listen:options", this._onListenOptions)
     this.stop()
   }
 
@@ -59,12 +69,19 @@ export default class extends Controller {
       this._armed = null
       return this.play(info)
     }
+    // Pick a voice, speed and mode first, where the Listen sheet exists.
+    if (document.querySelector('[data-sheet-id-value="listen"]')) {
+      opener = this
+      window.dispatchEvent(new CustomEvent("sheet:open", { detail: { id: "listen" } }))
+      return
+    }
     this.start()
   }
 
   async start() {
     active?.stop()
     active = this
+    window.dispatchEvent(new CustomEvent("reader:listening")) // auto-scroll steps aside
 
     const params = this.chapterParams()
     if (!params || chosenVoice() === "device") return this.speakFallback()
@@ -117,9 +134,14 @@ export default class extends Controller {
     audio.onended = () => { if (this._audio === audio) this.advance(info) }
     audio.onerror = () => { if (this._audio === audio && audio.getAttribute("src")) this.reset() }
     audio.onpause = () => { if (this._audio === audio && !audio.ended && this.state === "playing") this.setPaused(true) }
-    audio.onplay = () => { if (this._audio === audio && this.state === "paused") this.setPaused(false) }
+    audio.onplay = () => {
+      if (this._audio !== audio) return
+      audio.playbackRate = Number(listenOptions().rate) || 1
+      if (this.state === "paused") this.setPaused(false)
+    }
     audio.ontimeupdate = () => { if (this._audio === audio) this.followAudio(audio) }
     audio.src = info.url
+    audio.playbackRate = Number(listenOptions().rate) || 1
     this._audio = audio
     this.startFollowing(info)
 
@@ -139,7 +161,7 @@ export default class extends Controller {
   // Seamless-ish continuation: the next chapter was requested when this one
   // started, so by the time it ends the narration is usually cached and ready.
   async advance(info) {
-    if (!info.next || this.state !== "playing") return this.reset()
+    if (!info.next || this.state !== "playing" || !listenOptions().continue) return this.reset()
     this.setState("loading")
     try {
       const next = await this.fetchInfo(info.next)
@@ -207,8 +229,8 @@ export default class extends Controller {
     window.speechSynthesis.cancel()
     this.startFollowing(null)
     const utterance = new SpeechSynthesisUtterance(text)
+    utterance.rate = 0.92 * (Number(listenOptions().rate) || 1)
     utterance.onboundary = (e) => { if (active === this) this.followCharIndex(e.charIndex) }
-    utterance.rate = 0.92
     utterance.pitch = 1
     utterance.onend = this._onEnd
     utterance.onerror = this._onEnd
@@ -254,6 +276,7 @@ export default class extends Controller {
 
   startFollowing(info) {
     this.stopFollowing()
+    if (!listenOptions().follow) return
     // Only follow the chapter that's on screen (auto-advance moves on).
     if (info && this.hasButtonTarget && String(info.chapter) !== String(this.buttonTarget.dataset.chapter)) return
     const verses = this.followVerses()

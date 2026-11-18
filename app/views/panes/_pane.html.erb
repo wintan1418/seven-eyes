@@ -61,8 +61,8 @@
                   data-action="reader#toggle" data-reader-target="button"
                   data-osis="<%= content.book.osis_code %>" data-chapter="<%= content.parsed.chapter %>"
                   data-translation="<%= content.translation.code %>"><%= icon(:listen) %></button>
-          <button type="button" class="ps-pane-tool ui-iconbtn is-sm rd-autoscroll" title="Auto-scroll while you read"
-                  aria-pressed="false" data-action="autoscroll#cycle" data-autoscroll-target="button"><%= icon(:autoscroll) %><span class="rd-autoscroll-speed" data-autoscroll-target="speed"></span></button>
+          <button type="button" class="ps-pane-tool ui-iconbtn is-sm rd-autoscroll" title="Auto-scroll and highlight as you read"
+                  aria-pressed="false" data-action="autoscroll#toggle" data-autoscroll-target="button"><%= icon(:autoscroll) %></button>
           <button type="button" class="ps-pane-tool ui-iconbtn is-sm" title="Memorize mode"
                   data-action="memorize#toggle" data-memorize-target="button"><%= icon(:memorize) %></button>
           <button type="button" class="ps-pane-tool ui-iconbtn is-sm <%= "has-notes" if pane.notes.present? %>"
@@ -102,6 +102,12 @@
           <% end %>
         </div>
 
+        <div class="rd-pace-bar" data-autoscroll-target="bar" role="group" aria-label="Auto-scroll" hidden>
+          <button type="button" class="rd-pace-btn" data-action="autoscroll#slower" aria-label="Slower">&minus;</button>
+          <span class="rd-pace-name" aria-live="polite"><span class="rd-pace-kicker">Auto-scroll</span> <span data-autoscroll-target="pace">Normal</span></span>
+          <button type="button" class="rd-pace-btn" data-action="autoscroll#faster" aria-label="Faster">+</button>
+          <button type="button" class="rd-pace-stop" data-action="autoscroll#toggle">Stop</button>
+        </div>
         <footer class="rd-chapter-end" data-chrome>
           <div class="rd-chapter-actions">
             <%= link_to commentary_study_path(study, osis: content.book.osis_code, chapter: content.parsed.chapter),

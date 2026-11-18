@@ -1,0 +1,47 @@
+<%# Listen: opens from a chapter's Listen button. Pick a voice, a speed and how
+    to listen, then Play (reader controller reads these choices). %>
+<div class="ui-sheet ui-sheet--dialog ui-listen-sheet" data-controller="sheet listen-options" data-sheet-id-value="listen" data-chrome hidden>
+  <div class="ui-sheet-backdrop" data-action="click->sheet#close"></div>
+  <section class="ui-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="listen-sheet-title" tabindex="-1">
+    <header class="ui-sheet-head">
+      <h2 id="listen-sheet-title" class="ui-sheet-title">Listen</h2>
+      <button type="button" class="ui-iconbtn is-sm" data-action="sheet#close" aria-label="Close"><%= icon(:x) %></button>
+    </header>
+    <div class="ui-sheet-body ui-settings">
+      <%= render "studies/voice_setting" %>
+
+      <div class="ui-setting">
+        <div class="ui-label" id="listen-speed-label">Speed</div>
+        <div class="ui-seg ls-speed" role="radiogroup" aria-labelledby="listen-speed-label">
+          <% [ [ "0.75", "0.75×" ], [ "1", "1×" ], [ "1.25", "1.25×" ], [ "1.5", "1.5×" ] ].each do |rate, label| %>
+            <button type="button" class="ui-seg-btn" role="radio" aria-checked="false"
+                    data-listen-options-target="rate" data-rate="<%= rate %>"
+                    data-action="listen-options#pickRate"><%= label %></button>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="ui-setting ls-modes">
+        <div class="ui-label">Listening mode</div>
+        <label class="ls-mode">
+          <span class="ls-mode-text">
+            <span class="ls-mode-name">Highlight and follow along</span>
+            <span class="ls-mode-detail">The verse being read lights up and the page moves with it</span>
+          </span>
+          <input type="checkbox" class="ls-switch" role="switch" data-listen-options-target="follow" data-action="listen-options#save">
+        </label>
+        <label class="ls-mode">
+          <span class="ls-mode-text">
+            <span class="ls-mode-name">Keep going into the next chapter</span>
+            <span class="ls-mode-detail">Plays on, even with the screen off</span>
+          </span>
+          <input type="checkbox" class="ls-switch" role="switch" data-listen-options-target="continue" data-action="listen-options#save">
+        </label>
+      </div>
+
+      <button type="button" class="ui-btn is-primary ls-play" data-action="listen-options#play">
+        <%= icon(:listen) %> Play this chapter
+      </button>
+    </div>
+  </section>
+</div>
