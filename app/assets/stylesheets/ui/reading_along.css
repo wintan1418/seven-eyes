@@ -11,14 +11,59 @@
 
 .rd-autoscroll { position: relative; }
 .rd-autoscroll.is-on { color: var(--ui-accent); background: var(--ui-accent-soft); }
-.rd-autoscroll-speed {
-  margin-left: 4px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-.rd-autoscroll:not(.is-on) .rd-autoscroll-speed { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .ps-root .ps-verse.is-reading { transition: none; }
 }
+
+/* Auto-scroll's moving highlight (same soft gold as listening). */
+.ps-root:not(.is-presenting, .is-output) .ps-verse.is-pace {
+  background: color-mix(in srgb, var(--hl-ochre-dot) 16%, transparent);
+  box-decoration-break: clone; -webkit-box-decoration-break: clone;
+  border-radius: 6px;
+  transition: background-color 0.6s ease;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-verse.is-pace .ps-vnum { color: var(--ui-accent); }
+
+/* The little control bar while auto-scroll is on. */
+.rd-pace-bar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--tabbar-h, 0px) + 16px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  background: var(--ui-elevated);
+  border: 1px solid var(--ui-border);
+  box-shadow: var(--ui-shadow-md);
+}
+.rd-pace-bar[hidden] { display: none; }
+.rd-pace-btn, .rd-pace-stop {
+  height: 40px;
+  min-width: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ui-surface);
+  color: var(--ui-fg);
+  font: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.rd-pace-stop { padding: 0 16px; font-size: 15px; background: var(--ui-accent); color: var(--ui-accent-fg); }
+.rd-pace-name { padding: 0 6px; font-size: 15px; font-weight: 700; color: var(--ui-fg); white-space: nowrap; }
+.rd-pace-kicker { font-weight: 500; color: var(--ui-fg-muted); }
+
+/* Listen sheet */
+.ls-speed { display: flex; }
+.ls-modes { display: flex; flex-direction: column; gap: 10px; }
+.ls-mode { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.ls-mode-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.ls-mode-name { font-weight: 700; color: var(--ui-fg); }
+.ls-mode-detail { font-size: 13px; color: var(--ui-fg-muted); }
+.ls-switch { width: 22px; height: 22px; accent-color: var(--ui-accent); flex: none; }
+.ls-play { width: 100%; justify-content: center; min-height: 48px; font-size: 16px; margin-top: 6px; display: inline-flex; align-items: center; gap: 8px; }
