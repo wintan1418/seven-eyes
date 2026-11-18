@@ -37,7 +37,8 @@ class AudioChaptersController < ApplicationController
       elsif record.playable?
         ensure_timings(record)
         return render json: payload(book, chapter, translation, "ready", voice,
-                                    url: rails_storage_proxy_path(record.audio), timings: record.verse_timings)
+                                    url: rails_storage_proxy_path(record.audio), timings: record.verse_timings,
+                                    duration: record.audio.blob.metadata["duration"])
       elsif record.failed?
         next unless record.updated_at < RETRY_FAILED.ago
         record.update!(status: :pending, error: nil)
@@ -116,10 +117,12 @@ class AudioChaptersController < ApplicationController
     VerseTimingsJob.perform_later(record.id)
   end
 
-  def payload(book, chapter, translation, status, voice, url: nil, timings: nil)
+  # duration: the streamed audio doesn't tell the browser its length, and the
+  # follow-along estimate (before verse timings exist) needs it.
+  def payload(book, chapter, translation, status, voice, url: nil, timings: nil, duration: nil)
     nxt = next_chapter(book, chapter)
     {
-      ok: true, status:, url:, timings:,
+      ok: true, status:, url:, timings:, duration:,
       voice: voice.id, voice_name: voice.name,
       title: "#{book.name} #{chapter}",
       book: book.name, chapter:, translation: translation.code,

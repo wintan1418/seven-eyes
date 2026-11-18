@@ -358,7 +358,7 @@ export default class extends Controller {
       timed = verses.map((el) => Number(info.timings[el.dataset.verseNum]))
       for (let i = 0; i < timed.length; i++) if (!Number.isFinite(timed[i])) timed[i] = i ? timed[i - 1] : 0
     }
-    this._follow = { verses, starts, charStarts, total, lead, timed, index: -1, handAt: 0 }
+    this._follow = { verses, starts, charStarts, total, lead, timed, duration: Number(info?.duration) || 0, index: -1, handAt: 0 }
 
     this._onHandScroll ??= () => { if (this._follow) this._follow.handAt = Date.now() }
     for (const target of [ this.scrollBox(), window ]) {
@@ -387,8 +387,10 @@ export default class extends Controller {
       while (i > 0 && f.timed[i] > now) i--
       return this.markVerse(i)
     }
-    if (!audio.duration || !Number.isFinite(audio.duration)) return
-    const spoken = (audio.currentTime / audio.duration) * (f.lead + f.total) - f.lead
+    // The stream often doesn't report its length: use the one the server sent.
+    const duration = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : f.duration
+    if (!duration) return
+    const spoken = (audio.currentTime / duration) * (f.lead + f.total) - f.lead
     if (spoken < 0) return
     let i = f.starts.length - 1
     while (i > 0 && f.starts[i] > spoken) i--
