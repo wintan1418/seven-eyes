@@ -44,7 +44,17 @@ export default class extends Controller {
     // This controller sits on the pane's turbo-frame, which survives frame
     // navigations: a new chapter/translation must not keep narrating the old
     // one behind a reset button.
-    this._onFrameRender = (e) => { if (e.target === this.element) this.stop() }
+    this._onFrameRender = (e) => {
+      if (e.target !== this.element) return
+      // We turned the page with the audio (next chapter): keep playing and follow on.
+      if (this._turning && this.state !== "idle") {
+        this._turning = false
+        this.setState(this.state)
+        if (this._info) this.startFollowing(this._info)
+        return
+      }
+      this.stop()
+    }
     this.element.addEventListener("turbo:frame-render", this._onFrameRender)
     // Play from the Listen sheet starts the pane that opened it.
     this._onListenPlay = () => { if (opener === this) { opener = null; this.start() } }
@@ -84,6 +94,7 @@ export default class extends Controller {
     window.dispatchEvent(new CustomEvent("reader:listening")) // auto-scroll steps aside
 
     const params = this.chapterParams()
+    this._params = params
     if (!params || chosenVoice() === "device") return this.speakFallback()
 
     this.setState("loading")
@@ -143,7 +154,9 @@ export default class extends Controller {
     audio.src = info.url
     audio.playbackRate = Number(listenOptions().rate) || 1
     this._audio = audio
+    this._info = info
     this.startFollowing(info)
+    this.awaitTimings(info)
 
     try {
       await audio.play()
@@ -164,9 +177,14 @@ export default class extends Controller {
     if (!info.next || this.state !== "playing" || !listenOptions().continue) return this.reset()
     this.setState("loading")
     try {
+      this._params = info.next
       const next = await this.fetchInfo(info.next)
       if (this.state !== "loading") return
-      if (next.status === "ready") return this.play(next)
+      if (next.status === "ready") {
+        await this.play(next)
+        this.turnPage(next)
+        return
+      }
       if (next.status === "preparing") return this.pollUntilReady(info.next)
       this.reset()
     } catch {
@@ -258,6 +276,42 @@ export default class extends Controller {
       .map((el) => el.textContent.trim())
       .filter(Boolean)
       .join(" ")
+  }
+
+  // A chapter played for the first time has no verse timings yet (they are
+  // made in the background within about 15 s): ask again until they arrive,
+  // then switch from the estimate to the exact times mid-play.
+  awaitTimings(info) {
+    clearInterval(this._timingsPoll)
+    this._timingsPoll = null
+    if (info?.timings && Object.keys(info.timings).length) return
+    const params = this._params
+    if (!params || !listenOptions().follow) return
+    let tries = 0
+    this._timingsPoll = setInterval(async () => {
+      if (this._info !== info || this.state === "idle" || ++tries > 12) { clearInterval(this._timingsPoll); this._timingsPoll = null; return }
+      try {
+        const fresh = await this.fetchInfo(params)
+        if (fresh?.timings && Object.keys(fresh.timings).length && this._info === info) {
+          info.timings = fresh.timings
+          clearInterval(this._timingsPoll); this._timingsPoll = null
+          const at = this._follow?.index ?? -1
+          this.startFollowing(info)
+          if (this._follow) this._follow.index = -1 // re-light on the next time update
+          if (at >= 0 && this._audio) this.followAudio(this._audio)
+        }
+      } catch { /* try again next time */ }
+    }, 8000)
+  }
+
+  // "Keep going into the next chapter": turn this pane to the chapter now
+  // playing, so the words and the highlight move on with the voice.
+  turnPage(next) {
+    // Tap the same Next button a reader would (it goes the normal way, online or offline).
+    const button = this.element.querySelector("form.rd-pager-form.is-next button, form.rd-next-form button")
+    if (!button || !listenOptions().follow) return
+    this._turning = true
+    button.click()
   }
 
   // ---- Follow along: light the verse being read and keep it in view ----
@@ -391,6 +445,8 @@ export default class extends Controller {
 
   reset() {
     this.stopFollowing()
+    clearInterval(this._timingsPoll); this._timingsPoll = null
+    this._turning = false
     if (this._poll) { clearTimeout(this._poll); this._poll = null }
     this.releaseAudio()
     if (active === this) this.clearMediaSession()
