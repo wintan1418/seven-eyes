@@ -89,7 +89,9 @@ class AudioChaptersTest < ActionDispatch::IntegrationTest
                                   voice: OpenaiSpeech.voice, status: :ready, verse_timings: { "1" => 4.9, "2" => 12.3 })
     record.audio.attach(io: StringIO.new("mp3bytes"), filename: "a.mp3", content_type: "audio/mpeg")
     with_tts_key(true) do
-      assert_equal({ "1" => 4.9, "2" => 12.3 }, request_chapter["timings"])
+      body = request_chapter
+      assert_equal({ "1" => 4.9, "2" => 12.3 }, body["timings"])
+      assert body.key?("duration")
     end
 
     record.update_columns(verse_timings: nil, timings_attempted_at: nil)
