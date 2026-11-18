@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { hasSecondScreen, windowManagement, projectorScreen, featuresFor, moveTo } from "../lib/second_screen"
 import { warmLocal, localCheck, loadPaneLocally } from "../lib/offline/local_pane"
 import { quickFetch, isNetworkSlow } from "../lib/offline/network"
 import { allBookTexts } from "../lib/offline/store"
@@ -49,7 +50,7 @@ import { fitElement, screenCap } from "../lib/fit_text"
 // on the operator and in the projector/stage windows alike. The server is
 // only asked, briefly (lib/offline/network's circuit breaker), for what the
 // device can't answer; AI quick find falls back to an on-device keyword search.
-const FADE_MS = 160
+const FADE_MS = 110 // only a projector without view transitions dips
 const AUTOFIT_MAX_ITERS = 24
 const AUTOFIT_MIN_PX = 18
 const SCREEN_PREFS_KEY = "ps-screen-prefs"
@@ -103,6 +104,8 @@ export default class extends Controller {
       this._channel.onmessage = (e) => this._onMessage(e.data)
     }
     warmLocal() // the reference parser + download list, before anyone types
+    this._onEnsureOutput = () => this.ensureOutput()
+    if (!this._isOutput) window.addEventListener("projector:ensure", this._onEnsureOutput)
     // A new look (screen_look) changes fonts and margins: fit the words again.
     this._onRefit = () => requestAnimationFrame(() => {
       if (!this.element.classList.contains("is-preaching")) return
@@ -1896,16 +1899,51 @@ export default class extends Controller {
   // ----- dual-screen projection -----
 
   // Operator: open the output window — or focus it if it's already open.
-  openOutput(event) {
+  // Project: open the projector window straight onto the second screen, full
+  // screen (lib/second_screen). With window management allowed (Chrome/Edge
+  // ask once) it lands there by itself; the first time it is moved across as
+  // soon as the permission is given. One screen, or another browser: a normal
+  // window, as before.
+  async openOutput(event) {
     event?.preventDefault?.()
     if (!this.element.classList.contains("is-preaching")) return
     const url = this._screenUrl("output")
-    this._outputWindow = this._openNamedWindow(this._outputWindow, url, "ps-preach-output", "popup=yes,width=1280,height=720")
+    const name = "ps-preach-output"
+    const already = this._outputWindow && !this._outputWindow.closed
+    const access = hasSecondScreen() ? await windowManagement() : "unsupported"
+
+    if (access === "granted") {
+      const screen = await projectorScreen()
+      if (screen) {
+        if (already) { moveTo(this._outputWindow, screen); this._outputWindow.focus?.(); return }
+        this._outputWindow = this._openNamedWindow(null, url, name, featuresFor(screen))
+        if (this._outputWindow) moveTo(this._outputWindow, screen)
+        else alert("The browser blocked the projector window — allow pop-ups for this site, then click Project again.")
+        return
+      }
+    }
+
+    this._outputWindow = this._openNamedWindow(this._outputWindow, url, name, "popup=yes,width=1280,height=720")
     if (!this._outputWindow) {
       alert("The browser blocked the output window — allow pop-ups for this site, then click Project again.")
+      return
+    }
+    // First time with a second screen: ask once, then move it across.
+    if (access === "prompt") {
+      const win = this._outputWindow
+      const screen = await projectorScreen()
+      if (screen && win && !win.closed) moveTo(win, screen)
     }
     // The projector shows the staged scripture immediately. To start on a calm
     // hold instead, tap Blank — it's an option, not the default.
+  }
+
+  // Go live with no projector window yet: open it too, when a second screen is
+  // connected (a laptop on its own keeps working without a pop-up).
+  ensureOutput() {
+    if (this._outputWindow && !this._outputWindow.closed) return
+    if (!this.element.classList.contains("is-preaching") || this.element.classList.contains("is-output")) return
+    if (hasSecondScreen()) this.openOutput()
   }
 
   // Output window: browsers only allow fullscreen from a user gesture, so the
@@ -2249,6 +2287,7 @@ export default class extends Controller {
   // ----- lifecycle -----
 
   disconnect() {
+    window.removeEventListener("projector:ensure", this._onEnsureOutput)
     if (this._isOutput) this._send({ type: "bye", role: this._isStage ? "stage" : "output" })
     this._channel?.close()
     this._channel = null

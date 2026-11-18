@@ -1,21 +1,22 @@
 // How the projector moves from one slide to the next.
 //
-//   "xfade" — a true crossfade: the old words dissolve into the new over the
-//             same background (the View Transitions API snapshots the screen,
-//             so nothing has to be drawn twice). Projector window only — on
-//             the operator's console a view transition would swallow clicks.
-//   "dip"   — the older fade-out / fade-in of the words (operator, and any
-//             browser without view transitions).
-//   "cut"   — instant. The operator's "Cut" setting, and always when the
-//             computer asks for reduced motion.
+//   "xfade" — a quick crossfade on the projector (View Transitions API), so the
+//             words change the moment the operator taps and blend in briefly.
+//   "dip"   — a quick fade-out / fade-in of the words, only on a projector whose
+//             browser has no view transitions.
+//   "cut"   — instant. The operator's console and the stage display always
+//             cut (they are control screens: waiting on a fade there delayed
+//             the projector), and so does everything with the "Cut" setting or
+//             when the computer asks for reduced motion.
 //
 // The look controller (screen_look) writes the setting to the root as
 // data-slide-transition="fade|cut" in every window.
 export function transitionStyle(root) {
-  if (!root) return "dip"
+  if (!root) return "cut"
   if (root.dataset.slideTransition === "cut" || prefersReducedMotion()) return "cut"
-  if (root.classList.contains("is-output") && !root.classList.contains("is-stage") &&
-      typeof document !== "undefined" && typeof document.startViewTransition === "function") return "xfade"
+  const projector = root.classList.contains("is-output") && !root.classList.contains("is-stage")
+  if (!projector) return "cut"
+  if (typeof document !== "undefined" && typeof document.startViewTransition === "function") return "xfade"
   return "dip"
 }
 
