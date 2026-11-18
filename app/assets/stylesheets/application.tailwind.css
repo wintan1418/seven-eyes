@@ -36,6 +36,7 @@
 @import "./ui/search.css"; /* /search page, search sheet results, open-at-verse mark */
 @import "./ui/reading_along.css"; /* verse being read aloud, auto-scroll button */
 @import "./ui/pages.css";
+@import "./ui/give.css"; /* /give: support BiblioRata */
 @import "./ui/daily_word.css";
 @import "./ui/faith.css";
 @import "./ui/illuminated.css"; /* gold leaf, illuminated initials, chapter headings, time-of-day tint */

@@ -1,0 +1,16 @@
+<header class="ui-appbar pub-appbar">
+  <div class="ui-appbar-start">
+    <%= link_to root_path, class: "ui-brand" do %>
+      <span class="ui-brand-mark" aria-hidden="true"><%= icon(:book) %></span>
+      <span class="ui-brand-name">BiblioRata</span>
+    <% end %>
+  </div>
+  <div class="ui-appbar-center"></div>
+  <div class="ui-appbar-end"><%= render "shared/theme_toggle" %></div>
+</header>
+<% unless GivingController.public? %>
+  <div class="give-preview" role="status">
+    <%= icon(:lock) %>
+    <span><strong>Preview:</strong> only admins can see this page. Payments open when the Paystack keys are added.</span>
+  </div>
+<% end %>

@@ -23,6 +23,11 @@ class Rack::Attack
     email_param(req) if req.post? && req.path == "/session"
   end
 
+  # --- giving: each POST starts a Paystack checkout ------------------------
+  throttle("give/ip", limit: 10, period: 10.minutes) do |req|
+    req.ip if req.post? && req.path == "/give"
+  end
+
   # --- sign up --------------------------------------------------------------
   throttle("registrations/ip", limit: 10, period: 1.hour) do |req|
     req.ip if req.post? && req.path == "/registration"

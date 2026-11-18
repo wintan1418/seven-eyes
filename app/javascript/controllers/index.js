@@ -260,3 +260,7 @@ application.register("last-service", LastServiceController)
 
 import WordRevealController from "./word_reveal_controller"
 application.register("word-reveal", WordRevealController)
+
+import GiveController from "./give_controller"
+application.register("give", GiveController)
+

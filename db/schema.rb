@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_18_155554) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_18_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -133,6 +133,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_155554) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["date"], name: "index_daily_words_on_date", unique: true
+  end
+
+  create_table "donations", force: :cascade do |t|
+    t.integer "amount_minor", null: false
+    t.string "currency", default: "NGN", null: false
+    t.string "frequency", default: "one_time", null: false
+    t.string "email", null: false
+    t.string "name"
+    t.boolean "anonymous", default: false, null: false
+    t.text "message"
+    t.bigint "user_id"
+    t.string "status", default: "pending", null: false
+    t.string "reference", null: false
+    t.string "paystack_plan_code"
+    t.datetime "paid_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["reference"], name: "index_donations_on_reference", unique: true
+    t.index ["status", "paid_at"], name: "index_donations_on_status_and_paid_at"
+    t.index ["user_id"], name: "index_donations_on_user_id"
   end
 
   create_table "faith_terms", force: :cascade do |t|
@@ -588,6 +608,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_155554) do
   add_foreign_key "cross_references", "books", column: "from_book_id"
   add_foreign_key "cross_references", "books", column: "to_book_id"
   add_foreign_key "daily_completions", "users"
+  add_foreign_key "donations", "users", on_delete: :nullify
   add_foreign_key "highlights", "users"
   add_foreign_key "highlights", "verses"
   add_foreign_key "live_sessions", "studies"

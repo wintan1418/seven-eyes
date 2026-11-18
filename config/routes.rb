@@ -158,6 +158,11 @@ Rails.application.routes.draw do
   resource :account, only: %i[ show destroy ] do
     get :export, on: :member
   end
+  # Giving (Paystack). Admin-only until DONATIONS_PUBLIC=1; see GivingController.
+  get  "/give",         to: "giving#show",    as: :give
+  post "/give",         to: "giving#create"
+  get  "/give/thanks",  to: "giving#thanks",  as: :give_thanks
+  post "/give/webhook", to: "giving#webhook", as: :give_webhook
   get "/terms",   to: "legal#terms",   as: :terms
   get "/privacy", to: "legal#privacy", as: :privacy
   get "/delete-account", to: "legal#delete_account", as: :delete_account

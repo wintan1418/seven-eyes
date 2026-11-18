@@ -10,7 +10,10 @@
         <%= @studies_this_week %> new stud<%= @studies_this_week == 1 ? "y" : "ies" %> this week.
       </p>
     </div>
-    <%= link_to "&larr; Back to the scriptorium".html_safe, root_path, class: "back" %>
+    <div class="head-links">
+      <%= link_to "Giving page#{' (preview)' unless GivingController.public?}", give_path, class: "back" %>
+      <%= link_to "&larr; Back to the scriptorium".html_safe, root_path, class: "back" %>
+    </div>
   </header>
 
   <section class="tiles">
