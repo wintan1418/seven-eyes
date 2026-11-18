@@ -35,8 +35,9 @@ class AudioChaptersController < ApplicationController
         end
         return request_generation(translation, book, chapter, voice)
       elsif record.playable?
+        ensure_timings(record)
         return render json: payload(book, chapter, translation, "ready", voice,
-                                    url: rails_storage_proxy_path(record.audio))
+                                    url: rails_storage_proxy_path(record.audio), timings: record.verse_timings)
       elsif record.failed?
         next unless record.updated_at < RETRY_FAILED.ago
         record.update!(status: :pending, error: nil)
@@ -107,10 +108,18 @@ class AudioChaptersController < ApplicationController
     ChapterAudioJob.perform_later(record.id)
   end
 
-  def payload(book, chapter, translation, status, voice, url: nil)
+  # Audio made before verse timings existed gets them on first play (once a day at most).
+  def ensure_timings(record)
+    return if record.verse_timings.present? || !VerseTimings.configured?
+    return if record.timings_attempted_at && record.timings_attempted_at > 1.day.ago
+    record.update_columns(timings_attempted_at: Time.current)
+    VerseTimingsJob.perform_later(record.id)
+  end
+
+  def payload(book, chapter, translation, status, voice, url: nil, timings: nil)
     nxt = next_chapter(book, chapter)
     {
-      ok: true, status:, url:,
+      ok: true, status:, url:, timings:,
       voice: voice.id, voice_name: voice.name,
       title: "#{book.name} #{chapter}",
       book: book.name, chapter:, translation: translation.code,
