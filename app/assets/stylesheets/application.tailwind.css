@@ -34,6 +34,7 @@
 @import "./ui/word_reveal.css"; /* hold a word: its Hebrew or Greek under it (word_reveal controller) */
 @import "./ui/reader_phone.css"; /* phone reader like a Bible app: verse lines, compact bar, pager */
 @import "./ui/search.css"; /* /search page, search sheet results, open-at-verse mark */
+@import "./ui/reading_along.css"; /* verse being read aloud, auto-scroll button */
 @import "./ui/pages.css";
 @import "./ui/daily_word.css";
 @import "./ui/faith.css";

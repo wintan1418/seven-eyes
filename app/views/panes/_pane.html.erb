@@ -10,7 +10,7 @@
 <% label = passage_label(content) %>
 <% translation = content.translation || pane.effective_translation %>
 <%= turbo_frame_tag pane.frame_id, class: "ps-pane#{' is-primary' if pane.position.zero?}",
-      data: { controller: "pane reader memorize", pane_position: pane.position } do %>
+      data: { controller: "pane reader memorize autoscroll", pane_position: pane.position } do %>
   <%# What this pane shows, for the app bar chips and the pickers. Inside the
       frame (not on it) because a frame navigation only replaces its content. %>
   <%= tag.span class: "rd-pane-meta", hidden: true,
@@ -61,6 +61,8 @@
                   data-action="reader#toggle" data-reader-target="button"
                   data-osis="<%= content.book.osis_code %>" data-chapter="<%= content.parsed.chapter %>"
                   data-translation="<%= content.translation.code %>"><%= icon(:listen) %></button>
+          <button type="button" class="ps-pane-tool ui-iconbtn is-sm rd-autoscroll" title="Auto-scroll while you read"
+                  aria-pressed="false" data-action="autoscroll#cycle" data-autoscroll-target="button"><%= icon(:autoscroll) %><span class="rd-autoscroll-speed" data-autoscroll-target="speed"></span></button>
           <button type="button" class="ps-pane-tool ui-iconbtn is-sm" title="Memorize mode"
                   data-action="memorize#toggle" data-memorize-target="button"><%= icon(:memorize) %></button>
           <button type="button" class="ps-pane-tool ui-iconbtn is-sm <%= "has-notes" if pane.notes.present? %>"

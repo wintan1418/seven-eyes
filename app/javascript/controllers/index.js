@@ -16,6 +16,9 @@ application.register("auth-gate", AuthGateController)
 import AutoSubmitController from "./auto_submit_controller"
 application.register("auto-submit", AutoSubmitController)
 
+import AutoscrollController from "./autoscroll_controller"
+application.register("autoscroll", AutoscrollController)
+
 import ChapterSwipeController from "./chapter_swipe_controller"
 application.register("chapter-swipe", ChapterSwipeController)
 
@@ -37,11 +40,23 @@ application.register("console-preview", ConsolePreviewController)
 import ConsoleTourController from "./console_tour_controller"
 application.register("console-tour", ConsoleTourController)
 
+import DailyWordController from "./daily_word_controller"
+application.register("daily-word", DailyWordController)
+
 import DiffController from "./diff_controller"
 application.register("diff", DiffController)
 
+import FaithPaneController from "./faith_pane_controller"
+application.register("faith-pane", FaithPaneController)
+
+import FaithRewriterController from "./faith_rewriter_controller"
+application.register("faith-rewriter", FaithRewriterController)
+
 import FontSizeController from "./font_size_controller"
 application.register("font-size", FontSizeController)
+
+import GlossaryFilterController from "./glossary_filter_controller"
+application.register("glossary-filter", GlossaryFilterController)
 
 import GuideController from "./guide_controller"
 application.register("guide", GuideController)
@@ -51,6 +66,9 @@ application.register("highlighter", HighlighterController)
 
 import InterlinearController from "./interlinear_controller"
 application.register("interlinear", InterlinearController)
+
+import LastServiceController from "./last_service_controller"
+application.register("last-service", LastServiceController)
 
 import LexiconController from "./lexicon_controller"
 application.register("lexicon", LexiconController)
@@ -76,8 +94,17 @@ application.register("offline", OfflineController)
 import OfflineDownloadsController from "./offline_downloads_controller"
 application.register("offline-downloads", OfflineDownloadsController)
 
+import OfflineStudiesController from "./offline_studies_controller"
+application.register("offline-studies", OfflineStudiesController)
+
+import OrderOfServiceController from "./order_of_service_controller"
+application.register("order-of-service", OrderOfServiceController)
+
 import PaneController from "./pane_controller"
 application.register("pane", PaneController)
+
+import ParallaxController from "./parallax_controller"
+application.register("parallax", ParallaxController)
 
 import PassagePickerController from "./passage_picker_controller"
 application.register("passage-picker", PassagePickerController)
@@ -91,17 +118,26 @@ application.register("preach-offline", PreachOfflineController)
 import PresentationController from "./presentation_controller"
 application.register("presentation", PresentationController)
 
+import PresentationImportController from "./presentation_import_controller"
+application.register("presentation-import", PresentationImportController)
+
+import PreviewController from "./preview_controller"
+application.register("preview", PreviewController)
+
 import PrintController from "./print_controller"
 application.register("print", PrintController)
+
+import QuickPresentController from "./quick_present_controller"
+application.register("quick-present", QuickPresentController)
 
 import RabbiController from "./rabbi_controller"
 application.register("rabbi", RabbiController)
 
+import ReadMoreController from "./read_more_controller"
+application.register("read-more", ReadMoreController)
+
 import ReaderController from "./reader_controller"
 application.register("reader", ReaderController)
-
-import VoiceChoiceController from "./voice_choice_controller"
-application.register("voice-choice", VoiceChoiceController)
 
 import ReaderHeaderController from "./reader_header_controller"
 application.register("reader-header", ReaderHeaderController)
@@ -112,8 +148,14 @@ application.register("remote", RemoteController)
 import RemotePadController from "./remote_pad_controller"
 application.register("remote-pad", RemotePadController)
 
+import RevealController from "./reveal_controller"
+application.register("reveal", RevealController)
+
 import RootWordsController from "./root_words_controller"
 application.register("root-words", RootWordsController)
+
+import SceneController from "./scene_controller"
+application.register("scene", SceneController)
 
 import ScreenLiveController from "./screen_live_controller"
 application.register("screen-live", ScreenLiveController)
@@ -121,38 +163,32 @@ application.register("screen-live", ScreenLiveController)
 import ScreenLookController from "./screen_look_controller"
 application.register("screen-look", ScreenLookController)
 
-import SearchPageController from "./search_page_controller"
-application.register("search-page", SearchPageController)
+import ScriptureSetController from "./scripture_set_controller"
+application.register("scripture-set", ScriptureSetController)
 
 import SearchController from "./search_controller"
 application.register("search", SearchController)
 
+import SearchPageController from "./search_page_controller"
+application.register("search-page", SearchPageController)
+
+import SeminarBuilderController from "./seminar_builder_controller"
+application.register("seminar-builder", SeminarBuilderController)
+
+import ServiceTemplatesController from "./service_templates_controller"
+application.register("service-templates", ServiceTemplatesController)
+
 import SetlistController from "./setlist_controller"
 application.register("setlist", SetlistController)
-
-import SongBankController from "./song_bank_controller"
-application.register("song-bank", SongBankController)
-
-import SongEditorController from "./song_editor_controller"
-application.register("song-editor", SongEditorController)
-
-import PreviewController from "./preview_controller"
-application.register("preview", PreviewController)
 
 import ShareCardController from "./share_card_controller"
 application.register("share-card", ShareCardController)
 
-import DailyWordController from "./daily_word_controller"
-application.register("daily-word", DailyWordController)
-
-import GlossaryFilterController from "./glossary_filter_controller"
-application.register("glossary-filter", GlossaryFilterController)
-
-import FaithPaneController from "./faith_pane_controller"
-application.register("faith-pane", FaithPaneController)
-
 import ShareController from "./share_controller"
 application.register("share", ShareController)
+
+import ShatterSliderController from "./shatter_slider_controller"
+application.register("shatter-slider", ShatterSliderController)
 
 import SheetController from "./sheet_controller"
 application.register("sheet", SheetController)
@@ -163,6 +199,15 @@ application.register("sheets", SheetsController)
 import ShortcutsController from "./shortcuts_controller"
 application.register("shortcuts", ShortcutsController)
 
+import SongBankController from "./song_bank_controller"
+application.register("song-bank", SongBankController)
+
+import SongEditorController from "./song_editor_controller"
+application.register("song-editor", SongEditorController)
+
+import SundayCardController from "./sunday_card_controller"
+application.register("sunday-card", SundayCardController)
+
 import SundayReadyController from "./sunday_ready_controller"
 application.register("sunday-ready", SundayReadyController)
 
@@ -171,6 +216,15 @@ application.register("sync-scroll", SyncScrollController)
 
 import ThemeController from "./theme_controller"
 application.register("theme", ThemeController)
+
+import TodayFlowController from "./today_flow_controller"
+application.register("today-flow", TodayFlowController)
+
+import TodayHeroController from "./today_hero_controller"
+application.register("today-hero", TodayHeroController)
+
+import TodayResumeController from "./today_resume_controller"
+application.register("today-resume", TodayResumeController)
 
 import TourController from "./tour_controller"
 application.register("tour", TourController)
@@ -187,70 +241,17 @@ application.register("verse-focus", VerseFocusController)
 import VerseLinesController from "./verse_lines_controller"
 application.register("verse-lines", VerseLinesController)
 
-import SceneController from "./scene_controller"
-application.register("scene", SceneController)
-
 import VerseSelectController from "./verse_select_controller"
 application.register("verse-select", VerseSelectController)
+
+import VoiceChoiceController from "./voice_choice_controller"
+application.register("voice-choice", VoiceChoiceController)
 
 import WhatsNewController from "./whats_new_controller"
 application.register("whats-new", WhatsNewController)
 
-import XrefController from "./xref_controller"
-application.register("xref", XrefController)
-
-import QuickPresentController from "./quick_present_controller"
-application.register("quick-present", QuickPresentController)
-
-import OfflineStudiesController from "./offline_studies_controller"
-application.register("offline-studies", OfflineStudiesController)
-
-// Slide tools (phase 2B): scripture slides, presentations, seminar slides,
-// service templates, order of service — each owns its dialog (studies/_slide_tools).
-import ScriptureSetController from "./scripture_set_controller"
-application.register("scripture-set", ScriptureSetController)
-
-import PresentationImportController from "./presentation_import_controller"
-application.register("presentation-import", PresentationImportController)
-
-import SeminarBuilderController from "./seminar_builder_controller"
-application.register("seminar-builder", SeminarBuilderController)
-
-import ServiceTemplatesController from "./service_templates_controller"
-application.register("service-templates", ServiceTemplatesController)
-
-import OrderOfServiceController from "./order_of_service_controller"
-application.register("order-of-service", OrderOfServiceController)
-
-import RevealController from "./reveal_controller"
-application.register("reveal", RevealController)
-
-import FaithRewriterController from "./faith_rewriter_controller"
-application.register("faith-rewriter", FaithRewriterController)
-
-import ShatterSliderController from "./shatter_slider_controller"
-application.register("shatter-slider", ShatterSliderController)
-
-import TodayHeroController from "./today_hero_controller"
-application.register("today-hero", TodayHeroController)
-
-import TodayResumeController from "./today_resume_controller"
-application.register("today-resume", TodayResumeController)
-
-import TodayFlowController from "./today_flow_controller"
-application.register("today-flow", TodayFlowController)
-
-import ParallaxController from "./parallax_controller"
-application.register("parallax", ParallaxController)
-
-import SundayCardController from "./sunday_card_controller"
-application.register("sunday-card", SundayCardController)
-
-import ReadMoreController from "./read_more_controller"
-application.register("read-more", ReadMoreController)
-
-import LastServiceController from "./last_service_controller"
-application.register("last-service", LastServiceController)
-
 import WordRevealController from "./word_reveal_controller"
 application.register("word-reveal", WordRevealController)
+
+import XrefController from "./xref_controller"
+application.register("xref", XrefController)

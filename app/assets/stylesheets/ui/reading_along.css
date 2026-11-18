@@ -1,0 +1,24 @@
+/* Reading along: the verse the Audio Bible is reading gets a soft gold wash
+   and the page keeps it in view (reader controller). Auto-scroll button
+   for silent reading (autoscroll controller). */
+.ps-root:not(.is-presenting, .is-output) .ps-verse.is-reading {
+  background: color-mix(in srgb, var(--hl-ochre-dot) 16%, transparent);
+  box-decoration-break: clone; -webkit-box-decoration-break: clone;
+  border-radius: 6px;
+  transition: background-color 0.45s ease;
+}
+.ps-root:not(.is-presenting, .is-output) .ps-verse.is-reading .ps-vnum { color: var(--ui-accent); }
+
+.rd-autoscroll { position: relative; }
+.rd-autoscroll.is-on { color: var(--ui-accent); background: var(--ui-accent-soft); }
+.rd-autoscroll-speed {
+  margin-left: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.rd-autoscroll:not(.is-on) .rd-autoscroll-speed { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-root .ps-verse.is-reading { transition: none; }
+}
