@@ -1,0 +1,112 @@
+<% content_for :title, "Give · BiblioRata" %>
+<% open = Paystack.configured? %>
+<% d = @donation %>
+<% custom = d.amount_minor && !Donation::CURRENCIES[d.currency][:presets].include?(d.amount_major) ? d.amount_major : nil %>
+<div class="pub-page give-page">
+  <%= render "giving/appbar" %>
+
+  <main class="give-main">
+    <header class="give-hero">
+      <p class="give-eyebrow"><%= icon(:heart) %> Support BiblioRata</p>
+      <h1>Help keep the Word open for every pulpit</h1>
+      <p class="give-lede">BiblioRata is free for pastors, churches and every reader. Your gift keeps it that way,
+        and helps us build the tools that make preparing and preaching easier.</p>
+    </header>
+
+    <div class="give-layout">
+      <%= form_with model: d, url: give_path, method: :post, scope: :donation, class: "give-card",
+            data: { turbo: false, controller: "give", action: "input->give#refresh change->give#refresh" } do |f| %>
+        <% if flash[:notice] %><p class="give-flash" role="status"><%= icon(:check) %> <%= flash[:notice] %></p><% end %>
+        <% if flash[:alert] %><p class="give-flash is-error" role="alert"><%= flash[:alert] %></p><% end %>
+        <% if d.errors.any? %>
+          <div class="give-flash is-error" role="alert">
+            <% d.errors.full_messages.each do |m| %><p><%= m %></p><% end %>
+          </div>
+        <% end %>
+
+        <div class="give-row">
+          <fieldset class="give-toggle">
+            <legend class="ui-sr-only">How often</legend>
+            <label><%= f.radio_button :frequency, "one_time", checked: !d.monthly? %><span>Give once</span></label>
+            <label><%= f.radio_button :frequency, "monthly", checked: d.monthly? %><span><%= icon(:repeat) %> Monthly</span></label>
+          </fieldset>
+          <fieldset class="give-toggle is-currency">
+            <legend class="ui-sr-only">Currency</legend>
+            <% Donation::CURRENCIES.each_key do |cur| %>
+              <label><%= f.radio_button :currency, cur, checked: d.currency == cur %><span><%= cur %></span></label>
+            <% end %>
+          </fieldset>
+        </div>
+
+        <fieldset class="give-amounts-set">
+          <legend class="ui-label">Choose an amount</legend>
+          <% Donation::CURRENCIES.each do |cur, cfg| %>
+            <div class="give-amounts" data-currency="<%= cur %>">
+              <% cfg[:presets].each do |amt| %>
+                <label class="give-amount">
+                  <%= radio_button_tag "donation[amount_#{cur.downcase}]", amt, d.currency == cur ? (custom.nil? && d.amount_major == amt) : amt == cfg[:presets][1],
+                        data: { give_target: "preset" } %>
+                  <span><%= Donation.format_amount(amt, cur) %></span>
+                </label>
+              <% end %>
+            </div>
+          <% end %>
+          <label class="give-custom">
+            <span class="give-custom-symbol" data-give-target="symbol"><%= Donation.symbol_for(d.currency) %></span>
+            <%= text_field_tag "donation[amount_custom]", (custom && (custom % 1 == 0 ? custom.to_i : custom.to_f)), class: "ui-input", inputmode: "decimal", autocomplete: "off",
+                  placeholder: "Other amount", "aria-label": "Other amount", data: { give_target: "custom" } %>
+          </label>
+          <p class="give-hint" data-give-target="minimum">
+            Smallest gift: <span data-currency="NGN"><%= Donation.format_amount(500, "NGN") %></span><span data-currency="USD"><%= Donation.format_amount(2, "USD") %></span>
+          </p>
+        </fieldset>
+
+        <div class="give-fields">
+          <label class="give-field">
+            <span class="ui-label">Your name</span>
+            <%= f.text_field :name, class: "ui-input", autocomplete: "name", placeholder: "Optional" %>
+          </label>
+          <label class="give-field">
+            <span class="ui-label">Email for your receipt</span>
+            <%= f.email_field :email, class: "ui-input", autocomplete: "email", required: true, placeholder: "you@example.com" %>
+          </label>
+          <label class="give-check">
+            <%= f.check_box :anonymous %>
+            <span>Give anonymously <small>We won't show or share your name.</small></span>
+          </label>
+          <label class="give-field">
+            <span class="ui-label">A note to the team <small>(optional)</small></span>
+            <%= f.text_area :message, class: "ui-input give-textarea", rows: 3, maxlength: 500, placeholder: "A prayer, an encouragement, or what you'd love us to build" %>
+          </label>
+        </div>
+
+        <% if open %>
+          <button type="submit" class="ui-btn is-accent is-block give-submit">
+            <%= icon(:heart) %><span data-give-target="summary">Give</span>
+          </button>
+        <% else %>
+          <button type="submit" class="ui-btn is-accent is-block give-submit" disabled aria-disabled="true">
+            <%= icon(:heart) %><span>Giving opens soon</span>
+          </button>
+        <% end %>
+        <p class="give-secure"><%= icon(:lock) %> Payments are processed securely by Paystack. We never see or store your card details.</p>
+      <% end %>
+
+      <aside class="give-why">
+        <h2>Where your gift goes</h2>
+        <ul class="give-uses">
+          <li><span class="give-use-icon"><%= icon(:listen) %></span>
+            <div><strong>The audio Bible</strong><p>Narration, verse-by-verse follow-along and new voices, so anyone can hear the Word.</p></div></li>
+          <li><span class="give-use-icon"><%= icon(:sparkles) %></span>
+            <div><strong>Study help</strong><p>The AI study tools, word studies and commentary pastors use every week to prepare.</p></div></li>
+          <li><span class="give-use-icon"><%= icon(:presentation) %></span>
+            <div><strong>Projection for churches</strong><p>Fast Scripture and song slides on the big screen, free for every congregation.</p></div></li>
+          <li><span class="give-use-icon"><%= icon(:server) %></span>
+            <div><strong>Servers and offline Bibles</strong><p>Keeping BiblioRata fast and online, and Bibles ready to read without data.</p></div></li>
+        </ul>
+        <p class="give-why-note">BiblioRata has no ads and never sells your data. It is carried by people who believe
+          every pastor should have good tools for the Word, whatever their church can afford.</p>
+      </aside>
+    </div>
+  </main>
+</div>

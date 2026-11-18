@@ -1,0 +1,28 @@
+<% content_for :title, "Thank you · BiblioRata" %>
+<div class="pub-page give-page">
+  <%= render "giving/appbar" %>
+  <main class="give-main">
+    <section class="give-thanks">
+      <% if @donation&.paid? %>
+        <span class="give-thanks-icon"><%= icon(:heart) %></span>
+        <h1>Thank you<%= ", #{@donation.name.split.first}" if @donation.name.present? && !@donation.anonymous? %></h1>
+        <p>Your <%= @donation.monthly? ? "monthly gift" : "gift" %> of <strong><%= @donation.display_amount %></strong> was received.
+          A receipt is on its way to <%= @donation.email %>.</p>
+        <p class="give-verse">&ldquo;God loves a cheerful giver.&rdquo; <span>2 Corinthians 9:7</span></p>
+      <% elsif @donation&.failed? %>
+        <h1>That payment didn't go through</h1>
+        <p>No money was taken. You can try again whenever you're ready.</p>
+      <% elsif @donation %>
+        <h1>We're confirming your gift</h1>
+        <p>This can take a minute. You'll get an email receipt from Paystack as soon as it's done.</p>
+      <% else %>
+        <h1>We couldn't find that gift</h1>
+        <p>If you were charged, your Paystack receipt has the details. Please get in touch and we'll sort it out.</p>
+      <% end %>
+      <div class="give-thanks-actions">
+        <%= link_to "Back to BiblioRata", root_path, class: "ui-btn is-accent" %>
+        <% unless @donation&.paid? %><%= link_to "Give page", give_path, class: "ui-btn" %><% end %>
+      </div>
+    </section>
+  </main>
+</div>
