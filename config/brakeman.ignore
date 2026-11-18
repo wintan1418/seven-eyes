@@ -1,0 +1,11 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Redirect",
+      "fingerprint": "0ade52472ea624e67c437fce0c1cc5477f76000ad7d12f23f0dce01e0f95cd13",
+      "file": "app/controllers/giving_controller.rb",
+      "note": "The URL is Paystack's authorization_url from its API; Donation#checkout_url only returns https URLs on *.paystack.com."
+    }
+  ],
+  "brakeman_version": "7"
+}
