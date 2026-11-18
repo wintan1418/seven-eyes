@@ -118,8 +118,10 @@ export default class extends Controller {
     audio.onerror = () => { if (this._audio === audio && audio.getAttribute("src")) this.reset() }
     audio.onpause = () => { if (this._audio === audio && !audio.ended && this.state === "playing") this.setPaused(true) }
     audio.onplay = () => { if (this._audio === audio && this.state === "paused") this.setPaused(false) }
+    audio.ontimeupdate = () => { if (this._audio === audio) this.followAudio(audio) }
     audio.src = info.url
     this._audio = audio
+    this.startFollowing(info)
 
     try {
       await audio.play()
@@ -203,7 +205,9 @@ export default class extends Controller {
     }
 
     window.speechSynthesis.cancel()
+    this.startFollowing(null)
     const utterance = new SpeechSynthesisUtterance(text)
+    utterance.onboundary = (e) => { if (active === this) this.followCharIndex(e.charIndex) }
     utterance.rate = 0.92
     utterance.pitch = 1
     utterance.onend = this._onEnd
@@ -234,6 +238,110 @@ export default class extends Controller {
       .join(" ")
   }
 
+  // ---- Follow along: light the verse being read and keep it in view ----
+  //
+  // Narrations are one mp3 per chapter with no word timings, so the current
+  // verse is estimated from how far through the audio we are, weighted by each
+  // verse's length (plus a short pause per verse, and the spoken heading).
+  // The phone's own voice reports exact positions (boundary events).
+  // If the reader scrolls by hand, following pauses for a few seconds.
+
+  followVerses() {
+    const chapter = this.hasButtonTarget ? this.buttonTarget.dataset.chapter : null
+    return Array.from(this.element.querySelectorAll(".ps-verse"))
+      .filter((el) => el.querySelector(".ps-verse-text") && (!chapter || !el.dataset.chapter || el.dataset.chapter === String(chapter)))
+  }
+
+  startFollowing(info) {
+    this.stopFollowing()
+    // Only follow the chapter that's on screen (auto-advance moves on).
+    if (info && this.hasButtonTarget && String(info.chapter) !== String(this.buttonTarget.dataset.chapter)) return
+    const verses = this.followVerses()
+    if (!verses.length) return
+    const PAUSE = 12 // chars' worth of silence between verses
+    let total = 0
+    const starts = verses.map((el) => {
+      const at = total
+      total += el.querySelector(".ps-verse-text").textContent.trim().length + PAUSE
+      return at
+    })
+    // The narrator says a heading first ("John, chapter 3. King James Version.").
+    const lead = info ? (info.voice === "human" ? `${info.book} chapter ${info.chapter}` : `${info.book}, chapter ${info.chapter}. ${info.translation_name || ""}.`).length + PAUSE : 0
+    // Device speech joins verse texts with one space: char offsets per verse.
+    let offset = 0
+    const charStarts = verses.map((el) => {
+      const at = offset
+      offset += el.querySelector(".ps-verse-text").textContent.trim().length + 1
+      return at
+    })
+    this._follow = { verses, starts, charStarts, total, lead, index: -1, handAt: 0 }
+
+    this._onHandScroll ??= () => { if (this._follow) this._follow.handAt = Date.now() }
+    for (const target of [ this.scrollBox(), window ]) {
+      target.addEventListener("wheel", this._onHandScroll, { passive: true })
+      target.addEventListener("touchmove", this._onHandScroll, { passive: true })
+    }
+  }
+
+  stopFollowing() {
+    if (!this._follow) return
+    this._follow.verses.forEach((el) => el.classList.remove("is-reading"))
+    for (const target of [ this.scrollBox(), window ]) {
+      target.removeEventListener("wheel", this._onHandScroll)
+      target.removeEventListener("touchmove", this._onHandScroll)
+    }
+    this._follow = null
+  }
+
+  followAudio(audio) {
+    const f = this._follow
+    if (!f || !audio.duration || !Number.isFinite(audio.duration)) return
+    const spoken = (audio.currentTime / audio.duration) * (f.lead + f.total) - f.lead
+    if (spoken < 0) return
+    let i = f.starts.length - 1
+    while (i > 0 && f.starts[i] > spoken) i--
+    this.markVerse(i)
+  }
+
+  followCharIndex(charIndex) {
+    const f = this._follow
+    if (!f) return
+    let i = f.charStarts.length - 1
+    while (i > 0 && f.charStarts[i] > charIndex) i--
+    this.markVerse(i)
+  }
+
+  markVerse(i) {
+    const f = this._follow
+    if (!f || i === f.index) return
+    f.verses[f.index]?.classList.remove("is-reading")
+    f.index = i
+    const el = f.verses[i]
+    el.classList.add("is-reading")
+    if (Date.now() - f.handAt > 6000) this.bringIntoView(el)
+  }
+
+  // The verse sits about a third of the way down, so what's next is visible.
+  bringIntoView(el) {
+    const box = this.scrollBox()
+    const rect = el.getBoundingClientRect()
+    if (box === window) {
+      const top = window.scrollY + rect.top - window.innerHeight * 0.33
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" })
+    } else {
+      const boxRect = box.getBoundingClientRect()
+      const top = box.scrollTop + (rect.top - boxRect.top) - box.clientHeight * 0.33
+      box.scrollTo({ top: Math.max(0, top), behavior: "smooth" })
+    }
+  }
+
+  // The pane's verses scroll inside .ps-verses on wide screens; on phones the page scrolls.
+  scrollBox() {
+    const box = this.element.querySelector(".ps-verses")
+    if (box && box.scrollHeight > box.clientHeight + 4 && getComputedStyle(box).overflowY !== "visible") return box
+    return window
+  }
+
   // ---- Teardown ----
 
   stop() {
@@ -244,6 +352,7 @@ export default class extends Controller {
   }
 
   reset() {
+    this.stopFollowing()
     if (this._poll) { clearTimeout(this._poll); this._poll = null }
     this.releaseAudio()
     if (active === this) this.clearMediaSession()
@@ -264,7 +373,7 @@ export default class extends Controller {
     if (!this._audio) return
     const audio = this._audio
     this._audio = null
-    audio.onended = audio.onerror = audio.onpause = audio.onplay = null
+    audio.onended = audio.onerror = audio.onpause = audio.onplay = audio.ontimeupdate = null
     audio.pause()
     audio.removeAttribute("src")
     audio.load()
