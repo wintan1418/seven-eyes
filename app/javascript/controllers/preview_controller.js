@@ -216,6 +216,7 @@ export default class extends Controller {
     if (!this._preview || !this.element.classList.contains("is-preaching")) return
     const { parsed, ...detail } = this._preview
     this._goneLiveAt = performance.now()
+    window.dispatchEvent(new CustomEvent("projector:ensure")) // opens it on the second screen if needed
     window.dispatchEvent(new CustomEvent("setlist:present", { detail }))
     this.previewCardTarget.dataset.state = "live"
   }

@@ -671,11 +671,11 @@
 @keyframes lookFadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes alertIn { from { opacity: 0; transform: translateY(40%); } to { opacity: 1; transform: none; } }
 
-/* The projector crossfades slides (lib/slide_transition: View Transitions). */
+/* The projector crossfades slides quickly (lib/slide_transition: View Transitions). */
 :root:has(.ps-root.is-output)::view-transition-old(root),
 :root:has(.ps-root.is-output)::view-transition-new(root) {
-  animation-duration: 0.45s;
-  animation-timing-function: ease-in-out;
+  animation-duration: 0.15s; /* quick, like a live production switcher */
+  animation-timing-function: ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
