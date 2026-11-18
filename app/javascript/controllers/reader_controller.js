@@ -262,9 +262,10 @@ export default class extends Controller {
 
   // ---- Follow along: light the verse being read and keep it in view ----
   //
-  // Narrations are one mp3 per chapter with no word timings, so the current
-  // verse is estimated from how far through the audio we are, weighted by each
-  // verse's length (plus a short pause per verse, and the spoken heading).
+  // The server sends each verse's real start time (VerseTimings: the chapter's
+  // audio transcribed once with word timestamps). Until a chapter has them,
+  // the verse is estimated from how far through the audio we are, weighted by
+  // each verse's length (plus a short pause per verse, and the spoken heading).
   // The phone's own voice reports exact positions (boundary events).
   // If the reader scrolls by hand, following pauses for a few seconds.
 
@@ -297,7 +298,13 @@ export default class extends Controller {
       offset += el.querySelector(".ps-verse-text").textContent.trim().length + 1
       return at
     })
-    this._follow = { verses, starts, charStarts, total, lead, index: -1, handAt: 0 }
+    // Exact verse start times from the server (VerseTimings), when it has them.
+    let timed = null
+    if (info?.timings && Object.keys(info.timings).length) {
+      timed = verses.map((el) => Number(info.timings[el.dataset.verseNum]))
+      for (let i = 0; i < timed.length; i++) if (!Number.isFinite(timed[i])) timed[i] = i ? timed[i - 1] : 0
+    }
+    this._follow = { verses, starts, charStarts, total, lead, timed, index: -1, handAt: 0 }
 
     this._onHandScroll ??= () => { if (this._follow) this._follow.handAt = Date.now() }
     for (const target of [ this.scrollBox(), window ]) {
@@ -318,7 +325,15 @@ export default class extends Controller {
 
   followAudio(audio) {
     const f = this._follow
-    if (!f || !audio.duration || !Number.isFinite(audio.duration)) return
+    if (!f) return
+    if (f.timed) {
+      const now = audio.currentTime + 0.15 // light the verse as its first word starts
+      if (now < f.timed[0]) return
+      let i = f.timed.length - 1
+      while (i > 0 && f.timed[i] > now) i--
+      return this.markVerse(i)
+    }
+    if (!audio.duration || !Number.isFinite(audio.duration)) return
     const spoken = (audio.currentTime / audio.duration) * (f.lead + f.total) - f.lead
     if (spoken < 0) return
     let i = f.starts.length - 1

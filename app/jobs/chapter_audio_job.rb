@@ -12,5 +12,7 @@ class ChapterAudioJob < ApplicationJob
     else
       ChapterNarration.call(record) # Google or OpenAI text-to-speech
     end
+    # Then when each verse starts, so the reader follows the voice exactly.
+    VerseTimingsJob.perform_later(record.id) if record.reload.playable?
   end
 end

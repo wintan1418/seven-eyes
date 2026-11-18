@@ -84,6 +84,21 @@ class AudioChaptersTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "a ready chapter sends its verse start times, and asks for them once when missing" do
+    record = ChapterAudio.create!(translation: @kjv, book: @john, chapter: 3,
+                                  voice: OpenaiSpeech.voice, status: :ready, verse_timings: { "1" => 4.9, "2" => 12.3 })
+    record.audio.attach(io: StringIO.new("mp3bytes"), filename: "a.mp3", content_type: "audio/mpeg")
+    with_tts_key(true) do
+      assert_equal({ "1" => 4.9, "2" => 12.3 }, request_chapter["timings"])
+    end
+
+    record.update_columns(verse_timings: nil, timings_attempted_at: nil)
+    with_tts_key(true) do
+      assert_enqueued_with(job: VerseTimingsJob, args: [ record.id ]) { request_chapter }
+      assert_no_enqueued_jobs(only: VerseTimingsJob) { request_chapter } # not again today
+    end
+  end
+
   test "the last chapter of the canon has no next" do
     rev = Book.create!(osis_code: "Rev", name: "Revelation", testament: :new,
                        position: 66, chapter_count: 22)

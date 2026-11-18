@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_14_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_18_155554) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -74,6 +74,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_120100) do
     t.bigint "translation_id", null: false
     t.datetime "updated_at", null: false
     t.string "voice", default: "", null: false
+    t.jsonb "verse_timings"
+    t.datetime "timings_attempted_at"
     t.index ["book_id"], name: "index_chapter_audios_on_book_id"
     t.index ["translation_id", "book_id", "chapter", "voice"], name: "index_chapter_audios_on_chapter_and_voice", unique: true
     t.index ["translation_id"], name: "index_chapter_audios_on_translation_id"
