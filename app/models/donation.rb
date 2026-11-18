@@ -50,8 +50,11 @@ class Donation < ApplicationRecord
       update!(paystack_plan_code: monthly_plan_code)
       body[:plan] = paystack_plan_code
     end
-    Paystack.post("/transaction/initialize", body).fetch("authorization_url")
-  rescue KeyError
+    url = Paystack.post("/transaction/initialize", body).fetch("authorization_url")
+    # Only ever send givers to Paystack's own checkout.
+    raise Paystack::Error, "Unexpected checkout link" unless URI.parse(url).then { |u| u.scheme == "https" && u.host.to_s.end_with?(".paystack.com") }
+    url
+  rescue KeyError, URI::InvalidURIError
     raise Paystack::Error, "Paystack didn't return a checkout link"
   end
 

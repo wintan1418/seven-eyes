@@ -98,6 +98,16 @@ class GivingTest < ActionDispatch::IntegrationTest
     assert_equal "PLN_123", Donation.last.paystack_plan_code
   end
 
+  test "a checkout link that isn't Paystack's is refused" do
+    ENV["PAYSTACK_SECRET_KEY"] = SECRET
+    sign_in_as @admin
+    stub_paystack(:post, ->(_path, _body) { { "authorization_url" => "https://evil.example.com/pay" } }) do
+      post give_path, params: give_params
+    end
+    assert_response :unprocessable_entity
+    assert_match "couldn&#39;t reach the payment service", response.body
+  end
+
   test "gifts below the minimum are refused" do
     ENV["PAYSTACK_SECRET_KEY"] = SECRET
     sign_in_as @admin
