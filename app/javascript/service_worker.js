@@ -501,7 +501,10 @@ async function pruneStaticAssets() {
   }
   const statics = await caches.open(STATIC_CACHE)
   for (const req of await statics.keys()) {
-    if (new URL(req.url).pathname.startsWith("/assets/") && !keep.has(req.url)) await statics.delete(req)
+    const path = new URL(req.url).pathname
+    // Fonts are named from the stylesheet, not the page: keep them for offline.
+    if (path.endsWith(".woff2")) continue
+    if (path.startsWith("/assets/") && !keep.has(req.url)) await statics.delete(req)
   }
 }
 
