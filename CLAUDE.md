@@ -187,7 +187,7 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   hold a Puma thread on a model. The action creates an `AiRequest` (token, user, study, kind, params;
   `AiRequest.start!` reuses an identical one still thinking, never for illustrations) and enqueues
   `AiRequestJob` (queue `ai`; Solid Queue in production, worked by the separate `bin/jobs` service —
-  the rest of the app stays on :async), then answers at once: Quick Find 202 `{pending, poll_url}`,
+  all production jobs now run there too), then answers at once: Quick Find 202 `{pending, poll_url}`,
   the Rabbi / illustration frames `studies/_ai_pending` ("Thinking…", seconds, "still thinking").
   The page polls `GET /studies/:id/ai_requests/:token` (`studies#ai_request`, `lib/ai_poll.js`):
   202 until done, then the old JSON / frame (`AiWork` stores plain data, partials render at poll time).
