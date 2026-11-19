@@ -67,3 +67,22 @@
 .ls-mode-detail { font-size: 13px; color: var(--ui-fg-muted); }
 .ls-switch { width: 22px; height: 22px; accent-color: var(--ui-accent); flex: none; }
 .ls-play { width: 100%; justify-content: center; min-height: 48px; font-size: 16px; margin-top: 6px; display: inline-flex; align-items: center; gap: 8px; }
+
+/* Listen sheet in Compare: which passage to hear, and what's playing now. */
+.ls-sides[hidden], .ls-now[hidden] { display: none; }
+.ls-side-list { display: flex; flex-direction: column; gap: 8px; }
+.ls-side {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px; cursor: pointer;
+  border: 1px solid var(--ui-border); border-radius: 12px;
+}
+.ls-side:has(.ls-side-radio:checked) { border-color: var(--ui-accent); background: var(--ui-accent-soft); }
+.ls-side-radio { width: 20px; height: 20px; accent-color: var(--ui-accent); flex: none; margin: 0; }
+.ls-side-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ls-side-ref { font-weight: 700; color: var(--ui-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ls-side-where { font-size: 13px; color: var(--ui-fg-muted); }
+.ls-now {
+  display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px;
+  border-radius: 12px; background: var(--ui-surface);
+}
+.ls-now-text { flex: 1; min-width: 0; font-weight: 700; color: var(--ui-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ls-now-kicker { font-weight: 500; color: var(--ui-fg-muted); }

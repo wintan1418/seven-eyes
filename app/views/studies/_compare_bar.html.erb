@@ -1,6 +1,11 @@
 <%# Compare mode toolbar (two or more panes). locals: study %>
 <div class="ui-comparebar" data-chrome role="toolbar" aria-label="Compare">
   <span class="ui-comparebar-title"><%= icon(:columns) %> Compare</span>
+  <%# Listen to one of the passages (the Listen sheet asks which). %>
+  <button type="button" class="ui-pill" data-controller="listen-pill" data-action="sheets#open"
+          data-sheets-id-param="listen" title="Listen to one of these passages">
+    <%= icon(:listen) %><span data-listen-pill-target="label">Listen</span>
+  </button>
   <%= button_to study_path(study), method: :patch, params: { study: { sync_scroll: !study.sync_scroll } },
         class: "ui-pill#{' is-on' if study.sync_scroll}", "aria-pressed": study.sync_scroll.to_s,
         title: "Scroll the panes together", form: { class: "contents" } do %>

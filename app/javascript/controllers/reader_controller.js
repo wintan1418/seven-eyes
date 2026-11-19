@@ -56,9 +56,18 @@ export default class extends Controller {
       this.stop()
     }
     this.element.addEventListener("turbo:frame-render", this._onFrameRender)
-    // Play from the Listen sheet starts the pane that opened it.
-    this._onListenPlay = () => { if (opener === this) { opener = null; this.start() } }
+    // Play from the Listen sheet starts the pane it names (Compare: the side
+    // the listener picked), or else the pane whose Listen button opened it.
+    this._onListenPlay = (e) => {
+      const pane = e.detail?.pane
+      if (pane ? pane !== this.element.id : opener !== this) return
+      opener = null
+      this.start()
+    }
     window.addEventListener("listen:play", this._onListenPlay)
+    // Stop from the Listen sheet (Compare: no per-pane button on phones).
+    this._onListenStop = () => { if (active === this) this.stop() }
+    window.addEventListener("listen:stop", this._onListenStop)
     // A new speed applies straight away to what's playing.
     this._onListenOptions = (e) => { if (this._audio) this._audio.playbackRate = Number(e.detail.rate) || 1 }
     window.addEventListener("listen:options", this._onListenOptions)
@@ -67,6 +76,7 @@ export default class extends Controller {
   disconnect() {
     this.element.removeEventListener("turbo:frame-render", this._onFrameRender)
     window.removeEventListener("listen:play", this._onListenPlay)
+    window.removeEventListener("listen:stop", this._onListenStop)
     window.removeEventListener("listen:options", this._onListenOptions)
     this.stop()
   }
@@ -82,7 +92,7 @@ export default class extends Controller {
     // Pick a voice, speed and mode first, where the Listen sheet exists.
     if (document.querySelector('[data-sheet-id-value="listen"]')) {
       opener = this
-      window.dispatchEvent(new CustomEvent("sheet:open", { detail: { id: "listen" } }))
+      window.dispatchEvent(new CustomEvent("sheet:open", { detail: { id: "listen", paneId: this.element.id } }))
       return
     }
     this.start()
@@ -477,6 +487,8 @@ export default class extends Controller {
 
   setState(state) {
     this.state = state
+    // The Listen sheet and Compare's Listen pill show what's playing.
+    window.dispatchEvent(new CustomEvent("listen:state", { detail: { pane: this.element.id, state } }))
     if (!this.hasButtonTarget) return
     const btn = this.buttonTarget
     btn.classList.toggle("is-on", state === "playing" || state === "paused")
