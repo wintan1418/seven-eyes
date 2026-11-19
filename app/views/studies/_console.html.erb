@@ -170,40 +170,78 @@
         </div>
       </div>
     </div>
-    <%# Pictures: the Picture Bank — every picture in the service as a big
-        thumbnail drawn the way the screen shows it. Click previews, double-click
-        (or Go live) puts it up; Fit / Fill / Stretch and zoom are saved with the
-        picture and change the screen at once if it is up (console-library). %>
+    <%# Pictures: two views (console-media). "This service" is the Picture Bank
+        — every picture in the service as a big thumbnail drawn the way the
+        screen shows it. Click previews, double-click (or Go live) puts it up;
+        Fit / Fill / Stretch and zoom are saved with the picture and change the
+        screen at once if it is up (console-library). "My Media" is the
+        account's picture library: search, preview, go live, add to the service,
+        upload. %>
     <div class="cx-panel" data-tab="media" role="tabpanel" aria-label="Pictures">
-      <div class="cx-pbank">
-        <div class="cx-pbank-bar">
-          <button type="button" class="cx-pbank-add" data-action="console#openAdd" data-console-kind-param="picture"
-                  title="A photo, flyer or announcement — shown full screen">&#43; Add a picture</button>
-          <div class="cx-pbank-ctl" data-console-library-target="pictureControls" hidden>
-            <span class="cx-pbank-name" data-console-library-target="pictureName"></span>
-            <div class="cx-seg" role="group" aria-label="How the picture fills the screen">
-              <button type="button" data-fit="fit" aria-pressed="true" data-action="console-library#pictureFit"
-                      title="Whole picture, black bars at the sides or top">Fit</button>
-              <button type="button" data-fit="fill" aria-pressed="false" data-action="console-library#pictureFit"
-                      title="Covers the screen edge to edge — the edges are cropped">Fill</button>
-              <button type="button" data-fit="stretch" aria-pressed="false" data-action="console-library#pictureFit"
-                      title="Pulled to the screen's shape">Stretch</button>
-            </div>
-            <label class="cx-zoom" title="Enlarge the picture from its centre">
-              <span>Zoom</span>
-              <input type="range" min="100" max="200" step="10" value="100" aria-label="Zoom"
-                     data-console-library-target="pictureZoom" data-action="input->console-library#pictureZoom">
-              <output data-console-library-target="pictureZoomOut">100%</output>
-            </label>
-            <button type="button" class="cx-btn is-preview" data-action="console-library#picturePreview"
-                    title="Put it in Preview — the screen doesn't change yet">Preview</button>
-            <button type="button" class="cx-btn is-golive" data-action="console-library#pictureLive"
-                    title="Put it on the screen now">&#9654; Go live</button>
+      <div class="cx-pbank" data-controller="console-media">
+        <div class="cx-pbank-views">
+          <div class="cx-seg" role="tablist" aria-label="Pictures">
+            <button type="button" role="tab" data-view="service" aria-selected="true" aria-pressed="true"
+                    data-console-media-target="tab" data-action="console-media#view">This service</button>
+            <button type="button" role="tab" data-view="library" aria-selected="false" aria-pressed="false"
+                    data-console-media-target="tab" data-action="console-media#view">My Media</button>
           </div>
         </div>
-        <ol class="cx-pbank-grid" data-console-library-target="pictures" data-kinds="picture"
-            aria-label="Pictures in this service"
-            data-empty="No pictures in this service yet — add a flyer, photo or announcement."></ol>
+
+        <div class="cx-pbank-view" data-pbank-view="service" data-console-media-target="view">
+          <div class="cx-pbank-bar">
+            <button type="button" class="cx-pbank-add" data-action="console#openAdd" data-console-kind-param="picture"
+                    title="A photo, flyer or announcement — shown full screen">&#43; Add a picture</button>
+            <div class="cx-pbank-ctl" data-console-library-target="pictureControls" hidden>
+              <span class="cx-pbank-name" data-console-library-target="pictureName"></span>
+              <div class="cx-seg" role="group" aria-label="How the picture fills the screen">
+                <button type="button" data-fit="fit" aria-pressed="true" data-action="console-library#pictureFit"
+                        title="Whole picture, black bars at the sides or top">Fit</button>
+                <button type="button" data-fit="fill" aria-pressed="false" data-action="console-library#pictureFit"
+                        title="Covers the screen edge to edge — the edges are cropped">Fill</button>
+                <button type="button" data-fit="stretch" aria-pressed="false" data-action="console-library#pictureFit"
+                        title="Pulled to the screen's shape">Stretch</button>
+              </div>
+              <label class="cx-zoom" title="Enlarge the picture from its centre">
+                <span>Zoom</span>
+                <input type="range" min="100" max="200" step="10" value="100" aria-label="Zoom"
+                       data-console-library-target="pictureZoom" data-action="input->console-library#pictureZoom">
+                <output data-console-library-target="pictureZoomOut">100%</output>
+              </label>
+              <button type="button" class="cx-btn is-preview" data-action="console-library#picturePreview"
+                      title="Put it in Preview — the screen doesn't change yet">Preview</button>
+              <button type="button" class="cx-btn is-golive" data-action="console-library#pictureLive"
+                      title="Put it on the screen now">&#9654; Go live</button>
+            </div>
+          </div>
+          <ol class="cx-pbank-grid" data-console-library-target="pictures" data-kinds="picture"
+              aria-label="Pictures in this service"
+              data-empty="No pictures in this service yet — add a flyer, photo or announcement, or pick one from My Media."></ol>
+        </div>
+
+        <div class="cx-pbank-view" data-pbank-view="library" data-console-media-target="view" hidden>
+          <div class="cx-pbank-bar">
+            <input type="search" class="cx-pbank-search" placeholder="Search My Media" aria-label="Search My Media by title"
+                   autocomplete="off" data-console-media-target="search" data-action="input->console-media#filter">
+            <label class="cx-pbank-add cx-pbank-upload" title="Pictures from this computer — kept in My Media for any service">
+              &#10514; Upload
+              <input type="file" accept="image/*" multiple hidden data-console-media-target="upload"
+                     data-action="change->console-media#upload">
+            </label>
+            <label class="cx-pbank-also"><input type="checkbox" checked data-console-media-target="also"> Also add to this service</label>
+            <div class="cx-pbank-ctl" data-console-media-target="controls" hidden>
+              <span class="cx-pbank-name" data-console-media-target="name"></span>
+              <button type="button" class="cx-btn is-preview" data-action="console-media#previewSelected"
+                      title="Put it in Preview — the screen doesn't change yet">Preview</button>
+              <button type="button" class="cx-btn is-golive" data-action="console-media#liveSelected"
+                      title="Put it on the screen now">&#9654; Go live</button>
+              <button type="button" class="cx-btn" data-action="console-media#addSelected"
+                      title="Add it to the end of the service">&#43; Add to service</button>
+            </div>
+          </div>
+          <p class="cx-pbank-status" data-console-media-target="status" role="status"></p>
+          <ol class="cx-pbank-grid" data-console-media-target="grid" aria-label="My Media"></ol>
+        </div>
       </div>
     </div>
     <%# Word study: the root-word card (_root_words, root_words controller) sits here. %>

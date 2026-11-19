@@ -6,6 +6,7 @@ class User < ApplicationRecord
   has_many :songs, dependent: :delete_all
   has_many :song_collections, dependent: :delete_all
   has_many :service_templates, dependent: :delete_all
+  has_many :media_assets, dependent: :destroy
   has_many :reading_plans, dependent: :destroy
   has_many :ai_reports, dependent: :delete_all
   has_many :daily_completions, dependent: :delete_all

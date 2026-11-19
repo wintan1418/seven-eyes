@@ -121,3 +121,12 @@ test("queueKey treats the same passage typed differently as one", () => {
   assert.equal(queueKey({ kind: "scripture", label: "Jeremiah 10:10–11" }), queueKey({ kind: "scripture", label: "Jeremiah 10:10-11" }))
   assert.notEqual(queueKey({ kind: "scripture", label: "John 11:35" }), queueKey({ kind: "song", title: "John 11:35" }))
 })
+
+test("a picture from My Media keeps its library id through a reload and a replayed create", () => {
+  const row = { id: 9, client_id: "tmp-p", kind: "picture", title: "Flyer", image: "/rails/active_storage/blobs/redirect/x/f.png", media_asset_id: 4, data: { fit: "fill", zoom: 100 } }
+  assert.equal(fromServer(row).media_asset_id, 4)
+  assert.equal(fromServer({ id: 1, kind: "song", title: "Hymn" }).media_asset_id, null)
+  const item = { cid: "tmp-q", kind: "picture", title: "Flyer", image: row.image, media_asset_id: 4 }
+  const merged = mergeQueue({ server: [], ops: [ { setlist: { action: "create", cid: "tmp-q", item, position: 0 } } ] })
+  assert.equal(merged[0].media_asset_id, 4)
+})

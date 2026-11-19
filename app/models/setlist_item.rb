@@ -5,8 +5,12 @@
 #               which may carry section labels ([Verse 1], [Chorus]…) and an
 #               arrangement ("V1 C V2 C") — see SongSheet
 #   thought   — a freeform note/announcement projected as a single slide
-#   picture   — a Cloudinary-hosted image (announcement slide, sermon graphic);
-#               `data` says how it fills the screen (fit / fill / stretch + zoom)
+#   picture   — an image (announcement slide, sermon graphic) from the owner's
+#               My Media library (`media_asset`); the item keeps its own URL and
+#               attachment to the same file (so deleting it from the library
+#               never empties a service) and its own `data` — how it fills the
+#               screen here (fit / fill / stretch + zoom), starting from the
+#               library's default
 #   scripture_set — several references on one slide, each in its own
 #               translation (Col 2:2 KJV + Matt 28:19 BSB): the verse words are
 #               kept in `data` (so it projects with no signal, on any device)
@@ -20,6 +24,7 @@
 #               (lib/root_words.js), title "Word study: agapáō — John 3:16"
 class SetlistItem < ApplicationRecord
   belongs_to :study
+  belongs_to :media_asset, optional: true
   # A queue picture kept on our own server when the picture host (Cloudinary)
   # is unavailable; media_url then points at this file.
   has_one_attached :picture_file
@@ -45,6 +50,7 @@ class SetlistItem < ApplicationRecord
   validate :presentation_must_have_pages, if: :presentation?
   validate :seminar_must_have_slides, if: :seminar?
   validate :word_study_must_parse, if: :word?
+  validate :media_asset_must_be_owners, if: :media_asset
   validates :body, length: { maximum: 40_000 }
 
   before_validation { self.data = SlideData.clean(kind, data) if will_save_change_to_data? || will_save_change_to_kind? }
@@ -79,6 +85,17 @@ class SetlistItem < ApplicationRecord
       seen[key] ||= song
     end
     seen.values
+  end
+
+  # A queue picture made from a My Media entry: the same file (the blob is
+  # attached again, never copied or uploaded), the library's title and its
+  # default display. Marks the entry as just used.
+  def self.picture_attrs_from(asset)
+    asset.used!
+    attrs = { kind: "picture", title: asset.title, media_url: asset.media_url, media_public_id: asset.media_public_id,
+              media_asset: asset, data: asset.display_settings }
+    attrs[:picture_file] = asset.file.blob if asset.file.attached?
+    attrs
   end
 
   # What the queue list shows for this item.
@@ -134,7 +151,8 @@ class SetlistItem < ApplicationRecord
     {
       id: id, client_id: client_id, kind: kind, reference: reference, label: label,
       title: title, body: body, arrangement: arrangement, image: media_url,
-      stanzas: slide_count, data: picture? ? picture_display : data.presence
+      stanzas: slide_count, data: picture? ? picture_display : data.presence,
+      media_asset_id: media_asset_id
     }
   end
 
@@ -195,6 +213,10 @@ class SetlistItem < ApplicationRecord
     unless parsed_ref.valid? && Book.find_by_osis(parsed_ref.osis)
       errors.add(:reference, "couldn't be read — try something like John 3:16")
     end
+  end
+
+  def media_asset_must_be_owners
+    errors.add(:base, "That picture isn't in your library") unless study && media_asset.user_id == study.user_id
   end
 
   def picture_limit

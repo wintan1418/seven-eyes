@@ -1,6 +1,8 @@
 require "test_helper"
 
 class SetlistItemsTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+
   setup do
     Book.create!(osis_code: "Rom", name: "Romans", testament: :new, position: 45, chapter_count: 16)
   end
@@ -333,5 +335,76 @@ class SetlistItemsTest < ActionDispatch::IntegrationTest
     get study_path(study)
     items = JSON.parse(css_select("[data-items]").first["data-items"])
     assert_equal({ "fit" => "stretch", "zoom" => 100 }, items.find { |i| i["kind"] == "picture" }["data"])
+  end
+
+  # ---- My Media: every picture added to a service is kept in the library ----
+
+  test "a picture uploaded to the queue lands in My Media and the item uses that file" do
+    study = owner_study
+    assert_difference [ "MediaAsset.count", "ActiveStorage::Blob.count" ], 1 do
+      post study_setlist_items_path(study), params: { setlist_item: { kind: "picture", title: "Welcome", image: picture_upload } }
+    end
+    item = study.setlist_items.picture.sole
+    asset = users(:one).media_assets.sole
+    assert_equal asset, item.media_asset
+    assert_equal "Welcome", asset.title
+    assert_equal asset.file.blob, item.picture_file.blob
+    assert_equal asset.media_url, item.media_url
+  end
+
+  test "the same picture in a second service reuses the library file — no second upload" do
+    study = owner_study
+    other = users(:one).studies.create!(name: "Midweek", pane_count: 1)
+    post study_setlist_items_path(study), params: { setlist_item: { kind: "picture", image: picture_upload } }
+    assert_no_difference [ "MediaAsset.count", "ActiveStorage::Blob.count" ] do
+      post study_setlist_items_path(other), params: { setlist_item: { kind: "picture", image: picture_upload } }
+    end
+    a = study.setlist_items.picture.sole
+    b = other.setlist_items.picture.sole
+    assert_equal a.media_asset_id, b.media_asset_id
+    assert_equal a.picture_file.blob, b.picture_file.blob
+    assert_equal "welcome flyer", b.title
+  end
+
+  test "a picture from My Media is queued by its library id (JSON / outbox), once per client_id" do
+    study = owner_study
+    asset = library_picture(users(:one))
+    asset.update!(display: { fit: "fill", zoom: 120 })
+    assert_difference -> { study.setlist_items.count }, 1 do
+      json_post(study, kind: "picture", media_asset_id: asset.id, client_id: "tmp-pic-1")
+      assert_response :created
+      json_post(study, kind: "picture", media_asset_id: asset.id, client_id: "tmp-pic-1")
+    end
+    body = response.parsed_body
+    assert_equal asset.id, body["media_asset_id"]
+    assert_equal asset.media_url, body["image"]
+    assert_equal({ "fit" => "fill", "zoom" => 120 }, body["data"], "starts from the library's default display")
+    item = study.setlist_items.picture.sole
+    assert_equal asset.file.blob, item.picture_file.blob
+    assert asset.reload.last_used_at.present?
+
+    json_post(study, kind: "picture", media_asset_id: asset.id, client_id: "tmp-pic-2", data: { fit: "stretch" })
+    assert_equal({ "fit" => "stretch", "zoom" => 100 }, response.parsed_body["data"], "or the device's own choice")
+  end
+
+  test "someone else's library picture can't be queued" do
+    study = owner_study
+    theirs = library_picture(users(:two))
+    assert_no_difference -> { SetlistItem.count } do
+      json_post(study, kind: "picture", media_asset_id: theirs.id, client_id: "tmp-pic")
+    end
+    assert_response :unprocessable_entity
+  end
+
+  test "removing a picture from a service leaves it in My Media" do
+    study = owner_study
+    asset = library_picture(users(:one))
+    item = study.setlist_items.create!(SetlistItem.picture_attrs_from(asset))
+    perform_enqueued_jobs do
+      delete study_setlist_item_path(study, item), as: :json
+    end
+    assert_response :success
+    assert asset.reload.file.attached?
+    assert ActiveStorage::Blob.exists?(asset.file.blob.id)
   end
 end

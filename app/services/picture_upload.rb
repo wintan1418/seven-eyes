@@ -33,6 +33,34 @@ class PictureUpload
 
   def self.call(file) = new(file).call
 
+  # Why this file can't be a queue / library picture (an ERROR_MESSAGES key),
+  # or nil. Checked before anything is hashed or uploaded.
+  def self.refusal(file)
+    return :missing if file.blank? || !file.respond_to?(:tempfile)
+    return :not_image unless file.content_type.to_s.start_with?("image/")
+    :too_large if file.size.to_i > MAX_BYTES
+  end
+
+  # The file's MD5, base64 — the same value Active Storage keeps as the blob's
+  # checksum, so a picture already in My Media is found before any upload.
+  def self.checksum(file)
+    io = file.tempfile
+    io.rewind
+    digest = OpenSSL::Digest::MD5.new
+    buffer = "".b
+    digest << buffer while io.read(1.megabyte, buffer)
+    io.rewind
+    digest.base64digest
+  end
+
+  # A Cloudinary copy is shared by every queue item and the My Media entry
+  # made from the same upload: destroy it only once none of them names it.
+  def self.purge_unused(public_id)
+    return if public_id.blank?
+    return if SetlistItem.exists?(media_public_id: public_id) || MediaAsset.exists?(media_public_id: public_id)
+    purge(public_id)
+  end
+
   # Best-effort remote delete when a picture leaves the queue.
   def self.purge(public_id)
     return if public_id.blank? || !configured?
@@ -57,9 +85,8 @@ class PictureUpload
   end
 
   def call
-    return err(:missing) if @file.blank? || !@file.respond_to?(:tempfile)
-    return err(:not_image) unless @file.content_type.to_s.start_with?("image/")
-    return err(:too_large) if @file.size.to_i > MAX_BYTES
+    refused = self.class.refusal(@file)
+    return err(refused) if refused
     return store_locally unless self.class.configured?
 
     begin

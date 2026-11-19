@@ -43,6 +43,9 @@ application.register("search-mode", SearchModeController)
 import ConsoleLiveController from "./console_live_controller"
 application.register("console-live", ConsoleLiveController)
 
+import ConsoleMediaController from "./console_media_controller"
+application.register("console-media", ConsoleMediaController)
+
 import ConsolePreviewController from "./console_preview_controller"
 application.register("console-preview", ConsolePreviewController)
 

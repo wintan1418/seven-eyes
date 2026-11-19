@@ -1,9 +1,11 @@
 # The preach queue ("setlist"): scripture references, songs, and thoughts the
 # operator lines up before the service and walks through from the preach bar.
 # Every action re-renders the queue's Turbo Frame; guests can build a queue on
-# their session study (current_study resolves owner-or-guest). Pictures are
-# hosted on Cloudinary, so uploading one needs an account and is capped per
-# study (SetlistItem::PICTURE_LIMIT).
+# their session study (current_study resolves owner-or-guest). Pictures need
+# an account: an uploaded one goes into the account's My Media library first
+# (MediaLibrary — the same file is never stored twice), and one picked from
+# My Media is queued by its library id through the JSON path like any other
+# device-made item. Capped per study (SetlistItem::PICTURE_LIMIT).
 #
 # The preach-mode queue is local-first: the device changes its own copy at once
 # and replays each change here as JSON through the offline outbox. Those
@@ -32,18 +34,17 @@ class SetlistItemsController < ApplicationController
     if attrs[:kind] == "picture"
       error = picture_refusal
       error ||= begin
-        upload = PictureUpload.call(params.dig(:setlist_item, :image))
-        attrs = attrs.merge(media_url: upload.url, media_public_id: upload.public_id) if upload.ok?
-        attrs = attrs.merge(picture_file: upload.blob) if upload.ok? && upload.blob
-        PictureUpload.message_for(upload.error) unless upload.ok?
+        # Into My Media first (the same file again is found, not re-uploaded),
+        # then the queue item uses that file.
+        added = MediaLibrary.add(current_user, params.dig(:setlist_item, :image), title: attrs[:title],
+                                 width: params.dig(:setlist_item, :width), height: params.dig(:setlist_item, :height))
+        attrs = attrs.merge(SetlistItem.picture_attrs_from(added.asset).except(*(attrs[:title].present? ? [ :title ] : []))) if added.ok?
+        added.message unless added.ok?
       end
       return render_error(attrs, error) if error
     end
     item = @study.setlist_items.create(attrs)
-    unless item.persisted?
-      @errored = item
-      attrs[:picture_file]&.purge_later # don't keep a file nobody can see
-    end
+    @errored = item unless item.persisted? # the file stays in My Media
     render_setlist
   end
 
@@ -60,18 +61,20 @@ class SetlistItemsController < ApplicationController
     was_picture = item.picture?
     old_public_id = item.media_public_id
     if was_picture && attrs[:kind].present? && attrs[:kind] != "picture"
-      attrs = attrs.merge(media_url: nil, media_public_id: nil)
+      attrs = attrs.merge(media_url: nil, media_public_id: nil, media_asset_id: nil)
     end
     if item.update(attrs) && was_picture && !item.picture?
-      PictureUpload.purge(old_public_id) # the picture left the queue
+      # The picture left the queue. Its file stays while My Media or another
+      # service still uses it (the blob can't be purged while attached).
       item.picture_file.purge_later if item.picture_file.attached?
+      PictureUpload.purge_unused(old_public_id)
     end
     render_setlist
   end
 
   def destroy
     item.destroy
-    PictureUpload.purge(item.media_public_id) if item.picture?
+    PictureUpload.purge_unused(item.media_public_id) if item.picture?
     return render(json: queue_json) if request.format.json?
     render_setlist
   end
@@ -104,10 +107,20 @@ class SetlistItemsController < ApplicationController
     attrs = item_params
     client_id = params.dig(:setlist_item, :client_id).presence
     return render_json_error("Pick what kind of item this is") unless valid_kind?(attrs[:kind])
-    return render_json_error("Add pictures from the queue form while online") if attrs[:kind] == "picture"
-
     existing = client_id && @study.setlist_items.find_by(client_id: client_id)
     return render(json: item_json(existing)) if existing
+
+    if attrs[:kind] == "picture"
+      # A picture from My Media (console, a service template): no upload — the
+      # item uses the library's file, so it can be queued offline and synced.
+      return render_json_error("Sign in to add pictures to the queue") unless authenticated?
+      asset = current_user.media_assets.find_by(id: params.dig(:setlist_item, :media_asset_id).to_s[/\A\d+\z/])
+      return render_json_error("Add pictures from My Media or the queue form while online") unless asset
+      display = attrs.key?(:data) ? SlideData.picture(attrs[:data]) : nil
+      attrs = attrs.slice(:kind).merge(SetlistItem.picture_attrs_from(asset))
+      attrs[:title] = params.dig(:setlist_item, :title).to_s.squish.presence || asset.title
+      attrs[:data] = display if display
+    end
 
     item = @study.setlist_items.new(attrs.merge(client_id: client_id))
     begin
