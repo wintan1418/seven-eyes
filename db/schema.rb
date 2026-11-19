@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_19_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_19_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -50,6 +50,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_19_120100) do
     t.datetime "created_at", null: false
     t.index ["created_at"], name: "index_ai_reports_on_created_at"
     t.index ["user_id"], name: "index_ai_reports_on_user_id"
+  end
+
+  create_table "ai_requests", force: :cascade do |t|
+    t.string "token", null: false
+    t.bigint "user_id", null: false
+    t.bigint "study_id", null: false
+    t.string "kind", null: false
+    t.string "status", default: "pending", null: false
+    t.string "fingerprint"
+    t.jsonb "params", default: {}, null: false
+    t.jsonb "result"
+    t.string "error"
+    t.bigint "illustration_quota_id"
+    t.datetime "finished_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_ai_requests_on_created_at"
+    t.index ["study_id"], name: "index_ai_requests_on_study_id"
+    t.index ["token"], name: "index_ai_requests_on_token", unique: true
+    t.index ["user_id", "fingerprint", "status"], name: "index_ai_requests_on_user_id_and_fingerprint_and_status"
+    t.index ["user_id"], name: "index_ai_requests_on_user_id"
   end
 
   create_table "books", force: :cascade do |t|
@@ -623,6 +644,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_19_120100) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "ai_reports", "users"
+  add_foreign_key "ai_requests", "studies", on_delete: :cascade
+  add_foreign_key "ai_requests", "users", on_delete: :cascade
   add_foreign_key "chapter_audios", "books"
   add_foreign_key "chapter_audios", "translations"
   add_foreign_key "commentaries", "books"

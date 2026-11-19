@@ -31,6 +31,14 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # test's Bible (another test's verses) mustn't leak into the next.
   setup { clear_offline_data }
 
+  # AI answers (Quick Find, the Rabbi, illustrations) are worked out by
+  # AiRequestJob while the page polls; the test adapter would never run it.
+  setup do
+    @ai_job_adapter = AiRequestJob.queue_adapter
+    AiRequestJob.queue_adapter = :inline
+  end
+  teardown { AiRequestJob.queue_adapter = @ai_job_adapter }
+
   # On the study page: wait until Stimulus has connected (the theme
   # controller marks the current theme in the settings sheet on connect), so
   # a tap isn't lost on a page whose controllers haven't booted yet.

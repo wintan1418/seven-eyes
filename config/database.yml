@@ -18,7 +18,9 @@ default: &default
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   # Increased pool size for handling 100s of concurrent users
-  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 25 } %>
+  # Never below 10: the Solid Queue worker (config/queue.yml: 5 AI threads +
+  # 3 general) refuses to boot with a pool smaller than its thread count.
+  pool: <%= [ ENV.fetch("RAILS_MAX_THREADS") { 25 }.to_i, 10 ].max %>
   # Connection timeout for busy servers
   timeout: 5000
   # Prepared statements improve performance

@@ -88,6 +88,16 @@
   <% elsif result.error == :no_verse %>
     <div class="ps-ai-hint">Couldn&rsquo;t tell which verse that was. Try selecting within a single verse.</div>
   <% else %>
-    <div class="ps-ai-hint">The Rabbi is silent just now &mdash; couldn&rsquo;t reach the AI. Please try again.</div>
+    <div class="ps-rabbi-loading is-error" role="alert">
+      <div class="orn">&#10018;</div>
+      <% if result.error == :timeout %>
+        <div class="lead">The Rabbi took too long to answer.</div>
+        <div class="hint">The study assistant is busy just now. Your question is kept.</div>
+      <% else %>
+        <div class="lead">The Rabbi is silent just now.</div>
+        <div class="hint">Couldn&rsquo;t reach the AI. Your question is kept.</div>
+      <% end %>
+      <button type="button" class="ps-tb-btn" data-action="rabbi#retry">Try again</button>
+    </div>
   <% end %>
 <% end %>

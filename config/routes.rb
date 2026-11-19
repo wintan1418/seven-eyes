@@ -19,6 +19,8 @@ Rails.application.routes.draw do
     get :prayer, on: :member
     get "lexicon/:strongs", on: :member, action: :lexicon, as: :lexicon
     get :quick_find, on: :member
+    # Poll an AI answer that is thinking in the background (AiRequest).
+    get "ai_requests/:token", on: :member, action: :ai_request, as: :ai_request
     resource :live, only: %i[ create update destroy ], controller: "live_sessions"
     resource :remote, only: %i[ create ], controller: "remotes"
     resources :setlist_items, only: %i[ index create update destroy ], path: "setlist" do

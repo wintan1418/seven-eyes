@@ -2,6 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 import { hasSecondScreen, windowManagement, projectorScreen, featuresFor, moveTo } from "../lib/second_screen"
 import { warmLocal, localCheck, loadPaneLocally, renderPaneHtml, swapPaneHtml } from "../lib/offline/local_pane"
 import { quickFetch, isNetworkSlow } from "../lib/offline/network"
+import { pollAiRequest } from "../lib/ai_poll"
 import { allBookTexts } from "../lib/offline/store"
 import { searchVerses } from "../lib/offline/keyword_search"
 import { rankVerses, queryWords } from "../lib/scripture_search"
@@ -73,6 +74,8 @@ const GO_HINTS = {
   words: "Words: and he that believeth — lists the verses"
 }
 const QUICK_FIND_TIMEOUT_MS = 3000 // AI quick find, before the on-device keyword search
+// Quick Find errors that mean "the AI failed", not "nothing matched" — shown with Try again.
+const AI_FAILURES = [ "api", "timeout", "budget", "no_key" ]
 const SWIPE_IGNORE = ".ps-setlist-host, .ps-drawer, .ps-ai-drawer, .ps-book-drawer, .ps-search-drawer, " +
   ".ps-rabbi-host, .ps-xref-host, .ps-share-host, .ps-modal, .ps-live-panel, .ps-screen-panel, " +
   ".ps-preach-finds, .ps-preach-bar, .ps-preach-jump, .ps-preach-next, [data-no-swipe]"
@@ -944,6 +947,11 @@ export default class extends Controller {
     const current = () => this._findsOpen && this._findSeq === search // the operator moved on?
     box.hidden = false
     box.innerHTML = `<div class="head"><span class="lbl">&#10038; Searching the Scriptures&hellip;</span></div>`
+    const stillThinking = setTimeout(() => {
+      const lbl = current() && box.querySelector(".head .lbl")
+      if (lbl && /Searching the Scriptures/.test(lbl.textContent)) lbl.innerHTML = "&#10038; Still thinking&hellip; the study assistant is on it"
+    }, 8000)
+    box.addEventListener("ai:settled", () => clearTimeout(stillThinking), { once: true })
 
     // The AI answer, or — if it hasn't come back in a few seconds (dead
     // signal) — a keyword search of the downloaded Bibles meanwhile. A late AI
@@ -970,8 +978,9 @@ export default class extends Controller {
     }
     const late = await ai
     if (!current()) return
-    if (late.data) this._renderAiFinds(box, q, late.data)
-    else if (local.length) this._renderKeywordFinds(box, q, local, { waiting: false })
+    box.dispatchEvent(new CustomEvent("ai:settled"))
+    if (late.data?.ok || (late.data && !local.length)) this._renderAiFinds(box, q, late.data)
+    else if (local.length) this._renderKeywordFinds(box, q, local, { waiting: false, aiFailed: !!late.data && AI_FAILURES.includes(late.data.error) })
     else this._renderAiFinds(box, q, null, { offline: true })
   }
 
@@ -1032,21 +1041,39 @@ export default class extends Controller {
   }
 
   // GET quick_find → { data } | { unauthorized } | { failed }. Skips the
-  // network at once when it is known to be down or dead.
+  // network at once when it is known to be down or dead. The server answers
+  // at once with a poll URL (the model works in the background — AiRequest),
+  // so the wait below is cheap polling, never a held server thread.
   async _askQuickFind(q) {
     if (navigator.onLine === false || isNetworkSlow()) return { failed: true }
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 25_000)
+    const timer = setTimeout(() => controller.abort(), 10_000)
     try {
       const res = await fetch(`${this.quickFindUrlValue}?q=${encodeURIComponent(q)}`,
                               { headers: { Accept: "application/json" }, signal: controller.signal })
       if (res.status === 401) return { unauthorized: true }
-      return { data: await res.json() }
+      const data = await res.json()
+      if (!data.pending || !data.poll_url) return { data }
+      clearTimeout(timer)
+      const seq = this._findSeq
+      const stop = new AbortController()
+      const watch = setInterval(() => { if (!this._findsOpen || this._findSeq !== seq) stop.abort() }, 500)
+      const out = await pollAiRequest(data.poll_url, { signal: stop.signal }).finally(() => clearInterval(watch))
+      if (out.unauthorized) return { unauthorized: true }
+      if (out.response) return { data: await out.response.json() }
+      if (out.timeout) return { data: { ok: false, error: "timeout" } }
+      return { failed: true }
     } catch {
       return { failed: true }
     } finally {
       clearTimeout(timer)
     }
+  }
+
+  // "Try again" on a study-assistant error.
+  retryFind(event) {
+    const q = event.currentTarget?.dataset.q
+    if (q) this._quickFind(q)
   }
 
   // Keyword search over the presented pane's Bible (or any downloaded one).
@@ -1068,12 +1095,23 @@ export default class extends Controller {
     }
   }
 
-  _renderKeywordFinds(box, q, results, { waiting }) {
+  _renderKeywordFinds(box, q, results, { waiting, aiFailed = false }) {
     box.innerHTML = ""
     const head = document.createElement("div")
     head.className = "head"
-    head.innerHTML = `<span class="lbl">&#10038; Offline search (keywords)${waiting ? " &middot; still asking the study assistant&hellip;" : ""}</span>` +
+    const note = waiting ? " &middot; still asking the study assistant&hellip;"
+      : aiFailed ? " &middot; the study assistant couldn&rsquo;t answer" : ""
+    head.innerHTML = `<span class="lbl">&#10038; Offline search (keywords)${note}</span>` +
                      `<button type="button" class="close" data-action="presentation#cancelFinds">&#10005;</button>`
+    if (aiFailed) {
+      const again = document.createElement("button")
+      again.type = "button"
+      again.className = "project"
+      again.dataset.action = "presentation#retryFind"
+      again.dataset.q = q
+      again.textContent = "↻ Ask again"
+      head.insertBefore(again, head.lastChild)
+    }
     box.appendChild(head)
     this._appendFindChips(box, results)
   }
@@ -1090,6 +1128,29 @@ export default class extends Controller {
   }
 
   _renderAiFinds(box, q, data, { offline = false } = {}) {
+    box.dispatchEvent(new CustomEvent("ai:settled"))
+    if (data && !data.ok && AI_FAILURES.includes(data.error)) {
+      // The study assistant failed (not a miss): say so, with Try again.
+      box.innerHTML =
+        `<div class="head"><span class="lbl">&#10038; The study assistant couldn&rsquo;t answer</span>` +
+        `<button type="button" class="close" data-action="presentation#cancelFinds">&#10005;</button></div>`
+      const card = document.createElement("div")
+      card.className = "card"
+      const sum = document.createElement("div")
+      sum.className = "sum"
+      sum.textContent = data.error === "timeout"
+        ? `It took too long to answer “${q}”. References like “Rom 8:28” still work.`
+        : `Couldn’t reach the AI for “${q}” just now. References like “Rom 8:28” still work.`
+      const again = document.createElement("button")
+      again.type = "button"
+      again.className = "project"
+      again.dataset.action = "presentation#retryFind"
+      again.dataset.q = q
+      again.textContent = "↻ Try again"
+      card.append(sum, again)
+      box.appendChild(card)
+      return
+    }
     if (!data?.ok || (!data.summary && !data.suggestions?.length)) {
       // A genuine miss (e.g. not a biblical subject) — tell the operator plainly
       // instead of a silent flash, so the Go box never feels broken.

@@ -632,6 +632,11 @@
 .ps-rabbi-loading .hint { margin-top: 4px; font: italic 12.5px "EB Garamond", serif; color: var(--sepia-mute); }
 .ps-rabbi-loading.is-error .orn { animation: none; color: var(--rubric); }
 .ps-rabbi-loading.is-error .ps-tb-btn { margin-top: 14px; }
+.ps-rabbi-loading.is-error .ps-tb-btn,
+.ps-rabbi-loading.is-error .ps-tb-btn:disabled { display: block; margin: 14px auto 0; padding: 8px 20px; border: 0; border-radius: 999px; background: var(--ui-accent, #8A2418); color: var(--ui-accent-fg, #FFF8EA); font: 600 13px/1.2 var(--ui-font, "Inter", system-ui, sans-serif); opacity: 1; cursor: pointer; }
+.ps-rabbi-loading.is-error .ps-tb-btn:hover { background: var(--ui-accent-hover, #5E1A12); }
+.ps-rabbi-loading.is-small { padding: 18px 12px; }
+.ps-ai-elapsed { margin-top: 8px; min-height: 1em; font: 12px/1 "Inter", system-ui, sans-serif; color: var(--sepia-mute); font-variant-numeric: tabular-nums; }
 .ps-ai-hint.is-error { color: var(--rubric); }
 @keyframes ps-rabbi-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 

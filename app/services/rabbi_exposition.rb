@@ -126,6 +126,12 @@ class RabbiExposition
     "rabbi_exposition/v2/#{@translation&.id}/#{@verses.map(&:id).sort.join("-")}/#{digest}"
   end
 
+  # True when this exact question is already answered in the cache, so the
+  # controller can render it at once instead of queueing a job.
+  def cached?
+    @verse.present? && @selection.present? && Rails.cache.read(cache_key).is_a?(Hash)
+  end
+
   private
 
   def error(code) = Result.new(ok: false, error: code, origin: origin_label, selection: @selection)

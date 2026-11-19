@@ -35,8 +35,10 @@
     <div class="ps-rabbi-draw-note">Nothing to picture in this passage.</div>
   <% elsif state == :no_key %>
     <div class="ps-rabbi-draw-note">&#9888; No image provider configured &mdash; add <code>OPENAI_API_KEY</code> to illustrate.</div>
-  <% elsif state == :api %>
-    <div class="ps-rabbi-draw-note">Couldn&rsquo;t create the image just now &mdash; please try again.</div>
+  <% elsif state == :api || state == :budget %>
+    <div class="ps-rabbi-draw-note" role="alert">Couldn&rsquo;t create the image just now &mdash; please try again.</div>
+  <% elsif state == :timeout %>
+    <div class="ps-rabbi-draw-note" role="alert">The painting took too long &mdash; please try again.</div>
   <% end %>
 
   <% if verse_id.present? && !exhausted %>
@@ -55,7 +57,9 @@
 
       <%= button_to rabbi_illustration_study_path(study, verse_id: verse_id, verse_ids: verse_ids, q: selection, style: style),
             class: "ps-rabbi-draw", form: { data: { turbo_frame: "rabbi_illustration_frame" }, style: "display:contents;" } do %>
-        <%= image.present? ? "↻ A new illustration" : "✦ Illustrate this passage" %>
+        <%= if image.present? then "↻ A new illustration"
+            elsif %i[api budget timeout].include?(state) then "↻ Try again"
+            else "✦ Illustrate this passage" end %>
       <% end %>
       <span class="ps-rabbi-drawing">&#10022; Painting the scene&hellip; this can take ~15 seconds.</span>
       <% if remaining %>
