@@ -5,11 +5,13 @@ import { passageVerses } from "../lib/offline/pane_renderer"
 import { precachePages } from "../lib/offline/page"
 import { refreshSongs } from "../lib/song_library"
 import { onArrival } from "../lib/arrival"
+import { saveMedia } from "../lib/offline/media"
 
 // "Get ready for Sunday" (preach queue drawer, and the Preach section of the
 // More sheet via [data-sunday-prepare]): makes this study preachable with no
 // Wi-Fi. It downloads every Bible the study's panes use, checks every queued
 // scripture and pane passage against those downloads, saves the song bank,
+// the service's pictures (My Media / queue pictures, lib/offline/media.js),
 // the study page,
 // the projector (?output=1) and stage (?stage=1) screens and their assets, and
 // shows a checklist — "Whole KJV Bible saved on this device (66 books) ✓",
@@ -108,7 +110,21 @@ export default class extends Controller {
     if (songs) this.set(bank, "ok", `Song bank saved on this device (${songs.length} songs) ✓`)
     else this.set(bank, "warn", "Couldn't save the song bank — songs already in the queue still work offline")
 
-    // 4. The study, projector and stage screens (and their CSS/JS/fonts).
+    // 4. The service's pictures, so they project with no internet.
+    let picturesOk = true
+    const pictures = this.pictureUrls()
+    if (pictures.length) {
+      const row = this.item("busy", "Saving this service's pictures…")
+      const saved = await saveMedia(pictures, {
+        onProgress: ({ done, total }) => this.set(row, "busy", `Saving this service's pictures… ${done} of ${total}`)
+      })
+      picturesOk = !saved.failed && !saved.unsupported
+      if (saved.unsupported) this.set(row, "warn", "This browser can't keep pictures offline — use Chrome/Edge or the app.")
+      else if (saved.failed) this.set(row, "warn", `${saved.saved} of ${saved.total} pictures saved on this device — ${saved.failed} couldn't be saved, try again`)
+      else this.set(row, "ok", `${saved.total} picture${saved.total === 1 ? "" : "s"} saved on this device ✓`)
+    }
+
+    // 5. The study, projector and stage screens (and their CSS/JS/fonts).
     const screens = this.item("busy", "Saving the study, projector and stage screens…")
     const url = this.studyUrlValue
     const result = await precachePages([ url, `${url}?output=1`, `${url}?stage=1`, "/read", "/offline" ])
@@ -122,7 +138,7 @@ export default class extends Controller {
     if (this.signedInValue) refreshHighlights().catch(() => {})
 
     this.item("warn", "Live follow-along and the phone remote need internet; everything else works offline.")
-    if (result && !result.failed?.length && !missing.length) {
+    if (result && !result.failed?.length && !missing.length && picturesOk) {
       await setMeta(this.metaKey, Date.now()).catch(() => {})
       this.showLastReady()
     }
@@ -136,6 +152,13 @@ export default class extends Controller {
     const panes = [ ...document.querySelectorAll(".ps-workspace .ps-pane form.rd-pane-form input[name='pane[reference]']") ]
       .map((i) => i.value.trim()).filter(Boolean)
     return [ ...new Set([ ...queued, ...panes ]) ]
+  }
+
+  // The queue's pictures (the setlist controller's own copy).
+  pictureUrls() {
+    let items = []
+    window.dispatchEvent(new CustomEvent("setlist:request-items", { detail: { reply: (list) => { items = list } } }))
+    return items.filter((i) => i.kind === "picture" && i.image).map((i) => i.image)
   }
 
   // Readable offline in at least the first pane's translation.

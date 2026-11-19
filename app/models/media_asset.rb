@@ -49,14 +49,39 @@ class MediaAsset < ApplicationRecord
     update_column(:last_used_at, Time.current)
   end
 
+  # A small picture for grids (the console's My Media, the /media page):
+  # Cloudinary resizes by URL; our own files get an Active Storage variant
+  # only where libvips is installed (production may not have it — then the
+  # grid shows the picture itself, lazy-loaded, rather than a request that
+  # fails on every card).
   def thumb_url
-    if file.attached? && file.variable?
-      Rails.application.routes.url_helpers.rails_representation_path(file.variant(:thumb), only_path: true)
-    elsif media_url.to_s.include?("res.cloudinary.com") && media_url.include?("/upload/")
+    if cloudinary?
       media_url.sub("/upload/", "/upload/c_limit,w_#{THUMB_SIZE[0]},h_#{THUMB_SIZE[1]}/")
+    elsif file.attached? && file.variable? && self.class.thumbnails?
+      Rails.application.routes.url_helpers.rails_representation_path(file.variant(:thumb), only_path: true)
     else
       media_url
     end
+  end
+
+  def cloudinary? = media_url.to_s.start_with?("https://res.cloudinary.com/") && media_url.include?("/upload/")
+
+  # Can this server make thumbnails? (ruby-vips raises LoadError when the
+  # libvips library isn't installed.) Checked once per process.
+  def self.thumbnails?
+    return @thumbnails if defined?(@thumbnails)
+    @thumbnails = begin
+      require "vips"
+      true
+    rescue LoadError
+      Rails.logger.info("[MediaAsset] libvips not available — grids show the pictures themselves")
+      false
+    end
+  end
+
+  # Tests flip this.
+  def self.thumbnails=(value)
+    @thumbnails = value
   end
 
   def pixel_width = width || file_metadata("width")

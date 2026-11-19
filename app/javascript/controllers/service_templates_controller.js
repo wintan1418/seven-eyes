@@ -95,7 +95,8 @@ export default class extends Controller {
     if (!this.signedIn) { window.dispatchEvent(new CustomEvent("auth:required")); return }
     const name = this.nameTarget.value.trim()
     if (!name) { this._status("Give the template a name — e.g. Sunday Service"); this.nameTarget.focus(); return }
-    const items = this._queueItems().filter((i) => i.kind !== "picture").map(snapshot)
+    // Pictures are kept by their My Media entry (one queued before My Media can't be).
+    const items = this._queueItems().filter((i) => i.kind !== "picture" || i.media_asset_id).map(snapshot)
     if (!items.length) { this._status("The queue is empty — line up the service first, then save it."); return }
     const existing = this.templates.find((t) => t.name.toLowerCase() === name.toLowerCase())
     if (existing && !window.confirm(`Replace the “${existing.name}” template with this order?`)) return
@@ -191,6 +192,10 @@ function snapshot(item) {
   const out = { kind: item.kind }
   ;[ "reference", "title", "body", "arrangement" ].forEach((k) => { if (item[k]) out[k] = item[k] })
   if (item.data) out.data = item.data
+  if (item.kind === "picture") {
+    out.media_asset_id = item.media_asset_id
+    if (item.image) out.image = item.image // shown on this device before the server answers
+  }
   return out
 }
 
@@ -198,8 +203,10 @@ function snapshot(item) {
 export function queueFields(item) {
   const fields = { kind: item.kind, reference: item.reference || null, title: item.title || null, body: item.body || null,
     arrangement: item.arrangement || null, data: item.data || null }
+  if (item.kind === "picture") Object.assign(fields, { image: item.image || null, media_asset_id: item.media_asset_id || null })
   if (item.kind === "scripture") fields.label = item.reference
   else if (item.kind === "scripture_set") fields.label = item.title || setLabel(item.data)
+  else if (item.kind === "picture") fields.label = item.title || "Picture"
   else fields.label = item.title || String(item.body || "").split("\n").find((l) => l.trim()) || ""
   if (item.kind === "song" || item.kind === "thought") fields.stanzas = songSlides(item.body || "", item.arrangement || "").slides.length
   else if (item.kind === "scripture_set") fields.stanzas = setPages(item.data).length
@@ -212,7 +219,7 @@ export function queueFields(item) {
 function summary(t) {
   const counts = {}
   ;(t.items || []).forEach((i) => { counts[i.kind] = (counts[i.kind] || 0) + 1 })
-  const names = { scripture: "scripture", scripture_set: "scripture slide", song: "song", thought: "thought", presentation: "presentation", seminar: "seminar" }
+  const names = { scripture: "scripture", scripture_set: "scripture slide", song: "song", thought: "thought", presentation: "presentation", seminar: "seminar", picture: "picture" }
   const parts = Object.entries(counts).map(([ k, n ]) => `${n} ${names[k] || k}${n === 1 ? "" : "s"}`)
   return `${parts.join(" · ")}${t.pending ? " · not synced yet" : ""}`
 }

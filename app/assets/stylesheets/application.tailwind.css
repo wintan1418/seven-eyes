@@ -44,6 +44,7 @@
 @import "./ui/home.css"; /* the home page: Today hero, Continue rail, For you, This Sunday */
 @import "./ui/today.css"; /* the Today flow (/today/begin) */
 @import "./ui/faith_admin.css"; /* glossary review desk: Rewrite with AI */
+@import "./ui/media.css"; /* My Media (/media): the account's picture library */
 @import "./ui/native.css";
 @import "./ui/offline.css";
 

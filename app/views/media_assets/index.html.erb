@@ -1,0 +1,63 @@
+<% content_for :title, "My Media · BiblioRata" %>
+<%# My Media: the account's picture library — upload once, use in any service
+    on any computer. Cards are server-rendered (_asset) and changed through
+    Turbo Streams; the media_library controller uploads (several at once, with
+    progress), filters by title, and saves pictures on this device for offline
+    use (lib/offline/media.js, the service worker's ps-media cache). %>
+<div class="ps-root ui-more-page ui-media-page">
+  <%= render "studies/app_bar", title: "My Media" %>
+  <%= render "studies/menu_sheet" %>
+
+  <main class="ui-more-main ui-media-main" data-controller="media-library">
+    <% if authenticated? %>
+      <section class="ui-menu-section mm-head" aria-label="Your pictures">
+        <p class="ui-offline-intro">
+          Upload a picture once &mdash; a flyer, a photo, a sermon graphic &mdash; and use it in any service, on any
+          computer: just sign in. Pictures you add to a service are kept here too.
+        </p>
+        <div class="mm-toolbar">
+          <label class="ui-btn is-primary mm-upload">
+            <%= icon(:plus) %><span>Upload pictures</span>
+            <input type="file" accept="image/*" multiple class="mm-file" data-media-library-target="file"
+                   data-action="change->media-library#upload">
+          </label>
+          <button type="button" class="ui-btn mm-offline-btn" data-media-library-target="offlineButton"
+                  data-action="media-library#saveOffline" hidden>
+            <%= icon(:download) %><span data-media-library-target="offlineLabel">Save all on this device</span>
+          </button>
+        </div>
+        <p class="mm-hint">JPG, PNG or WebP, up to 5&nbsp;MB each &mdash; drop several at once. The same picture is never stored twice.</p>
+        <div id="media-storage"><%= render "media_assets/storage" %></div>
+        <ul class="mm-uploads" data-media-library-target="uploads" aria-live="polite"></ul>
+        <p id="media-status" class="mm-status" role="status" data-media-library-target="status"></p>
+      </section>
+
+      <section class="ui-menu-section" aria-label="Library">
+        <div class="mm-searchbar">
+          <span class="mm-search">
+            <%= icon(:search) %>
+            <input type="search" placeholder="Search by title" aria-label="Search your pictures by title"
+                   autocomplete="off" data-media-library-target="search" data-action="input->media-library#filter">
+          </span>
+          <span class="mm-device" data-media-library-target="device" role="status"></span>
+        </div>
+        <ul id="media-grid" class="mm-grid" data-media-library-target="grid">
+          <%= render partial: "media_assets/asset", collection: @assets, as: :asset, locals: { counts: @counts } %>
+        </ul>
+        <p class="mm-empty">No pictures yet. Upload a few above &mdash; or add one to a service and it shows up here.</p>
+        <p class="mm-nomatch" data-media-library-target="nomatch" hidden>No picture has that in its title.</p>
+      </section>
+    <% else %>
+      <section class="ui-menu-section">
+        <p class="ui-offline-intro">
+          <strong>My Media</strong> keeps your flyers, photos and sermon graphics in one place, so you can use them in
+          any service, on any computer &mdash; and still show them when the venue's internet drops.
+        </p>
+        <p class="mm-signin">
+          <%= link_to "Sign in", new_session_path, class: "ui-btn is-primary" %>
+          <%= link_to "Create a free account", new_registration_path, class: "ui-btn" %>
+        </p>
+      </section>
+    <% end %>
+  </main>
+</div>

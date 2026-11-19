@@ -21,6 +21,10 @@
 //     So do saved pages; a saved page also never waits more than 4 s on a
 //     request that hangs, and ?saved=1 ("Present offline") opens the saved
 //     copy at once (refreshing it in the background).
+//   • Pictures (queue / My Media: /rails/active_storage/… and Cloudinary) come
+//     from the "ps-media" cache when saved for offline use (lib/offline/
+//     media.js — "Save for offline", Get ready for Sunday, entering preach),
+//     else from the network. Kept across deploys, cleared on sign-out.
 //   • Writes queued offline (outbox) are replayed on Background Sync.
 //   • Right after it takes control, and again every few hours online (the page
 //     asks with a "warm" message, lib/offline/warm.js), it saves the app's core
@@ -43,6 +47,7 @@ import { renderOfflinePane, offlineReferenceCheck } from "./lib/offline/offline_
 import { flushOutbox, queuePaneVisit } from "./lib/offline/outbox"
 import { networkSlowStored, markNetworkSlow, markNetworkFine } from "./lib/offline/network"
 import { chapterVerses } from "./lib/offline/pane_renderer"
+import { MEDIA_CACHE, isMediaUrl, mediaResponse } from "./lib/offline/media"
 import {
   SHELL_ROOT, DEFAULT_PLACE, parseShellPath, pickBible, renderChapter, renderBooks, renderNoBible, renderOffline
 } from "./lib/offline/shell"
@@ -53,7 +58,7 @@ const CACHE_VERSION = CONFIG.version
 const STATIC_CACHE = "ps-static"
 const PAGES_CACHE = "ps-pages"
 const FONTS_CACHE = "ps-fonts"
-const KEEP = [ STATIC_CACHE, PAGES_CACHE, FONTS_CACHE ]
+const KEEP = [ STATIC_CACHE, PAGES_CACHE, FONTS_CACHE, MEDIA_CACHE ]
 
 const PUBLIC_PAGE = /^\/p\/[^/]+\/?$/
 const STUDY_PAGE = /^\/studies\/\d+$/
@@ -121,6 +126,12 @@ self.addEventListener("sync", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event
   const url = new URL(request.url)
+
+  // A queue / My Media picture: the copy saved on this device first.
+  if (request.method === "GET" && isMediaUrl(url.href, self.location.origin)) {
+    event.respondWith(mediaResponse(request))
+    return
+  }
 
   if (url.origin !== self.location.origin) {
     if (request.method === "GET" && FONT_HOSTS.includes(url.hostname)) {

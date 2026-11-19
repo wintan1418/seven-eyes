@@ -28,8 +28,8 @@ Rails.application.routes.draw do
     end
   end
 
-  # My Media: the account's picture library (JSON for the console's My Media view).
-  resources :media_assets, path: "media", only: %i[ index create ], defaults: { format: :json }
+  # My Media: the account's picture library (HTML page + JSON for the console).
+  resources :media_assets, path: "media", only: %i[ index create update destroy ]
 
   resources :songs, only: %i[ create destroy ]
   # Song bank collections and saved service orders, keyed by the device's id.

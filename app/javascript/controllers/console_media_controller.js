@@ -2,6 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 import { getMeta, setMeta } from "../lib/offline/db"
 import { quickFetch, isNetworkSlow } from "../lib/offline/network"
 import { owner, signedIn } from "../lib/offline/page"
+import { saveMedia, mediaOnDevice } from "../lib/offline/media"
 import { applyPicture, pictureDisplay, pictureLabel } from "../lib/picture_fit"
 
 // The console's Pictures tab, around the Picture Bank (console-library):
@@ -15,12 +16,17 @@ import { applyPicture, pictureDisplay, pictureLabel } from "../lib/picture_fit"
 //                               the queue (by library id, through the outbox —
 //                               works offline). Upload adds to the library and,
 //                               ticked, to the service too.
+//   offline                     how many of the view's pictures are on this
+//                               device, and "Save for offline" (the service
+//                               worker's ps-media cache, lib/offline/media.js).
+//                               Entering preach saves the service's pictures
+//                               by itself (signed in, not on Data Saver).
 const LIST_TIMEOUT_MS = 5000
 const UPLOAD_TIMEOUT_MS = 120_000
 const MAX_BYTES = 5 * 1024 * 1024
 
 export default class extends Controller {
-  static targets = [ "tab", "view", "grid", "search", "status", "also", "controls", "name", "upload" ]
+  static targets = [ "tab", "view", "grid", "search", "status", "also", "controls", "name", "offlineText", "offlineButton", "upload" ]
 
   connect() {
     this.root = this.element.closest(".ps-root")
@@ -29,7 +35,8 @@ export default class extends Controller {
     this._view = "service"
     this._selected = null
     this._listeners = {
-      "setlist:changed": () => this._markInService(),
+      "setlist:changed": () => { this._markInService(); this._paintOffline() },
+      "preach:enter": () => this._autoSave(),
       "console:on": () => { if (this._view === "library") this._refresh() }
     }
     Object.entries(this._listeners).forEach(([ name, fn ]) => window.addEventListener(name, fn))
@@ -51,6 +58,7 @@ export default class extends Controller {
     })
     this.viewTargets.forEach((v) => { v.hidden = v.dataset.pbankView !== this._view })
     if (this._view === "library") this._refresh()
+    this._paintOffline()
   }
 
   // ---- the library: device copy first, then the server ----------------------------------------
@@ -91,11 +99,12 @@ export default class extends Controller {
     }
     const q = this.hasSearchTarget ? this.searchTarget.value.trim().toLowerCase() : ""
     const list = this.assets.filter((a) => !q || String(a.title || "").toLowerCase().includes(q))
-    if (!this.assets.length) this.gridTarget.replaceChildren(el("li", "cx-empty", "No pictures in My Media yet — upload some here, or add one to any service and it is kept here too."))
+    if (!this.assets.length) this.gridTarget.replaceChildren(el("li", "cx-empty", "No pictures in My Media yet — upload some here or on the My Media page, or add one to any service and it is kept here too."))
     else if (!list.length) this.gridTarget.replaceChildren(el("li", "cx-empty", "No picture has that in its title."))
     else this.gridTarget.replaceChildren(...list.map((a) => this._card(a)))
     this._markInService()
     this._paintControls()
+    this._paintOffline()
   }
 
   filter() { this._paint() }
@@ -120,7 +129,8 @@ export default class extends Controller {
     frame.append(img)
     const cap = el("span", "cap")
     cap.append(el("span", "lbl", asset.title || "Picture"), el("span", "tag inservice", "IN SERVICE"),
-      el("span", "meta", pictureLabel(asset.display)))
+      el("span", "dot", "●"), el("span", "meta", pictureLabel(asset.display)))
+    cap.querySelector(".dot").title = "On this device — shows with no internet"
     btn.append(frame, cap)
     card.append(btn)
     return card
@@ -217,7 +227,7 @@ export default class extends Controller {
     input.value = ""
     if (!files.length) return
     if (!signedIn()) { window.dispatchEvent(new CustomEvent("auth:required")); return }
-    if (navigator.onLine === false) { this._status("You're offline — uploading needs a connection."); return }
+    if (navigator.onLine === false) { this._status("You're offline — uploading needs a connection. Pictures saved on this device still show."); return }
     const also = this.hasAlsoTarget && this.alsoTarget.checked
     let added = 0
     const problems = []
@@ -247,6 +257,63 @@ export default class extends Controller {
     this._paint()
     const done = added ? `Added ${added} picture${added === 1 ? "" : "s"} to My Media${also ? " and this service" : ""}.` : ""
     this._status([ done, problems.join(" · ") ].filter(Boolean).join(" "))
+  }
+
+  // ---- offline -------------------------------------------------------------------------------
+
+  _viewUrls() {
+    return this._view === "library" ? this.assets.map((a) => a.url) : this._serviceItems().map((i) => i.image)
+  }
+
+  async _paintOffline() {
+    if (!this.hasOfflineTextTarget) return
+    const urls = [ ...new Set(this._viewUrls().filter(Boolean)) ]
+    const saved = await mediaOnDevice(urls)
+    if (this._view === "library" && this.hasGridTarget) {
+      this.gridTarget.querySelectorAll(".cx-pcard").forEach((c) => c.classList.toggle("is-on-device", saved.has(c.dataset.url)))
+    }
+    if (this._saving) return
+    const what = this._view === "library" ? "in My Media" : "in this service"
+    if (!urls.length) {
+      this.offlineTextTarget.textContent = ""
+      this.offlineButtonTarget.hidden = true
+      return
+    }
+    const all = saved.size >= urls.length
+    this.offlineTextTarget.textContent = all
+      ? `✓ All ${urls.length} picture${urls.length === 1 ? "" : "s"} ${what} available offline`
+      : `${saved.size} of ${urls.length} picture${urls.length === 1 ? "" : "s"} ${what} on this device`
+    this.offlineTextTarget.dataset.state = all ? "ready" : "missing"
+    this.offlineButtonTarget.hidden = all
+  }
+
+  async saveOffline(event) {
+    event?.preventDefault?.()
+    await this._save(this._viewUrls())
+  }
+
+  // Entering preach: the service's pictures go on the device by themselves.
+  _autoSave() {
+    if (!signedIn() || navigator.connection?.saveData || navigator.onLine === false || isNetworkSlow()) { this._paintOffline(); return }
+    setTimeout(() => this._save(this._serviceItems().map((i) => i.image), { quiet: true }), 1500)
+  }
+
+  async _save(urls, { quiet = false } = {}) {
+    if (this._saving) return
+    if (navigator.onLine === false) { if (!quiet) this.offlineTextTarget.textContent = "Offline — connect to save pictures on this device"; return }
+    this._saving = true
+    this.offlineButtonTarget.disabled = true
+    try {
+      const result = await saveMedia(urls, {
+        onProgress: ({ done, total }) => { if (total) this.offlineTextTarget.textContent = `Saving pictures for offline… ${done} of ${total}` }
+      })
+      if (result.unsupported && !quiet) this._status("This browser can't keep pictures offline — use Chrome, Edge or the app.")
+      else if (result.failed && !quiet) this._status(`${result.failed} picture${result.failed === 1 ? "" : "s"} couldn't be saved — try again.`)
+    } finally {
+      this._saving = false
+      this.offlineButtonTarget.disabled = false
+      this._paintOffline()
+    }
   }
 
   _status(text) {

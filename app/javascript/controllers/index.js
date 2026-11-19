@@ -73,6 +73,9 @@ application.register("lexicon", LexiconController)
 import LiveController from "./live_controller"
 application.register("live", LiveController)
 
+import MediaLibraryController from "./media_library_controller"
+application.register("media-library", MediaLibraryController)
+
 import LiveFollowController from "./live_follow_controller"
 application.register("live-follow", LiveFollowController)
 

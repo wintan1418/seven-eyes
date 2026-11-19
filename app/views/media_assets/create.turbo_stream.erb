@@ -1,0 +1,8 @@
+<% response.headers["X-Media-Created"] = @created ? "1" : "0" %>
+<% if @created %>
+  <%= turbo_stream.prepend "media-grid", partial: "media_assets/asset", locals: { asset: @asset, count: @count } %>
+<% else %>
+  <%= turbo_stream.remove dom_id(@asset) %>
+  <%= turbo_stream.prepend "media-grid", partial: "media_assets/asset", locals: { asset: @asset, count: @count } %>
+<% end %>
+<%= turbo_stream.update "media-storage", partial: "media_assets/storage" %>
