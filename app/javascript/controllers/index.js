@@ -22,6 +22,9 @@ application.register("autoscroll", AutoscrollController)
 import ListenOptionsController from "./listen_options_controller"
 application.register("listen-options", ListenOptionsController)
 
+import ListenPillController from "./listen_pill_controller"
+application.register("listen-pill", ListenPillController)
+
 import ChapterSwipeController from "./chapter_swipe_controller"
 application.register("chapter-swipe", ChapterSwipeController)
 

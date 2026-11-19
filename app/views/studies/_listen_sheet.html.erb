@@ -1,6 +1,8 @@
-<%# Listen: opens from a chapter's Listen button. Pick a voice, a speed and how
-    to listen, then Play (reader controller reads these choices). %>
-<div class="ui-sheet ui-sheet--dialog ui-listen-sheet" data-controller="sheet listen-options" data-sheet-id-value="listen" data-chrome hidden>
+<%# Listen: opens from a chapter's Listen button (or Compare's Listen pill).
+    Pick a voice, a speed and how to listen, then Play (reader controller
+    reads these choices). In Compare, also which passage to hear. %>
+<div class="ui-sheet ui-sheet--dialog ui-listen-sheet" data-controller="sheet listen-options" data-sheet-id-value="listen"
+     data-action="sheet:opened->listen-options#opened" data-chrome hidden>
   <div class="ui-sheet-backdrop" data-action="click->sheet#close"></div>
   <section class="ui-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="listen-sheet-title" tabindex="-1">
     <header class="ui-sheet-head">
@@ -8,6 +10,16 @@
       <button type="button" class="ui-iconbtn is-sm" data-action="sheet#close" aria-label="Close"><%= icon(:x) %></button>
     </header>
     <div class="ui-sheet-body ui-settings">
+      <div class="ls-now" data-listen-options-target="now" role="status" hidden>
+        <span class="ls-now-text"><span class="ls-now-kicker">Playing</span> <span data-listen-options-target="nowLabel"></span></span>
+        <button type="button" class="ui-btn is-quiet ls-stop" data-action="listen-options#stop">Stop</button>
+      </div>
+
+      <div class="ui-setting ls-sides" data-listen-options-target="sides" hidden>
+        <div class="ui-label" id="listen-side-label">Passage to hear</div>
+        <div class="ls-side-list" role="radiogroup" aria-labelledby="listen-side-label" data-listen-options-target="sideList"></div>
+      </div>
+
       <%= render "studies/voice_setting" %>
 
       <div class="ui-setting">
