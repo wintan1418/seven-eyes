@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import { hasSecondScreen, windowManagement, projectorScreen, featuresFor, moveTo } from "../lib/second_screen"
-import { warmLocal, localCheck, loadPaneLocally } from "../lib/offline/local_pane"
+import { warmLocal, localCheck, loadPaneLocally, renderPaneHtml, swapPaneHtml } from "../lib/offline/local_pane"
 import { quickFetch, isNetworkSlow } from "../lib/offline/network"
 import { allBookTexts } from "../lib/offline/store"
 import { searchVerses } from "../lib/offline/keyword_search"
@@ -13,6 +13,7 @@ import { renderWordSlide, renderStageWord } from "../lib/root_word_slide"
 import { transitionStyle, crossfade } from "../lib/slide_transition"
 import { fitElement, screenCap } from "../lib/fit_text"
 import { pictureDisplay, samePicture, applyPicture } from "../lib/picture_fit"
+import { stepPlan, landingIndex, nearEdges, prefetchKey } from "../lib/chapter_step"
 
 // Drives focus-pane presentation mode plus the EasyWorship-style preach sub-mode.
 //
@@ -62,6 +63,8 @@ const GROUP_MAX = 3 // the preach bar offers 1–3 verses per slide
 // goes up as one slide, EasyWorship-style, up to this many verses.
 const RANGE_MAX = 6
 const ESC_CONFIRM_MS = 1500
+const PREFETCH_KEEP = 6 // rendered neighbour chapters kept per window
+const PREFETCH_MAX_AGE_MS = 10 * 60_000
 const LOAD_TIMEOUT_MS = 10_000 // a pane load that never answers stops blocking
 const CHECK_TIMEOUT_MS = 1500 // the server's reference check, for what the device can't read
 const GO_HINTS = {
@@ -101,6 +104,12 @@ export default class extends Controller {
     this._loadsPending = 0
     this._latestState = null
     this._mirrorRefs = new Map() // pane index → "reference|translation" requested
+    // Next/Prev across chapters (lib/chapter_step): the neighbouring chapters,
+    // rendered ahead (prefetchKey → {html, at}), shared with the projector.
+    this._prefetched = new Map()
+    this._prefetching = new Set()
+    this._crossing = false // a chapter step is loading: further steps wait for it
+    this._passagesLoading = 0 // _loadPassage loads in flight (a pane mid-swap has no edge yet)
   }
 
   connect() {
@@ -307,17 +316,81 @@ export default class extends Controller {
     event?.preventDefault?.()
     if (this._slide) { this._stepSlide(+1); return }
     if (this._isSplit()) { this._stepActiveRegion(+1); return }
-    const verses = this._primaryVerses()
-    if (this._preachIndex + this._groupSize >= verses.length) return
-    this._transition(() => { this._preachIndex += this._groupSize })
+    this._step(+1)
   }
 
   prev(event) {
     event?.preventDefault?.()
     if (this._slide) { this._stepSlide(-1); return }
     if (this._isSplit()) { this._stepActiveRegion(-1); return }
-    if (this._preachIndex <= 0) return
-    this._transition(() => { this._preachIndex = Math.max(0, this._preachIndex - this._groupSize) })
+    this._step(-1)
+  }
+
+  // Verse by verse — and off the end of a chapter straight into the next one
+  // (1 Cor 14:40 → 15:1, Malachi 4:6 → Matthew 1:1), EasyWorship-style; Prev
+  // on verse 1 goes to the last verse of the chapter before.
+  _step(direction) {
+    if (this._crossing) return
+    const verses = this._primaryVerses()
+    if (!verses.length) return
+    const { prev, next } = this._neighbourChapters()
+    const plan = stepPlan({ index: this._preachIndex, group: this._groupSize, count: verses.length, direction, prevRef: prev, nextRef: next })
+    if (plan.move === "verse") { this._transition(() => { this._preachIndex = plan.index }); return }
+    // A passage still loading has no edge yet: its last verse isn't the chapter's.
+    if (this._passagesLoading > 0) return
+    if (plan.move === "end") { this._toast("The end of Revelation — the last verse of the Bible", { ms: 2500 }); return }
+    if (plan.move !== "chapter") return
+    const pane = this.element.querySelector(".ps-pane.is-presented")
+    // A single-verse pane ("John 3:17") not yet swapped for its whole chapter
+    // (_expandToChapter): its edge isn't the chapter's edge.
+    if (/\d\s*[:.]\s*\d/.test(this._paneSource(pane).reference || "")) return
+    this._crossing = true
+    const html = this._takePrefetched(plan.reference, this._paneSource(pane).translation)
+    this._loadPassage(plan.reference, null, { remember: false, label: null, land: plan.land, html, done: () => { this._crossing = false } })
+  }
+
+  // The chapters either side of the presented pane, as its markup names them.
+  _neighbourChapters(pane = this.element.querySelector(".ps-pane.is-presented")) {
+    const box = pane?.querySelector(".ps-verses")
+    return { prev: box?.dataset.prevChapter || null, next: box?.dataset.nextChapter || null }
+  }
+
+  // Near either edge of the chapter, render the neighbouring chapter ahead
+  // (the downloaded Bible, else the server's no-save render) and hand it to
+  // the projector / stage windows too, so the step across is instant there.
+  _prefetchNeighbours(pane, count) {
+    if (this._isOutput || !pane || this._isSplit() || this._slide) return
+    const edges = nearEdges({ index: this._preachIndex, group: this._groupSize, count })
+    const { prev, next } = this._neighbourChapters(pane)
+    const translation = this._paneSource(pane).translation
+    if (edges.next && next) this._prefetch(pane, next, translation)
+    if (edges.prev && prev) this._prefetch(pane, prev, translation)
+  }
+
+  async _prefetch(pane, reference, translation) {
+    const key = prefetchKey(reference, translation)
+    const have = this._prefetched.get(key)
+    if ((have && Date.now() - have.at < PREFETCH_MAX_AGE_MS) || this._prefetching.has(key)) return
+    this._prefetching.add(key)
+    try {
+      const html = await renderPaneHtml(pane, reference, translation)
+      if (!html) return
+      this._storePrefetched(key, html)
+      this._send({ type: "prefetch", key, html })
+    } finally {
+      this._prefetching.delete(key)
+    }
+  }
+
+  _storePrefetched(key, html) {
+    this._prefetched.delete(key)
+    this._prefetched.set(key, { html, at: Date.now() })
+    while (this._prefetched.size > PREFETCH_KEEP) this._prefetched.delete(this._prefetched.keys().next().value)
+  }
+
+  _takePrefetched(reference, translation) {
+    const hit = this._prefetched.get(prefetchKey(reference, translation))
+    return hit && Date.now() - hit.at < PREFETCH_MAX_AGE_MS ? hit.html : null
   }
 
   // ----- group / fusion -----
@@ -732,20 +805,26 @@ export default class extends Controller {
   // Load a whole chapter through the presented pane's own Turbo Frame form,
   // then land on the given verse. Shared by chase, the queue, and AI finds.
   // `verseEnd`: a range ("Gen 2:1-3") — all of it on one slide (≤ RANGE_MAX verses).
-  _loadPassage(chapterReference, verseStart, { remember = true, label = undefined, verseEnd = null } = {}) {
+  // `land: "last"` lands on the chapter's last verse(s) (Prev across chapters);
+  // `html`: the pane already rendered (a prefetched neighbour chapter);
+  // `done`: called once the load finished either way.
+  _loadPassage(chapterReference, verseStart, { remember = true, label = undefined, verseEnd = null, land = null, html = null, done = null } = {}) {
     const pane = this.element.querySelector(".ps-pane.is-presented")
     const input = pane?.querySelector("input[name='pane[reference]']")
-    if (!input) return
+    if (!input) { done?.(); return }
     if (remember) this._remember()
     this._clearSlide({ repaint: false })
     input.value = chapterReference
     const split = this._isSplit()
+    this._passagesLoading++
     this._onceLoaded(pane, (ok) => {
+      this._passagesLoading = Math.max(0, this._passagesLoading - 1)
+      done?.()
       if (!ok) { this._toast(`Couldn't load ${chapterReference} — check the connection`, { tone: "error" }); return }
       if (!this.element.classList.contains("is-preaching")) return
       this._pairForParallel()
       const verses = Array.from(pane.querySelectorAll(".ps-verse"))
-      let idx = 0
+      let idx = land === "last" ? landingIndex("last", verses.length, split ? 1 : this._chosenGroup) : 0
       if (verseStart) {
         const found = verses.findIndex(v => parseInt(v.dataset.verseNum, 10) === verseStart)
         if (found >= 0) idx = found
@@ -766,6 +845,7 @@ export default class extends Controller {
       const went = label === undefined ? (verseStart ? `${chapterReference}:${verseStart}` : chapterReference) : label
       if (went) window.dispatchEvent(new CustomEvent("preach:passage", { detail: { reference: went } }))
     })
+    if (html && swapPaneHtml(pane, html)) return
     this._submitPane(pane)
   }
 
@@ -2092,6 +2172,7 @@ export default class extends Controller {
       else if (msg.type === "screen") this._applyScreen(msg)
       else if (msg.type === "join") this._applyJoin(msg)
       else if (msg.type === "exit") window.close()
+      else if (msg.type === "prefetch" && msg.key && msg.html) this._storePrefetched(msg.key, msg.html)
     } else {
       // Only the projector output flips the operator into console mode; the
       // stage display is a passive extra.
@@ -2203,6 +2284,9 @@ export default class extends Controller {
     // once they land.
     const nextParallel = !!msg.parallel
     const pairPane = nextParallel && msg.pair ? panes[msg.pair.pane] : null
+    // The operator stepped into a chapter it already sent us: swap it in
+    // inside the slide transition — no blank frame while the pane reloads.
+    if (!pairPane && this._swapPrefetched(pane, msg)) return
     let loading = this._ensurePaneLoaded(pane, msg.reference, msg.translation)
     if (pairPane && pairPane !== pane) {
       loading = this._ensurePaneLoaded(pairPane, msg.pair.reference, msg.pair.translation) || loading
@@ -2232,6 +2316,31 @@ export default class extends Controller {
     } else {
       this._transition(() => { this._preachIndex = nextIndex })
     }
+  }
+
+  // Output/stage window: put a prefetched chapter in `pane` and land on the
+  // state's verse in the same (cross)fade. false if there's nothing to swap.
+  _swapPrefetched(pane, msg) {
+    if (!msg.reference || this._loadsPending > 0) return false
+    const refInput = pane.querySelector("input[name='pane[reference]']")
+    const transSelect = pane.querySelector("select[name='pane[translation_id]']")
+    if (!refInput) return false
+    const sameRef = refInput.value.trim().toLowerCase() === msg.reference.trim().toLowerCase()
+    const sameTrans = !msg.translation || !transSelect || transSelect.value === String(msg.translation)
+    if (sameRef && sameTrans) return false
+    const html = this._takePrefetched(msg.reference, msg.translation)
+    if (!html) return false
+    this._prefetched.delete(prefetchKey(msg.reference, msg.translation)) // used once: a failed swap won't loop
+    this._mirrorRefs.set(this._workspacePanes().indexOf(pane), `${msg.reference.trim().toLowerCase()}|${msg.translation || ""}`)
+    this._afterFade = null
+    this._loadsPending++ // newer states wait for the swap (_receiveState)
+    this._crossfadeKind(() => {
+      this._loadsPending = Math.max(0, this._loadsPending - 1)
+      // A swap that fails falls back to the normal reload.
+      if (!swapPaneHtml(pane, html, { save: false })) this._mirrorRefs.delete(this._workspacePanes().indexOf(pane))
+      this._applyState(this._latestState || msg)
+    })
+    return true
   }
 
   // Output/stage window: mirror a song/thought slide. Same slide → fade to the
@@ -2516,6 +2625,7 @@ export default class extends Controller {
     this._paintNextPreview(primary, end)
     if (this._isStage) this._paintStage()
     this._broadcast()
+    this._prefetchNeighbours(this.element.querySelector(".ps-pane.is-presented"), primary.length)
   }
 
   // Operator console: preview of what the NEXT advance will put on the screen.
@@ -2523,7 +2633,10 @@ export default class extends Controller {
     const box = this.element.querySelector("[data-preach-next]")
     if (!box || this._isOutput) return
     if (end >= primary.length) {
-      box.innerHTML = `<span class="lbl">Next</span><span class="txt end">— end of chapter —</span>`
+      // Next carries on into the following chapter (lib/chapter_step).
+      const { next } = this._neighbourChapters()
+      box.innerHTML = `<span class="lbl">Next</span><span class="txt end"></span>`
+      box.querySelector(".txt").textContent = next ? `→ ${next}:1` : "— end of the Bible —"
       return
     }
     const upcoming = primary.slice(end, Math.min(primary.length, end + this._groupSize))

@@ -107,6 +107,13 @@
 .ps-verse-list[hidden] { display: none; }
 .ps-verse-list .head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 2px 2px 4px; }
 .ps-verse-list .ttl { font: 700 12px Inter, sans-serif; letter-spacing: 0.06em; color: #d8c389; }
+/* Next/Prev walked into the neighbouring chapter: the label glows once (preview#_flashTitle). */
+.ps-verse-list .ttl.is-turned { animation: ps-chapter-turn 1.4s ease-out; border-radius: 4px; }
+@keyframes ps-chapter-turn {
+  0% { background: rgba(216, 195, 137, 0.35); color: #fff3cf; box-shadow: 0 0 0 4px rgba(216, 195, 137, 0.35); }
+  100% { background: transparent; box-shadow: 0 0 0 4px transparent; }
+}
+@media (prefers-reduced-motion: reduce) { .ps-verse-list .ttl.is-turned { animation: none; } }
 .ps-verse-list .hint { font: 11px Inter, sans-serif; color: rgba(244, 234, 210, 0.5); }
 .ps-verse-list .rows {
   list-style: none; margin: 0; padding: 0; max-height: 30vh; overflow-y: auto;

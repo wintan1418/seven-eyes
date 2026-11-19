@@ -211,7 +211,9 @@ function okBody(ctx, c) {
       (nextRef ? paneButton(ctx, { reference: nextRef, cls: "rd-pager-btn is-next", title: `Next chapter (${nextRef})`, formClass: "rd-pager-form is-next", inner: `<span>${esc(nextRef)}</span>${ctx.icon("chevron_right")}` }) : "") +
       `</nav>`
     : ""
-  return `<div class="ps-verses"${focus}><div class="rd-column">` +
+  // data-prev/next-chapter: preach mode's Next/Prev carry on across chapters (lib/chapter_step).
+  const neighbours = ` data-prev-chapter="${esc(prevRef || "")}" data-next-chapter="${esc(nextRef || "")}"`
+  return `<div class="ps-verses"${focus}${neighbours}><div class="rd-column">` +
     `<header class="ref-title rd-chapter-head"><span class="rd-book">${esc(book.name)}</span><span class="rd-chapter-num">${esc(number)}</span><span class="tag rd-trans">${esc(t.display_name)}</span></header>` +
     `<div class="rule" aria-hidden="true"></div>` +
     `<div class="rd-chapter-tools" data-chrome>` +

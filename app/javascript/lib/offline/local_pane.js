@@ -123,3 +123,52 @@ function savePaneReference(url, { reference, translationId }, who) {
     headers: { "X-CSRF-Token": document.querySelector("meta[name='csrf-token']")?.content || "", Accept: "text/html" }
   }, { timeoutMs: SAVE_TIMEOUT_MS, read: "text" }).catch(queue)
 }
+
+// Preach mode's chapter prefetch (lib/chapter_step): the pane `frame` would
+// show for `reference` in `translationId`, rendered ahead of time — from the
+// downloaded Bible when it has it, else by the server WITHOUT saving
+// (panes#update's `mirror` render, the same one the projector uses). null if
+// neither can answer. Never touches the frame.
+const PREFETCH_TIMEOUT_MS = 6000
+
+export async function renderPaneHtml(frame, reference, translationId) {
+  const form = frame?.querySelector("form.rd-pane-form")
+  const action = form?.getAttribute("action")
+  const match = action?.match(/^\/studies\/(\d+)\/panes\/(\d+)/)
+  if (!match || !reference) return null
+  const token = document.querySelector("meta[name='csrf-token']")?.content || ""
+  try {
+    const html = await renderOfflinePane({
+      studyId: match[1], paneId: match[2], reference, translationId,
+      context: paneContext(frame), token, onlyIfReady: true
+    })
+    if (html) return html
+  } catch { /* not on the device */ }
+  if (navigator.onLine === false) return null
+  const body = new URLSearchParams({ "pane[reference]": reference, mirror: "1" })
+  if (translationId) body.set("pane[translation_id]", translationId)
+  try {
+    const { res, body: html } = await quickFetch(action, {
+      method: "PATCH", body,
+      headers: { "X-CSRF-Token": token, Accept: "text/html", "Turbo-Frame": frame.id }
+    }, { timeoutMs: PREFETCH_TIMEOUT_MS, read: "text" })
+    return res.ok && typeof html === "string" && html.includes("ps-verse") ? html : null
+  } catch { return null }
+}
+
+// Show a prefetched pane at once (same events as a Turbo frame load) and save
+// the reference in the background, as the pane form would have. `save: false`
+// for the projector / stage windows, which only mirror the operator.
+export function swapPaneHtml(frame, html, { save = true } = {}) {
+  const form = frame?.querySelector("form.rd-pane-form")
+  const action = form?.getAttribute("action")
+  const context = paneContext(frame)
+  if (!swapFrame(frame, html)) return false
+  seq.set(frame, (seq.get(frame) || 0) + 1) // an older local render in flight loses
+  if (save && action) {
+    const reference = frame.querySelector("input[name='pane[reference]']")?.value
+    const translationId = frame.querySelector("select[name='pane[translation_id]']")?.value || null
+    if (reference) savePaneReference(action, { reference, translationId }, context.owner)
+  }
+  return true
+}

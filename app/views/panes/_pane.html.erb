@@ -48,7 +48,9 @@
     <% next_ref = neighbor_reference(content.book, content.last_chapter, :next) %>
     <% book_name, chapter_number = chapter_heading(content) %>
     <%# focus: verses to mark and centre ("2" / "2-4", verse-focus controller). %>
-    <div class="ps-verses"<% if local_assigns[:focus].present? %> data-verse-focus="<%= local_assigns[:focus] %>"<% end %>>
+    <%# data-prev/next-chapter: preach mode's Next/Prev carry on across chapters (lib/chapter_step). %>
+    <div class="ps-verses"<% if local_assigns[:focus].present? %> data-verse-focus="<%= local_assigns[:focus] %>"<% end %>
+         data-prev-chapter="<%= prev_ref %>" data-next-chapter="<%= next_ref %>">
       <div class="rd-column">
         <header class="ref-title rd-chapter-head">
           <span class="rd-book"><%= book_name %></span>

@@ -95,7 +95,7 @@ module ScriptureHelper
         if chapter > 1
           [ book, chapter - 1 ]
         else
-          prv = Book.where("position < ?", book.position).order(position: :desc).first
+          prv = Book.where("position < ?", book.position).reorder(position: :desc).first # reorder: Book.default_scope sorts ascending
           prv && [ prv, prv.chapter_count ]
         end
       end
