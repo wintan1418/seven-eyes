@@ -387,6 +387,14 @@
 
   <div class="ps-preach-jump" hidden>
     <span>Go to</span>
+    <%# Same switch (and remembered choice) as the console's Scriptures search. %>
+    <div class="ps-search-mode" role="radiogroup" aria-label="Search by" data-controller="search-mode"
+         data-search-mode-input-value=".ps-preach-jump input[data-presentation-target='jumpInput']" data-search-mode-placeholders-value="false">
+      <% [ [ "auto", "Auto", "A" ], [ "reference", "Reference", "R" ], [ "words", "Words", "W" ] ].each do |mode, label, key| %>
+        <button type="button" role="radio" class="ps-search-mode-btn" data-mode="<%= mode %>" aria-checked="false"
+                data-search-mode-target="option" data-action="search-mode#pick" title="Search by <%= label.downcase %> (Alt+<%= key %>)"><%= label %></button>
+      <% end %>
+    </div>
     <input type="text" inputmode="search" placeholder="jn 3 16 &middot; 28 &middot; or a phrase"
            autocomplete="off" spellcheck="false" autocapitalize="none"
            data-presentation-target="jumpInput"

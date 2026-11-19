@@ -26,7 +26,9 @@ class ReferenceParserParityTest < ActiveSupport::TestCase
     "1 john 4:8", "2 jn 6", "Revelation 21:1-4", "gen", "g", "ge", "jo 3", "1 sam 17", "2sam 7",
     # What a preacher calls out in preach mode's Go box — now parsed on the device first.
     "jn 3:16", "john 3 16", "John 3:16", "1 cor 13", "rom 8:28-30", "ps 23", "song of songs 2:1",
-    "1 Cor 13:4-7", "Rom 8:28", "phil 4:13", "heb 11:1", "ps 119:105", "isa 40:31", "matt 28:19-20"
+    "1 Cor 13:4-7", "Rom 8:28", "phil 4:13", "heb 11:1", "ps 119:105", "isa 40:31", "matt 28:19-20",
+    # Reference mode of the console search (after lib/scripture_mode tidyReference).
+    "jn 3 16", "1cor13:4-7", "1cor13", "JOHN 10:30", "1 cor 13"
   ].freeze
 
   setup do

@@ -8,7 +8,9 @@
 #
 # Words are matched by their English stem (Postgres' text_vector), so "rain"
 # also finds "rained". Stop words ("the", "of") don't count. Bible order inside
-# a tier keeps the list the same on every run.
+# a tier keeps the list the same on every run — except that a verse holding
+# every word exactly as typed, small ones too ("I and my Father one" → John
+# 10:30, whose "I", "and", "my" are stop words), comes first in its tier.
 #
 #   result = ScriptureSearch.call("dew rain", translation: kjv, scope: "ot")
 #   result.hits.first.verse  # => Deuteronomy 32:2
@@ -64,6 +66,7 @@ class ScriptureSearch
 
     hits_sql = words.map { |w| "(verses.text_vector @@ #{quote_tsquery(w)})::int" }.join(" + ")
     phrase_sql = words.size > 1 ? "(verses.text_vector @@ phraseto_tsquery('english', #{quote(@query)}))" : "false"
+    exact = exact_sql(words)
 
     counts = rel.pick(Arel.sql(
       "count(*), count(*) FILTER (WHERE #{hits_sql} = #{words.size}), count(*) FILTER (WHERE #{phrase_sql})"
@@ -73,9 +76,10 @@ class ScriptureSearch
               .select("verses.*",
                       "#{phrase_sql} AS phrase_hit",
                       "#{hits_sql} AS words_hit",
+                      "#{exact} AS exact_hit",
                       "ts_headline('english', verses.text, #{any_q}, " \
                       "'HighlightAll=true, StartSel=#{MARK_OPEN}, StopSel=#{MARK_CLOSE}') AS marked_text")
-              .reorder(Arel.sql("phrase_hit DESC, words_hit DESC, books.position, verses.chapter, verses.verse_number"))
+              .reorder(Arel.sql("phrase_hit DESC, words_hit DESC, exact_hit DESC, books.position, verses.chapter, verses.verse_number"))
               .limit(@limit)
               .to_a
 
@@ -115,6 +119,16 @@ class ScriptureSearch
       "WHERE length(to_tsvector('english', w)::text) > 0 ORDER BY i", words
     ])
     ActiveRecord::Base.connection.select_values(sql)
+  end
+
+  # Every typed word, whole, in the verse (case- and apostrophe-blind) — only
+  # worth asking when stop words were typed that the stems leave out.
+  def exact_sql(words)
+    typed = @query.downcase.delete("'’").scan(/[a-z]+/).uniq.first(12)
+    return "false" unless typed.size > words.size
+
+    text = "regexp_replace(lower(verses.text), '[''’]', '', 'g')"
+    "(" + typed.map { |w| "#{text} ~ #{quote("\\m#{w}\\M")}" }.join(" AND ") + ")"
   end
 
   def scoped(rel)

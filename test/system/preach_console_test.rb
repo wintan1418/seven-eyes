@@ -107,6 +107,48 @@ class PreachConsoleTest < ApplicationSystemTestCase
     assert_selector ".cx-live-list .cx-line.is-live[data-n='1']"
   end
 
+  # Tester (EasyWorship user): one box that guesses could not be forced to
+  # search by reference or by words. Now an explicit switch, remembered.
+  test "the Scriptures search: Reference and Words modes each do only their own search" do
+    resize_to(1366, 768)
+    start_preaching
+    input = find(".cx-find-input")
+
+    # Words: the words, never a passage.
+    find(".cx-mode-btn[data-mode='words']").click
+    assert_selector ".cx-mode-btn.is-on[data-mode='words'][aria-checked='true']"
+    input.fill_in(with: "he that believeth on him")
+    assert_selector ".ps-verse-list[data-mode='search'] .vrow.is-strong", minimum: 2
+    assert_selector ".ps-verse-list[data-mode='search'] .vrow:first-child .ref", text: "John 3:18"
+    input.send_keys(:enter)
+    assert_selector ".ps-console-preview .what", text: "John 3:18"
+    # Something that reads as a reference is still only words here.
+    input.fill_in(with: "psalms 23")
+    assert_selector ".ps-verse-list[data-mode='search'][data-query='psalms 23'] .ttl", text: /No verses with/
+    assert_no_selector ".ps-verse-list .ttl", text: "Psalms 23"
+
+    # Reference: references only (Alt+R from the box), never a word search.
+    input.send_keys([ :alt, "r" ])
+    assert_selector ".cx-mode-btn.is-on[data-mode='reference']"
+    input.fill_in(with: "the lord is my shepherd")
+    assert_selector ".cx-findhint[data-tone='error']", text: /Not a reference/
+    input.send_keys(:enter)
+    assert_selector ".cx-findhint[data-tone='error']", text: /isn.t a reference/
+    assert_selector ".ps-console-preview .what", text: "John 3:18" # unchanged
+    input.fill_in(with: "ps23 2")
+    assert_selector ".ps-verse-list .ttl", text: "Psalms 23"
+    input.send_keys(:enter)
+    assert_selector ".ps-console-preview .what", text: "Psalms 23:2"
+    assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-osis='John']" # Preview only
+
+    # Remembered on this device, and shared with the Go box.
+    visit study_path(@study)
+    wait_for_reader_js
+    find(".ui-appbar button[data-action~='presentation#start']").click
+    assert_selector ".cx-mode-btn.is-on[data-mode='reference']"
+    assert_selector ".ps-preach-jump .ps-search-mode-btn.is-on[data-mode='reference']", visible: :all
+  end
+
   test "the library: type a reference, preview, go live; the Songs tab previews a hymn" do
     resize_to(1366, 768)
     start_preaching

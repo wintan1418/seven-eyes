@@ -12,6 +12,15 @@
     <%= form_with url: search_path, method: :get, class: "sr-form",
           data: { turbo_frame: "search_results", turbo_action: "advance",
                   search_page_target: "form", action: "submit->search-page#submit" } do %>
+      <%# Search by: Auto (a reference opens the reader, words search) · Reference · Words. %>
+      <div class="sr-mode" role="radiogroup" aria-label="Search by" data-controller="search-mode"
+           data-search-mode-input-value=".sr-input">
+        <%= hidden_field_tag :mode, (@mode if params[:mode].present?), data: { search_mode_target: "field" }, id: nil %>
+        <% [ [ "auto", "Auto", "A" ], [ "reference", "Reference", "R" ], [ "words", "Words", "W" ] ].each do |mode, label, key| %>
+          <button type="button" role="radio" class="sr-mode-btn" data-mode="<%= mode %>" aria-checked="<%= @mode == mode %>"
+                  data-search-mode-target="option" data-action="search-mode#pick" title="Search by <%= label.downcase %> (Alt+<%= key %>)"><%= label %></button>
+        <% end %>
+      </div>
       <label class="sr-box">
         <%= icon(:search) %>
         <%= search_field_tag :q, @query, class: "sr-input", placeholder: "Search the Bible — e.g. dew rain",
@@ -45,7 +54,13 @@
     </section>
 
     <%= turbo_frame_tag "search_results", class: "sr-results", data: { search_page_target: "results" } do %>
-      <% if @result.blank? %>
+      <% if @not_reference %>
+        <div class="sr-empty" data-search-not-reference>
+          <%= icon(:search, css: "ui-icon is-xl") %>
+          <p>&ldquo;<%= @query %>&rdquo; isn&rsquo;t a Bible reference.</p>
+          <p class="sr-empty-note">Try <em>John 3:16</em>, <em>jn 3 16</em> or <em>1cor13:4-7</em> &mdash; or switch to <b>Words</b> to search for it.</p>
+        </div>
+      <% elsif @result.blank? %>
         <div class="sr-empty" data-search-empty>
           <%= icon(:search, css: "ui-icon is-xl") %>
           <p>Type a word or two &mdash; <em>dew rain</em>, <em>love your enemies</em>.</p>

@@ -10,12 +10,20 @@ class SearchController < ApplicationController
     @query = params[:q].to_s.squish.first(200)
     # "John 3:16" or "ps 23" (a reference, with a number) opens the reader
     # there — the home page has one box for both. Not inside the results frame.
-    return redirect_to(read_path(ref: @query, t: params[:t].presence)) if request.format.html? && open_reference?
+    # The Auto | Reference | Words switch (lib/scripture_mode.js): Reference
+    # opens the passage or says it isn't one; Words never redirects.
+    @mode = MODES.include?(params[:mode]) ? params[:mode] : "auto"
+    if @mode == "reference" && request.format.html?
+      parsed = ReferenceParser.call(tidy_reference(@query))
+      return redirect_to(read_path(ref: parsed.label, t: params[:t].presence)) if parsed.valid?
+      @not_reference = @query.present?
+    end
+    return redirect_to(read_path(ref: @query, t: params[:t].presence)) if @mode == "auto" && request.format.html? && open_reference?
     @scope = params[:in].to_s.presence || "all"
     @translation = Translation.available.find_by(code: params[:t].to_s.upcase.presence) ||
                    Translation.available.find_by(id: params[:translation].presence) ||
                    Translation.default
-    @result = ScriptureSearch.call(@query, translation: @translation, scope: @scope,
+    @result = ScriptureSearch.call(@not_reference ? "" : @query, translation: @translation, scope: @scope,
                                    limit: request.format.json? ? JSON_LIMIT : ScriptureSearch::LIMIT)
     respond_to do |format|
       format.html
@@ -25,6 +33,7 @@ class SearchController < ApplicationController
   end
 
   JSON_LIMIT = 30
+  MODES = %w[ auto reference words ].freeze
 
   private
 
@@ -37,6 +46,14 @@ class SearchController < ApplicationController
           text: v.text, tier: hit.tier }
       end
     }
+  end
+
+  # A letter O typed for a zero next to a number ("john 1O:30") — the same
+  # forgiveness as tidyReference in lib/scripture_mode.js.
+  def tidy_reference(raw)
+    s = raw.to_s.squish
+    3.times { s = s.gsub(/(\d)[oO]/, '\10') }
+    s.gsub(/(^|[\s:.,-])[oO](?=\d)/, '\10')
   end
 
   def open_reference?

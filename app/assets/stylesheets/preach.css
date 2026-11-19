@@ -672,3 +672,12 @@
 }
 .ps-preach-jump-hint[data-tone="ok"] { color: var(--vellum-0); }
 .ps-preach-jump-hint[data-tone="ai"] { color: var(--gold); font-style: italic; }
+
+/* Go box: Auto | Reference | Words (search_mode controller, shared with the console). */
+.ps-preach-jump .ps-search-mode { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--gold-deep); border-radius: 3px; }
+.ps-preach-jump .ps-search-mode .ps-search-mode-btn {
+  padding: 6px 9px; background: transparent; border: 0; border-radius: 2px; color: rgba(216, 195, 137, 0.75);
+  font: 600 10px "Cinzel", "Noto Sans Symbols 2", "Segoe UI Symbol", serif; letter-spacing: 0.12em;
+}
+.ps-preach-jump .ps-search-mode .ps-search-mode-btn:hover { background: rgba(255, 247, 224, 0.08); color: var(--vellum-0); }
+.ps-preach-jump .ps-search-mode .ps-search-mode-btn.is-on { background: var(--gold); color: #1c140c; }

@@ -37,6 +37,9 @@ application.register("console", ConsoleController)
 import ConsoleLibraryController from "./console_library_controller"
 application.register("console-library", ConsoleLibraryController)
 
+import SearchModeController from "./search_mode_controller"
+application.register("search-mode", SearchModeController)
+
 import ConsoleLiveController from "./console_live_controller"
 application.register("console-live", ConsoleLiveController)
 

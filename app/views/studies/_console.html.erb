@@ -106,6 +106,17 @@
 
     <div class="cx-panel" data-tab="scripture" role="tabpanel" aria-label="Scriptures">
       <div class="cx-findbar">
+        <%# EasyWorship-style: search by Reference or by Words, or let the box guess (Auto). %>
+        <div class="cx-mode" role="radiogroup" aria-label="Search by" data-controller="search-mode"
+             data-search-mode-input-value=".cx-find-input">
+          <% [ [ "auto", "Auto", "A", "Auto — a reference if it reads as one, otherwise the words" ],
+               [ "reference", "Reference", "R", "Reference only — John 3:16, jn 3 16, 1cor13:4-7. Never searches the words" ],
+               [ "words", "Words", "W", "Words only — and he that believeth. Never jumps to a reference" ] ].each do |mode, label, key, tip| %>
+            <button type="button" role="radio" class="cx-mode-btn" data-mode="<%= mode %>" aria-checked="false"
+                    data-search-mode-target="option" data-action="search-mode#pick"
+                    title="<%= tip %> (Alt+<%= key %>)"><%= label %></button>
+          <% end %>
+        </div>
         <label class="cx-find">
           <span class="ui-sr-only">Find a scripture</span>
           <span class="ic" aria-hidden="true">&#8981;</span>

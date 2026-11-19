@@ -36,6 +36,11 @@ export default class extends Controller {
     const query = this.inputTarget.value.trim()
     clearTimeout(this._fallback)
     if (!query) { event.preventDefault(); this.inputTarget.focus(); return }
+    // Reference mode (search_mode switch): the whole page goes, so the server
+    // can open the reader at the passage — or say it isn't a reference.
+    const mode = this.formTarget.querySelector("input[name='mode']")?.value
+    this.formTarget.dataset.turboFrame = mode === "reference" ? "_top" : "search_results"
+    if (mode === "reference") { this.remember(query); return }
     this.remember(query)
     this.inputTarget.blur() // put the phone keyboard away to show the results
     this.recentTarget.hidden = true

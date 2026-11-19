@@ -7,6 +7,8 @@
 //   3. partial — some of the words (more of them first)
 //
 // then in Bible order. Words match by a simple stem ("rain" finds "rained").
+// Inside a tier, a verse holding every word exactly as typed — the small ones
+// too ("I and my Father one" → John 10:30) — comes before the rest (`exact`).
 //
 //   rankVerses(records, "dew rain", { order, books, limit })
 //     → { words, hits: [{ osis, chapter, num, text, tier, matched, parts }], allCount, anyCount }
@@ -32,6 +34,11 @@ function normalise(text) {
   return ` ${String(text || "").toLowerCase().replace(/[’']/g, "").replace(/[^a-z]+/g, " ").trim()} `
 }
 
+// Every word as typed, small ones included, lower-case, once each.
+export function typedWords(query) {
+  return [ ...new Set(normalise(query).trim().split(" ").filter(Boolean)) ].slice(0, 12)
+}
+
 export function markParts(text, stems) {
   const wanted = new Set(stems)
   const parts = []
@@ -52,6 +59,8 @@ export function rankVerses(records, query, { order = null, books = null, limit =
   const stems = words.map((w) => w.stem)
   const prefix = stems.map((s) => s.slice(0, Math.max(3, s.length - 1)))
   const phrase = words.length > 1 ? normalise(query) : null
+  const typed = typedWords(query)
+  const checkExact = typed.length > words.length
 
   const hits = []
   for (const record of records || []) {
@@ -65,19 +74,21 @@ export function rankVerses(records, query, { order = null, books = null, limit =
         const verseStems = new Set((lower.match(/[a-z’']+/g) || []).map(root))
         const matched = stems.filter((s) => verseStems.has(s)).length
         if (!matched) return
-        const tier = phrase && normalise(text).includes(phrase) ? "phrase" : matched === stems.length ? "all" : "partial"
-        hits.push({ osis: record.osis, chapter: ci + 1, num: c.n ? c.n[k] : k + 1, text, tier, matched, pos })
+        const norm = normalise(text)
+        const tier = phrase && norm.includes(phrase) ? "phrase" : matched === stems.length ? "all" : "partial"
+        const exact = tier !== "partial" && checkExact && typed.every((w) => norm.includes(` ${w} `))
+        hits.push({ osis: record.osis, chapter: ci + 1, num: c.n ? c.n[k] : k + 1, text, tier, matched, exact, pos })
       })
     })
   }
-  hits.sort((a, b) => TIERS[a.tier] - TIERS[b.tier] || b.matched - a.matched ||
+  hits.sort((a, b) => TIERS[a.tier] - TIERS[b.tier] || b.matched - a.matched || (b.exact - a.exact) ||
     a.pos - b.pos || a.chapter - b.chapter || a.num - b.num)
   const allCount = hits.filter((h) => h.tier !== "partial").length
   return {
     words,
     allCount,
     anyCount: hits.length,
-    hits: hits.slice(0, limit).map(({ pos, ...h }) => ({ ...h, parts: markParts(h.text, stems) }))
+    hits: hits.slice(0, limit).map(({ pos, exact, ...h }) => ({ ...h, parts: markParts(h.text, stems) }))
   }
 }
 
