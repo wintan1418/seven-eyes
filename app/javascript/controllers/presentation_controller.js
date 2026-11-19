@@ -4,6 +4,8 @@ import { warmLocal, localCheck, loadPaneLocally } from "../lib/offline/local_pan
 import { quickFetch, isNetworkSlow } from "../lib/offline/network"
 import { allBookTexts } from "../lib/offline/store"
 import { searchVerses } from "../lib/offline/keyword_search"
+import { rankVerses, queryWords } from "../lib/scripture_search"
+import { readMode, tidyReference } from "../lib/scripture_mode"
 import { songSlides } from "../lib/song_sheet"
 import { richSlides, paintRichSlide, paintPresenter, sameRich } from "../lib/slides/rich_slides"
 import { wordFromDetail, wordStudyTitle, encodeWordStudy } from "../lib/root_words"
@@ -61,6 +63,11 @@ const RANGE_MAX = 6
 const ESC_CONFIRM_MS = 1500
 const LOAD_TIMEOUT_MS = 10_000 // a pane load that never answers stops blocking
 const CHECK_TIMEOUT_MS = 1500 // the server's reference check, for what the device can't read
+const GO_HINTS = {
+  auto: "Type a reference, a verse number, or describe a passage",
+  reference: "Reference: jn 3 16 · 1cor13:4-7 · or a verse number",
+  words: "Words: and he that believeth — lists the verses"
+}
 const QUICK_FIND_TIMEOUT_MS = 3000 // AI quick find, before the on-device keyword search
 const SWIPE_IGNORE = ".ps-setlist-host, .ps-drawer, .ps-ai-drawer, .ps-book-drawer, .ps-search-drawer, " +
   ".ps-rabbi-host, .ps-xref-host, .ps-share-host, .ps-modal, .ps-live-panel, .ps-screen-panel, " +
@@ -569,9 +576,12 @@ export default class extends Controller {
   jumpPreview() {
     const raw = this.jumpInputTarget.value.trim()
     clearTimeout(this._previewTimer)
-    window.dispatchEvent(new CustomEvent("preview:typing", { detail: { raw, source: "go" } }))
-    if (!raw) return this._setJumpHint("Type a reference, a verse number, or describe a passage")
+    const mode = readMode()
+    window.dispatchEvent(new CustomEvent("preview:typing", { detail: { raw: mode === "reference" ? tidyReference(raw) : raw, source: "go", mode } }))
+    if (!raw) return this._setJumpHint(GO_HINTS[mode])
     if (/^\d+$/.test(raw)) return this._setJumpHint(`↵ Verse ${raw} in this chapter`, "ok")
+    if (mode === "words") return this._setJumpHint(`↵ Verses with “${raw}” — results go to Preview`, "ai")
+    if (mode === "reference") return this._referenceHint(raw)
     // Read on the device, instantly — no network.
     const local = localCheck(raw)
     if (local?.ok) {
@@ -585,6 +595,23 @@ export default class extends Controller {
       if (parsed) this._lastCheck = { raw, parsed }
       if (parsed?.ok) this._setJumpHint(`↵ ${parsed.label || parsed.chapter_reference}`, "ok")
       else if (parsed || local) this._setJumpHint(this.hasQuickFindUrlValue ? `↵ Search the Scriptures for “${raw}” — results go to Preview` : "Not a reference yet: try “jn 3:16”", "ai")
+    }, 120)
+  }
+
+  // Reference mode: only ever "→ John 3:16" or "not a reference".
+  _referenceHint(raw) {
+    const text = tidyReference(raw)
+    const local = localCheck(text)
+    if (local?.ok) {
+      this._lastCheck = { raw: text, parsed: local }
+      return this._setJumpHint(`↵ ${local.label || local.chapter_reference}`, "ok")
+    }
+    if (local) return this._setJumpHint("Not a reference yet: try “jn 3:16”, “1cor13:4-7” (Alt+W searches words)")
+    this._previewTimer = setTimeout(async () => {
+      const parsed = await this._serverCheck(text)
+      if (this.jumpInputTarget.value.trim() !== raw) return
+      if (parsed) this._lastCheck = { raw: text, parsed }
+      this._setJumpHint(parsed?.ok ? `↵ ${parsed.label || parsed.chapter_reference}` : "Not a reference yet: try “jn 3:16”", parsed?.ok ? "ok" : "")
     }, 120)
   }
 
@@ -619,7 +646,9 @@ export default class extends Controller {
       if (idx >= 0) this._transition(() => this._setCurrentIndex(idx))
       return
     }
-    this._chase(raw)
+    const mode = readMode()
+    if (mode === "words") { this._wordFind(raw); return }
+    this._chase(mode === "reference" ? tidyReference(raw) : raw, { search: mode !== "reference" })
   }
 
   // Go box with Shift+Enter (or "Preview first" ticked): the reference goes to
@@ -642,12 +671,19 @@ export default class extends Controller {
         ?.trim().replace(/\s*[:.]\s*\d+.*$/, "")
       if (!chapter) return
       reference = `${chapter}:${raw.replace(/\s+/g, "")}`
+    } else if (readMode() === "words") {
+      this._closeJump()
+      this._wordFind(raw)
+      return
     } else {
+      const strict = readMode() === "reference"
+      if (strict) raw = reference = tidyReference(raw)
       const local = localCheck(raw)
+      if (strict && local && !local.ok) { this._flashJumpError(raw); return }
       // Not read on the device (a described thought, or the parser isn't
       // loaded yet): the server decides — a reference still lands in Preview,
       // anything else opens the search results. Never the projector.
-      if (!local?.ok) { this._closeJump(); this._chase(raw, { toPreview: true }); return }
+      if (!local?.ok) { this._closeJump(); this._chase(raw, { toPreview: true, search: !strict }); return }
     }
     this._closeJump()
     window.dispatchEvent(new CustomEvent("preview:load", { detail: { kind: "scripture", reference, source: "go" } }))
@@ -660,7 +696,9 @@ export default class extends Controller {
   // move up through the normal broadcast. Text the parser can't read falls
   // through to the AI quick search ("the prodigal son" → references).
   // `toPreview`: a reference goes to the operator's Preview instead.
-  async _chase(raw, { silent = false, remember = true, toPreview = false } = {}) {
+  // `search: false` (Reference mode): text that isn't a reference is an
+  // error to fix, never a search.
+  async _chase(raw, { silent = false, remember = true, toPreview = false, search = true } = {}) {
     let parsed = this._lastCheck?.raw === raw ? this._lastCheck.parsed : null // already checked while typing
     if (!parsed?.ok) {
       // On the device first; the server only for what the device can't read.
@@ -670,14 +708,15 @@ export default class extends Controller {
     }
     if (!parsed) {
       // No parser on the device and no network: still try the keyword search.
-      if (!silent && this.hasQuickFindUrlValue) this._quickFind(raw)
+      if (!silent && !search) this._flashJumpError(raw)
+      else if (!silent && this.hasQuickFindUrlValue) this._quickFind(raw)
       return
     }
     if (!parsed.ok) {
       if (silent) return
       // Not a reference — treat it as a question for the AI study assistant
       // ("azusa street", "the crusaders", "walls of jericho"...).
-      if (this.hasQuickFindUrlValue) { this._quickFind(raw); return }
+      if (search && this.hasQuickFindUrlValue) { this._quickFind(raw); return }
       this._flashJumpError(raw)
       return
     }
@@ -846,6 +885,62 @@ export default class extends Controller {
     if (late.data) this._renderAiFinds(box, q, late.data)
     else if (local.length) this._renderKeywordFinds(box, q, local, { waiting: false })
     else this._renderAiFinds(box, q, null, { offline: true })
+  }
+
+  // Words mode: only a search of the words, in the presented pane's
+  // translation — the downloaded Bible, else the server's /search.json.
+  // Never the AI, never a jump to a passage. Results go to Preview.
+  async _wordFind(q) {
+    const box = this._findsBox()
+    if (!box) return
+    this._findsOpen = true
+    const search = (this._findSeq = (this._findSeq || 0) + 1)
+    box.hidden = false
+    box.innerHTML = `<div class="head"><span class="lbl">&#10038; Searching the words&hellip;</span></div>`
+    const hits = queryWords(q).length ? ((await this._wordFindDevice(q)) || (await this._wordFindServer(q)) || []) : []
+    if (!this._findsOpen || this._findSeq !== search) return
+    box.innerHTML = ""
+    const head = document.createElement("div")
+    head.className = "head"
+    const lbl = document.createElement("span")
+    lbl.className = "lbl"
+    lbl.textContent = hits.length ? `✶ Words · verses with “${q}”` : `✶ No verses with “${q}” — Alt+A lets the study assistant try`
+    const close = document.createElement("button")
+    close.type = "button"
+    close.className = "close"
+    close.dataset.action = "presentation#cancelFinds"
+    close.innerHTML = "&#10005;"
+    head.append(lbl, close)
+    box.appendChild(head)
+    this._appendFindChips(box, hits.slice(0, 30).map((h) => ({
+      reference: h.reference, chapter_reference: h.reference.replace(/:\d+$/, ""), verse_start: h.num,
+      preview: h.text.length > 140 ? `${h.text.slice(0, 139)}…` : h.text
+    })))
+  }
+
+  async _wordFindDevice(q) {
+    try {
+      const { downloaded, translations, books } = await warmLocal()
+      const paneTrans = this.element.querySelector(".ps-pane.is-presented select[name='pane[translation_id]']")?.value
+      const code = translations?.find(t => String(t.id) === String(paneTrans))?.code
+      const pick = downloaded?.find(d => d.code === code) || (navigator.onLine === false ? downloaded?.[0] : null)
+      if (!pick) return null
+      const order = new Map([ ...books.keys() ].map((osis, i) => [ osis, i ]))
+      const { hits } = rankVerses(await allBookTexts(pick.code), q, { order, limit: 30 })
+      return hits.filter(h => h.tier !== "partial").map(h => ({
+        reference: `${books.get(h.osis)?.name || h.osis} ${h.chapter}:${h.num}`, num: h.num, text: h.text
+      }))
+    } catch { return null }
+  }
+
+  async _wordFindServer(q) {
+    try {
+      const paneTrans = this.element.querySelector(".ps-pane.is-presented select[name='pane[translation_id]']")?.value || ""
+      const { res, body } = await quickFetch(`/search.json?q=${encodeURIComponent(q)}&translation=${encodeURIComponent(paneTrans)}`,
+        { headers: { Accept: "application/json" } }, { timeoutMs: 3000, read: "json" })
+      if (!res.ok || !body?.ok) return null
+      return (body.hits || []).filter(h => h.tier !== "partial")
+    } catch { return null }
   }
 
   // GET quick_find → { data } | { unauthorized } | { failed }. Skips the

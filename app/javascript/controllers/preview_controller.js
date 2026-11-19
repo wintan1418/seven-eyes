@@ -49,7 +49,7 @@ export default class extends Controller {
     if (this.element.classList.contains("is-output")) return
     this._listeners = {
       "preview:load": (e) => this.load(e.detail),
-      "preview:typing": (e) => this._typed(e.detail?.raw),
+      "preview:typing": (e) => this._typed(e.detail?.raw, e.detail?.mode),
       "preview:golive": () => this.goLive(),
       "preach:state": (e) => this._liveState(e.detail),
       "setlist:changed": (e) => { this._queued = new Set(e.detail?.keys || []); this._paintQueueButtons() }
@@ -326,12 +326,17 @@ export default class extends Controller {
 
   // ---- the chapter verse list -------------------------------------------------------
 
-  async _typed(raw) {
+  // `mode` (lib/scripture_mode): "words" always searches the words,
+  // "reference" never does (a text that isn't a reference lists nothing),
+  // "auto" (or none, e.g. the Go box) guesses as before.
+  async _typed(raw, mode = "auto") {
     const text = (raw || "").trim()
     clearTimeout(this._searchTimer)
-    if (!text || /^\d+$/.test(text)) return
-    const p = localState().parse?.(text)
-    if (!p?.valid) {
+    this._searchMode = mode
+    if (!text || (mode !== "words" && /^\d+$/.test(text))) return
+    const p = mode === "words" ? null : localState().parse?.(text)
+    if (mode === "reference" && p && !p.valid) { this._typedSeq = (this._typedSeq || 0) + 1; return }
+    if (mode === "words" || (mode !== "reference" && !p?.valid)) {
       // Words, not a reference: the matching verses list as you type.
       this._typedSeq = (this._typedSeq || 0) + 1
       this._searchTimer = setTimeout(() => this._searchTyped(text), SEARCH_DELAY_MS)
@@ -565,7 +570,7 @@ export default class extends Controller {
     const strong = hits.filter((h) => h.tier !== "partial").length
     this.verseListTitleTarget.textContent = hits.length
       ? `${strong ? `${strong}${hits.length >= SEARCH_LIMIT && strong === hits.length ? "+" : ""}` : "No"} verse${strong === 1 ? "" : "s"} with “${text}”${strong < hits.length ? ` · then some of the words` : ""}${translation ? ` · ${translation}` : ""}`
-      : `No verses with “${text}”${translation ? ` · ${translation}` : ""} — Enter asks the study assistant`
+      : `No verses with “${text}”${translation ? ` · ${translation}` : ""}${this._searchMode === "words" ? "" : " — Enter asks the study assistant"}`
     this.verseRowsTarget.replaceChildren(...hits.map((h) => {
       const row = el("li", "vrow is-found")
       row.classList.toggle("is-strong", h.tier !== "partial")

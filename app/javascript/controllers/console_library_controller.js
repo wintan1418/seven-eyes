@@ -1,5 +1,10 @@
 import { Controller } from "@hotwired/stimulus"
 import { warmLocal, localCheck } from "../lib/offline/local_pane"
+import { quickFetch } from "../lib/offline/network"
+import { queryWords } from "../lib/scripture_search"
+import { readMode, tidyReference, MODE_EVENT } from "../lib/scripture_mode"
+
+const WORDS_WAIT_MS = 2500 // Enter in Words mode waits this long for the list
 
 // The console library's Scriptures tab (and Songs → Preview). Lives on the
 // library region of _console, operator window only.
@@ -11,6 +16,10 @@ import { warmLocal, localCheck } from "../lib/offline/local_pane"
 //                   that aren't a reference search the Scriptures through the
 //                   Go box's own path (AI, or on-device keywords offline) —
 //                   results land in Preview, never on the projector.
+//   search mode     Auto | Reference | Words (search_mode controller,
+//                   lib/scripture_mode): Reference only reads references and
+//                   never searches the words; Words only searches the words
+//                   and never jumps to a passage. Auto is the guess above.
 //   translation     the translation the presented pane shows: a scripture on
 //                   screen reloads in it at the same verse (preach:command chase).
 //   songs           a song picked in the song bank (Songs tab) goes to Preview.
@@ -27,11 +36,13 @@ export default class extends Controller {
     if (!this.root || this.root.classList.contains("is-output")) return
     this._live = null
     this._defaultHint = this.hasHintTarget ? this.hintTarget.innerHTML : ""
+    this._mode = readMode()
     this._listeners = {
       "preach:state": (e) => { this._live = e.detail || null },
       "console:on": () => { this._syncTranslation(); this._paintKinds() },
       "setlist:changed": () => this._paintKinds(),
-      "song-bank:picked": (e) => this._songPicked(e.detail?.song)
+      "song-bank:picked": (e) => this._songPicked(e.detail?.song),
+      [MODE_EVENT]: (e) => { this._mode = e.detail?.mode || "auto"; if (this._raw()) this.typed() }
     }
     Object.entries(this._listeners).forEach(([ name, fn ]) => window.addEventListener(name, fn))
   }
@@ -45,11 +56,19 @@ export default class extends Controller {
   async typed() {
     await warmLocal() // the parser, before the first keystroke is read
     const raw = this._raw()
-    window.dispatchEvent(new CustomEvent("preview:typing", { detail: { raw, source: "library" } }))
+    const mode = this._mode
+    const text = mode === "words" ? raw : this._refText(raw)
+    window.dispatchEvent(new CustomEvent("preview:typing", { detail: { raw: text, source: "library", mode } }))
     if (!raw) { this._hint(null); return }
+    if (mode === "words") {
+      if (queryWords(raw).length) this._hint("Words — matching verses list below as you type · click to preview, double-click to go live · Enter previews the first", "search")
+      else this._hint("Words — type a word or two from the verse (Alt+R to search by reference)", "wait")
+      return
+    }
     if (/^\d+$/.test(raw)) { this._hint(`↵ Verse ${raw} of the chapter on screen`, "ok"); return }
-    const local = localCheck(raw)
+    const local = localCheck(text)
     if (local?.ok) this._hint(`↵ ${local.label || local.chapter_reference} — Enter to preview, Shift+Enter to put it on the screen`, "ok")
+    else if (local && mode === "reference") this._hint("Not a reference yet — try John 3:16, jn 3 16, 1cor13:4-7 · Alt+W searches the words", "error")
     else if (local) this._hint(`Matching verses list below as you type — click to preview, double-click to go live · ↓ to walk them · Enter previews the first`, "search")
     else this._hint("↵ Enter to look it up", "wait")
   }
@@ -76,6 +95,7 @@ export default class extends Controller {
     const raw = this._raw()
     if (!raw) { this.inputTarget.focus(); return }
     await warmLocal()
+    if (this._mode !== "auto") { await this._explicit(raw, { live: false }); return }
     const reference = this._reference(raw)
     const found = reference ? null : this._topMatch(raw)
     if (reference) window.dispatchEvent(new CustomEvent("preview:load", { detail: { kind: "scripture", reference, source: "library" } }))
@@ -89,8 +109,11 @@ export default class extends Controller {
     const raw = this._raw()
     if (!raw) return
     await warmLocal()
-    if (/^\d+$/.test(raw) && this._live && !this._live.slide) {
+    if (/^\d+$/.test(raw) && this._mode !== "words" && this._live && !this._live.slide) {
       window.dispatchEvent(new CustomEvent("preach:command", { detail: { action: "verse", value: Number(raw) } }))
+    } else if (this._mode !== "auto") {
+      await this._explicit(raw, { live: true })
+      return
     } else {
       const reference = this._reference(raw)
       const found = reference ? null : this._topMatch(raw)
@@ -103,12 +126,66 @@ export default class extends Controller {
     this._done()
   }
 
+  // Reference or Words mode: only that kind of search, never the other and
+  // never the study assistant. A miss says so and keeps the text to fix.
+  async _explicit(raw, { live }) {
+    if (this._mode === "reference") {
+      const reference = this._reference(raw) || (localCheck(raw) ? null : await this._serverReference(raw))
+      if (!reference) { this._hint(`“${raw}” isn't a reference — try John 3:16, jn 3 16, 1cor13:4-7 · Alt+W searches the words`, "error"); return }
+      window.dispatchEvent(new CustomEvent("preview:load", { detail: { kind: "scripture", reference, source: "library" } }))
+      if (live) window.dispatchEvent(new CustomEvent("preview:golive"))
+    } else {
+      if (!queryWords(raw).length) { this._hint("Words — type a word or two from the verse", "wait"); return }
+      const found = await this._wordsMatch(raw)
+      if (!found) { this._hint(`No verses with “${raw}” in this translation · Alt+A lets the study assistant try`, "error"); return }
+      if (live) found.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }))
+      else found.click()
+    }
+    this._done()
+  }
+
+  // Words mode: the first verse of the list for exactly this text, waiting
+  // for the search as you type to land (it runs a moment after the last key).
+  async _wordsMatch(raw) {
+    const until = performance.now() + WORDS_WAIT_MS
+    for (;;) {
+      const list = this.root.querySelector(".ps-verse-list[data-mode='search']")
+      if (list && list.dataset.query === raw) return list.querySelector(".vrow.is-strong .pick")
+      if (performance.now() > until) return null
+      await new Promise((r) => setTimeout(r, 40))
+    }
+  }
+
+  // The parser isn't on the device yet: the server reads the reference.
+  async _serverReference(raw) {
+    try {
+      const { res, body } = await quickFetch(`/reference_check?q=${encodeURIComponent(tidyReference(raw))}`,
+        { headers: { Accept: "application/json" } }, { timeoutMs: 2000, read: "json" })
+      if (!res.ok || !body?.ok) return null
+      return body.label || (body.verse_start ? `${body.chapter_reference}:${body.verse_start}` : body.chapter_reference)
+    } catch { return null }
+  }
+
+  // What the parser should read: as typed, or tidied ("john 1O:30" → "john
+  // 10:30") when only the tidied text is a reference.
+  _refText(raw) {
+    if (!raw) return raw
+    const tidy = tidyReference(raw)
+    if (tidy === raw || localCheck(raw)?.ok) return raw
+    return localCheck(tidy)?.ok ? tidy : raw
+  }
+
   async queue(event) {
     event?.preventDefault?.()
     const raw = this._raw()
     if (!raw) { this.inputTarget.focus(); return }
     await warmLocal()
-    window.dispatchEvent(new CustomEvent("setlist:add", { detail: { kind: "scripture", reference: this._reference(raw) || raw } }))
+    let reference = this._mode === "words" ? null : this._reference(raw)
+    if (this._mode === "words") {
+      reference = (await this._wordsMatch(raw))?.closest(".vrow")?.dataset.label
+      if (!reference) { this._hint(`No verses with “${raw}” to add`, "error"); return }
+    }
+    window.dispatchEvent(new CustomEvent("setlist:add", { detail: { kind: "scripture", reference: reference || raw } }))
     this.inputTarget.select()
   }
 
@@ -119,7 +196,7 @@ export default class extends Controller {
       const chapter = String(this._live?.reference || "").replace(/\s*[:.]\s*\d.*$/, "")
       return chapter && !this._live?.slide ? `${chapter}:${raw.replace(/\s+/g, "")}` : null
     }
-    const local = localCheck(raw)
+    const local = localCheck(this._refText(raw))
     return local?.ok ? (local.label || local.chapter_reference) : null
   }
 

@@ -31,6 +31,19 @@ class ScriptureSearchTest < ActiveSupport::TestCase
     assert_equal "dew and rain", result.terms_label
   end
 
+  test "a verse holding every word as typed, small words too, leads its tier" do
+    gen = Book.find_by(osis_code: "Gen")
+    john = Book.create!(osis_code: "John", name: "John", testament: :new, position: 43, chapter_count: 21)
+    Verse.create!(translation: @kjv, book: gen, chapter: 2, verse_number: 24,
+                  text: "Therefore shall a man leave his father and his mother, and they shall be one flesh.")
+    Verse.create!(translation: @kjv, book: john, chapter: 10, verse_number: 30, text: "I and my Father are one.")
+    hits = ScriptureSearch.call("I AND MY FATHER ONE", translation: @kjv).hits
+    assert_equal [ "John 10:30", "Genesis 2:24" ], hits.first(2).map(&:reference)
+    assert_equal %i[ all all ], hits.first(2).map(&:tier)
+    # Without the small words, Bible order as before.
+    assert_equal "Genesis 2:24", ScriptureSearch.call("father one", translation: @kjv).hits.first.reference
+  end
+
   test "the order is the same on every run" do
     runs = 3.times.map { ScriptureSearch.call("Dew doctrine", translation: @kjv).hits.map(&:reference) }
     assert_equal 1, runs.uniq.size

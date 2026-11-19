@@ -122,3 +122,13 @@ body.hotwire-native .sr-main { padding-bottom: calc(24px + env(safe-area-inset-b
 @media (prefers-reduced-motion: reduce) {
   .ps-root:not(.is-presenting, .is-output) .ps-verse.is-focus { transition: none; }
 }
+
+/* Search by: Auto | Reference | Words (search_mode controller). */
+.sr-mode { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--ui-border); border-radius: 999px; background: var(--ui-surface); align-self: flex-start; }
+.sr-mode-btn {
+  min-height: 34px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; cursor: pointer;
+  font: 500 14px var(--ui-font); color: var(--ui-fg-muted);
+}
+.sr-mode-btn:hover { color: var(--ui-fg); }
+.sr-mode-btn.is-on { background: var(--ui-fg); color: var(--ui-bg); }
+.sr-mode-btn:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }

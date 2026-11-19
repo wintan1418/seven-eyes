@@ -53,6 +53,40 @@ class SearchPageTest < ActionDispatch::IntegrationTest
     assert_select ".sr-summary", text: /No verses containing rain/
   end
 
+  test "search by: the Auto | Reference | Words switch is on the page" do
+    get search_path
+    assert_select ".sr-mode[data-controller~=search-mode] input[type=hidden][name=mode]"
+    assert_select ".sr-mode button[data-mode]", 3
+    assert_select ".sr-mode button[data-mode=reference]", text: "Reference"
+    assert_select ".sr-mode button[data-mode=words]", text: "Words"
+  end
+
+  test "reference mode opens the passage, forgiving a letter O for a zero" do
+    get search_path(q: "job 38 28", mode: "reference")
+    assert_redirected_to read_path(ref: "Job 38:28")
+    get search_path(q: "JOB 3O:1", mode: "reference")
+    assert_redirected_to read_path(ref: "Job 30:1")
+    # No number is still a reference in Reference mode.
+    get search_path(q: "deuteronomy", mode: "reference")
+    assert_response :redirect
+  end
+
+  test "reference mode never searches the words: it says it isn't a reference" do
+    get search_path(q: "dew rain", mode: "reference")
+    assert_response :success
+    assert_select "[data-search-not-reference]", text: /isn.t a Bible reference/
+    assert_select ".sr-hit", 0
+  end
+
+  test "words mode never redirects, even for something that reads as a reference" do
+    get search_path(q: "job 38 28", mode: "words")
+    assert_response :success
+    assert_select "[data-search-not-reference]", 0
+    # Auto keeps the old behaviour: a reference with a number opens the reader.
+    get search_path(q: "job 38 28")
+    assert_response :redirect
+  end
+
   test "JSON for the preach console's search as you type: ranked, the translation by id too" do
     get search_path(q: "dew rain", translation: @kjv.id, format: :json)
     assert_response :success

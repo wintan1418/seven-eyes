@@ -537,7 +537,7 @@
   height: 38px; padding: 0 8px; border-radius: 6px; cursor: pointer;
   background: var(--cx-panel); color: var(--cx-text); border: 1px solid var(--cx-line-2); font: 600 13px var(--cx-ui); letter-spacing: 0;
 }
-.cx-findhint:not([data-tone="ok"], [data-tone="search"], [data-tone="wait"]) { display: none; }
+.cx-findhint:not([data-tone="ok"], [data-tone="search"], [data-tone="wait"], [data-tone="error"]) { display: none; }
 .cx-findhint { flex: none; padding: 0 12px 6px; font: 12px/1.4 var(--cx-ui); color: var(--cx-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cx-findhint[data-tone="ok"] { color: var(--cx-text); }
 .cx-findhint[data-tone="search"] { color: var(--cx-gold); font-style: italic; }
@@ -846,3 +846,14 @@ html body:has(.ps-root.is-console) .ps-offline-host { top: auto; bottom: 14px; l
 .ps-root.is-console .cx-screen-veil:is([data-mode="clear"], [data-mode="logo"], [data-mode="countdown"]) .word { font-size: 11px; letter-spacing: 0.2em; }
 .ps-root.is-console .cx-screen-veil .note { max-width: 100%; text-wrap: balance; }
 .ps-root.is-console .cx-screen-veil:is([data-mode="clear"], [data-mode="logo"], [data-mode="countdown"]) .note { font-size: 11px; line-height: 1.3; }
+
+/* Scripture search: Auto | Reference | Words (search_mode controller). */
+.cx-mode { flex: none; display: inline-flex; height: 38px; padding: 3px; gap: 2px; border: 1px solid var(--cx-line-2); border-radius: 6px; background: var(--cx-panel); }
+.cx-mode-btn {
+  height: 100%; padding: 0 10px; border: 0; border-radius: 4px; cursor: pointer; white-space: nowrap;
+  font: 600 12px var(--cx-ui); color: var(--cx-mute); background: transparent;
+}
+.cx-mode-btn:hover { color: var(--cx-text); }
+.cx-mode-btn.is-on { background: var(--cx-gold); color: #1c140c; }
+.cx-mode-btn:focus-visible { outline: 2px solid var(--ps-preview); outline-offset: 1px; }
+.cx-findhint[data-tone="error"] { display: block; color: #f08a7a; }
