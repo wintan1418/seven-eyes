@@ -1,0 +1,44 @@
+@import "tailwindcss";
+/* study.css — the pages that can present: the study (reader + preach
+   console + ?output=1 projector + ?stage=1), sermon, shared studies, live
+   follow-along, the phone remote, What's new. The legacy component layer in
+   its original order (the cascade depends on it; preach / projector / live
+   CSS stays verbatim — pastors use it every Sunday), then the modern reader
+   without the Home / Today / glossary / give / My Media pages (those are in
+   application.css only). Pages pick it with content_for :stylesheet. */
+@import "./legacy/parchment.css";
+@import "./preach.css";
+@import "./live.css";
+@import "./sermon.css";
+@import "./legacy/reader_tools.css";
+@import "./preach_queue.css";
+@import "./admin.css";
+@import "./whats_new.css";
+@import "./preach_screen.css";
+@import "./preach_console.css";
+@import "./slide_tools.css";
+@import "./root_words.css";
+@import "./whats_new_mocks.css";
+@import "./legacy/audio.css";
+@import "./slide_themes.css"; /* projection Looks + live controls (after the preach layer) */
+@import "./console.css"; /* the operator console lays the preach pieces out (after Looks) */
+@import "./preach_shared.css"; /* preach rules other pages need too */
+@import "./picture_fit.css"; /* pictures edge to edge (fit / fill / stretch + zoom) and the Picture Bank */
+@import "./ui/tokens.css";
+@import "./ui/base.css";
+@import "./ui/reader.css";
+@import "./ui/panels.css";
+@import "./ui/shell.css";
+@import "./ui/sheet.css";
+@import "./ui/actions.css";
+@import "./ui/mobile.css";
+@import "./ui/scene.css"; /* scene pictures behind the reader (scene controller) */
+@import "./ui/word_reveal.css"; /* hold a word: its Hebrew or Greek under it (word_reveal controller) */
+@import "./ui/reader_phone.css"; /* phone reader like a Bible app: verse lines, compact bar, pager */
+@import "./ui/search.css"; /* /search page, search sheet results, open-at-verse mark */
+@import "./ui/reading_along.css"; /* verse being read aloud, auto-scroll button */
+@import "./ui/pages.css";
+@import "./ui/illuminated.css"; /* gold leaf, illuminated initials, chapter headings, time-of-day tint */
+@import "./ui/native.css";
+@import "./ui/offline.css";
+@import "./application_rules.css";

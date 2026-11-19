@@ -7,7 +7,7 @@
 // cleared on sign-out ({type: "clear-caches"}) and when a different reader
 // signs in on the device. Redirected (!response.redirected), non-200 and
 // opaque responses are never cached as-is; pages are networkFirst.
-<% assets = [ asset_path("application.js"), asset_path("application.css") ] %>
+<% assets = [ asset_path("application.js"), asset_path("application.css"), asset_path("study.css") ] %>
 <% worker = Rails.root.join("app/assets/builds/service_worker.js") %>
 <% worker_source = worker.exist? ? worker.read.gsub(%r{^//# sourceMappingURL=.*$}, "") : "" %>
 <% version = Digest::SHA256.hexdigest((assets + [ Digest::SHA256.hexdigest(worker_source) ]).join("|"))[0, 12] %>

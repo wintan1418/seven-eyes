@@ -6,7 +6,9 @@
   },
   "scripts": {
     "build": "node esbuild.config.mjs",
-    "build:css": "npx @tailwindcss/cli -i ./app/assets/stylesheets/application.tailwind.css -o ./app/assets/builds/application.css --minify"
+    "build:css": "npx @tailwindcss/cli -i ./app/assets/stylesheets/application.tailwind.css -o ./app/assets/builds/application.css --minify && npx @tailwindcss/cli -i ./app/assets/stylesheets/study.tailwind.css -o ./app/assets/builds/study.css --minify",
+    "build:css:application": "npx @tailwindcss/cli -i ./app/assets/stylesheets/application.tailwind.css -o ./app/assets/builds/application.css --minify",
+    "build:css:study": "npx @tailwindcss/cli -i ./app/assets/stylesheets/study.tailwind.css -o ./app/assets/builds/study.css --minify"
   },
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",

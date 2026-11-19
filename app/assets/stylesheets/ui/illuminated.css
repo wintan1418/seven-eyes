@@ -74,7 +74,7 @@
   font-size: 3.05em; line-height: 0.82;
 }
 /* Over a painting (or any dark ground): bright leaf and a soft halo. */
-.il-on-dark .il-initial, .hm-today .il-initial, .tf-root .il-initial {
+.hm-today .il-initial, .tf-root .il-initial {
   background-image: var(--il-leaf);
   filter: drop-shadow(0 1px 0 rgba(60, 36, 4, 0.55)) drop-shadow(0 0 14px rgba(255, 210, 120, 0.22));
 }
@@ -106,13 +106,8 @@
 .il-heading-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .il-heading-link:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: 6px; }
 
-/* A thin manuscript rule with a lozenge at its centre. */
-.il-divider { display: flex; align-items: center; gap: 10px; color: var(--il-gold); }
-.il-divider::before, .il-divider::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--il-gold-soft)); }
-.il-divider::after { transform: scaleX(-1); }
-
 /* Gold-leaf progress bars (native <progress>, so it reads as a progress bar). */
-progress.hm-bar, progress.il-bar {
+progress.hm-bar {
   -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 4px; border: 0; border-radius: 99px;
   background: var(--ui-border); overflow: hidden; color: var(--il-gold);
 }

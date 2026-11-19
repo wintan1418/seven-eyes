@@ -1,0 +1,1039 @@
+/* The app's own rules after the component layers (theme tokens, dark
+   variant, shared shell). Imported last by both bundles:
+   application.tailwind.css and study.tailwind.css. */
+@custom-variant dark (&:where([data-theme=candlelight], [data-theme=candlelight] *));
+
+@theme inline {
+  --color-bg: var(--ui-bg);
+  --color-surface: var(--ui-surface);
+  --color-surface-2: var(--ui-surface-2);
+  --color-border: var(--ui-border);
+  --color-fg: var(--ui-fg);
+  --color-muted: var(--ui-fg-muted);
+  --color-subtle: var(--ui-fg-subtle);
+  --color-accent: var(--ui-accent);
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-reader: var(--reader-font);
+}
+
+/* Ancient Epistle palette + fonts exposed as Tailwind v4 tokens.
+   The .ps-* component layer in scripture.css uses the raw CSS vars in :root
+   (defined there); these tokens mirror them for incidental utility use. */
+@theme {
+  --font-serif: "EB Garamond", "Cormorant Garamond", Georgia, "Noto Sans Symbols 2", "Segoe UI Symbol", "Apple Symbols", "Segoe UI Emoji", "Noto Color Emoji", serif;
+  --font-display: "Cinzel", "Trajan Pro", "Noto Sans Symbols 2", "Segoe UI Symbol", "Apple Symbols", "Segoe UI Emoji", "Noto Color Emoji", serif;
+  --font-illuminated: "UnifrakturMaguntia", "Cinzel", "Segoe UI Symbol", serif;
+
+  --color-vellum-0: #f4ead2;
+  --color-vellum-1: #efe3c5;
+  --color-vellum-2: #e7d6ad;
+  --color-vellum-edge: #c9b88e;
+  --color-vellum-shadow: #8a7444;
+
+  --color-ink: #231408;
+  --color-ink-soft: #3a2616;
+  --color-sepia: #5a3b1f;
+  --color-sepia-mute: #8a6d4a;
+
+  --color-rubric: #8a2418;
+  --color-rubric-deep: #5e1a12;
+  --color-gold: #a3812e;
+  --color-gold-deep: #6f5318;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--ui-bg);
+  font-family: var(--ui-font);
+}
+body > .ps-root { height: 100vh; }
+
+/* ---- auth gate (login / password reset) ---- */
+.ps-gate {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+.ps-gate .ps-modal { position: relative; }
+.ps-gate form { margin: 0; }
+.ps-gate .field + .field { margin-top: 0; }
+.ps-gate .sub {
+  font-family: "EB Garamond", serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--sepia-mute);
+  text-align: center;
+  margin: 0 0 18px;
+}
+.ps-gate .actions { margin-top: 22px; }
+.ps-gate .actions .btn { flex: 1; }
+.ps-auth-flash {
+  font-family: "EB Garamond", serif;
+  font-style: italic;
+  font-size: 13px;
+  text-align: center;
+  padding: 9px 12px;
+  border-radius: 2px;
+  margin-bottom: 16px;
+}
+.ps-auth-flash.alert { background: rgba(138, 36, 24, 0.10); color: var(--rubric-deep); border: 1px solid rgba(138, 36, 24, 0.3); }
+.ps-auth-flash.notice { background: rgba(108, 132, 78, 0.14); color: var(--sepia); border: 1px solid rgba(108, 132, 78, 0.35); }
+.ps-gate .foot {
+  margin-top: 18px;
+  text-align: center;
+  font-family: "Cinzel", serif;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.ps-gate .foot a { color: var(--sepia); text-decoration: none; border-bottom: 1px solid rgba(138, 116, 68, 0.4); padding-bottom: 1px; }
+.ps-gate .foot a:hover { color: var(--rubric); }
+
+/* ---- pane translation dropdown (real <select> styled like .ps-trans) ---- */
+.ps-trans-select {
+  padding: 5px 8px;
+  border: 1px solid rgba(138, 116, 68, 0.4);
+  border-radius: 2px;
+  font: 600 10.5px "Cinzel", "Segoe UI", sans-serif;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  background: var(--legacy-card);
+  text-transform: uppercase;
+  cursor: pointer;
+  min-width: 72px;
+  max-width: 110px;
+}
+.ps-trans-select:focus { outline: none; border-color: var(--rubric); }
+/* keep the options popup legible across browsers (esp. Windows Chrome) */
+.ps-trans-select option { background: var(--ui-elevated); color: var(--ui-fg); font-weight: 600; }
+.ps-pane-tool:disabled { opacity: 0.4; cursor: default; }
+
+/* turbo-frame is the replaceable pane unit; make it lay out like the section */
+turbo-frame.ps-pane { display: flex; }
+
+/* loading state while a pane's Turbo Frame is navigating */
+turbo-frame.ps-pane[busy], turbo-frame.ps-pane[aria-busy="true"] {
+  opacity: 0.55; transition: opacity 0.12s ease;
+}
+turbo-frame.ps-pane[busy] .ps-verses { filter: blur(0.3px); }
+
+/* ---- shared backdrop behind the slide-over panels ---- */
+.ps-book-backdrop { position: absolute; inset: 0; background: rgba(35, 20, 8, 0.45); opacity: 0; transition: opacity 0.2s; }
+
+/* ---- AI "Find a Verse" slide-over ---- */
+.ps-ai-drawer { position: fixed; inset: 0; z-index: 41; visibility: hidden; pointer-events: none; }
+.ps-ai-drawer.is-open { visibility: visible; pointer-events: auto; }
+.ps-ai-drawer.is-open .ps-book-backdrop { opacity: 1; }
+.ps-ai-panel {
+  position: absolute; top: 0; right: 0; height: 100%; width: 408px;
+  background: linear-gradient(180deg, #ebdfc1 0%, #dec99a 100%);
+  border-left: 1px solid var(--vellum-edge);
+  box-shadow: -12px 0 30px -10px rgba(50, 30, 10, 0.45);
+  transform: translateX(100%); transition: transform 0.22s ease;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.ps-ai-drawer.is-open .ps-ai-panel { transform: translateX(0); }
+.ps-ai-panel form { padding: 14px 18px 6px; margin: 0; }
+.ps-ai-input {
+  width: 100%; padding: 10px 12px; background: var(--legacy-card);
+  border: 1px solid rgba(138, 116, 68, 0.4); border-radius: 2px;
+  font: 15px "EB Garamond", serif; color: var(--ink); resize: vertical; outline: none;
+}
+.ps-ai-input:focus { border-color: var(--rubric); box-shadow: 0 0 0 2px rgba(138, 36, 24, 0.12); }
+.ps-ai-results { padding: 4px 0 16px; overflow-y: auto; flex: 1; }
+.ps-ai-hint {
+  padding: 22px 18px; font-family: "EB Garamond", serif; font-style: italic;
+  font-size: 14px; color: var(--sepia-mute); text-align: center; line-height: 1.5;
+}
+.ps-ai-hint code {
+  font-family: ui-monospace, monospace; font-style: normal; font-size: 12px;
+  background: rgba(138, 36, 24, 0.08); padding: 1px 5px; border-radius: 2px; color: var(--rubric-deep);
+}
+.ps-ai-resultcount {
+  padding: 12px 20px 6px; font: 600 9.5px "Cinzel", serif; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--sepia-mute);
+}
+
+/* ---- full-text "Search the Scriptures" slide-over ---- */
+.ps-search-drawer { position: fixed; inset: 0; z-index: 41; visibility: hidden; pointer-events: none; }
+.ps-search-drawer.is-open { visibility: visible; pointer-events: auto; }
+.ps-search-drawer.is-open .ps-book-backdrop { opacity: 1; }
+.ps-search-panel {
+  position: absolute; top: 0; right: 0; height: 100%; width: 408px;
+  background: linear-gradient(180deg, #ebdfc1 0%, #dec99a 100%);
+  border-left: 1px solid var(--vellum-edge);
+  box-shadow: -12px 0 30px -10px rgba(50, 30, 10, 0.45);
+  transform: translateX(100%); transition: transform 0.22s ease;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.ps-search-drawer.is-open .ps-search-panel { transform: translateX(0); }
+.ps-search-panel form { padding: 14px 18px 6px; margin: 0; }
+
+/* The xref / commentary / lexicon drawers wrap their content in a <turbo-frame>;
+   make it a flex column so the inner .ps-drawer-list can actually scroll instead
+   of overflowing the drawer when entries are long. */
+.ps-drawer > turbo-frame {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ---- cross-reference slide-over (wraps the design's .ps-drawer) ---- */
+.ps-xref-host { position: fixed; inset: 0; z-index: 42; visibility: hidden; pointer-events: none; }
+.ps-xref-host.is-open { visibility: visible; pointer-events: auto; }
+.ps-xref-host.is-open .ps-book-backdrop { opacity: 1; }
+.ps-xref-host .ps-drawer {
+  position: absolute; top: 0; right: 0; height: 100%;
+  transform: translateX(100%); transition: transform 0.22s ease;
+}
+.ps-xref-host.is-open .ps-drawer { transform: translateX(0); }
+
+/* clickable verse number opens the xref drawer */
+.ps-vnum { text-decoration: none; cursor: pointer; }
+a.ps-vnum:hover { color: var(--rubric-deep); text-decoration: underline; }
+
+/* ---- guest / auth-gate ---- */
+
+.ps-modal-shroud.ps-auth-modal,
+.ps-modal-shroud.ps-new-study-modal { display: none; }
+.ps-modal-shroud.ps-auth-modal.is-open,
+.ps-modal-shroud.ps-new-study-modal.is-open { display: flex; }
+.ps-link-btn {
+  background: transparent; border: 0; cursor: pointer; color: var(--sepia);
+  font: 600 10px "Cinzel", serif; letter-spacing: 0.16em; text-transform: uppercase;
+}
+.ps-link-btn:hover { color: var(--rubric); }
+
+/* ---- Document-style workspace (welcome, reading plans, etc.) ----
+   The default workspace is a fixed grid for the multi-pane studies view.
+   Long-form pages need vertical scroll and start-aligned content. */
+.ps-workspace.is-doc {
+  overflow-y: auto;
+  grid-template-rows: auto !important;
+}
+.ps-workspace.is-doc .ps-welcome {
+  justify-content: flex-start;
+  padding: 60px 24px 28px;
+  flex: 0 0 auto;
+}
+
+/* ====================================================================
+   Welcome guide panel: "What's at your desk"
+   ==================================================================== */
+.ps-guide {
+  width: min(960px, 92%);
+  margin: 36px auto 60px;
+  padding: 22px 24px 24px;
+  background: var(--ui-elevated);
+  color: var(--ui-fg);
+  border: 1px solid var(--ui-border);
+  box-shadow: var(--ui-shadow-sm);
+  border-radius: 14px;
+  text-align: left;
+}
+.ps-guide-title {
+  font-family: var(--reader-font); font-size: 28px; color: var(--ui-fg);
+  margin: 2px 0 4px;
+}
+
+/* ---- "Today's reading" panel on the Scriptorium welcome ---- */
+.ps-today-label {
+  font: 600 9.5px "Cinzel", serif; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--sepia-mute);
+}
+
+/* ====================================================================
+   Reading plans: index, new form, show (manuscript calendar + day list).
+   ==================================================================== */
+.ps-plan-index, .ps-plan-form, .ps-plan-show {
+  width: min(960px, 100%); margin: 0 auto; padding: 22px 24px 60px;
+  color: var(--ink);
+}
+.ps-plan-title {
+  font-family: "EB Garamond", serif; font-size: 30px; color: var(--ink);
+  margin: 4px 0 6px; letter-spacing: 0.01em;
+}
+.ps-plan-sub {
+  font-family: "EB Garamond", serif; font-style: italic; color: var(--sepia);
+  font-size: 14px; margin: 0 0 16px;
+}
+.ps-plan-index-head, .ps-plan-show-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
+}
+.ps-plan-actions { display: flex; gap: 10px; align-items: center; }
+
+.ps-plan-list { display: flex; flex-direction: column; gap: 10px; }
+.ps-plan-card {
+  display: block; padding: 14px 16px;
+  background: var(--vellum-0); border: 1px solid var(--vellum-edge);
+  border-radius: 2px; text-decoration: none; color: var(--ink);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset;
+}
+.ps-plan-card:hover { background: var(--legacy-card); border-color: var(--gold); }
+.ps-plan-card-name { font: italic 18px/1.2 "EB Garamond", serif; }
+.ps-plan-card-meta {
+  font: 600 10.5px "Cinzel", serif; color: var(--sepia-mute);
+  letter-spacing: 0.16em; text-transform: uppercase; margin-top: 4px;
+}
+
+.ps-plan-empty {
+  background: var(--vellum-0); border: 1px solid var(--vellum-edge);
+  padding: 28px 24px; text-align: center; color: var(--sepia);
+  border-radius: 2px;
+}
+.ps-plan-empty .orn { color: var(--gold); font-size: 22px; margin-bottom: 6px; }
+.ps-plan-empty .hint { font-style: italic; color: var(--sepia-mute); font-size: 14px; }
+
+/* new-plan form */
+.ps-plan-form-body { display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
+.ps-plan-form-body .field { display: flex; flex-direction: column; gap: 4px; }
+.ps-plan-form-body label {
+  font: 600 9.5px "Cinzel", serif; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--sepia);
+}
+.ps-plan-input {
+  padding: 8px 10px; background: var(--vellum-0);
+  border: 1px solid rgba(138, 116, 68, 0.4); border-radius: 2px;
+  font: 15px "EB Garamond", serif; color: var(--ink); outline: none;
+}
+.ps-plan-input:focus { border-color: var(--rubric); box-shadow: 0 0 0 2px rgba(138, 36, 24, 0.12); }
+.ps-plan-form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+
+/* day rows */
+.ps-plan-days { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; }
+.ps-plan-row {
+  display: block;
+  background: var(--vellum-0); border: 1px solid var(--vellum-edge);
+  border-radius: 2px; padding: 10px 14px;
+}
+.ps-plan-row.is-today { border-color: var(--rubric); box-shadow: 0 0 0 1px rgba(138, 36, 24, 0.2); }
+.ps-plan-row.is-done { background: linear-gradient(180deg, #f1e9cf 0%, #ead8aa 100%); }
+.ps-plan-row-head {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;
+}
+.ps-plan-daynum {
+  font: 600 10.5px "Cinzel", serif; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--rubric);
+}
+.ps-plan-date { font: italic 14px "EB Garamond", serif; color: var(--sepia); flex: 1; }
+.ps-plan-tick {
+  border: 1px solid rgba(138, 116, 68, 0.5); background: transparent;
+  border-radius: 2px; padding: 4px 10px;
+  font: 600 10.5px "Cinzel", serif; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--sepia); cursor: pointer;
+}
+.ps-plan-tick:hover { background: rgba(163, 129, 46, 0.15); color: var(--ink); }
+.ps-plan-tick.is-on {
+  background: var(--rubric); color: var(--vellum-0); border-color: var(--rubric-deep);
+}
+.ps-plan-refs {
+  width: 100%; padding: 8px 10px; background: color-mix(in srgb, var(--legacy-card) 60%, transparent);
+  border: 1px solid rgba(138, 116, 68, 0.3); border-radius: 2px;
+  font: italic 15px "EB Garamond", serif; color: var(--ink); outline: none;
+}
+.ps-plan-refs:focus { border-color: var(--rubric); background: #fff; }
+
+/* manuscript calendar */
+.ps-plan-cal {
+  display: flex; flex-direction: column; gap: 16px;
+  margin: 12px 0 26px;
+  padding: 14px 16px;
+  background: var(--vellum-0);
+  border: 1px solid var(--vellum-edge);
+  box-shadow: inset 0 0 0 1px rgba(163, 129, 46, 0.3);
+  border-radius: 2px;
+}
+.ps-plan-cal-label {
+  font: 600 10px "Cinzel", serif; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--sepia-mute); margin-bottom: 6px;
+}
+.ps-plan-cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+}
+.ps-plan-cal-cell {
+  position: relative;
+  aspect-ratio: 1; min-height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--legacy-card) 50%, transparent);
+  border: 1px solid rgba(163, 129, 46, 0.25);
+  border-radius: 2px;
+  font: 12px "EB Garamond", serif; color: var(--sepia);
+}
+.ps-plan-cal-cell .num { opacity: 0.55; font-size: 11px; }
+.ps-plan-cal-cell.is-future { opacity: 0.45; }
+.ps-plan-cal-cell.is-today {
+  border-color: var(--rubric);
+  box-shadow: 0 0 0 1px rgba(138, 36, 24, 0.25);
+}
+.ps-plan-cal-cell.is-done {
+  background: linear-gradient(180deg, #f5e3a8 0%, #e9c469 100%);
+  color: var(--rubric);
+  border-color: var(--gold);
+}
+.ps-plan-cal-cell .mark {
+  position: absolute; font-size: 14px; color: var(--rubric);
+  opacity: 0.85; pointer-events: none;
+}
+
+/* ---- pane head wraps cleanly when crowded (tablets, multi-pane) ---- */
+.ps-pane-head { flex-wrap: wrap; row-gap: 6px; }
+.ps-pane-head .ps-pane-tool,
+.ps-pane-head .ps-trans-select { flex-shrink: 0; }
+
+/* ---- prev / next chapter arrows in the chapter title ---- */
+.ref-title { align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* ---- highlight edit popover (note + color swap + delete) ---- */
+.ps-hl-edit {
+  width: 300px;
+  background: #1d1107;
+  color: var(--vellum-0);
+  border: 1px solid var(--gold-deep);
+  border-radius: 2px;
+  padding: 10px 10px 8px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ps-hl-edit .ps-hl-note {
+  width: 100%;
+  background: color-mix(in srgb, var(--legacy-card) 8%, transparent);
+  color: var(--vellum-0);
+  border: 1px solid rgba(163, 129, 46, 0.45);
+  border-radius: 2px;
+  padding: 8px 9px;
+  font: 14px "EB Garamond", "Noto Sans Symbols 2", "Segoe UI Symbol", serif;
+  font-style: italic;
+  resize: vertical;
+  min-height: 56px;
+  outline: none;
+}
+.ps-hl-edit .ps-hl-note:focus { border-color: rgba(232, 200, 120, 0.7); }
+.ps-hl-edit .ps-hl-note::placeholder { color: rgba(232, 216, 176, 0.45); }
+.ps-hl-edit-row {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ps-hl-edit-swatches { display: flex; gap: 6px; }
+.ps-hl-edit .ps-hl-swatch.is-on {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+.ps-hl-del {
+  background: transparent; color: rgba(232, 216, 176, 0.7);
+  border: 1px solid rgba(163, 129, 46, 0.4); border-radius: 2px;
+  cursor: pointer; padding: 3px 8px; font-size: 12px;
+}
+.ps-hl-del:hover { color: var(--vellum-0); border-color: var(--rubric); background: rgba(138, 36, 24, 0.25); }
+
+/* small quill marker on highlights that carry a note */
+.hl-ochre.has-note::after,
+.hl-sage.has-note::after,
+.hl-cobalt.has-note::after,
+.hl-rose.has-note::after {
+  content: "✎"; /* ✎ */
+  font-size: 0.7em;
+  vertical-align: super;
+  margin-left: 1px;
+  color: var(--rubric);
+  opacity: 0.7;
+}
+
+/* ---- Strong's word study: tagged words + lexicon drawer ---- */
+.ps-word {
+  color: inherit; text-decoration: none; cursor: pointer;
+  border-radius: 2px; transition: background 0.1s ease;
+}
+.ps-word:hover {
+  background: rgba(163, 129, 46, 0.22);
+  box-shadow: 0 0 0 1px rgba(163, 129, 46, 0.3);
+}
+.ps-lex-lemma {
+  font-family: "EB Garamond", "Times New Roman", serif;
+  font-size: 30px; line-height: 1.1; color: var(--ink); margin-top: 2px;
+}
+.ps-lex-translit { font-style: italic; color: var(--sepia); }
+.ps-lex-code {
+  font-family: ui-monospace, monospace; font-size: 11px; color: var(--rubric);
+}
+.ps-lex-section { padding: 12px 20px; border-bottom: 1px solid rgba(138, 116, 68, 0.2); }
+.ps-lex-label {
+  font: 600 9.5px "Cinzel", serif; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--sepia-mute); margin: 10px 0 4px;
+}
+.ps-lex-label:first-child { margin-top: 0; }
+.ps-lex-text {
+  font-family: "EB Garamond", serif; font-size: 15px; line-height: 1.55; color: var(--ink-soft);
+}
+.ps-lex-muted { color: var(--sepia); font-style: italic; }
+
+/* ---- commentary drawer body ---- */
+.ps-commentary { padding: 14px 20px; border-bottom: 1px solid rgba(138, 116, 68, 0.2); }
+.ps-commentary-source {
+  font: 600 9.5px "Cinzel", serif; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--sepia-mute); margin-bottom: 8px;
+}
+.ps-commentary-body {
+  font-family: "EB Garamond", serif; font-size: 15px; line-height: 1.62; color: var(--ink-soft);
+}
+.ps-commentary-body p { margin: 0 0 10px; }
+.ps-commentary-body .cm-vref {
+  display: inline-block; margin: 6px 0 2px;
+  font: 600 9.5px "Cinzel", serif; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--rubric);
+}
+
+/* ---- pane tools: read-aloud + memorize active states ---- */
+.ps-pane-tool.is-on {
+  background: var(--rubric);
+  color: var(--vellum-0);
+  border-color: var(--rubric-deep);
+}
+
+/* memorize mode: blanked words, click to reveal */
+.ps-blank {
+  display: inline-block;
+  color: var(--rubric);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(138, 36, 24, 0.4);
+  font-family: ui-monospace, monospace;
+  font-size: 0.92em;
+  user-select: none;
+}
+.ps-blank:hover { background: rgba(163, 129, 46, 0.18); }
+.ps-blank.is-revealed {
+  color: var(--ink);
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: normal;
+  cursor: default;
+  border-bottom: 0;
+  background: rgba(163, 129, 46, 0.12);
+}
+
+/* ---- active pane (keyboard focus) ---- */
+.ps-pane.is-active-pane::before { border-color: rgba(138, 36, 24, 0.5); }
+.ps-pane.is-active-pane .ps-pane-index { background: rgba(138, 36, 24, 0.1); }
+
+/* dynamic toast fades via opacity */
+.ps-toast.js-flash { transition: opacity 0.3s ease; }
+
+/* ---- notes as a hideable popover (doesn't occupy the pane) ---- */
+.ps-notes-form {
+  position: absolute; left: 12px; right: 12px; bottom: 12px;
+  display: none; z-index: 4; margin: 0;
+}
+.ps-notes-form.is-open { display: block; }
+.ps-notes-form .ps-notes {
+  background: var(--vellum-0); border: 1px solid var(--vellum-edge); border-radius: 2px;
+  padding: 10px 14px 12px;
+  box-shadow: 0 -8px 24px -10px rgba(50, 30, 10, 0.45), 0 2px 8px rgba(50, 30, 10, 0.18);
+}
+.ps-notes-form .ps-notes-head { justify-content: space-between; }
+.ps-notes-close {
+  background: transparent; border: 0; cursor: pointer; color: var(--sepia-mute);
+  font-size: 12px; line-height: 1; padding: 2px;
+}
+.ps-notes-close:hover { color: var(--rubric); }
+.ps-pane-tool.has-notes { color: var(--rubric); position: relative; }
+.ps-pane-tool.has-notes::after {
+  content: ""; position: absolute; top: 3px; right: 3px;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--rubric);
+}
+
+/* ---- notes auto-save textarea ---- */
+.ps-notes-area {
+  width: 100%; border: 0; background: transparent; resize: vertical;
+  font-family: "EB Garamond", serif; font-style: italic; font-size: 14px;
+  color: var(--ink-soft); line-height: 1.55; outline: none; padding: 0; min-height: 48px;
+}
+.ps-notes-area::placeholder { color: var(--sepia-mute); opacity: 0.7; }
+.ps-notes form, .ps-pane form { margin: 0; }
+
+/* ====================================================================
+   First-run guided tour — spotlight coachmarks (tour_controller.js)
+   ==================================================================== */
+.ps-tour { position: fixed; inset: 0; z-index: 1000; pointer-events: none; }
+/* the spotlight: a small transparent box whose huge box-shadow dims
+   everything else, leaving the target control lit through the hole. */
+.ps-tour-spot {
+  position: fixed; border-radius: 4px;
+  box-shadow: 0 0 0 9999px rgba(28, 18, 8, 0.66),
+              0 0 0 2px var(--gold) inset;
+  transition: left 0.22s ease, top 0.22s ease, width 0.22s ease, height 0.22s ease;
+  pointer-events: none;
+}
+.ps-tour-card {
+  position: fixed; width: 320px; pointer-events: auto;
+  background: var(--vellum-0); color: var(--ink);
+  border: 1px solid var(--vellum-edge);
+  box-shadow: inset 0 0 0 1px rgba(163, 129, 46, 0.35),
+              0 14px 40px -16px rgba(28, 18, 8, 0.6);
+  border-radius: 3px; padding: 16px 18px 14px;
+  transition: left 0.22s ease, top 0.22s ease;
+}
+.ps-tour-card.is-centered {
+  left: 50% !important; top: 50% !important;
+  transform: translate(-50%, -50%);
+}
+/* when centered with no spotlight, dim the page from the overlay root */
+.ps-tour:has(.ps-tour-spot[style*="display: none"])::before {
+  content: ""; position: fixed; inset: 0;
+  background: rgba(28, 18, 8, 0.66); pointer-events: auto;
+}
+.ps-tour-step {
+  font: 600 9px "Cinzel", serif; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--sepia-mute); margin-bottom: 6px;
+}
+.ps-tour-title {
+  font-family: "EB Garamond", serif; font-size: 21px; font-style: italic;
+  color: var(--ink); margin-bottom: 6px; line-height: 1.2;
+}
+.ps-tour-body {
+  font: 14px/1.55 "EB Garamond", serif; color: var(--ink-soft); margin-bottom: 14px;
+}
+.ps-tour-actions {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.ps-tour-nav { display: flex; gap: 8px; }
+.ps-tour-skip {
+  background: transparent; border: 0; cursor: pointer;
+  font: 600 10px "Cinzel", serif; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--sepia-mute);
+}
+.ps-tour-skip:hover { color: var(--rubric); }
+.ps-tour-back, .ps-tour-next {
+  cursor: pointer; border-radius: 2px;
+  font: 600 10px "Cinzel", serif; letter-spacing: 0.16em; text-transform: uppercase;
+  padding: 7px 14px;
+}
+.ps-tour-back {
+  background: transparent; color: var(--sepia);
+  border: 1px solid rgba(163, 129, 46, 0.4);
+}
+.ps-tour-back:hover { color: var(--ink); background: rgba(163, 129, 46, 0.12); }
+.ps-tour-next {
+  background: var(--rubric); color: var(--vellum-0);
+  border: 1px solid var(--rubric-deep); box-shadow: 0 2px 0 rgba(0,0,0,0.18);
+}
+.ps-tour-next:hover { background: var(--rubric-deep); }
+
+/* ====================================================================
+   Illustrated Field Guide page (guide/show.html.erb)
+   Self-contained — .eyebrow / .lede / .rule-orn are re-scoped under
+   .ps-tut here because the globals are scoped to .ps-welcome.
+   ==================================================================== */
+.ps-tut-root { overflow-y: auto; }
+.ps-tut {
+  width: min(1040px, 92%); margin: 0 auto; padding: 8px 0 80px;
+}
+.ps-tut .eyebrow {
+  font: 600 11px "Cinzel", serif; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--rubric);
+}
+.ps-tut-hero {
+  text-align: center; padding: 56px 0 40px;
+}
+.ps-tut-hero h1 {
+  font-family: "EB Garamond", serif; font-style: italic; font-weight: 500;
+  font-size: 46px; color: var(--ink); margin: 12px 0 14px; letter-spacing: -0.005em;
+}
+.ps-tut .lede {
+  max-width: 640px; margin: 0 auto;
+  font: 18px/1.7 "EB Garamond", serif; color: var(--ink-soft);
+}
+.ps-tut-hero-cta {
+  margin-top: 26px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+}
+
+/* alternating feature rows */
+.ps-tut-section {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
+  align-items: center; padding: 40px 0;
+  border-top: 1px dashed rgba(163, 129, 46, 0.35);
+}
+.ps-tut-section.reverse .ps-tut-copy { order: 2; }
+.ps-tut-section.reverse .ps-tut-art  { order: 1; }
+.ps-tut-feature {
+  background: linear-gradient(180deg, rgba(245,231,196,0.4) 0%, rgba(234,215,166,0.25) 100%);
+  border-radius: 4px; padding: 40px 32px;
+  box-shadow: inset 0 0 0 1px rgba(163, 129, 46, 0.28);
+}
+.ps-tut-kicker {
+  font: 600 18px "Cinzel", serif; color: var(--gold-deep);
+  letter-spacing: 0.1em; margin-bottom: 8px;
+}
+.ps-tut-copy h2 {
+  font-family: "EB Garamond", serif; font-size: 28px; color: var(--ink);
+  margin: 0 0 12px; line-height: 1.2;
+}
+.ps-tut-copy p {
+  font: 16px/1.65 "EB Garamond", serif; color: var(--ink-soft); margin: 0;
+}
+.ps-tut-copy strong { color: var(--rubric); font-weight: 600; }
+.ps-tut-copy .kbd, .ps-tut .kbd {
+  font: 600 11px "Cinzel", serif; padding: 1px 6px;
+  border: 1px solid rgba(163, 129, 46, 0.45); border-radius: 2px;
+  color: var(--sepia); background: var(--vellum-0);
+}
+.ps-tut-chips { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+.ps-tut-chip {
+  font: 600 12px "Cinzel", serif; letter-spacing: 0.08em;
+  padding: 4px 10px; border-radius: 2px; color: var(--sepia);
+  background: var(--vellum-0); border: 1px solid rgba(163, 129, 46, 0.4);
+}
+
+/* the little illustrative artboards */
+.ps-tut-art { display: flex; justify-content: center; }
+.ps-tut-art > * {
+  width: 100%; max-width: 420px;
+  background: var(--vellum-0); border: 1px solid var(--vellum-edge);
+  border-radius: 3px; padding: 16px 18px;
+  box-shadow: inset 0 0 0 1px rgba(163, 129, 46, 0.3),
+              0 10px 28px -16px rgba(50, 30, 10, 0.4);
+}
+.ps-tut-panes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px !important; }
+.ps-tut-pane {
+  border: 1px solid rgba(163, 129, 46, 0.3); border-radius: 2px;
+  padding: 8px 10px; background: color-mix(in srgb, var(--legacy-card) 50%, transparent);
+}
+.ps-tut-pane-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; }
+.ps-tut-pane-head .num { color: var(--gold-deep); font: 600 12px "Cinzel", serif; }
+.ps-tut-pane-head .ref { font: italic 13px "EB Garamond", serif; color: var(--ink); }
+.ps-tut-pane-head .tr {
+  margin-left: auto; font: 600 8.5px "Cinzel", serif; letter-spacing: 0.12em;
+  color: var(--sepia-mute);
+}
+.ps-tut-pane-body { font: 14px/1.5 "EB Garamond", serif; color: var(--ink-soft); }
+.ps-tut-pane-body .v {
+  font-size: 9px; color: var(--rubric); vertical-align: super; margin-right: 3px;
+}
+
+.ps-tut-field {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ps-tut-field .cur { font: 18px "EB Garamond", serif; color: var(--ink); }
+.ps-tut-field .caret {
+  display: inline-block; width: 1px; height: 18px; margin-left: 1px;
+  background: var(--rubric); vertical-align: middle;
+  animation: ps-tut-blink 1.1s step-end infinite;
+}
+@keyframes ps-tut-blink { 50% { opacity: 0; } }
+.ps-tut-field .go {
+  font: 600 9px "Cinzel", serif; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--vellum-0); background: var(--rubric); padding: 5px 10px; border-radius: 2px;
+}
+
+.ps-tut-drawer-head {
+  font: 600 10px "Cinzel", serif; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--sepia); margin-bottom: 10px;
+}
+.ps-tut-xref {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 0; border-bottom: 1px dashed rgba(163, 129, 46, 0.3);
+}
+.ps-tut-xref:last-child { border-bottom: 0; }
+.ps-tut-xref .r { font: italic 15px "EB Garamond", serif; color: var(--ink); }
+.ps-tut-xref .dots { color: var(--gold-deep); font-size: 10px; letter-spacing: 1px; }
+
+.ps-tut-rabbi .sel {
+  font: italic 16px "EB Garamond", serif; color: var(--rubric);
+  background: rgba(138, 36, 24, 0.08); border-radius: 2px;
+  padding: 4px 8px; display: inline-block; margin-bottom: 12px;
+}
+.ps-tut-rabbi .card .lbl {
+  font: 600 8.5px "Cinzel", serif; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--sepia-mute); margin: 8px 0 3px;
+}
+.ps-tut-rabbi .card p {
+  font: 14px/1.5 "EB Garamond", serif; color: var(--ink-soft); margin: 0;
+}
+.ps-tut-rabbi .card p.caution { color: var(--rubric-deep); font-style: italic; }
+.ps-tut-rabbi .refs { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+.ps-tut-rabbi .refs span {
+  font: 600 10px "Cinzel", serif; color: var(--rubric);
+  border: 1px solid rgba(138, 36, 24, 0.3); border-radius: 2px; padding: 2px 7px;
+}
+
+.ps-tut-find .q { font: italic 15px "EB Garamond", serif; color: var(--ink); margin-bottom: 12px; }
+.ps-tut-find .results { display: flex; gap: 6px; flex-wrap: wrap; }
+.ps-tut-find .results span {
+  font: 600 10px "Cinzel", serif; color: var(--sepia);
+  border: 1px solid rgba(163, 129, 46, 0.4); border-radius: 2px; padding: 3px 8px;
+  background: color-mix(in srgb, var(--legacy-card) 60%, transparent);
+}
+
+.ps-tut-lex .word { font: 18px "EB Garamond", serif; color: var(--ink); }
+.ps-tut-lex .word .g {
+  font: 600 11px "Cinzel", serif; letter-spacing: 0.06em; color: var(--gold-deep); margin-left: 8px;
+}
+.ps-tut-lex .def {
+  margin-top: 10px; font: italic 14px/1.55 "EB Garamond", serif; color: var(--ink-soft);
+}
+
+/* "more tools" grid */
+.ps-tut-more { padding: 48px 0 0; border-top: 1px dashed rgba(163, 129, 46, 0.35); margin-top: 8px; }
+.ps-tut-more-title {
+  text-align: center; font-family: "EB Garamond", serif; font-style: italic;
+  font-size: 26px; color: var(--ink); margin: 0 0 28px;
+}
+.ps-tut-more-grid {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+}
+.ps-tut-more-card {
+  display: flex; flex-direction: column; gap: 6px; padding: 16px 18px;
+  background: var(--vellum-0); border: 1px solid rgba(163, 129, 46, 0.3);
+  border-radius: 3px;
+}
+.ps-tut-more-card .orn { font-size: 20px; color: var(--gold); line-height: 1; }
+.ps-tut-more-card .t {
+  font: 600 12px "Cinzel", serif; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--rubric);
+}
+.ps-tut-more-card .d { font: 14px/1.5 "EB Garamond", serif; color: var(--ink-soft); font-style: italic; }
+
+.ps-tut-foot { text-align: center; padding: 56px 0 0; }
+.ps-tut .rule-orn {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  margin: 0 0 28px; color: var(--gold); opacity: 0.6;
+}
+.ps-tut .rule-orn .line { height: 1px; width: 120px; background: var(--gold); }
+.ps-tut-foot .cta { margin: 0 6px; }
+
+/* Field Guide parts, contents, screenshots and the new mock artboards */
+.ps-tut-copy h3 {
+  font-family: "EB Garamond", serif; font-size: 28px; color: var(--ink);
+  margin: 0 0 12px; line-height: 1.2;
+}
+.ps-tut-copy p + p { margin-top: 10px; }
+.ps-tut-toc {
+  max-width: 560px; margin: 0 auto 24px; padding: 18px 22px;
+  background: var(--vellum-0); border: 1px solid rgba(163, 129, 46, 0.35); border-radius: 4px;
+}
+.ps-tut-toc-title {
+  font: 600 11px "Cinzel", serif; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--rubric); margin-bottom: 8px; text-align: center;
+}
+.ps-tut-toc ol { list-style: none; margin: 0; padding: 0; }
+.ps-tut-toc a {
+  display: flex; gap: 12px; align-items: baseline; padding: 7px 0;
+  border-bottom: 1px dashed rgba(163, 129, 46, 0.3);
+  font: 18px "EB Garamond", serif; color: var(--ink); text-decoration: none;
+}
+.ps-tut-toc li:last-child a { border-bottom: 0; }
+.ps-tut-toc a span {
+  flex: 0 0 104px; white-space: nowrap; font: 600 10px "Cinzel", serif; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--gold-deep);
+}
+.ps-tut-toc a:hover { color: var(--rubric); }
+.ps-tut-part {
+  text-align: center; padding: 64px 0 24px; scroll-margin-top: 72px;
+  border-top: 2px solid rgba(163, 129, 46, 0.45); margin-top: 24px;
+}
+.ps-tut-part h2 {
+  font-family: "EB Garamond", serif; font-style: italic; font-weight: 500;
+  font-size: 38px; color: var(--ink); margin: 8px 0 8px;
+}
+.ps-tut-part p { max-width: 560px; margin: 0 auto; font: 17px/1.6 "EB Garamond", serif; color: var(--ink-soft); }
+.ps-tut-steps { margin: 8px 0 0; padding-left: 22px; font: 16px/1.6 "EB Garamond", serif; color: var(--ink-soft); }
+.ps-tut-steps li { margin: 3px 0; }
+.ps-tut-steps b { color: var(--ink); }
+
+/* real phone screenshots */
+.ps-tut-art > .ps-tut-shot {
+  margin: 0; padding: 8px; max-width: 280px; border-radius: 26px;
+  background: #1d1712; border: 0;
+  box-shadow: 0 18px 40px -18px rgba(50, 30, 10, 0.55);
+}
+.ps-tut-shot img { display: block; width: 100%; height: auto; border-radius: 19px; }
+
+/* tabs / account / connection / plan / voice */
+.ps-tut-tabs { display: flex; justify-content: space-around; padding: 12px 8px !important; }
+.ps-tut-tabs .tab { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--sepia-mute); }
+.ps-tut-tabs .tab svg { width: 22px; height: 22px; }
+.ps-tut-tabs .tab b { font: 600 11px "Inter", sans-serif; }
+.ps-tut-tabs .tab.is-on { color: var(--rubric); }
+.ps-tut-save .t, .ps-tut-plan .t, .ps-tut-live .t, .ps-tut-sunday .t {
+  font: 600 18px "EB Garamond", serif; color: var(--ink);
+}
+.ps-tut-save .row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 12px; }
+.ps-tut-save .row span, .ps-tut-sunday .btns span, .ps-tut-song .flow span {
+  font: 600 11px "Inter", sans-serif; color: var(--sepia);
+  border: 1px solid rgba(163, 129, 46, 0.4); border-radius: 999px; padding: 3px 10px;
+}
+.ps-tut-save .btn {
+  text-align: center; font: 600 13px "Inter", sans-serif; color: var(--vellum-0);
+  background: var(--rubric); border-radius: 999px; padding: 8px;
+}
+.ps-tut-net .line { display: flex; align-items: center; gap: 10px; padding: 6px 0; font: 16px "EB Garamond", serif; color: var(--ink); }
+.ps-tut-net .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.ps-tut-net .dot.is-on { background: #2f9e5b; }
+.ps-tut-net .dot.is-off { background: #c0392b; }
+.ps-tut-net .note { margin-top: 8px; font: italic 14px "EB Garamond", serif; color: var(--sepia-mute); }
+.ps-tut-plan { display: flex; gap: 16px; align-items: center; }
+.ps-tut-plan .ring {
+  flex: none; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(var(--gold-deep) 0 62%, rgba(163, 129, 46, 0.2) 62% 100%);
+}
+.ps-tut-plan .ring span {
+  width: 50px; height: 50px; border-radius: 50%; background: var(--vellum-0);
+  display: grid; place-items: center; font: 600 13px "Inter", sans-serif; color: var(--ink);
+}
+.ps-tut-plan .d, .ps-tut-live .d, .ps-tut-sunday .d { font: 14px "EB Garamond", serif; color: var(--ink-soft); }
+.ps-tut-plan .b { margin-top: 6px; font: 600 12px "Inter", sans-serif; color: var(--rubric); }
+.ps-tut-voice p { font: italic 18px/1.5 "EB Garamond", serif; color: var(--ink); margin: 0 0 8px; }
+.ps-tut-voice p::before { content: "\201C"; color: var(--gold); font-size: 34px; line-height: 0; vertical-align: -12px; margin-right: 2px; }
+.ps-tut-voice span { font: 600 11px "Cinzel", serif; letter-spacing: 0.1em; color: var(--sepia-mute); }
+
+/* preaching mocks */
+.ps-tut-screen {
+  aspect-ratio: 16 / 9; display: flex; flex-direction: column; justify-content: center; gap: 10px;
+  background: linear-gradient(160deg, #1d2a5c, #0f1736) !important; color: #f6efe0; text-align: center;
+}
+.ps-tut-screen .ref { font: 600 10px "Cinzel", serif; letter-spacing: 0.18em; opacity: 0.75; }
+.ps-tut-screen .words { font: 22px/1.35 "EB Garamond", serif; }
+.ps-tut-console { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 8px; padding: 12px !important; }
+.ps-tut-console .col { display: flex; flex-direction: column; gap: 4px; }
+.ps-tut-console b { font: 600 10px "Inter", sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sepia); }
+.ps-tut-console b.pv { color: #b7791f; }
+.ps-tut-console b.lv { color: #c0392b; }
+.ps-tut-console i { font: normal 12px "Inter", sans-serif; color: var(--ink-soft); padding: 3px 6px; border-radius: 3px; }
+.ps-tut-console i.on { background: rgba(183, 121, 31, 0.18); color: var(--ink); }
+.ps-tut-console .mini {
+  aspect-ratio: 16 / 9; display: grid; place-items: center; padding: 4px; text-align: center;
+  background: #1d2a5c; color: #f6efe0; border-radius: 3px; font: 11px/1.3 "EB Garamond", serif;
+  outline: 2px solid #b7791f;
+}
+.ps-tut-console .mini.is-live { outline-color: #c0392b; }
+.ps-tut-live { display: flex; gap: 16px; align-items: center; }
+.ps-tut-live .qr {
+  flex: none; width: 72px; height: 72px; border-radius: 4px;
+  background: repeating-conic-gradient(var(--ink) 0 25%, var(--vellum-0) 0 50%) 0 0 / 12px 12px;
+  border: 4px solid var(--vellum-0); outline: 1px solid rgba(163, 129, 46, 0.4);
+}
+.ps-tut-live .code { font: 600 13px "Inter", sans-serif; color: var(--rubric); margin: 2px 0; }
+.ps-tut-looks { display: grid; gap: 8px; }
+.ps-tut-looks .lk {
+  display: block; padding: 18px 12px; border-radius: 3px; text-align: center;
+  font: 17px "EB Garamond", serif; color: #fff;
+}
+.ps-tut-looks .royal { background: linear-gradient(140deg, #1e3a8a, #0b1640); }
+.ps-tut-looks .night { background: linear-gradient(180deg, #0b1026, #27214f); color: #f3e7c4; }
+.ps-tut-looks .bar, .ps-tut-song .flow, .ps-tut-sunday .btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.ps-tut-looks .bar em {
+  font: normal 600 11px "Inter", sans-serif; color: var(--sepia); padding: 4px 9px;
+  border: 1px solid rgba(163, 129, 46, 0.4); border-radius: 3px;
+}
+.ps-tut-looks .bar em.on { background: #111; color: #fff; border-color: #111; }
+.ps-tut-song .flow span.c { color: var(--rubric); border-color: rgba(138, 36, 24, 0.4); }
+.ps-tut-song .lbl { margin-top: 12px; font: 600 10px "Inter", sans-serif; color: var(--sepia-mute); }
+.ps-tut-song .words { font: 18px/1.4 "EB Garamond", serif; color: var(--ink); }
+.ps-tut-sunday .eb { font: 600 10px "Cinzel", serif; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-deep); }
+.ps-tut-sunday .d span { color: #2f7a4b; font-weight: 600; }
+.ps-tut-sunday .btns { margin-top: 12px; }
+
+/* keyboard shortcuts */
+.ps-tut-keys { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.ps-tut-keys-card {
+  padding: 18px 20px; background: var(--vellum-0);
+  border: 1px solid rgba(163, 129, 46, 0.3); border-radius: 3px;
+}
+.ps-tut-keys-card h3 {
+  font: 600 12px "Cinzel", serif; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--rubric); margin: 0 0 10px;
+}
+.ps-tut-keys-card dl { margin: 0; }
+.ps-tut-keys-card dl > div {
+  display: flex; justify-content: space-between; gap: 12px; padding: 6px 0;
+  border-bottom: 1px dashed rgba(163, 129, 46, 0.25);
+}
+.ps-tut-keys-card dl > div:last-child { border-bottom: 0; }
+.ps-tut-keys-card dt { flex: none; }
+.ps-tut-keys-card dd { margin: 0; text-align: right; font: 15px "EB Garamond", serif; color: var(--ink-soft); }
+.ps-tut-keys-card kbd {
+  font: 600 11px "Inter", sans-serif; padding: 1px 6px; border-radius: 3px;
+  border: 1px solid rgba(163, 129, 46, 0.45); background: var(--vellum-1, var(--vellum-0)); color: var(--sepia);
+}
+.ps-tut-foot-new { margin-top: 20px; font: 16px "EB Garamond", serif; }
+.ps-tut-foot-new a { color: var(--rubric); }
+
+@media (max-width: 860px) {
+  .ps-tut-keys { grid-template-columns: 1fr; }
+  .ps-tut-part h2 { font-size: 30px; }
+  .ps-tut-copy h3 { font-size: 24px; }
+  .ps-tut-section { padding: 28px 0; }
+  .ps-tut-part { padding-top: 44px; }
+}
+@media (max-width: 520px) {
+  .ps-tut-console { grid-template-columns: 1fr 1fr; }
+  .ps-tut-console .svc { grid-column: 1 / -1; }
+  .ps-tut-toc a span { flex-basis: 92px; letter-spacing: 0.06em; }
+}
+
+@media (max-width: 860px) {
+  .ps-tut-section { grid-template-columns: 1fr; gap: 24px; }
+  .ps-tut-section.reverse .ps-tut-copy,
+  .ps-tut-section.reverse .ps-tut-art { order: 0; }
+  .ps-tut-hero h1 { font-size: 34px; }
+}
+
+/* =====================================================================
+   Mobile / small-screen layout.
+   The workspace was built desktop-first (side-by-side panes). On a phone
+   we drop the multi-column grid and stack everything vertically so the
+   page scrolls top-to-bottom: topbar -> studies -> one pane at a time.
+   ===================================================================== */
+@media (max-width: 760px) {
+  /* let the whole app grow and scroll instead of locking to 100vh */
+  html, body { height: auto; }
+  body > .ps-root { height: auto; min-height: 100vh; }
+  .ps-root { overflow: visible; }
+
+  /* topbar wraps onto multiple rows instead of overflowing off-screen */
+  .ps-study-name {
+    order: 3; flex: 1 0 100%;
+    justify-content: flex-start; font-size: 16px;
+  }
+  .ps-tb-btn { padding: 6px 9px; }
+
+  /* shell stacks vertically */
+  .ps-shell { flex-direction: column; min-height: 0; }
+
+  /* one pane per row; the page scrolls between stacked panes */
+  .ps-workspace {
+    display: flex; flex-direction: column;
+    gap: 14px; padding: 14px;
+    overflow: visible;
+  }
+  .ps-workspace.cols-1,
+  .ps-workspace.cols-2,
+  .ps-workspace.cols-3,
+  .ps-workspace.cols-4 {
+    grid-template-columns: none;
+    grid-template-rows: none;
+  }
+  /* each pane is a tall viewport whose verses scroll internally */
+  .ps-pane { height: 78vh; min-height: 420px; flex: 0 0 auto; }
+  /* pane header has more tools now — let it wrap rather than overflow */
+  .ps-pane-head { flex-wrap: wrap; }
+  .ps-verses { padding: 16px 18px; font-size: 17px; }
+
+  /* slide-over drawers take the full width on a phone */
+  .ps-ai-panel, .ps-search-panel { width: 100%; max-width: 100%; }
+  .ps-xref-host .ps-drawer,
+  .ps-drawer { width: 100%; max-width: 100%; flex-basis: 100%; }
+
+  /* modals fit the screen and stay centered in the viewport */
+  .ps-modal-shroud { position: fixed; }
+  .ps-modal { width: auto; max-width: 92vw; padding: 22px 20px 20px; }
+}
+

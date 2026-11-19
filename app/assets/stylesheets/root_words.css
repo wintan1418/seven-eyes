@@ -25,7 +25,6 @@
   --rw-script: "RW Hebrew", "RW Greek", "Noto Serif", "Times New Roman", serif;
   --rw-latin: "RW Greek", "EB Garamond", "Noto Serif", serif;
 }
-[lang="he"] { font-feature-settings: "kern"; }
 
 /* ----- the projected slide ------------------------------------------------ */
 .ps-root .ps-preach-slide .rw-slide {

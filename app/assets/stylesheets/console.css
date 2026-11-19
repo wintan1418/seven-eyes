@@ -393,7 +393,6 @@
 .ps-root.is-console .ps-console-preview[data-state="live"] .ps-golive-btn::after { content: "· on screen now"; font-weight: 500; font-size: 12px; }
 
 /* ---------- SERVICE: the queue ---------- */
-.cx-slot-next { flex: none; height: 36px; margin: 0 10px 6px; }
 .cx-slot-service { flex: 1 1 auto; }
 /* !important: the Focus-view dock (preach_console.css) positions the open queue too. */
 .ps-root.is-console .ps-setlist-host {
@@ -514,7 +513,6 @@
 .ps-root.is-console[data-cx-tab="words"] .cx-panel[data-tab="words"],
 .ps-root.is-console[data-cx-tab="looks"] .cx-panel[data-tab="looks"] { display: flex; }
 .cx-panel > .cx-slot { flex: 1 1 auto; }
-.cx-mount { overflow: auto; padding: 10px 12px; }
 
 .cx-findbar { flex: none; display: flex; align-items: center; gap: 6px; padding: 8px 10px 6px; }
 .cx-find {
