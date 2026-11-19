@@ -1,0 +1,30 @@
+/* ============================================================================
+   The few preach-layer rules other pages need too, so they sit in both
+   bundles (application.css and study.css) at this point of the cascade:
+   right after the preach layer, before ui/*.
+   - the picture frame (lib/picture_fit.js): projector, console miniatures,
+     Picture Bank thumbnails and the /media page's cards;
+   - Hebrew kerning (glossary pages show Hebrew lemmas);
+   - the live pulse (admin's "live now", preach bar, follow-along).
+   ========================================================================== */
+.slide-img[data-fit] {
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; background: #000;
+}
+.slide-img[data-fit] > img {
+  display: block;
+  width: 100% !important; height: 100% !important;
+  max-width: none !important; max-height: none !important;
+  object-fit: contain !important; object-position: center;
+  transform: scale(var(--pic-zoom, 1)); transform-origin: center;
+  border-radius: 0 !important; box-shadow: none !important;
+}
+.slide-img[data-fit="fill"] > img { object-fit: cover !important; }
+.slide-img[data-fit="stretch"] > img { object-fit: fill !important; }
+
+[lang="he"] { font-feature-settings: "kern"; }
+
+@keyframes ps-live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}

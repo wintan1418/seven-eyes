@@ -90,7 +90,7 @@ export function page({ title, body, assets = {}, owner = "guest", online = "/rea
     "<meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'>" +
     `<title>${esc(title)}</title>` +
     "<meta name='turbo-cache-control' content='no-cache'>" +
-    (assets.css ? `<link rel='stylesheet' href='${esc(assets.css)}'>` : "") +
+    (assets.css ? `<link rel='stylesheet' href='${esc(assets.css)}' data-turbo-track='dynamic'>` : "") +
     `<style>${STYLE}</style>` +
     (assets.js ? `<script type='module' src='${esc(assets.js)}'></script>` : "") +
     `</head><body class='ofr' data-theme='auto' data-offline-owner='${esc(owner)}' data-offline-shell data-online-href='${esc(online)}'>${body}</body></html>`

@@ -60,11 +60,20 @@ class HotwireNativeTest < ActionDispatch::IntegrationTest
   test "the apps don't reload a page over a new deploy; browsers still do" do
     get root_path, headers: BROWSER
     assert_select "script[src*=application][data-turbo-track=reload]"
-    assert_select "link[rel=stylesheet][href*=application][data-turbo-track=reload]"
 
     get root_path, headers: ANDROID
     assert_select "script[src*=application][data-turbo-track]", count: 0
-    assert_select "link[rel=stylesheet][href*=application][data-turbo-track]", count: 0
+    assert_select "[src*=application][data-turbo-track=reload], [href*=application][data-turbo-track=reload]", count: 0
+  end
+
+  # application.css and study.css differ in cascade, so a Turbo visit swaps
+  # them ("dynamic": the old one is dropped, no full reload) — in the apps too.
+  test "the CSS bundle is swapped on Turbo visits, never reload-tracked" do
+    [ BROWSER, ANDROID ].each do |headers|
+      get root_path, headers: headers
+      assert_select "link[rel=stylesheet][href*='/application-'][data-turbo-track=dynamic]"
+      assert_select "link[rel=stylesheet][href*='/study-']", count: 0
+    end
   end
 
   test "browsers never get the native class" do

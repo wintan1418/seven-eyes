@@ -2,27 +2,12 @@
    Pictures on the screen (lib/picture_fit.js) and the console's Picture Bank.
    Imported last in the preach layer so a picture beats every slide / look rule.
 
-   A picture frame is any `.slide-img[data-fit]` holding an <img>: the frame is
+   A picture frame is any `.slide-img[data-fit]` (rules in preach_shared.css) holding an <img>: the frame is
    the screen (black), the picture sits in it as Fit (whole picture, black bars),
    Fill (covers, edges cropped) or Stretch, enlarged from the centre by
    --pic-zoom. The projector, the Live and Preview miniatures and the bank's
    thumbnails all use these same rules, so they show the same thing.
    ========================================================================== */
-.slide-img[data-fit] {
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden; background: #000;
-}
-.slide-img[data-fit] > img {
-  display: block;
-  width: 100% !important; height: 100% !important;
-  max-width: none !important; max-height: none !important;
-  object-fit: contain !important; object-position: center;
-  transform: scale(var(--pic-zoom, 1)); transform-origin: center;
-  border-radius: 0 !important; box-shadow: none !important;
-}
-.slide-img[data-fit="fill"] > img { object-fit: cover !important; }
-.slide-img[data-fit="stretch"] > img { object-fit: fill !important; }
-
 /* The slide layer while a picture is up: edge to edge on black — no padding,
    no frame, no Look behind it (projector and the console's Live miniature). */
 .ps-root.is-preaching.is-slide:not(.is-stage) .ps-preach-slide.is-picture {

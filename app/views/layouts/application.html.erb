@@ -56,7 +56,11 @@
         apps answer a reload by reopening the tab's start page (/read), which
         loops on slow data. The apps load the new code on their next launch. %>
     <% track = ("reload" unless hotwire_native_app?) %>
-    <%= stylesheet_link_tag "application", "data-turbo-track": track %>
+    <%# Two bundles: application.css (most pages) and study.css (pages that can
+        present — they set content_for :stylesheet). "dynamic": a Turbo visit
+        between the two swaps the stylesheet (never both at once, the cascade
+        differs) without the full reload "reload" would force. %>
+    <%= stylesheet_link_tag content_for(:stylesheet).presence || "application", "data-turbo-track": "dynamic" %>
     <%= javascript_include_tag "application", "data-turbo-track": track, type: "module" %>
     <%= javascript_chunk_preload_tags %>
   </head>

@@ -25,9 +25,6 @@ body > .ps-root.hm-root { height: 100vh; height: 100dvh; display: flex; flex-dir
     radial-gradient(90% 60% at 0% 30%, var(--dp-glow-b, transparent), transparent 70%);
 }
 
-.hm-link { display: inline-flex; align-items: center; gap: 2px; font: 600 14px var(--ui-font); color: var(--ui-accent); text-decoration: none; }
-.hm-link svg { width: 16px; height: 16px; }
-
 /* Lead: This Sunday (pastor mode) and the Today hero ------------------------------ */
 .hm-lead { display: grid; }
 @media (min-width: 768px) {

@@ -19,6 +19,15 @@ reachable in **two clicks or fewer**. Optimize for that flow, not for generality
 - **Tailwind v4, CSS-first.** Config lives in `app/assets/stylesheets/application.tailwind.css`
   via `@import "tailwindcss"` + `@theme { ... }`. **There is no `tailwind.config.js`** — do not
   create one. Custom fonts and the warm palette are defined as `@theme` tokens.
+  **Two CSS bundles** (`yarn build:css` builds both): `application.css` (entry
+  `application.tailwind.css`, every page) and `study.css` (entry `study.tailwind.css`: the
+  study/reader + preach console + projector/stage, sermon, shared study, live follow-along,
+  remote, What's new — those views set `content_for :stylesheet, "study"`). Same files in the
+  same order, except application.css leaves out the preach/projector/console layer and
+  study.css leaves out Home/Today/glossary/give/My Media. A file in both lists must keep its
+  position relative to the others (cascade). Preach rules other pages need go in
+  `preach_shared.css`; `@theme` + the shared rules are in `application_rules.css` (imported
+  last by both). The layout link is `data-turbo-track="dynamic"` so Turbo swaps bundles.
 - **JS bundling: esbuild** via `yarn build` (`app/javascript/*` → `app/assets/builds/`). Package
   manager is **yarn**.
   `esbuild.config.mjs` code-splits `application.js`: heavy controllers are in `LAZY_CONTROLLERS`

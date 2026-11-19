@@ -1,6 +1,6 @@
 // BiblioRata service worker. Bundled by esbuild and inlined into
 // app/views/pwa/service-worker.js.erb, which defines self.PS_SW first:
-//   { version: "ps-<digest>", assets: [current application.js/css URLs] }
+//   { version: "ps-<digest>", assets: [current application.js, application.css, study.css URLs] }
 //
 // What it does:
 //   • Static assets: fingerprinted /assets/ are cache-first (kept across
@@ -348,17 +348,20 @@ const htmlResponse = (html, status = 200) =>
 
 // The app's own CSS and JS for the pages drawn here — this version's when
 // saved, else any saved copy (an older deploy's bundle still runs Turbo).
+// CSS: the reader's bundle (study.css) first — the shell draws the reader;
+// application.css (before the split it held everything) when that isn't saved.
 async function shellAssets() {
   const statics = await caches.open(STATIC_CACHE).catch(() => null)
   if (!statics) return {}
   const keys = await statics.keys().catch(() => [])
-  const find = async (ext) => {
-    const current = (CONFIG.assets || []).find((u) => u.split("?")[0].endsWith(ext))
+  const find = async (name, ext) => {
+    const current = (CONFIG.assets || []).find((u) => u.split("?")[0].endsWith(ext) && u.includes(`/${name}-`))
     if (current && await statics.match(new URL(current, self.location.origin).href)) return current
-    const any = [ ...keys ].reverse().find((r) => /^\/assets\/application-[\w]+\.\w+$/.test(new URL(r.url).pathname) && new URL(r.url).pathname.endsWith(ext))
+    const pattern = new RegExp(`^/assets/${name}-[\\w]+\\${ext}$`)
+    const any = [ ...keys ].reverse().find((r) => pattern.test(new URL(r.url).pathname))
     return any ? new URL(any.url).pathname : null
   }
-  return { css: await find(".css"), js: await find(".js") }
+  return { css: await find("study", ".css") || await find("application", ".css"), js: await find("application", ".js") }
 }
 
 async function shellContext() {
@@ -485,7 +488,7 @@ async function isCurrentPage(response) {
   const current = (CONFIG.assets || []).map((u) => u.split("?")[0])
   if (!current.length) return true
   try {
-    const used = assetUrls(await response.clone().text()).filter((u) => /^\/assets\/application-/.test(u)).map((u) => u.split("?")[0])
+    const used = assetUrls(await response.clone().text()).filter((u) => /^\/assets\/(application|study)-/.test(u)).map((u) => u.split("?")[0])
     return used.length > 0 && used.every((u) => current.includes(u))
   } catch (_) {
     return false
