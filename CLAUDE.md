@@ -14,7 +14,7 @@ reachable in **two clicks or fewer**. Optimize for that flow, not for generality
 
 ## Stack (what's actually here — don't assume otherwise)
 
-- **Rails 8.1** / **Ruby 3.4.3** / **PostgreSQL** (`pg`).
+- **Rails 8.1** / **Ruby 3.4.13** / **PostgreSQL** (`pg`).
 - **Hotwire**: Turbo + Stimulus. **No SPA, no React.** This is a hard architectural rule.
 - **Tailwind v4, CSS-first.** Config lives in `app/assets/stylesheets/application.tailwind.css`
   via `@import "tailwindcss"` + `@theme { ... }`. **There is no `tailwind.config.js`** — do not
