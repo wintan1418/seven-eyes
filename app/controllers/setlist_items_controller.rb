@@ -51,6 +51,7 @@ class SetlistItemsController < ApplicationController
     attrs = item_params
     if request.format.json?
       return render_json_error("Pick what kind of item this is") if attrs.key?(:kind) && !valid_kind?(attrs[:kind])
+      return update_picture_json(attrs) if item.picture? && attrs[:kind].to_s.in?([ "", "picture" ])
       return render_json_error("Pictures can't be changed from here") if item.picture? || attrs[:kind] == "picture"
       return item.update(attrs) ? render(json: item_json(item)) : render_json_error(item.errors.full_messages.to_sentence)
     end
@@ -119,6 +120,14 @@ class SetlistItemsController < ApplicationController
     position = params.dig(:setlist_item, :position)
     item.place_at!(position) if position.to_s.match?(/\A\d+\z/)
     render json: item_json(item.reload), status: :created
+  end
+
+  # A picture's own settings from the Picture Bank (Fit / Fill / Stretch, zoom)
+  # and its name. The picture itself is only ever changed by a new upload.
+  def update_picture_json(attrs)
+    changes = attrs.slice(:title).to_h
+    changes[:data] = SlideData.picture(item.data.merge(SlideData.hashify(attrs[:data]))) if attrs.key?(:data)
+    item.update(changes) ? render(json: item_json(item)) : render_json_error(item.errors.full_messages.to_sentence)
   end
 
   def item_json(item)

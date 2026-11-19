@@ -306,4 +306,32 @@ class SetlistItemsTest < ActionDispatch::IntegrationTest
     json_post(study, kind: "picture", title: "x", client_id: "tmp-pic")
     assert_response :unprocessable_entity
   end
+
+  test "the Picture Bank saves how a picture fills the screen (and only that)" do
+    study = owner_study
+    item = study.setlist_items.create!(kind: :picture, title: "First timer", media_url: "https://res.cloudinary.com/demo/x.jpg")
+    patch study_setlist_item_path(study, item), params: { setlist_item: { kind: "picture", data: { fit: "fill", zoom: 130 } } }, as: :json
+    assert_response :success
+    assert_equal({ "fit" => "fill", "zoom" => 130 }, JSON.parse(response.body)["data"])
+    item.reload
+    assert_equal({ "fit" => "fill", "zoom" => 130 }, item.data)
+    assert_equal "https://res.cloudinary.com/demo/x.jpg", item.media_url
+
+    # Zoom alone keeps the fit; nonsense is cleaned.
+    patch study_setlist_item_path(study, item), params: { setlist_item: { data: { zoom: 999 } } }, as: :json
+    assert_equal({ "fit" => "fill", "zoom" => 200 }, item.reload.data)
+
+    # It still can't be turned into another kind from the device.
+    patch study_setlist_item_path(study, item), params: { setlist_item: { kind: "thought", body: "x" } }, as: :json
+    assert_response :unprocessable_entity
+    assert item.reload.picture?
+  end
+
+  test "a picture's setting is in the queue the page hands the device" do
+    study = owner_study
+    study.setlist_items.create!(kind: :picture, title: "Flyer", media_url: "https://res.cloudinary.com/demo/x.jpg", data: { fit: "stretch" })
+    get study_path(study)
+    items = JSON.parse(css_select("[data-items]").first["data-items"])
+    assert_equal({ "fit" => "stretch", "zoom" => 100 }, items.find { |i| i["kind"] == "picture" }["data"])
+  end
 end

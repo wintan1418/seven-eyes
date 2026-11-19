@@ -12,6 +12,7 @@ import { wordFromDetail, wordStudyTitle, encodeWordStudy } from "../lib/root_wor
 import { renderWordSlide, renderStageWord } from "../lib/root_word_slide"
 import { transitionStyle, crossfade } from "../lib/slide_transition"
 import { fitElement, screenCap } from "../lib/fit_text"
+import { pictureDisplay, samePicture, applyPicture } from "../lib/picture_fit"
 
 // Drives focus-pane presentation mode plus the EasyWorship-style preach sub-mode.
 //
@@ -1219,7 +1220,7 @@ export default class extends Controller {
     }
     if (detail.kind === "slide") {
       if (this.element.classList.contains("is-preaching")) {
-        this._presentSlide({ title: detail.title, body: detail.body, arrangement: detail.arrangement, image: detail.image, index: detail.index || 0, rich: detail.rich, word: wordFromDetail(detail) })
+        this._presentSlide({ title: detail.title, body: detail.body, arrangement: detail.arrangement, image: detail.image, picture: detail.picture, index: detail.index || 0, rich: detail.rich, word: wordFromDetail(detail) })
       } else {
         // The setlist doesn't mark it live either — nothing went on a screen.
         this._toast("Enter Preach mode first, then pick the song or slide to put it on the screen")
@@ -1234,7 +1235,7 @@ export default class extends Controller {
   // full-screen slide. Labels show to the operator and stage, never projected.
   // A scripture set / presentation / seminar deck (`rich`, lib/slides) lays
   // out its own steps but rides the same layer, state and broadcast.
-  _presentSlide({ title, body, arrangement, image, index, rich, word }) {
+  _presentSlide({ title, body, arrangement, image, picture, index, rich, word }) {
     if (word) { this._presentWordSlide(title, word); return }
     const slides = rich ? (richSlides(rich) || []) : songSlides(body, arrangement).slides.filter(s => s.text)
     if (slides.length === 0 && !title && !image) return
@@ -1244,6 +1245,8 @@ export default class extends Controller {
       body: body || "",
       arrangement: arrangement || "",
       image: image || null,
+      // How the picture fills the screen (lib/picture_fit): fit / fill / stretch + zoom.
+      picture: image ? pictureDisplay(picture) : null,
       rich: rich || null,
       stanzas: slides.length ? slides.map(s => s.text) : [title || ""],
       labels: slides.map(s => s.label || null),
@@ -1277,6 +1280,8 @@ export default class extends Controller {
     const render = () => {
       const { title, image, stanzas, index, rich, word } = this._slide
       layer.innerHTML = ""
+      // A picture goes edge to edge on black — no padding, frame or look.
+      layer.classList.toggle("is-picture", !!image && !word && !rich)
       if (word) {
         renderWordSlide(layer, word)
         const counter = this.element.querySelector("[data-preach-counter]")
@@ -1301,6 +1306,7 @@ export default class extends Controller {
       } else if (image) {
         const wrap = document.createElement("div")
         wrap.className = "slide-img"
+        applyPicture(wrap, this._slide.picture)
         const img = document.createElement("img")
         img.src = image
         img.alt = title || ""
@@ -1412,7 +1418,7 @@ export default class extends Controller {
   _snapshot() {
     if (this._slide) {
       return { kind: "slide", title: this._slide.title, body: this._slide.body, arrangement: this._slide.arrangement,
-               image: this._slide.image, index: this._slide.index, rich: this._slide.rich, word: this._slide.word || null }
+               image: this._slide.image, picture: this._slide.picture, index: this._slide.index, rich: this._slide.rich, word: this._slide.word || null }
     }
     const pane = this.element.querySelector(".ps-pane.is-presented")
     const reference = pane?.querySelector("input[name='pane[reference]']")?.value?.trim()
@@ -1466,7 +1472,7 @@ export default class extends Controller {
     this._restoring = true
     try {
       if (entry.kind === "slide") {
-        this._presentSlide({ title: entry.title, body: entry.body, arrangement: entry.arrangement, image: entry.image, index: entry.index, rich: entry.rich, word: entry.word })
+        this._presentSlide({ title: entry.title, body: entry.body, arrangement: entry.arrangement, image: entry.image, picture: entry.picture, index: entry.index, rich: entry.rich, word: entry.word })
         return
       }
       const pane = this.element.querySelector(".ps-pane.is-presented")
@@ -1797,6 +1803,15 @@ export default class extends Controller {
     else if (detail.action === "chase" && detail.value) this._chase(detail.value, { silent: true })
     else if (detail.action === "verse") this._goToVerse(Number(detail.value))
     else if (detail.action === "slide") this._goToSlide(Number(detail.value))
+    else if (detail.action === "picture") this._setPicture(detail.image, detail.picture)
+  }
+
+  // The Picture Bank changed how a picture fills the screen: if that picture is
+  // up, it changes in place (no history entry, no transition).
+  _setPicture(image, picture) {
+    if (!image || this._slide?.image !== image || samePicture(this._slide.picture, picture)) return
+    this._slide.picture = pictureDisplay(picture)
+    this._paintSlide()
   }
 
   // The console's live list: a verse of the chapter on screen, or a slide of
@@ -2225,6 +2240,11 @@ export default class extends Controller {
     if (this._slide && this._slide.body === slide.body && this._slide.title === slide.title &&
         (this._slide.arrangement || "") === (slide.arrangement || "") &&
         (this._slide.image || null) === (slide.image || null) && sameRich(this._slide.rich, slide.rich)) {
+      if (slide.image && !samePicture(this._slide.picture, slide.picture)) {
+        this._slide.picture = pictureDisplay(slide.picture)
+        this._paintSlide()
+        return
+      }
       if (this._slide.index !== slide.index) {
         this._slide.index = slide.index
         this._paintSlide(true)
@@ -2315,7 +2335,7 @@ export default class extends Controller {
       verseStart: this._range?.first ?? null,
       verseEnd: this._range?.last ?? null,
       slide: this._slide
-        ? { title: this._slide.title, body: this._slide.body, arrangement: this._slide.arrangement, image: this._slide.image, index: this._slide.index, rich: this._slide.rich, word: this._slide.word || null }
+        ? { title: this._slide.title, body: this._slide.body, arrangement: this._slide.arrangement, image: this._slide.image, picture: this._slide.picture || null, index: this._slide.index, rich: this._slide.rich, word: this._slide.word || null }
         : null
     }
   }

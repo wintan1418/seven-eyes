@@ -1,5 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import { paintRichSlide } from "../lib/slides/rich_slides"
+import { applyPicture } from "../lib/picture_fit"
 
 // The console's PREVIEW miniature: a 16:9 picture of what Go live will put on
 // the big screen, drawn in the projection's own type (console.css .cx-mini).
@@ -86,11 +87,15 @@ export default class extends Controller {
     const verses = Array.from(this._list.querySelectorAll(".v"))
     if (img) {
       screen.dataset.kind = "picture"
+      // Fit / Fill / Stretch and zoom as the projector will show it.
+      const frame = document.createElement("div")
+      frame.className = "cx-mini-img slide-img"
+      applyPicture(frame, { fit: img.dataset.fit, zoom: img.dataset.zoom })
       const pic = document.createElement("img")
-      pic.className = "cx-mini-img"
       pic.src = img.src
       pic.alt = ""
-      screen.append(pic)
+      frame.append(pic)
+      screen.append(frame)
     } else if (slides.length || stanza) {
       screen.dataset.kind = "slide"
       const pick = this._hover && slides.includes(this._hover) ? this._hover : slides[0]

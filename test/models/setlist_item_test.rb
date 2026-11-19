@@ -117,4 +117,14 @@ class SetlistItemTest < ActiveSupport::TestCase
     a.move!(:down)
     assert_equal %w[B C A], @study.setlist_items.in_order.map(&:title)
   end
+
+  test "a new picture fits the whole screen; one queued before there was a choice reads as Fit too" do
+    item = @study.setlist_items.create!(kind: :picture, media_url: "https://res.cloudinary.com/demo/new.jpg")
+    assert_equal({ "fit" => "fit", "zoom" => 100 }, item.reload.data)
+    old = @study.setlist_items.create!(kind: :picture, media_url: "https://res.cloudinary.com/demo/old.jpg")
+    old.update_column(:data, {})
+    assert_equal({ "fit" => "fit", "zoom" => 100 }, old.reload.picture_display)
+    assert_equal({ "fit" => "fit", "zoom" => 100 }, old.as_queue_json[:data])
+    assert_nil @study.setlist_items.create!(kind: :thought, title: "Hi").picture_display
+  end
 end
