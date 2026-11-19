@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { pictureDisplay } from "../lib/picture_fit"
 import { warmLocal, localState } from "../lib/offline/local_pane"
 import { referenceLabel } from "../lib/offline/reference_parser"
 import { bookText, allBookTexts, storedManifest } from "../lib/offline/store"
@@ -153,6 +154,9 @@ export default class extends Controller {
       const img = el("img", "thumb")
       img.src = preview.image
       img.alt = ""
+      const { fit, zoom } = pictureDisplay(preview.picture)
+      img.dataset.fit = fit
+      img.dataset.zoom = String(zoom)
       nodes.push(img)
     }
     const { slides } = songSlides(preview.body, preview.arrangement)

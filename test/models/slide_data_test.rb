@@ -37,4 +37,11 @@ class SlideDataTest < ActiveSupport::TestCase
                  SlideData.set_label({ "refs" => [ { "label" => "Colossians 2:2", "translation" => "KJV" }, { "label" => "Matthew 28:19", "translation" => "BSB" } ] })
     assert_equal "Why", SlideData.seminar_label({ "slides" => [ { "title" => "" }, { "title" => "Why" } ] })
   end
+
+  test "a picture keeps how it fills the screen: a known fit and a zoom of 100–200" do
+    assert_equal({ "fit" => "fit", "zoom" => 100 }, SlideData.clean("picture", {}))
+    assert_equal({ "fit" => "fill", "zoom" => 150 }, SlideData.clean("picture", { "fit" => "fill", "zoom" => "150", "x" => 1 }))
+    assert_equal({ "fit" => "fit", "zoom" => 200 }, SlideData.clean("picture", { "fit" => "tile", "zoom" => 900 }))
+    assert_equal 100, SlideData.clean("picture", { "zoom" => -5 })["zoom"]
+  end
 end

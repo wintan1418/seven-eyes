@@ -8,6 +8,7 @@
 #                    split: auto|each, ref_style: gold|plain }
 #   presentation   { deck, pages, source: pdf|images, file }   — pages stay on the device
 #   seminar        { slides: [{ layout, title, text, cite, image, notes }], reveal: bool }
+#   picture        { fit: fit|fill|stretch, zoom: 100..200 }   — how it fills the projector
 module SlideData
   MAX_REFS = 12
   MAX_VERSES = 80 # per reference
@@ -18,6 +19,12 @@ module SlideData
   REF_STYLES = %w[ gold plain ].freeze
   SOURCES = %w[ pdf images ].freeze
   LAYOUTS = %w[ title bullets image quote section ].freeze
+  # How a picture fills the screen (EasyWorship's "scaling"): fit = the whole
+  # picture, black bars where its shape differs (the default — nothing of a
+  # flyer is ever cut off); fill = covers the screen, the edges cropped;
+  # stretch = pulled to the screen's shape. Zoom enlarges it from the centre.
+  PICTURE_FITS = %w[ fit fill stretch ].freeze
+  PICTURE_ZOOM = (100..200)
   DECK_KEY = /\A[\w-]{1,64}\z/
   LOCAL_IMAGE = /\Alocal:[\w-]{1,64}\z/
 
@@ -29,6 +36,7 @@ module SlideData
     when "scripture_set" then scripture_set(raw)
     when "presentation" then presentation(raw)
     when "seminar" then seminar(raw)
+    when "picture" then picture(raw)
     else {}
     end
   end
@@ -62,6 +70,12 @@ module SlideData
       "source" => pick(raw["source"], SOURCES),
       "file" => str(raw["file"], 160).presence
     }.compact
+  end
+
+  def picture(raw)
+    zoom = raw["zoom"].to_i
+    zoom = PICTURE_ZOOM.min if zoom.zero?
+    { "fit" => pick(raw["fit"], PICTURE_FITS), "zoom" => zoom.clamp(PICTURE_ZOOM.min, PICTURE_ZOOM.max) }
   end
 
   def seminar(raw)

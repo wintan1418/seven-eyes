@@ -1,0 +1,93 @@
+/* ============================================================================
+   Pictures on the screen (lib/picture_fit.js) and the console's Picture Bank.
+   Imported last in the preach layer so a picture beats every slide / look rule.
+
+   A picture frame is any `.slide-img[data-fit]` holding an <img>: the frame is
+   the screen (black), the picture sits in it as Fit (whole picture, black bars),
+   Fill (covers, edges cropped) or Stretch, enlarged from the centre by
+   --pic-zoom. The projector, the Live and Preview miniatures and the bank's
+   thumbnails all use these same rules, so they show the same thing.
+   ========================================================================== */
+.slide-img[data-fit] {
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; background: #000;
+}
+.slide-img[data-fit] > img {
+  display: block;
+  width: 100% !important; height: 100% !important;
+  max-width: none !important; max-height: none !important;
+  object-fit: contain !important; object-position: center;
+  transform: scale(var(--pic-zoom, 1)); transform-origin: center;
+  border-radius: 0 !important; box-shadow: none !important;
+}
+.slide-img[data-fit="fill"] > img { object-fit: cover !important; }
+.slide-img[data-fit="stretch"] > img { object-fit: fill !important; }
+
+/* The slide layer while a picture is up: edge to edge on black — no padding,
+   no frame, no Look behind it (projector and the console's Live miniature). */
+.ps-root.is-preaching.is-slide:not(.is-stage) .ps-preach-slide.is-picture {
+  gap: 0; background: #000;
+}
+.ps-root.is-preaching.is-slide:is(.is-output, .is-console):not(.is-stage) .ps-preach-slide.is-picture {
+  padding: 0 !important;
+}
+.ps-root.is-preaching.is-slide:not(.is-stage) .ps-preach-slide.is-picture > .slide-img {
+  width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important;
+  flex: 1 1 auto;
+}
+.ps-root.is-console.is-preaching.is-slide .ps-preach-slide.is-picture { border-radius: 3px; overflow: hidden; }
+
+/* The Preview miniature: the picture frame is the whole miniature. */
+.cx-mini > .cx-mini-img.slide-img {
+  position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none;
+}
+
+/* ---------- the Picture Bank (console library → Pictures) ---------- */
+.cx-pbank { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 12px; }
+.cx-pbank-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; flex: none; }
+.cx-pbank-add {
+  height: 32px; padding: 0 12px; border-radius: 6px; cursor: pointer; white-space: nowrap;
+  background: var(--cx-panel); color: var(--cx-text); border: 1px dashed var(--cx-gold); font: 600 12.5px var(--cx-ui);
+}
+.cx-pbank-add:hover { background: var(--cx-raise); }
+.cx-pbank-ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; flex: 1 1 auto; }
+.cx-pbank-ctl[hidden] { display: none; }
+.cx-pbank-name {
+  max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: 600 13px var(--cx-serif); color: var(--cx-text);
+}
+.cx-seg { display: inline-flex; border: 1px solid var(--cx-line-2); border-radius: 6px; overflow: hidden; }
+.cx-seg button {
+  height: 30px; padding: 0 12px; cursor: pointer; border: 0; border-right: 1px solid var(--cx-line-2);
+  background: var(--cx-panel); color: var(--cx-mute); font: 600 12px var(--cx-ui);
+}
+.cx-seg button:last-child { border-right: 0; }
+.cx-seg button:hover { color: var(--cx-text); background: var(--cx-raise); }
+.cx-seg button[aria-pressed="true"] { background: var(--cx-gold); color: #1a1007; }
+.cx-zoom { display: inline-flex; align-items: center; gap: 6px; font: 600 11px var(--cx-ui); color: var(--cx-mute); text-transform: uppercase; letter-spacing: 0.06em; }
+.cx-zoom input { width: 120px; accent-color: var(--cx-gold); }
+.cx-zoom output { min-width: 38px; font: 600 12px var(--cx-ui); color: var(--cx-text); text-transform: none; letter-spacing: 0; }
+.cx-pbank-ctl .cx-btn.is-golive { background: var(--ps-live, #c62828); border-color: var(--ps-live, #c62828); color: #fff; }
+
+.cx-pbank-grid {
+  list-style: none; margin: 0; padding: 2px; flex: 1 1 auto; min-height: 0; overflow: auto;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; align-content: start;
+}
+.cx-pbank-grid .cx-empty { grid-column: 1 / -1; font: italic 13px/1.5 var(--cx-serif); color: var(--cx-faint); }
+.cx-pcard .pick {
+  display: flex; flex-direction: column; gap: 5px; width: 100%; padding: 5px; cursor: pointer; text-align: left;
+  background: var(--cx-panel); color: var(--cx-text); border: 2px solid var(--cx-line); border-radius: 7px;
+}
+.cx-pcard .pick:hover { border-color: var(--cx-line-2); background: var(--cx-raise); }
+.cx-pcard .pick:focus-visible { outline: 2px solid var(--cx-gold); outline-offset: 2px; }
+.cx-pcard .frame { width: 100%; aspect-ratio: 16 / 9; border-radius: 3px; }
+.cx-pcard .cap { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.cx-pcard .lbl { flex: 1; min-width: 0; font: 600 13px var(--cx-serif); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cx-pcard .meta { flex: none; font: 600 10px var(--cx-ui); color: var(--cx-faint); text-transform: uppercase; letter-spacing: 0.06em; }
+.cx-pcard .tag { display: none; flex: none; padding: 1px 5px; border-radius: 3px; font: 800 9px var(--cx-ui); letter-spacing: 0.1em; }
+.cx-pcard.is-selected .pick { border-color: var(--cx-gold); }
+.cx-pcard.is-preview .pick { border-color: var(--ps-preview); }
+.cx-pcard.is-live .pick { border-color: var(--ps-live); }
+.cx-pcard.is-preview .tag.preview { display: inline-block; background: var(--ps-preview); color: #1a1007; }
+.cx-pcard.is-live .tag.live { display: inline-block; background: var(--ps-live); color: #fff; }
+.cx-pcard.is-live .tag.preview { display: none; }

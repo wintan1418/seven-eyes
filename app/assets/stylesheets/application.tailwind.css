@@ -18,6 +18,7 @@
 @import "./legacy/audio.css";
 @import "./slide_themes.css"; /* projection Looks + live controls (after the preach layer) */
 @import "./console.css"; /* the operator console lays the preach pieces out (after Looks) */
+@import "./picture_fit.css"; /* pictures edge to edge (fit / fill / stretch + zoom) and the Picture Bank */
 
 /* The modern reader (YouVersion-style). Imported after the legacy layer so
    it wins ties; reading-mode rules are scoped to

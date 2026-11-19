@@ -5,7 +5,8 @@
 #               which may carry section labels ([Verse 1], [Chorus]…) and an
 #               arrangement ("V1 C V2 C") — see SongSheet
 #   thought   — a freeform note/announcement projected as a single slide
-#   picture   — a Cloudinary-hosted image (announcement slide, sermon graphic)
+#   picture   — a Cloudinary-hosted image (announcement slide, sermon graphic);
+#               `data` says how it fills the screen (fit / fill / stretch + zoom)
 #   scripture_set — several references on one slide, each in its own
 #               translation (Col 2:2 KJV + Matt 28:19 BSB): the verse words are
 #               kept in `data` (so it projects with no signal, on any device)
@@ -122,12 +123,18 @@ class SetlistItem < ApplicationRecord
     nil
   end
 
+  # How a picture fills the projector: { "fit" => fit|fill|stretch, "zoom" => 100..200 }.
+  # Pictures queued before there was a choice have no data: they show as Fit.
+  def picture_display
+    picture? ? SlideData.picture(data) : nil
+  end
+
   # The queue as the device-side controller holds it (setlist_controller.js).
   def as_queue_json
     {
       id: id, client_id: client_id, kind: kind, reference: reference, label: label,
       title: title, body: body, arrangement: arrangement, image: media_url,
-      stanzas: slide_count, data: data.presence
+      stanzas: slide_count, data: picture? ? picture_display : data.presence
     }
   end
 

@@ -3,6 +3,7 @@ import { warmLocal, localCheck } from "../lib/offline/local_pane"
 import { quickFetch } from "../lib/offline/network"
 import { queryWords } from "../lib/scripture_search"
 import { readMode, tidyReference, MODE_EVENT } from "../lib/scripture_mode"
+import { pictureDisplay, pictureLabel, applyPicture, ZOOM_MIN } from "../lib/picture_fit"
 
 const WORDS_WAIT_MS = 2500 // Enter in Words mode waits this long for the list
 
@@ -25,11 +26,17 @@ const WORDS_WAIT_MS = 2500 // Enter in Words mode waits this long for the list
 //   songs           a song picked in the song bank (Songs tab) goes to Preview.
 //   composer        "Several on one slide" opens the scripture-slide composer
 //                   (slide tools, queue-tool:open) with what was typed.
-//   kind lists      Presentations / Pictures tabs list those items of the
-//                   service; click previews, double-click goes live (the queue
-//                   row's own actions).
+//   kind lists      the Presentations tab lists those items of the service;
+//                   click previews, double-click goes live (the queue row's
+//                   own actions).
+//   picture bank    the Pictures tab: every picture of the service as a big
+//                   16:9 thumbnail drawn the way the screen shows it. Click
+//                   previews, double-click / Go live puts it up. Fit / Fill /
+//                   Stretch and zoom for the selected picture go to the queue
+//                   (setlist:picture), which saves them and changes the screen.
 export default class extends Controller {
-  static targets = [ "input", "hint", "translation", "decks", "pictures" ]
+  static targets = [ "input", "hint", "translation", "decks", "pictures",
+    "pictureControls", "pictureName", "pictureZoom", "pictureZoomOut" ]
 
   connect() {
     this.root = this.element.closest(".ps-root")
@@ -41,6 +48,7 @@ export default class extends Controller {
       "preach:state": (e) => { this._live = e.detail || null },
       "console:on": () => { this._syncTranslation(); this._paintKinds() },
       "setlist:changed": () => this._paintKinds(),
+      "preview:changed": (e) => { this._previewCid = e.detail?.cid || null; this._paintKinds() },
       "song-bank:picked": (e) => this._songPicked(e.detail?.song),
       [MODE_EVENT]: (e) => { this._mode = e.detail?.mode || "auto"; if (this._raw()) this.typed() }
     }
@@ -288,7 +296,8 @@ export default class extends Controller {
 
   _paintKinds() {
     if (!this.root.classList.contains("is-console")) return
-    ;[ this.hasDecksTarget && this.decksTarget, this.hasPicturesTarget && this.picturesTarget ].filter(Boolean).forEach((list) => {
+    this._paintPictures()
+    ;[ this.hasDecksTarget && this.decksTarget ].filter(Boolean).forEach((list) => {
       const kinds = (list.dataset.kinds || "").split(/\s+/)
       const rows = Array.from(this.root.querySelectorAll(".ps-setlist-items .ps-setlist-item"))
         .filter((li) => kinds.some((k) => li.classList.contains(`kind-${k}`)))
@@ -325,6 +334,124 @@ export default class extends Controller {
 
   _queueRow(event) {
     const cid = event.currentTarget.dataset.cid
+    return cid ? this.root.querySelector(`.ps-setlist-items .ps-setlist-item[data-cid="${CSS.escape(cid)}"]`) : null
+  }
+
+  // ---- the Picture Bank (Pictures tab) ----------------------------------------------------
+
+  _pictureItems() {
+    let items = []
+    window.dispatchEvent(new CustomEvent("setlist:request-items", { detail: { reply: (list) => { items = list } } }))
+    return items.filter((i) => i.kind === "picture" && i.image)
+  }
+
+  // Rebuilt only when the pictures themselves change (the queue repaints
+  // every second while something syncs); live / preview marks just toggle.
+  _paintPictures() {
+    if (!this.hasPicturesTarget) return
+    const list = this.picturesTarget
+    const pictures = this._pictureItems()
+    this._pictures = pictures
+    if (!pictures.some((p) => p.cid === this._pictureCid)) {
+      const previewed = pictures.find((p) => p.cid === this._previewCid)
+      this._pictureCid = (previewed || pictures[0])?.cid || null
+    }
+    const signature = JSON.stringify(pictures.map((p) => [ p.cid, p.image, p.label || p.title, pictureDisplay(p.data) ]))
+    if (signature !== this._pictureSignature) {
+      this._pictureSignature = signature
+      if (!pictures.length) list.replaceChildren(el("li", "cx-empty", list.dataset.empty || ""))
+      else list.replaceChildren(...pictures.map((p) => this._pictureCard(p)))
+    }
+    const rows = this.root.querySelectorAll(".ps-setlist-items .ps-setlist-item")
+    const marks = {}
+    rows.forEach((li) => { marks[li.dataset.cid] = { live: li.classList.contains("is-live"), preview: li.classList.contains("is-preview") } })
+    list.querySelectorAll(".cx-pcard").forEach((card) => {
+      const m = marks[card.dataset.cid] || {}
+      card.classList.toggle("is-live", !!m.live)
+      card.classList.toggle("is-preview", !!m.preview || card.dataset.cid === this._previewCid)
+      card.classList.toggle("is-selected", card.dataset.cid === this._pictureCid)
+    })
+    this._paintPictureControls()
+  }
+
+  _pictureCard(item) {
+    const card = el("li", "cx-pcard")
+    card.dataset.cid = item.cid
+    const btn = el("button", "pick")
+    btn.type = "button"
+    btn.dataset.cid = item.cid
+    btn.dataset.action = "click->console-library#pickPicture dblclick->console-library#livePicture"
+    btn.title = "Click to preview · double-click to go live"
+    const frame = el("span", "frame slide-img")
+    applyPicture(frame, item.data)
+    const img = el("img")
+    img.src = item.image
+    img.alt = ""
+    img.loading = "lazy"
+    img.decoding = "async"
+    frame.append(img)
+    const cap = el("span", "cap")
+    cap.append(el("span", "lbl", item.label || item.title || "Picture"), el("span", "tag live", "LIVE"),
+      el("span", "tag preview", "PREVIEW"), el("span", "meta", pictureLabel(item.data)))
+    btn.append(frame, cap)
+    card.append(btn)
+    return card
+  }
+
+  _paintPictureControls() {
+    if (!this.hasPictureControlsTarget) return
+    const item = this._pictures?.find((p) => p.cid === this._pictureCid)
+    this.pictureControlsTarget.hidden = !item
+    if (!item) return
+    const { fit, zoom } = pictureDisplay(item.data)
+    this.pictureNameTarget.textContent = item.label || item.title || "Picture"
+    this.pictureControlsTarget.querySelectorAll("[data-fit]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.fit === fit)))
+    if (document.activeElement !== this.pictureZoomTarget) this.pictureZoomTarget.value = String(zoom)
+    this.pictureZoomOutTarget.textContent = `${zoom}%`
+  }
+
+  pickPicture(event) {
+    event.preventDefault()
+    this._pictureCid = event.currentTarget.dataset.cid
+    this._paintPictures()
+    this._queueRow(event)?.querySelector(".present")?.click()
+  }
+
+  livePicture(event) {
+    event.preventDefault()
+    this._pictureCid = event.currentTarget.dataset.cid
+    this._queueRow(event)?.querySelector(".present")?.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }))
+  }
+
+  pictureFit(event) {
+    event.preventDefault()
+    this._changePicture({ fit: event.currentTarget.dataset.fit })
+  }
+
+  pictureZoom() {
+    const zoom = Number(this.pictureZoomTarget.value) || ZOOM_MIN
+    this.pictureZoomOutTarget.textContent = `${zoom}%`
+    this._changePicture({ zoom })
+  }
+
+  picturePreview(event) {
+    event.preventDefault()
+    this._selectedRow()?.querySelector(".present")?.click()
+  }
+
+  pictureLive(event) {
+    event.preventDefault()
+    this._selectedRow()?.querySelector(".present")?.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }))
+  }
+
+  _changePicture(change) {
+    if (!this._pictureCid) return
+    window.dispatchEvent(new CustomEvent("setlist:picture", { detail: { cid: this._pictureCid, ...change } }))
+    this._paintPictures()
+  }
+
+  _selectedRow() {
+    const cid = this._pictureCid
     return cid ? this.root.querySelector(`.ps-setlist-items .ps-setlist-item[data-cid="${CSS.escape(cid)}"]`) : null
   }
 

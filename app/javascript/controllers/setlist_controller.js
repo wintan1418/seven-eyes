@@ -14,6 +14,7 @@ import { onArrival } from "../lib/arrival"
 import { songSlides } from "../lib/song_sheet"
 import { richFor } from "../lib/slides/rich_slides"
 import { pageUrl } from "../lib/slides/deck_store"
+import { pictureDisplay, samePicture } from "../lib/picture_fit"
 
 // The preach queue ("setlist"). Lives on .ps-root.
 //
@@ -37,7 +38,8 @@ import { pageUrl } from "../lib/slides/deck_store"
 //   in   setlist:present (from anywhere: which queue item is live), setlist:add {kind, reference…},
 //        setlist:preview-next, setlist:focus, setlist:open, preview:changed {cid},
 //        preach:passage {reference} (auto-add what went on screen), preach:enter,
-//        setlist:edit-song {title, body, arrangement} (the song bank's "Edit first")
+//        setlist:edit-song {title, body, arrangement} (the song bank's "Edit first"),
+//        setlist:picture {cid, fit?, zoom?} (the Picture Bank: how a picture fills the screen)
 //
 // Songs: the words may carry section labels and an order ("V1 C V2 C") — the
 // song editor (song_editor controller) helps write them; lib/song_sheet turns
@@ -73,6 +75,7 @@ export default class extends Controller {
       "setlist:focus": () => this.focusQueue(),
       "setlist:open": () => this.open(),
       "setlist:edit-song": (e) => this._editSong(e.detail),
+      "setlist:picture": (e) => this._setPicture(e.detail),
       // The slide tools (scripture set composer, presentation import, seminar
       // builder, service templates, order of service) — lib/slides, *_controller.
       "setlist:add-item": (e) => { const item = this._insert(e.detail.fields, e.detail.at ?? this.items.length); e.detail.done?.(item); this._toast(`Added ${item.label} to the queue`) },
@@ -637,8 +640,28 @@ export default class extends Controller {
       kind: item.kind === "scripture" ? "scripture" : "slide",
       itemKind: item.kind, cid: item.cid, label: item.label,
       reference: item.reference || null, title: item.title || null, body: item.body || null,
-      arrangement: item.arrangement || null, image: item.image || null, rich: richFor(item)
+      arrangement: item.arrangement || null, image: item.image || null, rich: richFor(item),
+      picture: item.kind === "picture" ? pictureDisplay(item.data) : null
     }
+  }
+
+  // The Picture Bank's Fit / Fill / Stretch and zoom: saved with the item
+  // (synced like any edit), changed in place on the screen if that picture is
+  // up, and repainted in Preview if it is there.
+  _setPicture(detail) {
+    const item = detail?.cid && this.items.find((i) => i.cid === detail.cid && i.kind === "picture")
+    if (!item) return
+    const now = pictureDisplay(item.data)
+    const picture = pictureDisplay({ fit: detail.fit ?? now.fit, zoom: detail.zoom ?? now.zoom })
+    if (samePicture(item.data, picture)) return
+    item.data = picture
+    delete this._failed[item.cid]
+    this._pending.set(item.cid, Date.now())
+    this._paintMarks()
+    this._save()
+    this._enqueue(() => queueSetlistUpdate(this.studyId, item, { kind: "picture", data: picture }, owner()))
+    window.dispatchEvent(new CustomEvent("preach:command", { detail: { action: "picture", image: item.image, picture } }))
+    if (this._previewCid === item.cid && this._preaching()) this._preview(item)
   }
 
   // Something went on screen: if it is a queue item, it is "live" in the queue.
