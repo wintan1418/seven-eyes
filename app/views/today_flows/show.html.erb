@@ -69,7 +69,6 @@
           <% when :reflection %>
             <p class="tf-prose"><%= illuminated(word.reflection) %></p>
             <div class="tf-ai">
-              <span>Written with AI from the passage</span>
               <%= render "shared/ai_report", kind: "daily_word", key: "today_flow_#{word.date.iso8601}",
                          context: word.reference, excerpt: [ word.reflection, word.prayer ].join("\n\n") %>
             </div>

@@ -77,7 +77,6 @@
 
       <footer class="pub-foot">
         Scripture from the <%= @word ? (Translation.find_by(code: @word.translation_code)&.name || @word.translation_code) : "King James Version" %>.
-        Reflection and prayer are written with AI from the passage.
         <%= link_to "Sources & credits", credits_path %>
       </footer>
     </article>
