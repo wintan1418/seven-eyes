@@ -38,7 +38,8 @@ export default class extends Controller {
     if (!query) { event.preventDefault(); this.inputTarget.focus(); return }
     // Reference mode (search_mode switch): the whole page goes, so the server
     // can open the reader at the passage — or say it isn't a reference.
-    const mode = this.formTarget.querySelector("input[name='mode']")?.value
+    const field = this.formTarget.querySelector("input[name='mode']")
+    const mode = field && !field.disabled ? field.value : "auto"
     this.formTarget.dataset.turboFrame = mode === "reference" ? "_top" : "search_results"
     if (mode === "reference") { this.remember(query); return }
     this.remember(query)

@@ -60,7 +60,10 @@ export default class extends Controller {
       b.setAttribute("aria-checked", String(on))
       b.classList.toggle("is-on", on)
     })
-    if (this.hasFieldTarget) this.fieldTarget.value = this._mode
+    if (this.hasFieldTarget) {
+      this.fieldTarget.value = this._mode
+      this.fieldTarget.disabled = this._mode === "auto" // Auto is the default: keep URLs plain
+    }
     this.element.dataset.mode = this._mode
     const input = this._input()
     if (input && this.placeholdersValue) input.placeholder = input.dataset[`placeholder${cap(this._mode)}`] || PLACEHOLDERS[this._mode]
