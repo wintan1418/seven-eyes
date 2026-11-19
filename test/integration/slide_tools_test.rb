@@ -40,7 +40,7 @@ class SlideToolsIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal 1, @study.setlist_items.count
     item = @study.setlist_items.sole
     assert item.scripture_set?
-    assert_equal({ "ref_position" => "bottom", "verse_numbers" => false, "split" => "auto", "ref_style" => "gold" }, item.data.except("refs"))
+    assert_equal({ "ref_position" => "bottom", "verse_numbers" => false, "split" => "auto", "ref_style" => "gold", "per_slide" => 0 }, item.data.except("refs"))
     assert_equal %w[ label reference translation verses ], item.data["refs"].first.keys.sort
     assert_equal "BSB", item.data["refs"].first["translation"]
     assert_equal "Matthew 28:19 BSB", item.label

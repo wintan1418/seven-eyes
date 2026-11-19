@@ -406,6 +406,9 @@
     <button type="button" class="ps-preach-jump-mode" data-preview-first aria-pressed="false"
             data-action="preview#togglePreviewFirst"
             title="When on, Enter loads Preview instead of the projector">Preview first</button>
+    <%# NKJV / NIV / AMP… from the pastor's own Bible app (paste_verses controller). %>
+    <button type="button" class="ps-preach-jump-paste" data-action="presentation#pasteOwn"
+            title="Paste your own — verses from your Bible app (NKJV, NIV, AMP…) as slides">Paste your own verses</button>
     <%# What Enter will do, live as you type: "→ John 3:16", "Verse 28", or an AI search. %>
     <span class="ps-preach-jump-hint" data-presentation-target="jumpHint" aria-live="polite">Type a reference, a verse number, or describe a passage</span>
   </div>

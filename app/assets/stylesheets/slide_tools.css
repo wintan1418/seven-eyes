@@ -120,6 +120,17 @@
 .set-pager button { width: 28px; height: 28px; border-radius: 3px; border: 1px solid rgba(138, 116, 68, 0.45); background: var(--vellum-0); cursor: pointer; }
 .set-pager button:disabled { opacity: 0.35; cursor: default; }
 
+/* ---- paste your own verses ---- */
+.pv-row { display: flex; gap: 10px; align-items: flex-end; }
+.pv-ref { flex: 1; min-width: 0; }
+.pv-ver-row { display: flex; gap: 6px; }
+.ps-tool-card .pv-ver-row select { padding: 8px; font-size: 14px; }
+.ps-tool-card .pv-other { width: 7.5em; }
+.ps-tool-card .pv-other[hidden] { display: none; }
+.pv-ref-input { font: 600 17px "Source Serif 4", "EB Garamond", serif !important; }
+.ps-tool-card .pv-text { min-height: 9.5em; font: 15px/1.45 "Source Serif 4", "EB Garamond", serif; }
+.pv-notice { margin: 12px 0 0; font: italic 12.5px "EB Garamond", serif; color: var(--sepia-mute); }
+
 /* The little projector: a 16:9 dark screen drawn by the same code as the real one. */
 .set-screen {
   position: relative; aspect-ratio: 16 / 9; width: 100%; overflow: hidden; border-radius: 4px;

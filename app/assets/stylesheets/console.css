@@ -671,7 +671,7 @@
 .cx-mini-btn:hover { color: var(--cx-text); border-color: var(--cx-gold); }
 .cx-service .cx-head { flex-wrap: wrap; row-gap: 2px; }
 .cx-service .cx-head .cx-sub { order: 3; flex-basis: 100%; }
-.cx-btn.is-compose { color: var(--cx-mute); }
+.cx-btn:is(.is-compose, .is-paste) { color: var(--cx-mute); }
 
 .cx-launch { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; padding: 12px; overflow: auto; }
 .cx-launch-card {

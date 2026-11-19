@@ -906,6 +906,13 @@ export default class extends Controller {
   // Esc in the Go box closes the box — and stops there. Without
   // stopPropagation the same keystroke reached the document-level Esc handler
   // and also left preach mode (closing the projector).
+  // The Go box's "Paste your own verses": NKJV / NIV / AMP… from the pastor's
+  // own Bible app, made into slides by the paste_verses dialog.
+  pasteOwn(event) {
+    this.cancelJump(event)
+    window.dispatchEvent(new CustomEvent("queue-tool:open", { detail: { tool: "paste-verses", live: true } }))
+  }
+
   cancelJump(event) {
     event?.preventDefault?.()
     event?.stopPropagation?.()

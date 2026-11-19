@@ -228,6 +228,9 @@ application.register("offline-studies", OfflineStudiesController)
 import ScriptureSetController from "./scripture_set_controller"
 application.register("scripture-set", ScriptureSetController)
 
+import PasteVersesController from "./paste_verses_controller"
+application.register("paste-verses", PasteVersesController)
+
 import PresentationImportController from "./presentation_import_controller"
 application.register("presentation-import", PresentationImportController)
 

@@ -78,7 +78,12 @@ export default class extends Controller {
       "setlist:picture": (e) => this._setPicture(e.detail),
       // The slide tools (scripture set composer, presentation import, seminar
       // builder, service templates, order of service) — lib/slides, *_controller.
-      "setlist:add-item": (e) => { const item = this._insert(e.detail.fields, e.detail.at ?? this.items.length); e.detail.done?.(item); this._toast(`Added ${item.label} to the queue`) },
+      "setlist:add-item": (e) => {
+        const item = this._insert(e.detail.fields, e.detail.at ?? this.items.length)
+        e.detail.done?.(item)
+        this._toast(`Added ${item.label} to the queue`)
+        if (e.detail.live && this._preaching()) { this._select(item.cid); this._goLive(item) } // from the Go box: straight to the screen
+      },
       "setlist:add-items": (e) => this._addMany(e.detail?.items || []),
       "setlist:replace-item": (e) => this._replace(e.detail?.cid, e.detail?.fields),
       "setlist:request-items": (e) => e.detail?.reply?.(this.items.map((i) => ({ ...i }))),
@@ -412,7 +417,8 @@ export default class extends Controller {
 
   _startEdit(item) {
     if (item.kind === "picture" || item.kind === "word") return // a word study is re-made from its root-word card
-    const tool = { scripture_set: "scripture-set", presentation: "presentation", seminar: "seminar" }[item.kind]
+    const own = item.kind === "scripture_set" && (item.data?.refs || []).some((r) => r.own) // pasted from the pastor's own Bible
+    const tool = own ? "paste-verses" : { scripture_set: "scripture-set", presentation: "presentation", seminar: "seminar" }[item.kind]
     if (tool) { window.dispatchEvent(new CustomEvent("queue-tool:open", { detail: { tool, item: { ...item } } })); return }
     this.open()
     this._editing = item.cid

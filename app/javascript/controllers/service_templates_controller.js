@@ -96,8 +96,12 @@ export default class extends Controller {
     const name = this.nameTarget.value.trim()
     if (!name) { this._status("Give the template a name — e.g. Sunday Service"); this.nameTarget.focus(); return }
     // Pictures are kept by their My Media entry (one queued before My Media can't be).
-    const items = this._queueItems().filter((i) => i.kind !== "picture" || i.media_asset_id).map(snapshot)
-    if (!items.length) { this._status("The queue is empty — line up the service first, then save it."); return }
+    // Passages pasted from the pastor's own Bible belong to one sermon (and the
+    // publishers' quotation allowance is per use), so templates leave them out.
+    const queued = this._queueItems()
+    const items = queued.filter((i) => (i.kind !== "picture" || i.media_asset_id) && !isOwnPassage(i)).map(snapshot)
+    const skipped = queued.filter(isOwnPassage).length
+    if (!items.length) { this._status(skipped ? "Pasted passages aren't kept in templates — add something else to save." : "The queue is empty — line up the service first, then save it."); return }
     const existing = this.templates.find((t) => t.name.toLowerCase() === name.toLowerCase())
     if (existing && !window.confirm(`Replace the “${existing.name}” template with this order?`)) return
     const template = { id: existing?.id || newTempId().replace(/^tmp-/, "tpl-"), name, items, updated_at: new Date().toISOString(), pending: true }
@@ -106,7 +110,7 @@ export default class extends Controller {
     await queueRecordSave("service-template", `${URL_BASE}/${template.id}`, { service_template: { name, items } }, owner())
     flushOutbox().catch(() => {})
     this._paint()
-    this._status(`Saved “${name}” — ${items.length} item${items.length === 1 ? "" : "s"}${navigator.onLine === false ? " (will sync when online)" : ""}`)
+    this._status(`Saved “${name}” — ${items.length} item${items.length === 1 ? "" : "s"}${skipped ? ` (pasted passages aren't kept in templates)` : ""}${navigator.onLine === false ? " (will sync when online)" : ""}`)
   }
 
   _queueItems() {
@@ -185,6 +189,10 @@ export default class extends Controller {
   _status(text) {
     this.statusTarget.textContent = text || ""
   }
+}
+
+function isOwnPassage(item) {
+  return item.kind === "scripture_set" && (item.data?.refs || []).some((r) => r.own)
 }
 
 // What a template keeps of a queue item.
