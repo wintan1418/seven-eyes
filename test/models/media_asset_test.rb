@@ -51,6 +51,16 @@ class MediaAssetTest < ActiveSupport::TestCase
     assert_equal({ a.id => 2 }, MediaAsset.service_counts([ a ]))
   end
 
+  test "without libvips (production) the grid uses the picture itself; Cloudinary still resizes by URL" do
+    asset = library_picture(@user)
+    cloud = @user.media_assets.new(title: "C", media_url: "https://res.cloudinary.com/demo/image/upload/v1/q/x.jpg")
+    MediaAsset.thumbnails = false
+    assert_equal asset.media_url, asset.thumb_url
+    assert_match %r{/upload/c_limit,w_480,h_270/}, cloud.thumb_url
+  ensure
+    MediaAsset.remove_instance_variable(:@thumbnails) if MediaAsset.instance_variable_defined?(:@thumbnails)
+  end
+
   test "a Cloudinary picture's thumbnail is a resized URL" do
     asset = @user.media_assets.new(title: "C", media_url: "https://res.cloudinary.com/demo/image/upload/v1/q/x.jpg")
     assert_equal "https://res.cloudinary.com/demo/image/upload/c_limit,w_480,h_270/v1/q/x.jpg", asset.thumb_url

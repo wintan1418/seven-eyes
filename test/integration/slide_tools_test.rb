@@ -107,11 +107,39 @@ class SlideToolsIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal 0, SongCollection.count
   end
 
+  test "service templates keep My Media pictures: listed with their file, queued in the new service" do
+    flyer = library_picture(@user, title: "Welcome flyer")
+    theirs = library_picture(users(:two), "giving.jpg")
+    sign_in_as @user
+    items = [
+      { kind: "picture", media_asset_id: flyer.id, title: "Welcome flyer", data: { fit: "fill", zoom: 100 } },
+      { kind: "picture", media_asset_id: theirs.id, title: "Not mine" },
+      { kind: "song", title: "Blessed Assurance", body: "Blessed assurance" }
+    ]
+    put service_template_path("tpl-pics"), params: { service_template: { name: "Sunday", items: items } }, as: :json
+    assert_response :success
+    assert_equal %w[picture song], @user.service_templates.sole.items.map { |i| i["kind"] }
+
+    get service_templates_path, as: :json
+    picture = response.parsed_body["templates"].first["items"].first
+    assert_equal flyer.id, picture["media_asset_id"]
+    assert_equal flyer.media_url, picture["image"]
+
+    post start_service_template_path("tpl-pics"), as: :json
+    assert_response :created
+    study = @user.studies.order(:id).last
+    item = study.setlist_items.in_order.first
+    assert item.picture?
+    assert_equal flyer, item.media_asset
+    assert_equal({ "fit" => "fill", "zoom" => 100 }, item.data)
+    assert_equal flyer.file.blob, item.picture_file.blob
+  end
+
   test "service templates: save the order, list it, start a new service from it" do
     items = [
       { kind: "song", title: "Blessed Assurance", body: "Blessed assurance" },
       { kind: "scripture", reference: "Matt 28:19" },
-      { kind: "picture", title: "Notice" }, # pictures belong to their queue
+      { kind: "picture", title: "Notice" }, # a picture not in My Media can't be kept
       { kind: "scripture_set", body: "BSB Matthew 28:19", data: { refs: [ { reference: "Matt 28:19", translation: "BSB", verses: [ { c: 28, n: 19, text: "BSB Matthew 28:19" } ] } ] } }
     ]
     put service_template_path("tpl-1"), params: { service_template: { name: "Sunday Service", items: items } }, as: :json

@@ -54,6 +54,7 @@
         <%= link_to root_path, class: "ui-menu-item" do %><%= icon(:home) %> Home<% end %>
         <% if authenticated? %>
           <%= link_to reading_plans_path, class: "ui-menu-item" do %><%= icon(:calendar) %> Reading plans<% end %>
+          <%= link_to media_assets_path, class: "ui-menu-item" do %><%= icon(:image) %> My Media<% end %>
         <% end %>
         <% if faith_glossary_visible? %>
           <%= link_to faith_terms_path, class: "ui-menu-item" do %><%= icon(:word) %> Glossary of the Faith<% end %>

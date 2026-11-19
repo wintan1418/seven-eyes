@@ -176,7 +176,7 @@
         Fit / Fill / Stretch and zoom are saved with the picture and change the
         screen at once if it is up (console-library). "My Media" is the
         account's picture library: search, preview, go live, add to the service,
-        upload. %>
+        upload. Both say what's saved on this device for offline use. %>
     <div class="cx-panel" data-tab="media" role="tabpanel" aria-label="Pictures">
       <div class="cx-pbank" data-controller="console-media">
         <div class="cx-pbank-views">
@@ -186,6 +186,12 @@
             <button type="button" role="tab" data-view="library" aria-selected="false" aria-pressed="false"
                     data-console-media-target="tab" data-action="console-media#view">My Media</button>
           </div>
+          <span class="cx-pbank-offline">
+            <span class="cx-pbank-offline-text" data-console-media-target="offlineText" role="status"></span>
+            <button type="button" class="cx-mini-btn" data-console-media-target="offlineButton" hidden
+                    data-action="console-media#saveOffline"
+                    title="Keep these pictures on this computer, so they show with no internet">&#10515; Save for offline</button>
+          </span>
         </div>
 
         <div class="cx-pbank-view" data-pbank-view="service" data-console-media-target="view">
@@ -229,6 +235,8 @@
                      data-action="change->console-media#upload">
             </label>
             <label class="cx-pbank-also"><input type="checkbox" checked data-console-media-target="also"> Also add to this service</label>
+            <%= link_to "Manage", media_assets_path, class: "cx-mini-btn", target: "_blank", rel: "noopener",
+                  title: "Open My Media in a new tab — rename, set how each fills the screen, delete" %>
             <div class="cx-pbank-ctl" data-console-media-target="controls" hidden>
               <span class="cx-pbank-name" data-console-media-target="name"></span>
               <button type="button" class="cx-btn is-preview" data-action="console-media#previewSelected"

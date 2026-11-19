@@ -307,6 +307,18 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   double-click / Go live, "+ Add to service" (queued by library id through the outbox, so it works
   offline), upload (optionally into the service too). Backfill: `MediaBackfill` (migration +
   `bin/rails media:backfill`, idempotent, batched, reuses blobs — no re-upload).
+  **Phase 2:** the `/media` page (`media_assets#index` HTML + Turbo Streams, `media_library`
+  controller: one-at-a-time uploads with progress, rename / default display saved on change via
+  `auto-submit`, search, delete — services that use it keep it, the confirm says so — storage used;
+  menu + /more link). Thumbnails: Cloudinary resizes by URL; Active Storage variants only when
+  libvips loads (`MediaAsset.thumbnails?` — production has none, so grids lazy-load the picture
+  itself). Service templates keep pictures as `{kind: "picture", media_asset_id}` (own entries
+  only; `as_device_json` adds the file URL, deleted ones drop out; `start!` queues them).
+  **Offline**: `lib/offline/media.js` — Cache Storage `ps-media` keyed by the picture URL (kept
+  across deploys, cleared on sign-out); the service worker answers `/rails/active_storage/…` and
+  Cloudinary picture requests from it first. Filled by the console's "Save for offline" (this
+  service / all of My Media), entering preach (signed in, not Data Saver), "Get ready for Sunday"
+  (pictures step) and the /media page's "Save all on this device".
 - **Stage display** — `?stage=1` window (`⌗ Stage` button): NOW small / NEXT big / clock, painted
   by `_paintStage()` from the same BroadcastChannel state; hello role `"stage"` so it never flips
   the operator into console mode.

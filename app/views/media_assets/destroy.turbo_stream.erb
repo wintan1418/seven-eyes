@@ -1,0 +1,3 @@
+<%= turbo_stream.remove dom_id(@asset) %>
+<%= turbo_stream.update "media-storage", partial: "media_assets/storage" %>
+<%= turbo_stream.update "media-status", html: "Deleted “#{@asset.title}” from My Media." %>

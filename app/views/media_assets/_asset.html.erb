@@ -1,0 +1,49 @@
+<%# locals: asset, counts ({id => services using it}) or count — one picture
+    in My Media: thumbnail drawn the way the screen shows it by default, its
+    title and default display (saved on change), size, where it's used, delete.
+    The controller marks it "On this device" when saved for offline use. %>
+<% count = local_assigns.key?(:count) ? count : (counts || {})[asset.id].to_i %>
+<% display = asset.display_settings %>
+<li class="mm-card" id="<%= dom_id(asset) %>" data-media-library-target="card"
+    data-id="<%= asset.id %>" data-title="<%= asset.title.downcase %>" data-url="<%= asset.media_url %>"
+    data-zoom="<%= display["zoom"] %>">
+  <div class="mm-thumb slide-img" data-fit="<%= display["fit"] %>">
+    <img src="<%= asset.thumb_url %>" data-full="<%= asset.media_url %>" alt="<%= asset.title %>" loading="lazy"
+         decoding="async" data-action="error->media-library#thumbFailed">
+    <span class="mm-ondevice" data-ondevice hidden><%= icon(:check) %> On this device</span>
+  </div>
+  <%= form_with url: media_asset_path(asset), method: :patch, class: "mm-form",
+        data: { controller: "auto-submit" } do %>
+    <label class="mm-title">
+      <span class="ui-sr-only">Title</span>
+      <input type="text" name="title" value="<%= asset.title %>" maxlength="120" required
+             aria-label="Title" data-action="change->auto-submit#submit">
+    </label>
+    <div class="mm-display">
+      <div class="mm-seg" role="radiogroup" aria-label="How it fills the screen by default">
+        <% { "fit" => "Fit", "fill" => "Fill", "stretch" => "Stretch" }.each do |value, label| %>
+          <label class="<%= "is-on" if display["fit"] == value %>">
+            <input type="radio" name="fit" value="<%= value %>" <%= "checked" if display["fit"] == value %>
+                   data-action="auto-submit#submit"><%= label %>
+          </label>
+        <% end %>
+      </div>
+      <label class="mm-zoom" title="Enlarge the picture from its centre">
+        <span>Zoom</span>
+        <input type="range" name="zoom" min="100" max="200" step="10" value="<%= display["zoom"] %>"
+               aria-label="Zoom" data-action="input->media-library#zoomLabel change->auto-submit#submit">
+        <output><%= display["zoom"] %>%</output>
+      </label>
+    </div>
+  <% end %>
+  <div class="mm-meta">
+    <span>
+      <% if asset.pixel_width && asset.pixel_height %><%= asset.pixel_width %>&times;<%= asset.pixel_height %> &middot; <% end %>
+      <%= number_to_human_size(asset.byte_size) %>
+      &middot; <%= count.zero? ? "Not in a service" : "In #{pluralize(count, "service")}" %>
+    </span>
+    <%= button_to media_asset_path(asset), method: :delete, class: "ui-iconbtn is-sm mm-del",
+          form: { class: "contents" }, title: "Delete from My Media", "aria-label": "Delete #{asset.title}",
+          data: { turbo_confirm: media_delete_confirm(asset, count) } do %><%= icon(:trash) %><% end %>
+  </div>
+</li>
