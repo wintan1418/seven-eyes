@@ -21,6 +21,10 @@ reachable in **two clicks or fewer**. Optimize for that flow, not for generality
   create one. Custom fonts and the warm palette are defined as `@theme` tokens.
 - **JS bundling: esbuild** via `yarn build` (`app/javascript/*` → `app/assets/builds/`). Package
   manager is **yarn**.
+  `esbuild.config.mjs` code-splits `application.js`: heavy controllers are in `LAZY_CONTROLLERS`
+  (`controllers/index.js`) and load on first use (`lib/lazy_controllers.js`); chunks are
+  `*-<hash>.digested.js` (Propshaft serves them as-is) and the service worker saves them for
+  offline. New big, few-screens controller → add it to `LAZY_CONTROLLERS`.
 - **Testing: Minitest** (`test/`, Rails default) + **Capybara** for system tests. **Do NOT add
   RSpec** — stay consistent with the boilerplate.
 - Background jobs / cache / cable: **solid_queue / solid_cache / solid_cable** (DB-backed, Rails 8
