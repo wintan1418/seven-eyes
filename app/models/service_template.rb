@@ -3,7 +3,9 @@
 # used to start a new service (a new study with the queue filled in).
 # Pictures are kept by their My Media entry ({kind: "picture", media_asset_id,
 # title, data}) — only the account's own entries; one deleted from My Media
-# since is skipped when the template is used.
+# since is skipped when the template is used. Passages pasted from the pastor's
+# own Bible ("Paste your own" — NKJV, NIV…) are deliberately left out: they
+# belong to one sermon, and the quotation allowance they rely on is per use.
 class ServiceTemplate < ApplicationRecord
   LIMIT = 50 # per account
   MAX_ITEMS = 150
@@ -82,6 +84,7 @@ class ServiceTemplate < ApplicationRecord
       kind = item["kind"].to_s
       next unless KINDS.include?(kind)
       next picture_entry(item, owned) if kind == "picture"
+      next if kind == "scripture_set" && SlideData.own?(SlideData.clean(kind, item["data"]))
       {
         "kind" => kind,
         "reference" => item["reference"].to_s[0, 200].presence,

@@ -230,6 +230,11 @@
 }
 .ps-preach-jump .ps-preach-jump-mode[aria-pressed="true"] { background: var(--ps-preview); border: 1px solid var(--ps-preview); color: #1c140c; }
 
+.ps-preach-jump .ps-preach-jump-paste {
+  background: transparent; border: 0; color: #d8c389; font-size: 11px; letter-spacing: 0.06em; text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* keyboard help card */
 .ps-preach-keys { display: none; }
 .ps-root.is-preaching:not(.is-output) .ps-preach-keys:not([hidden]) {

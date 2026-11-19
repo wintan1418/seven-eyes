@@ -64,7 +64,7 @@ function paintSet(layer, raw, index) {
     const ref = el("div", "set-ref", `${refLine(block)}${block.cont ? " (cont.)" : ""}`)
     const words = el("div", "set-words")
     block.verses.forEach((v, i) => {
-      if (data.verse_numbers) words.append(el("sup", "set-vnum", String(v.n)))
+      if (data.verse_numbers && v.n > 0) words.append(el("sup", "set-vnum", String(v.n)))
       words.append(document.createTextNode(`${v.text}${i < block.verses.length - 1 ? " " : ""}`))
     })
     if (data.ref_position === "inline") {

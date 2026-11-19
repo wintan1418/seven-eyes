@@ -14,7 +14,10 @@
 #   scripture_set — several references on one slide, each in its own
 #               translation (Col 2:2 KJV + Matt 28:19 BSB): the verse words are
 #               kept in `data` (so it projects with no signal, on any device)
-#               and `body` holds the same slides as plain text — see ScriptureSet
+#               and `body` holds the same slides as plain text — see ScriptureSet.
+#               A ref marked `own` is a passage the pastor pasted from their own
+#               Bible app (NKJV, NIV, AMP… — "Paste your own"): the words exist
+#               only in this item, never in a Translation or any search
 #   presentation — an imported PDF or a run of pictures, stepped page by page.
 #               The pages live on the device that imported them (IndexedDB);
 #               the server only keeps the deck key and page count in `data`
@@ -51,7 +54,10 @@ class SetlistItem < ApplicationRecord
   validate :seminar_must_have_slides, if: :seminar?
   validate :word_study_must_parse, if: :word?
   validate :media_asset_must_be_owners, if: :media_asset
-  validates :body, length: { maximum: 40_000 }
+  validates :body, length: { maximum: 40_000 }, unless: :scripture_set?
+  # A pasted passage (up to SlideData::OWN_TEXT_BYTES of words) plus its
+  # reference line on every slide.
+  validates :body, length: { maximum: 64_000 }, if: :scripture_set?
 
   before_validation { self.data = SlideData.clean(kind, data) if will_save_change_to_data? || will_save_change_to_kind? }
 
@@ -234,6 +240,9 @@ class SetlistItem < ApplicationRecord
   end
 
   def scripture_set_must_have_passages
+    if SlideData.own_text_bytes(data) > SlideData::OWN_TEXT_BYTES
+      errors.add(:base, "That passage is too long to keep in one item — paste up to #{SlideData::MAX_OWN_VERSES} verses (about 40 KB) at a time")
+    end
     refs = Array(data["refs"])
     if refs.empty? || refs.any? { |r| r["verses"].blank? }
       errors.add(:base, "Add at least one scripture with its words")

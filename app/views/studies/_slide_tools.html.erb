@@ -81,6 +81,82 @@
   </div>
 </div>
 
+<%# ---- Paste your own verses (paste_verses controller) — NKJV / NIV / AMP… from
+    the pastor's own Bible app, kept only in this service's queue item. ---- %>
+<div class="ps-tool-dialog" hidden role="dialog" aria-modal="true" aria-label="Paste your own verses"
+     data-controller="paste-verses" data-action="click->paste-verses#backdrop keydown->paste-verses#key">
+  <div class="ps-tool-card set-card pv-card">
+    <header class="tool-head">
+      <span class="ttl">&#128203; &nbsp;Paste your own</span>
+      <span class="sub">Verses from your Bible app &mdash; NKJV, NIV, AMP&hellip; &mdash; as slides</span>
+      <button type="button" class="close" data-action="paste-verses#close" title="Close (Esc)">&#10005;</button>
+    </header>
+    <div class="tool-body set-body">
+      <section class="set-compose">
+        <div class="pv-row">
+          <div class="pv-ref">
+            <label class="fld-lbl" for="pv-ref">Reference</label>
+            <input id="pv-ref" type="text" class="pv-ref-input" autocomplete="off" spellcheck="false" maxlength="80"
+                   placeholder="John 3:16-18" data-paste-verses-target="reference" data-action="input->paste-verses#changed">
+          </div>
+          <div class="pv-ver">
+            <label class="fld-lbl" for="pv-version">Version</label>
+            <div class="pv-ver-row">
+              <select id="pv-version" data-paste-verses-target="version" data-action="change->paste-verses#versionChanged">
+                <% %w[NKJV NIV AMP AMPC ESV NLT MSG].each do |code| %>
+                  <option value="<%= code %>"><%= code %></option>
+                <% end %>
+                <option value="other">Other&hellip;</option>
+              </select>
+              <input type="text" class="pv-other" maxlength="12" autocomplete="off" placeholder="e.g. TPT" hidden
+                     aria-label="Version name" data-paste-verses-target="other" data-action="input->paste-verses#changed">
+            </div>
+          </div>
+        </div>
+        <label class="fld-lbl" for="pv-text">Paste the passage</label>
+        <textarea id="pv-text" class="pv-text" rows="9" spellcheck="false"
+                  placeholder="Copy the verses from your Bible app and paste them here — verse numbers are found for you."
+                  data-paste-verses-target="text" data-action="input->paste-verses#changed"></textarea>
+        <div class="set-hint" data-paste-verses-target="hint" aria-live="polite"></div>
+        <div class="err" data-paste-verses-target="error" hidden></div>
+        <div class="set-options">
+          <div class="opt">
+            <span class="opt-lbl">Slides</span>
+            <div class="seg">
+              <button type="button" data-option="per_slide" data-value="0" data-action="paste-verses#setOption">Fit to screen</button>
+              <button type="button" data-option="per_slide" data-value="1" data-action="paste-verses#setOption">1 verse</button>
+              <button type="button" data-option="per_slide" data-value="2" data-action="paste-verses#setOption">2 verses</button>
+              <button type="button" data-option="per_slide" data-value="3" data-action="paste-verses#setOption">3 verses</button>
+            </div>
+          </div>
+          <div class="opt">
+            <span class="opt-lbl">Verse numbers</span>
+            <div class="seg">
+              <button type="button" data-option="verse_numbers" data-value="true" data-action="paste-verses#setOption">Show</button>
+              <button type="button" data-option="verse_numbers" data-value="false" data-action="paste-verses#setOption">Hide</button>
+            </div>
+          </div>
+        </div>
+        <p class="pv-notice">For quoting in your own service. Paste from a Bible you have the right to use.</p>
+      </section>
+      <section class="set-side">
+        <div class="set-preview-head">On the screen</div>
+        <div class="set-preview" data-paste-verses-target="preview"></div>
+        <div class="set-pager" data-paste-verses-target="pager">
+          <button type="button" data-delta="-1" data-action="paste-verses#page" aria-label="Previous slide">&#8249;</button>
+          <span class="n"></span>
+          <button type="button" data-delta="1" data-action="paste-verses#page" aria-label="Next slide">&#8250;</button>
+        </div>
+      </section>
+    </div>
+    <footer class="tool-foot">
+      <span class="keys"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> adds it to the service</span>
+      <button type="button" class="btn ghost" data-action="paste-verses#close">Cancel</button>
+      <button type="button" class="btn primary" data-paste-verses-target="submit" data-action="paste-verses#submit">Add to service</button>
+    </footer>
+  </div>
+</div>
+
 <%# ---- Presentation import (presentation_import controller) ---- %>
 <div class="ps-tool-dialog" hidden role="dialog" aria-modal="true" aria-label="Presentation"
      data-controller="presentation-import"

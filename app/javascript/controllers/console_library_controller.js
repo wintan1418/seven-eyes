@@ -292,6 +292,12 @@ export default class extends Controller {
     })
   }
 
+  // NKJV / NIV / AMP… pasted from the pastor's own Bible app (paste_verses controller).
+  pasteOwn(event) {
+    event?.preventDefault?.()
+    window.dispatchEvent(new CustomEvent("queue-tool:open", { detail: { tool: "paste-verses" } }))
+  }
+
   // ---- what of a kind is in the service (Presentations, Pictures tabs) -------------------
 
   _paintKinds() {

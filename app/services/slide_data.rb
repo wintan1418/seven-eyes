@@ -3,15 +3,21 @@
 # presentation import, seminar slide builder); the server only keeps it, so
 # nothing here trusts what came in beyond its shape and size.
 #
-#   scripture_set  { refs: [{ reference, translation, label, verses: [{ c, n, text }] }],
+#   scripture_set  { refs: [{ reference, translation, label, own, verses: [{ c, n, text }] }],
 #                    ref_position: top|bottom|inline, verse_numbers: bool,
-#                    split: auto|each, ref_style: gold|plain }
+#                    split: auto|each, ref_style: gold|plain, per_slide: 0..6 }
+#                  A ref with `own` holds words the pastor pasted from their own
+#                  Bible (NKJV, NIV, AMP…) — the version is just their label; the
+#                  words live only in this item. n 0 = a piece of an unnumbered paste.
 #   presentation   { deck, pages, source: pdf|images, file }   — pages stay on the device
 #   seminar        { slides: [{ layout, title, text, cite, image, notes }], reveal: bool }
 #   picture        { fit: fit|fill|stretch, zoom: 100..200 }   — how it fills the projector
 module SlideData
   MAX_REFS = 12
   MAX_VERSES = 80 # per reference
+  MAX_OWN_VERSES = 200 # per pasted ("own") reference
+  OWN_TEXT_BYTES = 40_000 # the pasted words of one item
+  PER_SLIDE = (0..6) # verses a slide; 0 = as many as fit
   MAX_PAGES = 300
   MAX_SLIDES = 120
   REF_POSITIONS = %w[ top bottom inline ].freeze
@@ -44,22 +50,34 @@ module SlideData
   def scripture_set(raw)
     refs = list(raw["refs"]).first(MAX_REFS).filter_map do |r|
       r = hashify(r)
-      verses = list(r["verses"]).first(MAX_VERSES).filter_map do |v|
+      own = bool(r["own"], false)
+      verses = list(r["verses"]).first(own ? MAX_OWN_VERSES : MAX_VERSES).filter_map do |v|
         v = hashify(v)
         text = str(v["text"], 2000)
-        { "c" => v["c"].to_i, "n" => v["n"].to_i, "text" => text } if text.present?
+        { "c" => v["c"].to_i.clamp(0, 200), "n" => v["n"].to_i.clamp(0, 200), "text" => text } if text.present?
       end
       next if verses.empty?
-      { "reference" => str(r["reference"], 80), "translation" => str(r["translation"], 12).upcase,
-        "label" => str(r["label"].presence || r["reference"], 80), "verses" => verses }
+      ref = { "reference" => str(r["reference"], 80), "translation" => str(r["translation"], 12).upcase,
+              "label" => str(r["label"].presence || r["reference"], 80), "verses" => verses }
+      own ? ref.merge("own" => true) : ref
     end
     {
       "refs" => refs,
       "ref_position" => pick(raw["ref_position"], REF_POSITIONS),
       "verse_numbers" => bool(raw["verse_numbers"], true),
       "split" => pick(raw["split"], SPLITS),
-      "ref_style" => pick(raw["ref_style"], REF_STYLES)
+      "ref_style" => pick(raw["ref_style"], REF_STYLES),
+      "per_slide" => raw["per_slide"].to_i.clamp(PER_SLIDE.min, PER_SLIDE.max)
     }
+  end
+
+  # Does this scripture set hold words pasted from the pastor's own Bible?
+  def own?(data)
+    Array(data && data["refs"]).any? { |r| r.is_a?(Hash) && r["own"] == true }
+  end
+
+  def own_text_bytes(data)
+    Array(data && data["refs"]).select { |r| r["own"] }.sum { |r| Array(r["verses"]).sum { |v| v["text"].to_s.bytesize } }
   end
 
   def presentation(raw)

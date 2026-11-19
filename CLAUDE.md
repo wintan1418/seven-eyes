@@ -255,6 +255,17 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   study) and the **order of service** (copy for WhatsApp / share / print, built on the device).
   Collections and templates are cached on the device and saved through the outbox
   (`queueRecordSave`), so they work offline. Pure logic is node-tested (`test/javascript/slides_test.mjs`).
+- **Paste your own verses** (Nov 2026) — NKJV / NIV / AMP… aren't on BiblioRata (licensed), so a
+  pastor pastes the passage from their own Bible app: `paste_verses` dialog (`studies/_slide_tools`,
+  opened from the console's Scriptures tab "Paste your own", the queue tools "Paste verses", and the
+  Go box "Paste your own verses" → Add & show). `lib/slides/paste_verses.js` (node-tested) strips app
+  junk (copyright footers, bible.com links, BG footnote marks — AMP's own [brackets] stay) and finds
+  verse numbers (16 / 16. / [16] / ¹⁶ / per line / "John 3:16 …"), else splits by sentences (n 0 =
+  no number). Stored as a `scripture_set` whose ref has `own: true` + the version label (≤12 chars)
+  and `data.per_slide` (0 fit, 1–3 verses): ≤200 verses / 40 KB (`SlideData::MAX_OWN_VERSES`,
+  `OWN_TEXT_BYTES`). Projects/streams/works offline like any scripture set; never touches
+  Translation/Verse or search. **Service templates deliberately skip them** (per-sermon; quotation
+  allowances are per use).
 - **Root word projection** (Nov 2026) — "the Greek word here is agapē…" on the big screen. Preach
   mode: `W` / bar's ℵ Root word (live verse), `Shift+W` / ℵ in the Preview row (previewed verse) open
   the `root_words` card (self-contained popover, `studies/_root_words`): the verse's Strong's-tagged

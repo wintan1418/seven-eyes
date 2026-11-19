@@ -11,13 +11,16 @@
 //
 // data = { refs: [{ reference, translation, label, verses: [{ c, n, text }] }],
 //          ref_position: "top" | "bottom" | "inline", verse_numbers, split: "auto" | "each",
-//          ref_style: "gold" | "plain" }
+//          ref_style: "gold" | "plain", per_slide: 0 (fit) | 1..6 verses a slide }
+// A ref marked `own` holds words the pastor pasted from their own Bible
+// (NKJV, NIV…: lib/slides/paste_verses.js); a verse with n 0 is a piece of an
+// unnumbered paste and shows no number.
 
 // Roughly what fits on a projector at a readable size; a longer slide is
 // split at a verse boundary (a single long verse keeps a slide to itself).
 export const SLIDE_BUDGET = 430
 
-export const DEFAULTS = Object.freeze({ ref_position: "top", verse_numbers: true, split: "auto", ref_style: "gold" })
+export const DEFAULTS = Object.freeze({ ref_position: "top", verse_numbers: true, split: "auto", ref_style: "gold", per_slide: 0 })
 
 // Split on ";", ",", "+", "&" and new lines; a bare number continues the
 // chapter before it ("Jn 3:16, 18"). A piece may end in a Bible's code ("Matt 28:19 AMP").
@@ -72,7 +75,9 @@ export function labelOf(p) {
 }
 
 export function withDefaults(data) {
-  return { ...DEFAULTS, ...(data || {}), refs: (data?.refs || []).filter((r) => r && r.verses?.length) }
+  const out = { ...DEFAULTS, ...(data || {}), refs: (data?.refs || []).filter((r) => r && r.verses?.length) }
+  out.per_slide = Math.max(0, Math.min(6, Number(out.per_slide) || 0))
+  return out
 }
 
 // The slides: each is { blocks: [{ label, translation, verses, cont }] }. With
@@ -90,9 +95,12 @@ export function setPages(raw) {
     let placed = 0
     ref.verses.forEach((v) => {
       const cost = v.text.length + 8
-      if (size > 0 && size + cost > SLIDE_BUDGET) { start(); block = null }
+      // A fixed number of verses a slide (the pastor chose it), else what fits.
+      const full = data.per_slide ? (block && block.verses.length >= data.per_slide) : (size > 0 && size + cost > SLIDE_BUDGET)
+      if (full) { start(); block = null }
       if (!block) {
         block = { label: ref.label || ref.reference, translation: ref.translation || "", verses: [], cont: placed > 0 }
+        Object.defineProperty(block, "ref", { value: ref }) // not enumerable: blocks stay plain data
         page.blocks.push(block)
         size += 30
       }
@@ -100,8 +108,28 @@ export function setPages(raw) {
       placed++
       size += cost
     })
+    if (ref.own) nameOwnSlides(ref, pages)
   })
   return pages
+}
+
+// A pasted passage spread over several slides: each slide names its own verses
+// ("John 3:17 (NKJV)") rather than "John 3:16-18 (NKJV) (cont.)".
+function nameOwnSlides(ref, pages) {
+  const blocks = pages.flatMap((p) => p.blocks).filter((b) => b.ref === ref)
+  if (blocks.length < 2) return
+  const m = String(ref.label || ref.reference || "").match(/^(.*?\D)\s*(\d+)\s*[:.]\s*\d/)
+  if (!m || blocks.some((b) => b.verses.some((v) => !(v.n > 0)))) return
+  const book = m[1].trim()
+  blocks.forEach((b) => {
+    const first = b.verses[0]
+    const last = b.verses[b.verses.length - 1]
+    const c1 = first.c || Number(m[2])
+    const c2 = last.c || c1
+    const end = c2 !== c1 ? `-${c2}:${last.n}` : (last.n !== first.n ? `-${last.n}` : "")
+    b.label = `${book} ${c1}:${first.n}${end}`
+    b.cont = false
+  })
 }
 
 export function refLine(block) {
@@ -110,7 +138,7 @@ export function refLine(block) {
 
 export function blockWords(block, data) {
   const numbers = withDefaults(data).verse_numbers
-  return block.verses.map((v) => (numbers ? `${v.n} ${v.text}` : v.text)).join(" ")
+  return block.verses.map((v) => (numbers && v.n > 0 ? `${v.n} ${v.text}` : v.text)).join(" ")
 }
 
 export function pageText(page, raw) {
