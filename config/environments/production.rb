@@ -58,12 +58,11 @@ Rails.application.configure do
   # CreateSolidCacheEntries) and config/cache.yml names no separate `cache` db.
   config.cache_store = :solid_cache_store
 
-  # Active Job: Solid Queue only when a worker actually runs it — config/puma.rb
-  # starts the supervisor in-process when SOLID_QUEUE_IN_PUMA is set, and its
-  # tables live in the primary DB (migration CreateSolidQueueTables). Without
-  # that env var we stay on the in-process :async adapter rather than enqueue
-  # jobs nobody will ever run.
-  config.active_job.queue_adapter = ENV["SOLID_QUEUE_IN_PUMA"].present? ? :solid_queue : :async
+  # Active Job: Solid Queue. The separate biblio-compass-solid_queue service
+  # (bin/jobs) works every queue, so audio, verse timings and AI answers never
+  # use the web server's threads or memory. (Tables live in the primary DB.)
+  # JOB_ADAPTER=async is the escape hatch for a server with no job service.
+  config.active_job.queue_adapter = (ENV["JOB_ADAPTER"].presence || "solid_queue").to_sym
 
   # Action Cable powers Go Live and the phone remote. HTTPS origins only.
   config.action_cable.allowed_request_origins = app_hosts.map { |host| "https://#{host}" }

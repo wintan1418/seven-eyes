@@ -1,8 +1,7 @@
 # Runs one AiRequest (Quick Find, the Rabbi, an illustration) off the web
-# server. In production this goes to Solid Queue — the separate
-# biblio-compass-solid_queue service (bin/jobs) works it — so a 20–40 s model
-# call never holds one of Puma's few threads. The rest of the app still uses the
-# in-process :async adapter (see config/environments/production.rb).
+# server. In production all jobs go to Solid Queue — the separate
+# biblio-compass-solid_queue service (bin/jobs) works them — so a 20–40 s model
+# call never holds one of Puma's few threads.
 #
 # Never retried: every attempt is a paid call, and the page offers Retry.
 class AiRequestJob < ApplicationJob
