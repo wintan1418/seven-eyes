@@ -207,7 +207,7 @@ class AiChat
 
   def post_json(uri, body)
     http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
+    http.use_ssl = uri.scheme != "http" # plain http only for a local stand-in endpoint
     http.read_timeout = (ENV["AI_READ_TIMEOUT"].presence || READ_TIMEOUT).to_i
     http.open_timeout = OPEN_TIMEOUT
 

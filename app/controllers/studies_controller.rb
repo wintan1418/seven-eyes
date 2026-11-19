@@ -1,8 +1,8 @@
 class StudiesController < ApplicationController
   # The workspace is open to everyone; only saving (notes/highlights/account) needs auth.
-  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest quick_find search commentary lexicon rabbi rabbi_diagram rabbi_illustration sermon share_card prayer ]
+  allow_unauthenticated_access only: %i[ index show create update destroy cross_references suggest quick_find search commentary lexicon rabbi rabbi_diagram rabbi_illustration ai_request sermon share_card prayer ]
 
-  before_action :set_study, only: %i[ show update destroy suggest quick_find search cross_references commentary lexicon rabbi rabbi_diagram rabbi_illustration sermon share share_card prayer ]
+  before_action :set_study, only: %i[ show update destroy suggest quick_find ai_request search cross_references commentary lexicon rabbi rabbi_diagram rabbi_illustration sermon share share_card prayer ]
 
   # Every action below calls a paid AI provider. They need a (free) account, a
   # per-user burst limit, and a per-user daily allowance (AiBudget); AiChat and
@@ -118,24 +118,32 @@ class StudiesController < ApplicationController
   # crusaders" — and gets a short projectable explanation card plus validated
   # Scripture references. Verse text still comes only from our own DB.
   def quick_find
-    result = PulpitSearch.call(ai_query)
-    return render json: { ok: false, error: result.error } unless result.ok?
+    query = ai_query
+    return render json: { ok: false, error: "blank" } if query.empty?
 
-    render json: {
-      ok: true,
-      # Model-written prose is reduced to plain text (no injected markup/links).
-      topic: PlainText.call(result.topic, limit: 120),
-      summary: PlainText.call(result.summary),
-      suggestions: result.suggestions.map do |s|
-        book = Bible::Canon.find(s.osis)
-        {
-          reference: s.reference,
-          chapter_reference: "#{book&.name || s.osis} #{s.chapter}",
-          verse_start: s.verse_start,
-          preview: s.preview.to_s.truncate(140)
-        }
-      end
-    }
+    # The model can take 20 s+: the work runs in AiRequestJob and the Go box
+    # polls poll_url (studies#ai_request), so this returns in milliseconds.
+    req = AiRequest.start!(user: current_user, study: @study, kind: "quick_find", params: { q: query })
+    render json: { ok: false, pending: true, status: "pending", poll_url: ai_request_study_path(@study, token: req.token) },
+           status: :accepted
+  end
+
+  # Polled by the page while an AI request thinks: 202 until the worker has
+  # answered, then the answer in the shape the caller always rendered (JSON
+  # for Quick Find, the Turbo Frame for the Rabbi / an illustration). Only the
+  # signed-in user who asked, on a study they can open, can read it.
+  def ai_request
+    return head(:unauthorized) unless authenticated?
+
+    req = AiRequest.find_by(token: params[:token].to_s, user_id: current_user.id, study_id: @study.id)
+    return head(:not_found) unless req
+
+    req.fail!(:timeout) if req.stale?
+    if req.pending?
+      return render json: { status: "pending", elapsed: (Time.current - req.created_at).round }, status: :accepted
+    end
+
+    render_ai_request(req)
   end
 
   def search
@@ -197,10 +205,21 @@ class StudiesController < ApplicationController
     verses = rabbi_verses
     verse = verses.first
     @selection = ai_query
-    @result = RabbiExposition.call(verse:, verses:, selection: @selection, study: @study)
-    render partial: "studies/rabbi_results",
-           locals: { study: @study, result: @result,
-                     verse_id: verse&.id, verse_ids: verses.map(&:id).join(",") }
+    exposition = RabbiExposition.new(verse:, verses:, selection: @selection, study: @study)
+
+    # An answer already cached (same verses + words), or one that can't reach
+    # the model at all (no verse / blank), renders at once. Anything that needs
+    # the model thinks in the background and the drawer polls for it.
+    if verse.nil? || @selection.empty? || exposition.cached?
+      @result = exposition.call
+      return render partial: "studies/rabbi_results",
+                    locals: { study: @study, result: @result,
+                              verse_id: verse&.id, verse_ids: verses.map(&:id).join(",") }
+    end
+
+    req = AiRequest.start!(user: current_user, study: @study, kind: "rabbi",
+                           params: { q: @selection, verse_ids: verses.map(&:id) })
+    render_ai_pending(req, frame_id: "rabbi_drawer")
   end
 
   # On-demand "Draw this": render just the diagram frame for the Rabbi drawer.
@@ -225,18 +244,19 @@ class StudiesController < ApplicationController
     unless quota.reserve!
       return render_rabbi_illustration(verses, state: :quota, remaining: 0)
     end
+    if verses.empty?
+      quota.release!
+      return render_rabbi_illustration(verses, remaining: quota.remaining)
+    end
 
-    illustration = RabbiIllustration.call(verse: verses.first, verses:, selection: ai_query,
-                                          study: @study, style: params[:style])
-    quota.release! unless illustration.ok?
-
-    render_rabbi_illustration(verses,
-      image:       (illustration.ok? ? illustration.image : nil),
-      caption:     (illustration.ok? ? illustration.caption : nil),
-      annotations: (illustration.ok? ? illustration.annotations : nil),
-      state:       (illustration.ok? ? :ready : illustration.error),
-      style:       illustration.style,
-      remaining:   quota.remaining)
+    # Painting takes ~35 s: the slot is held by the request and handed back by
+    # the job if no picture comes of it.
+    style = RabbiIllustration::STYLES.key?(params[:style].to_s) ? params[:style].to_s : RabbiIllustration::DEFAULT_STYLE
+    req = AiRequest.start!(user: current_user, study: @study, kind: "rabbi_illustration", quota:,
+                           params: { q: ai_query, verse_ids: verses.map(&:id), style: })
+    render_ai_pending(req, frame_id: "rabbi_illustration_frame",
+      retry_url: rabbi_illustration_study_path(@study, verse_id: verses.first.id, verse_ids: verses.map(&:id).join(","),
+                                               q: ai_query, style:))
   end
 
   # Metadata for the share modal: the canonical reference, the text to render on
@@ -365,12 +385,51 @@ class StudiesController < ApplicationController
     end
   end
 
-  def render_rabbi_illustration(verses, image: nil, caption: nil, annotations: nil, state: nil, remaining: nil, style: nil)
+  def render_rabbi_illustration(verses, image: nil, caption: nil, annotations: nil, state: nil, remaining: nil, style: nil,
+                                selection: ai_query)
     render partial: "studies/rabbi_illustration", locals: {
       study: @study, verse_id: verses.first&.id, verse_ids: verses.map(&:id).join(","),
-      selection: ai_query, image:, caption:, annotations:, state:, remaining:,
+      selection:, image:, caption:, annotations:, state:, remaining:,
       style: (style || params[:style])
     }
+  end
+
+  # The "thinking" frame: the rabbi controller polls data-url until the answer
+  # is in (see studies#ai_request).
+  def render_ai_pending(req, frame_id:, retry_url: nil)
+    render partial: "studies/ai_pending", locals: {
+      frame_id:, kind: req.kind, url: ai_request_study_path(@study, token: req.token), retry_url:
+    }
+  end
+
+  def render_ai_request(req)
+    params_h = req.params.to_h
+    case req.kind
+    when "quick_find"
+      payload = req.done? ? req.result.to_h : { "ok" => false, "error" => req.error.presence || "api" }
+      render json: payload.merge("status" => req.status)
+    when "rabbi"
+      verses = AiWork.verses_for(params_h["verse_ids"])
+      result = if req.done?
+        AiWork.rabbi_result(req.result)
+      else
+        RabbiExposition::Result.new(ok: false, error: (req.error.presence || "api").to_sym, selection: params_h["q"])
+      end
+      render partial: "studies/rabbi_results",
+             locals: { study: @study, result:, verse_id: verses.first&.id, verse_ids: verses.map(&:id).join(",") }
+    when "rabbi_illustration"
+      verses = AiWork.verses_for(params_h["verse_ids"])
+      result = req.done? ? AiWork.illustration_result(req.result) : nil
+      ok = result&.ok?
+      render_rabbi_illustration(verses,
+        image:       (ok ? result.image : nil),
+        caption:     (ok ? result.caption : nil),
+        annotations: (ok ? result.annotations : nil),
+        state:       (ok ? :ready : (result&.error || req.error.presence&.to_sym || :api)),
+        style:       params_h["style"],
+        selection:   params_h["q"].to_s,
+        remaining:   IllustrationQuota.for(IllustrationQuota.key_for(current_user)).remaining)
+    end
   end
 
   def build_share_card

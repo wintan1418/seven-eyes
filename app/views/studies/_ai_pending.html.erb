@@ -1,0 +1,21 @@
+<%# locals: frame_id, kind, url, retry_url (nil = the rabbi form re-asks)
+    The "thinking" state of an AI answer running in the background (AiRequest).
+    The rabbi controller's pending target polls data-url and swaps in the
+    answer; the hint text changes the longer it takes. %>
+<% copy = {
+     "rabbi" => [ "The Rabbi is reading the whole chapter…",
+                  "Weighing context and cross-references before a word is said." ],
+     "rabbi_illustration" => [ "Painting the scene…",
+                               "A picture takes about half a minute. Keep reading — it will appear here." ]
+   }.fetch(kind) %>
+<%= turbo_frame_tag frame_id do %>
+  <div class="ps-rabbi-loading is-pending <%= 'is-small' if kind == 'rabbi_illustration' %>"
+       role="status" aria-live="polite"
+       data-rabbi-target="pending" data-url="<%= url %>" data-kind="<%= kind %>"
+       <% if retry_url %>data-retry-url="<%= retry_url %>"<% end %>>
+    <div class="orn">&#10018;</div>
+    <div class="lead"><%= copy[0] %></div>
+    <div class="hint" data-ai-hint><%= copy[1] %></div>
+    <div class="ps-ai-elapsed" data-ai-elapsed></div>
+  </div>
+<% end %>

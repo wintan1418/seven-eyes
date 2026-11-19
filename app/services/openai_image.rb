@@ -97,7 +97,7 @@ class OpenaiImage
 
   def post(uri, json, auth:)
     http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
+    http.use_ssl = uri.scheme != "http" # plain http only for a local stand-in endpoint
     http.read_timeout = 90
     http.open_timeout = 5
 

@@ -3,6 +3,11 @@ default: &default
     - polling_interval: 1
       batch_size: 500
   workers:
+    # AI answers (AiRequestJob) wait on a model for 5-40 s each: their own
+    # threads, so a few at once never delay the other jobs.
+    - queues: "ai"
+      threads: 5
+      polling_interval: 0.1
     - queues: "*"
       threads: 3
       processes: <%= ENV.fetch("JOB_CONCURRENCY", 1) %>

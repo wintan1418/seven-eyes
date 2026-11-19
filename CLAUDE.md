@@ -183,6 +183,20 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   the results (`_quickFind` in `presentation_controller`). **Results (AI and offline keyword)
   always go to Preview** — the row click / Enter previews; only the row's Go live,
   double-click, Shift+Enter, or L / Go live on Preview change the projector.
+- **AI answers run in the background** (Nov 2026) — Quick Find, the Rabbi and illustrations never
+  hold a Puma thread on a model. The action creates an `AiRequest` (token, user, study, kind, params;
+  `AiRequest.start!` reuses an identical one still thinking, never for illustrations) and enqueues
+  `AiRequestJob` (queue `ai`; Solid Queue in production, worked by the separate `bin/jobs` service —
+  the rest of the app stays on :async), then answers at once: Quick Find 202 `{pending, poll_url}`,
+  the Rabbi / illustration frames `studies/_ai_pending` ("Thinking…", seconds, "still thinking").
+  The page polls `GET /studies/:id/ai_requests/:token` (`studies#ai_request`, `lib/ai_poll.js`):
+  202 until done, then the old JSON / frame (`AiWork` stores plain data, partials render at poll time).
+  Only the asker on a study they can open can read it; past `STALE_AFTER` (3 min) it reports
+  `timeout`. Errors show Try again (rabbi controller `pending` target swaps the frame; Go box
+  `retryFind`). Illustration slots are reserved by the request and released by the job / timeout.
+  Cached Rabbi answers render at once. Tests: `AiRequestJob` runs inline in system tests;
+  `AI_JOB_ADAPTER=solid_queue` + `bin/jobs` runs it the production way locally; `OPENAI_ENDPOINT` /
+  `OPENAI_IMAGE_ENDPOINT` may point at a local http stand-in (never paid calls in tests).
 - **Offline-first preach** — preach mode parses references on the device (`lib/offline/local_pane`,
   JS port of `ReferenceParser`) and renders passages in a downloaded Bible straight from IndexedDB
   into the pane frame (operator *and* projector/stage), saving the reference in the background

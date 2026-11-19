@@ -1,6 +1,8 @@
 require "test_helper"
 
 class RabbiTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+
   setup do
     @kjv = Translation.create!(code: "KJV", name: "King James Version")
     @john = Book.create!(osis_code: "John", name: "John", testament: :new, position: 43, chapter_count: 21)
@@ -28,6 +30,16 @@ class RabbiTest < ActionDispatch::IntegrationTest
     OpenaiImage.singleton_class.define_method(:generate, original)
   end
 
+  # The answer is worked out by AiRequestJob: the ask returns a "thinking"
+  # frame at once; the page then polls its data-url. Do both, as the page does.
+  def assert_thinking_then_poll
+    assert_response :success
+    pending = css_select("[data-rabbi-target=pending]").first
+    assert pending, "the ask should answer at once with a thinking state"
+    get pending["data-url"]
+    assert_response :success
+  end
+
   def member_study
     sign_in_as users(:one)
     users(:one).studies.create!(name: "Sunday", pane_count: 1)
@@ -45,10 +57,10 @@ class RabbiTest < ActionDispatch::IntegrationTest
     }.to_json
 
     with_ai_result(AiChat::Result.new(ok: true, content: json, provider: :gemini)) do
-      get rabbi_study_path(study), params: { verse_id: @v16.id, q: "God so loved" }
+      perform_enqueued_jobs { get rabbi_study_path(study), params: { verse_id: @v16.id, q: "God so loved" } }
     end
 
-    assert_response :success
+    assert_thinking_then_poll
     assert_select "turbo-frame#rabbi_drawer"
     assert_includes response.body, "John 3:16"
     assert_includes response.body, "The plain love of God."
@@ -64,10 +76,10 @@ class RabbiTest < ActionDispatch::IntegrationTest
     }.to_json
 
     with_ai_result(AiChat::Result.new(ok: true, content: json, provider: :gemini)) do
-      get rabbi_study_path(study), params: { verse_id: @v16.id, q: "God so loved" }
+      perform_enqueued_jobs { get rabbi_study_path(study), params: { verse_id: @v16.id, q: "God so loved" } }
     end
 
-    assert_response :success
+    assert_thinking_then_poll
     assert_includes response.body, "sign in here"
     assert_not_includes response.body, "evil.example"
     assert_select "turbo-frame#rabbi_drawer .ps-rabbi-text a", count: 0
@@ -133,11 +145,11 @@ class RabbiTest < ActionDispatch::IntegrationTest
 
     with_ai_result(art) do
       with_image_result(image) do
-        post rabbi_illustration_study_path(study), params: { verse_id: @v16.id, q: "God so loved" }
+        perform_enqueued_jobs { post rabbi_illustration_study_path(study), params: { verse_id: @v16.id, q: "God so loved" } }
       end
     end
 
-    assert_response :success
+    assert_thinking_then_poll
     assert_includes response.body, "data:image/png;base64,AAAA"
     assert_includes response.body, "The embrace"
     assert_includes response.body, "So loved truly"
@@ -148,10 +160,12 @@ class RabbiTest < ActionDispatch::IntegrationTest
     study = member_study
 
     with_ai_result(AiChat::Result.new(ok: false, error: :api)) do
-      post rabbi_illustration_study_path(study), params: { verse_id: @v16.id, q: "God so loved" }
+      perform_enqueued_jobs { post rabbi_illustration_study_path(study), params: { verse_id: @v16.id, q: "God so loved" } }
     end
 
-    assert_response :success
+    assert_thinking_then_poll
+    assert_select "[role=alert]", text: /Couldn’t create the image/
+    assert_select "button", text: "↻ Try again"
     assert_equal 0, quota.count
   end
 
@@ -174,10 +188,10 @@ class RabbiTest < ActionDispatch::IntegrationTest
     study = member_study
 
     with_ai_result(AiChat::Result.new(ok: false, error: :no_key)) do
-      get rabbi_study_path(study), params: { verse_id: @v16.id, q: "God so loved" }
+      perform_enqueued_jobs { get rabbi_study_path(study), params: { verse_id: @v16.id, q: "God so loved" } }
     end
 
-    assert_response :success
+    assert_thinking_then_poll
     assert_includes response.body, "No AI provider configured"
   end
 end
