@@ -126,6 +126,26 @@ class PreachContractTest < ActionDispatch::IntegrationTest
     assert_select ".ps-pane .ps-word", minimum: 1
   end
 
+  test "the passage names its neighbouring chapters, so Next/Prev carry on across chapters" do
+    Book.create!(osis_code: "Acts", name: "Acts", testament: :new, position: 44, chapter_count: 28)
+    get_study
+    box = css_select(".ps-pane .ps-verses").first
+    assert_equal "John 2", box["data-prev-chapter"]
+    assert_equal "John 4", box["data-next-chapter"]
+  end
+
+  test "a neighbouring chapter is prefetched through the no-save mirror render" do
+    Verse.create!(translation: @bsb, book: @john, chapter: 4, verse_number: 1, text: "BSB John 4:1.")
+    pane = @study.panes.first
+    patch study_pane_path(@study, pane), params: { mirror: "1", pane: { reference: "John 4", translation_id: @bsb.id } },
+          headers: { "Turbo-Frame" => pane.frame_id }
+    assert_response :success
+    assert_select "turbo-frame##{pane.frame_id} input[name='pane[reference]'][value='John 4']"
+    assert_select ".ps-verses[data-prev-chapter='John 3'][data-next-chapter='John 5'] .ps-verse", text: /BSB John 4:1/
+    assert_equal "John 3", pane.reload.reference
+    assert_equal @kjv, pane.translation
+  end
+
   test "notes form keeps its field, controller and class" do
     get_study
     assert_select ".ps-pane form.ps-notes-form[data-controller~='notes'] textarea[name='pane[notes]'].ps-notes-area", 2

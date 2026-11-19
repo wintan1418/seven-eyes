@@ -109,7 +109,7 @@ test("an offline-drawn pane carries the phone pager and the verse focus, like th
     translation: { id: 1, code: "KJV", name: "King James Version", display_name: "King James Version" },
     translations: [], downloaded: [ { code: "KJV" } ], books: [ book ], highlights: [], icon: () => "", focus: "2-4"
   }, { ok: true, book, parsed: { chapter: 3, verseStart: null }, verses: [ { id: 9, chapter: 3, num: 1, text: "x" } ] })
-  assert.match(html, /<div class="ps-verses" data-verse-focus="2-4">/)
+  assert.match(html, /<div class="ps-verses" data-verse-focus="2-4" data-prev-chapter="John 2" data-next-chapter="John 4">/)
   assert.match(html, /<nav class="rd-pager" aria-label="Previous and next chapter"><form[^>]*class="rd-pager-form"[^>]*>.*?class="rd-pager-btn is-prev"[^>]*><span>John 2<\/span>/)
   assert.match(html, /class="rd-pager-form is-next".*?class="rd-pager-btn is-next"[^>]*><span>John 4<\/span>/)
 })

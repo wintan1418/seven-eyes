@@ -32,6 +32,44 @@ class PreachModeTest < ApplicationSystemTestCase
     assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-verse-num='17']"
   end
 
+  test "Next on a chapter's last verse carries on into the next chapter; Prev comes back" do
+    start_preaching("John 3:17")
+    assert_selector "[data-preach-counter]", text: /of 18/i # the whole chapter is in…
+    assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-verse-num='17']" # …and painted
+    send_keys :arrow_right
+    assert_selector "[data-preach-counter]", text: /verse 18/i
+    # The console's NEXT strip says where Next goes from the last verse.
+    assert_selector "[data-preach-next]", text: "John 4:1", visible: :all
+
+    send_keys :arrow_right
+    assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-chapter='4'][data-verse-num='1']"
+    assert_selector "[data-preach-counter]", text: /verse 1\b/i
+    assert_selector "[data-preach-counter]", text: /of 3/i
+    assert_equal "John 4", find(".ps-pane.is-presented form.rd-pane-form input[name='pane[reference]']", visible: :all).value
+
+    send_keys :arrow_left
+    assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-chapter='3'][data-verse-num='18']"
+    assert_selector "[data-preach-counter]", text: /verse 18/i
+
+    # The on-screen button does the same.
+    find(".ps-preach-tool[data-action~='presentation#next']").click
+    assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-chapter='4'][data-verse-num='1']"
+  end
+
+  test "Next after the last verse of the Bible stays put" do
+    kjv = Translation.find_by!(code: "KJV")
+    rev = Book.create!(osis_code: "Rev", name: "Revelation", testament: :new, position: 66, chapter_count: 22)
+    Verse.create!(translation: kjv, book: rev, chapter: 22, verse_number: 20, text: "Surely I come quickly")
+    Verse.create!(translation: kjv, book: rev, chapter: 22, verse_number: 21, text: "The grace of our Lord Jesus Christ be with you all. Amen.")
+    start_preaching("Revelation 22:21")
+    assert_selector "[data-preach-counter]", text: /verse 21/i
+    assert_selector ".ps-pane.is-presented .ps-verse[data-verse-num='20']", visible: :all # the whole chapter is in…
+    assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-verse-num='21']" # …and painted
+    send_keys :arrow_right
+    assert_selector ".ps-preach-toast", text: /end of revelation/i
+    assert_selector ".ps-pane.is-presented .ps-verse.is-preach-current[data-verse-num='21']"
+  end
+
   test "Esc in the Go box closes the box and stays in preach mode" do
     start_preaching("John 3")
     send_keys "g"

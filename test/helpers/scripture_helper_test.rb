@@ -28,6 +28,19 @@ class ScriptureHelperTest < ActionView::TestCase
     assert_nil neighbor_reference(@gen, 1, :prev)
   end
 
+  test "neighbor_reference crosses the Testaments: Malachi 4 → Matthew 1 and back" do
+    mal = Book.create!(osis_code: "Mal", name: "Malachi", testament: :old, position: 39, chapter_count: 4)
+    matt = Book.create!(osis_code: "Matt", name: "Matthew", testament: :new, position: 40, chapter_count: 28)
+    assert_equal "Matthew 1", neighbor_reference(mal, 4, :next)
+    assert_equal "Malachi 4", neighbor_reference(matt, 1, :prev)
+  end
+
+  test "neighbor_reference returns nil after Revelation 22" do
+    rev = Book.create!(osis_code: "Rev", name: "Revelation", testament: :new, position: 66, chapter_count: 22)
+    assert_nil neighbor_reference(rev, 22, :next)
+    assert_equal "Revelation 21", neighbor_reference(rev, 22, :prev)
+  end
+
   test "reference_title spans chapters" do
     assert_equal "John III", reference_title(@john, 3)
     assert_equal "John III–IV", reference_title(@john, 3, 4)

@@ -291,9 +291,12 @@ export default class extends Controller {
       if (p?.valid && first) label = referenceLabel({ ...p, chapterEnd: p.chapter, verseStart: first, verseEnd: last, openEnded: false })
       else if (first) label = `${ref.replace(/\s*[:.]\s*\d.*$/, "")}:${first}${last && last !== first ? `-${last}` : ""}`
       const moved = !this._live || this._live.osis !== p?.osis || this._live.chapter !== p?.chapter
+      // The list was showing the live chapter and Next/Prev walked into the
+      // neighbouring one: the list turns the page with it, picking or not.
+      const turned = moved && !!this._live && this._liveInList()
       this._live = { label, osis: p?.osis, chapter: p?.chapter, first, last, reference: ref }
       this.liveLabelTarget.textContent = label + (state.blank ? " · screen blanked" : "")
-      if (moved && p?.valid) this._followLive(ref)
+      if (moved && p?.valid) this._followLive(ref, { turned })
     }
     this.liveLabelTarget.closest(".ps-console-row")?.classList.toggle("is-blank", !!state.blank)
     if (this._preview && this.hasPreviewCardTarget && this.previewCardTarget.dataset.state !== "error") {
@@ -320,12 +323,26 @@ export default class extends Controller {
 
   // The live passage moved to another chapter: the list follows it, unless the
   // operator is in the middle of picking something else.
-  async _followLive(reference) {
+  async _followLive(reference, { turned = false } = {}) {
     const pinned = () => this._listPinnedAt && performance.now() - this._listPinnedAt < 8000
-    if (pinned()) return
+    if (pinned() && !turned) return
+    const pinnedAt = this._listPinnedAt
     const chapter = await this._chapter(reference)
     // The operator may have typed a reference while the chapter loaded.
-    if (chapter && !pinned()) this._showList(chapter, { pinned: false })
+    const typedSince = this._listPinnedAt !== pinnedAt
+    if (!chapter || typedSince || (pinned() && !turned)) return
+    this._showList(chapter, { pinned: false })
+    if (turned) this._flashTitle()
+  }
+
+  // A soft glow on the list's chapter label as it turns to the next chapter.
+  _flashTitle() {
+    const title = this.verseListTitleTarget
+    title.classList.remove("is-turned")
+    void title.offsetWidth // restart the animation
+    title.classList.add("is-turned")
+    clearTimeout(this._turnTimer)
+    this._turnTimer = setTimeout(() => title.classList.remove("is-turned"), 1600)
   }
 
   // ---- the chapter verse list -------------------------------------------------------
