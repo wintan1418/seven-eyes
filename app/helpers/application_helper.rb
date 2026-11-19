@@ -10,6 +10,38 @@ module ApplicationHelper
   THEME_COOKIE = :ps_reader_theme
   LEGACY_COOKIE = :ps_theme
 
+  # <link rel="modulepreload"> for the chunks application.js imports up front
+  # (esbuild --splitting, see esbuild.config.mjs), so the browser fetches them
+  # alongside the bundle instead of after parsing it. Lazy controller chunks
+  # (import()) aren't listed: they load when a page uses them.
+  def javascript_chunk_preload_tags(entry = "application.js")
+    safe_join(ApplicationHelper.static_chunks(entry).map { |chunk| tag.link(rel: "modulepreload", href: asset_path(chunk)) }, "\n")
+  end
+
+  STATIC_IMPORT = %r{(?:\bfrom|\bimport)\s*"/assets/([\w.-]+\.digested\.js)"}
+
+  # The chunk files `entry` imports statically, transitively. Memoized per
+  # build of the entry (its digest), so production reads the files once.
+  def self.static_chunks(entry)
+    asset = Rails.application.assets.load_path.find(entry)
+    return [] unless asset
+    @static_chunks ||= {}
+    @static_chunks[[ entry, asset.digest ]] ||= begin
+      seen = []
+      queue = [ asset ]
+      while (current = queue.shift)
+        current.content.to_s.scan(STATIC_IMPORT).flatten.uniq.each do |name|
+          next if seen.include?(name)
+          chunk = Rails.application.assets.load_path.find(name)
+          next unless chunk
+          seen << name
+          queue << chunk
+        end
+      end
+      seen
+    end
+  end
+
   # Whether the Glossary of the Faith has anything this viewer may read: the
   # menu links appear only then (no reviewed terms = no glossary for the public).
   def faith_glossary_visible?

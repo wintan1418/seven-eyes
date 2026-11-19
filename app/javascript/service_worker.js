@@ -501,6 +501,48 @@ function assetUrls(html) {
   return [ ...out ]
 }
 
+// ---- code-split chunks ----------------------------------------------------------
+// application.js is split (esbuild.config.mjs): it imports shared chunks
+// statically and the heavy Stimulus controllers (the projector, the console,
+// slide tools…) with import() on first use. Pages name the static ones
+// (modulepreload); the lazy ones are only named inside the scripts, so they're
+// found by reading them: every "/assets/…digested.js" a kept script mentions.
+const CHUNK_REF = /["'](\/assets\/[\w.-]+\.digested\.js)["']/g
+const scannedScripts = new Set() // chunk files are immutable: read each once per worker
+
+function chunkRefs(text) {
+  return [ ...new Set([ ...text.matchAll(CHUNK_REF) ].map((m) => new URL(m[1], self.location.origin).href)) ]
+}
+
+// Saves these scripts' chunks (and theirs) for offline use — the projector
+// must open offline even if it was never opened online.
+async function saveScriptChunks(scripts) {
+  const queue = scripts.filter((u) => /\.js$/.test(u.split("?")[0])).map((u) => new URL(u, self.location.origin).href)
+  while (queue.length) {
+    const href = queue.shift()
+    if (scannedScripts.has(href)) continue
+    const res = await cacheFirst(new Request(href), STATIC_CACHE).catch(() => null)
+    if (!res || !res.ok) continue
+    scannedScripts.add(href)
+    queue.push(...chunkRefs(await res.clone().text().catch(() => "")))
+  }
+}
+
+// The saved chunks these kept scripts need, transitively (prune keeps them).
+async function savedChunksOf(statics, scripts) {
+  const found = new Set()
+  const queue = [ ...scripts ].filter((href) => /\.js$/.test(new URL(href).pathname))
+  while (queue.length) {
+    const href = queue.shift()
+    const res = await statics.match(href)
+    if (!res) continue
+    for (const chunk of chunkRefs(await res.text().catch(() => ""))) {
+      if (!found.has(chunk)) { found.add(chunk); queue.push(chunk) }
+    }
+  }
+  return found
+}
+
 // Keep fingerprinted assets only while the current version or a saved page uses them.
 async function pruneStaticAssets() {
   const keep = new Set((CONFIG.assets || []).map((u) => new URL(u, self.location.origin).href))
@@ -511,6 +553,7 @@ async function pruneStaticAssets() {
     assetUrls(await res.text()).forEach((u) => keep.add(new URL(u, self.location.origin).href))
   }
   const statics = await caches.open(STATIC_CACHE)
+  ;(await savedChunksOf(statics, keep)).forEach((u) => keep.add(u))
   for (const req of await statics.keys()) {
     const path = new URL(req.url).pathname
     // Fonts are named from the stylesheet, not the page: keep them for offline.
@@ -548,6 +591,7 @@ async function saveForOffline(raw) {
       if (asset.startsWith("http")) await staleWhileRevalidate(req, FONTS_CACHE).catch(() => {})
       else await (asset.startsWith("/assets/") ? cacheFirst(req, STATIC_CACHE) : staleWhileRevalidate(req, STATIC_CACHE)).catch(() => {})
     }
+    await saveScriptChunks(assetUrls(html).filter((u) => u.startsWith("/assets/"))).catch(() => {})
     return html
   } catch (e) {
     return null
@@ -585,6 +629,9 @@ async function runWarm({ owner = "guest", signedIn = false } = {}) {
   const generation = warmGeneration
   const stale = () => generation !== warmGeneration
   const last = await getMeta(WARM_KEY).catch(() => null)
+  // This version's lazy chunks first (cheap once saved): offline then has the
+  // projector and the console even when they were never opened online.
+  if (!(await networkSlowStored().catch(() => false))) await saveScriptChunks(CONFIG.assets || []).catch(() => {})
   if (last && last.version === CACHE_VERSION && last.owner === owner && Date.now() - last.at < WARM_EVERY_MS) return
 
   let ok = 0

@@ -58,6 +58,7 @@
     <% track = ("reload" unless hotwire_native_app?) %>
     <%= stylesheet_link_tag "application", "data-turbo-track": track %>
     <%= javascript_include_tag "application", "data-turbo-track": track, type: "module" %>
+    <%= javascript_chunk_preload_tags %>
   </head>
 
   <%# Theme comes from the ps_reader_theme cookie (written by the theme controller) so
