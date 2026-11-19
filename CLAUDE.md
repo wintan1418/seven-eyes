@@ -294,6 +294,19 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   `--look-*` tokens; screen_live's Black / Clear / Logo / Timer / Alert sit in the toolbar and the
   state pill reads `data-screen-mode`. System tests written for the full-screen layout call
   `prefer_focus_view` before entering preach.
+- **My Media** (Nov 2026, phase 1) — each account's picture library (`MediaAsset`: the file on
+  Active Storage — or a legacy Cloudinary URL — title, default display `{fit, zoom}`, size,
+  dimensions, `last_used_at`). `MediaLibrary.add` dedupes by the file's MD5 (= the blob checksum,
+  worked out *before* any upload), so the same picture is stored once per account. Every picture a
+  signed-in user adds to a service goes through it; picture `SetlistItem`s point at the entry
+  (`media_asset_id`) but keep their own URL, their own attachment to the same blob and their own
+  `data` (per-service Fit/Fill/Stretch + zoom), so deleting from the library never empties a service
+  (the blob can't be purged while attached; Cloudinary copies via `PictureUpload.purge_unused`).
+  Console: Pictures → **This service | My Media** (`console_media` controller, `GET/POST /media`
+  JSON, list cached on the device in meta `myMedia:<owner>`): search, click = Preview,
+  double-click / Go live, "+ Add to service" (queued by library id through the outbox, so it works
+  offline), upload (optionally into the service too). Backfill: `MediaBackfill` (migration +
+  `bin/rails media:backfill`, idempotent, batched, reuses blobs — no re-upload).
 - **Stage display** — `?stage=1` window (`⌗ Stage` button): NOW small / NEXT big / clock, painted
   by `_paintStage()` from the same BroadcastChannel state; hello role `"stage"` so it never flips
   the operator into console mode.

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_18_190000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_19_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -238,6 +238,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_190000) do
     t.index ["study_id"], name: "index_live_sessions_on_study_id"
   end
 
+  create_table "media_assets", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "title", null: false
+    t.string "checksum"
+    t.bigint "byte_size", default: 0, null: false
+    t.string "content_type"
+    t.integer "width"
+    t.integer "height"
+    t.string "media_url", null: false
+    t.string "media_public_id"
+    t.jsonb "display", default: {}, null: false
+    t.datetime "last_used_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "checksum"], name: "index_media_assets_on_user_id_and_checksum", unique: true, where: "(checksum IS NOT NULL)"
+    t.index ["user_id", "media_url"], name: "index_media_assets_on_user_id_and_media_url"
+    t.index ["user_id"], name: "index_media_assets_on_user_id"
+  end
+
   create_table "panes", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "notes"
@@ -319,6 +338,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_190000) do
     t.string "client_id"
     t.string "arrangement"
     t.jsonb "data", default: {}, null: false
+    t.bigint "media_asset_id"
+    t.index ["media_asset_id"], name: "index_setlist_items_on_media_asset_id"
     t.index ["study_id", "client_id"], name: "index_setlist_items_on_study_id_and_client_id", unique: true, where: "(client_id IS NOT NULL)"
     t.index ["study_id", "position"], name: "index_setlist_items_on_study_id_and_position"
     t.index ["study_id"], name: "index_setlist_items_on_study_id"
@@ -612,6 +633,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_190000) do
   add_foreign_key "highlights", "users"
   add_foreign_key "highlights", "verses"
   add_foreign_key "live_sessions", "studies"
+  add_foreign_key "media_assets", "users"
   add_foreign_key "panes", "studies"
   add_foreign_key "panes", "translations"
   add_foreign_key "plan_completions", "plan_days"
@@ -620,6 +642,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_190000) do
   add_foreign_key "reading_plans", "users"
   add_foreign_key "service_templates", "users"
   add_foreign_key "sessions", "users"
+  add_foreign_key "setlist_items", "media_assets", on_delete: :nullify
   add_foreign_key "setlist_items", "studies"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

@@ -195,7 +195,8 @@ const setlistBase = (studyId) => `/studies/${studyId}/setlist`
 const itemUrl = (studyId, item) => `${setlistBase(studyId)}/${encodeURIComponent(item.id ?? item.cid)}`
 const itemBody = (item) => ({
   kind: item.kind, reference: item.reference ?? "", title: item.title ?? "", body: item.body ?? "", arrangement: item.arrangement ?? "",
-  ...(item.data ? { data: item.data } : {})
+  ...(item.data ? { data: item.data } : {}),
+  ...(item.media_asset_id ? { media_asset_id: item.media_asset_id } : {}) // a picture from My Media
 })
 
 export function queueSetlistCreate(studyId, item, position, owner) {
