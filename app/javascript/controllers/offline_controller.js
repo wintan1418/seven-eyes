@@ -29,7 +29,9 @@ const NEEDS_INTERNET = [
   [ "[data-action*='ai-search#']", "AI Find a Verse needs" ],
   [ "[data-action~='live#toggle']", "Live follow-along needs" ],
   [ "[data-action~='remote#toggle']", "The phone remote needs" ],
-  [ "[data-action~='reader#toggle']", "The audio Bible needs" ],
+  // Offline the reader reads with the phone's own voice; only a device
+  // without one needs the network for the audio Bible.
+  [ "[data-action~='reader#toggle'], [data-action~='verse-actions#listen']", "The audio Bible needs", { unless: phoneVoice } ],
   [ "[data-action*='lexicon#open'], [data-action~='verse-actions#wordStudy']", "Word study needs" ],
   [ "[data-action~='pane#share'], [data-action~='verse-actions#share']", "Share pictures need" ],
   [ "[data-action~='pane#prayer']", "Chapter prayers need" ],
@@ -37,6 +39,9 @@ const NEEDS_INTERNET = [
   [ "[data-tour='panes']", "Adding a pane needs internet. Your downloaded Bibles still work in the panes you have.", { full: true } ],
   [ "a[href$='/sermon'], a[href*='/sermon?']", "The sermon manuscript needs" ]
 ]
+function phoneVoice() {
+  return "speechSynthesis" in window || !!window.BiblioRataNative?.speak
+}
 // "New study" with no internet opens Quick Present (ready on the device) instead.
 const NEW_STUDY = "[data-action~='new-study#open'], form.ui-menu-new-form button"
 // Bible search isn't listed: offline it searches the downloaded Bibles (search
@@ -181,6 +186,7 @@ export default class extends Controller {
     if (navigator.onLine !== false) return
     for (const [ selector, what, options ] of NEEDS_INTERNET) {
       if (target.closest(selector)) {
+        if (options?.unless?.()) return
         stop()
         this.toast(options?.full ? what : `${what} internet — you're offline.`)
         return

@@ -25,7 +25,7 @@
       <div class="ui-setting">
         <div class="ui-label" id="listen-speed-label">Speed</div>
         <div class="ui-seg ls-speed" role="radiogroup" aria-labelledby="listen-speed-label">
-          <% [ [ "0.75", "0.75×" ], [ "1", "1×" ], [ "1.25", "1.25×" ], [ "1.5", "1.5×" ] ].each do |rate, label| %>
+          <% [ [ "0.75", "0.75×" ], [ "1", "1×" ], [ "1.25", "1.25×" ], [ "1.5", "1.5×" ], [ "2", "2×" ] ].each do |rate, label| %>
             <button type="button" class="ui-seg-btn" role="radio" aria-checked="false"
                     data-listen-options-target="rate" data-rate="<%= rate %>"
                     data-action="listen-options#pickRate"><%= label %></button>

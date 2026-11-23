@@ -27,6 +27,9 @@ application.register("listen-options", ListenOptionsController)
 import ListenPillController from "./listen_pill_controller"
 application.register("listen-pill", ListenPillController)
 
+import ListenPlayerController from "./listen_player_controller"
+application.register("listen-player", ListenPlayerController)
+
 import ChapterSwipeController from "./chapter_swipe_controller"
 application.register("chapter-swipe", ChapterSwipeController)
 

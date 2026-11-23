@@ -1,0 +1,54 @@
+<%# The Audio Bible's player: shows while a chapter is being read aloud
+    (listen_player controller ← the reader's `listen:state`), above the phone
+    tab bar / at the foot of the reader on wide screens. Play/pause, previous /
+    next verse, speed, sleep timer, repeat, close. Hidden while presenting. %>
+<div class="lp-bar" data-controller="listen-player" data-chrome hidden
+     role="region" aria-label="Audio Bible player"
+     data-action="keydown.esc->listen-player#closeSleepMenu">
+  <div class="lp-inner">
+    <div class="lp-now">
+      <span class="lp-status" data-listen-player-target="status">Playing</span>
+      <span class="lp-label" data-listen-player-target="label" aria-live="polite"></span>
+    </div>
+
+    <div class="lp-controls" role="group" aria-label="Playback">
+      <button type="button" class="lp-btn lp-repeat" data-listen-player-target="repeat"
+              data-action="listen-player#cycleRepeat" aria-label="Repeat: off" title="Repeat: off">
+        <span data-listen-player-target="repeatAll"><%= icon(:repeat) %></span>
+        <span data-listen-player-target="repeatOne" hidden><%= icon(:repeat_one) %></span>
+      </button>
+      <button type="button" class="lp-btn" data-listen-player-target="step" data-action="listen-player#prev"
+              aria-label="Previous verse" title="Previous verse"><%= icon(:skip_back) %></button>
+      <button type="button" class="lp-btn lp-play" data-listen-player-target="toggle" data-action="listen-player#toggle"
+              aria-label="Pause" title="Pause">
+        <span data-listen-player-target="pauseIcon"><%= icon(:pause) %></span>
+        <span data-listen-player-target="playIcon" hidden><%= icon(:play) %></span>
+      </button>
+      <button type="button" class="lp-btn" data-listen-player-target="step" data-action="listen-player#next"
+              aria-label="Next verse" title="Next verse"><%= icon(:skip_forward) %></button>
+      <div class="lp-sleep">
+        <button type="button" class="lp-btn lp-sleep-btn" data-listen-player-target="sleep"
+                data-action="listen-player#toggleSleepMenu" aria-haspopup="menu" aria-expanded="false"
+                aria-label="Sleep timer: off" title="Sleep timer">
+          <%= icon(:moon) %><span class="lp-sleep-left" data-listen-player-target="sleepLeft" hidden></span>
+        </button>
+        <div class="ui-popmenu lp-sleep-menu" data-listen-player-target="sleepMenu" role="menu" aria-label="Sleep timer" hidden>
+          <p class="lp-menu-title">Sleep timer</p>
+          <% [ [ "off", "Off" ], [ "chapter", "End of this chapter" ] ].concat(
+               [ 5, 10, 15, 30, 45, 60 ].map { |m| [ m.to_s, "#{m} minutes" ] }).each do |value, label| %>
+            <button type="button" class="ui-menu-item lp-menu-item" role="menuitemradio" aria-checked="false"
+                    data-listen-player-target="sleepChoice" data-sleep="<%= value %>"
+                    data-action="listen-player#pickSleep"><%= label %></button>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="lp-end">
+      <button type="button" class="lp-btn lp-speed" data-listen-player-target="speed"
+              data-action="listen-player#cycleSpeed" aria-label="Speed 1×, change" title="Speed">1×</button>
+      <button type="button" class="lp-btn lp-close" data-action="listen-player#close"
+              aria-label="Stop and close the player" title="Stop"><%= icon(:x) %></button>
+    </div>
+  </div>
+</div>

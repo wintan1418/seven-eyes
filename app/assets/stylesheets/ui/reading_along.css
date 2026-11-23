@@ -86,3 +86,107 @@
 }
 .ls-now-text { flex: 1; min-width: 0; font-weight: 700; color: var(--ui-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ls-now-kicker { font-weight: 500; color: var(--ui-fg-muted); }
+
+/* ==========================================================================
+   Audio Bible player (studies/_listen_player, listen_player controller).
+   In the reader's column layout, between the passage and the phone tab bar,
+   so it never covers the words or the tabs. Phones: what's playing + speed +
+   close on top, the transport row below; 768px+: one row. Bars that float
+   above the tab bar (verse actions, selection, toasts, auto-scroll) rise by
+   its height while it shows (html.ui-has-player).
+   ========================================================================== */
+:root { --lp-h: 108px; }
+@media (min-width: 768px) { :root { --lp-h: 72px; } }
+
+.lp-bar {
+  position: relative; z-index: 31; flex: 0 0 auto;
+  box-sizing: content-box; height: calc(var(--lp-h) - 16px);
+  padding: 8px max(12px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  background: color-mix(in srgb, var(--ui-elevated) 96%, transparent);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  backdrop-filter: saturate(1.4) blur(14px);
+  border-top: 1px solid var(--ui-border);
+  color: var(--ui-fg); font-family: var(--ui-font);
+}
+.lp-bar[hidden] { display: none; }
+/* Above the web tab bar, which already keeps clear of the home indicator. */
+@media (max-width: 767px) {
+  body:not(.hotwire-native) .lp-bar { padding-bottom: 8px; }
+}
+
+.lp-inner {
+  height: 100%; max-width: 760px; margin: 0 auto;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "now end" "controls controls";
+  align-items: center; column-gap: 8px;
+}
+.lp-now { grid-area: now; min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-left: 4px; }
+.lp-status { font: 500 12px/1.2 var(--ui-font); color: var(--ui-fg-muted); }
+.lp-label {
+  font: 600 15px/1.25 var(--ui-font); letter-spacing: -0.01em; color: var(--ui-fg);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.lp-controls { grid-area: controls; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.lp-end { grid-area: end; display: flex; align-items: center; gap: 2px; }
+
+.lp-btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  width: 44px; height: 44px; padding: 0; border: 0; border-radius: 999px;
+  background: transparent; color: var(--ui-fg); font: 600 14px var(--ui-font);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.lp-btn svg { width: 22px; height: 22px; }
+.lp-btn > span { display: inline-flex; }
+.lp-btn > span[hidden] { display: none; }
+.lp-btn:hover:not(:disabled) { background: var(--ui-surface); }
+.lp-btn:disabled { opacity: 0.4; cursor: default; }
+.lp-btn:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+.lp-btn.is-on { color: var(--ui-accent); background: var(--ui-accent-soft); }
+
+.lp-play { width: 50px; height: 50px; background: var(--ui-accent); color: var(--ui-accent-fg); box-shadow: var(--ui-shadow-sm); }
+.lp-play:hover:not(:disabled) { background: var(--ui-accent-hover); }
+.lp-play svg { width: 22px; height: 22px; fill: currentColor; stroke-width: 1.5; }
+
+.lp-end .lp-btn { width: 38px; height: 38px; }
+.lp-end .lp-btn svg { width: 20px; height: 20px; }
+.lp-end .lp-speed {
+  width: auto; min-width: 50px; padding: 0 10px; border: 1px solid var(--ui-border);
+  font-variant-numeric: tabular-nums; color: var(--ui-fg);
+}
+
+.lp-sleep { position: relative; display: inline-flex; }
+.lp-sleep-btn { width: auto; min-width: 44px; padding: 0 10px; }
+.lp-sleep-left { font: 600 13px var(--ui-font); font-variant-numeric: tabular-nums; }
+.lp-sleep-menu { left: auto; right: -8px; width: 220px; z-index: 45; }
+.lp-menu-title {
+  margin: 6px 10px 4px; font: 600 12px var(--ui-font); color: var(--ui-fg-muted);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.lp-menu-item[aria-checked="true"] { color: var(--ui-accent); font-weight: 600; }
+.lp-menu-item[aria-checked="true"]::after { content: "\2713"; margin-left: auto; padding-left: 12px; }
+
+@media (min-width: 768px) {
+  .lp-inner {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-areas: "now controls end";
+  }
+  .lp-end { justify-content: flex-end; }
+  .lp-controls { gap: 8px; }
+  .lp-sleep-menu { right: auto; left: 50%; transform: translateX(-50%); }
+}
+
+/* Floating bars keep above the player. */
+html.ui-has-player .ui-actionbar,
+html.ui-has-player body .ps-hl-popover.is-touch-bar {
+  bottom: calc(var(--chrome-bottom, env(safe-area-inset-bottom, 0px)) + var(--lp-h) + 12px);
+}
+html.ui-has-player .rd-pace-bar { bottom: calc(var(--tabbar-h, 0px) + var(--lp-h) + 16px + env(safe-area-inset-bottom)); }
+html.ui-has-player:has(.rd-app:not(.is-presenting, .is-output)) .ps-toast { bottom: calc(var(--chrome-bottom, 0px) + var(--lp-h) + 16px); }
+html.ui-has-player .ui-offline-toast { bottom: calc(var(--tabbar-h) + var(--lp-h) + 16px); }
+/* Preaching: the player hides with the rest of the reading chrome. */
+html.ui-has-player:has(.ps-root.is-presenting) .ui-actionbar { bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); }
+
+/* "Play from here" in the verse action bar. */
+.ui-actionbar-listen { flex: 0 0 auto; height: 32px; margin-left: auto; padding: 0 12px 0 10px; }
+.ui-actionbar-listen svg { width: 14px; height: 14px; fill: currentColor; stroke-width: 1.5; }
+.ui-actionbar-head .ui-actionbar-label { min-width: 0; }

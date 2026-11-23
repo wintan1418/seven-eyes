@@ -52,6 +52,16 @@ export default class extends Controller {
     this.refreshPane()
   }
 
+  // "Play from here": listen to the chapter from the first verse picked (the
+  // pane's reader controller; the player bar takes over from there).
+  listen() {
+    const first = [ ...this.selection.verses ].sort((a, b) => (a.chapter - b.chapter) || (a.verse - b.verse))[0]
+    const pane = this.pane()
+    if (!first || !pane) return
+    this.dismiss()
+    window.dispatchEvent(new CustomEvent("listen:play", { detail: { pane: pane.id, verse: first.verse } }))
+  }
+
   note() {
     const ref = this.selection.label
     window.dispatchEvent(new CustomEvent("notes:open", { detail: { paneId: this.selection.paneId, insert: `[[${ref}]] ` } }))
