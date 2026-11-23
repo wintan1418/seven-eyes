@@ -20,6 +20,26 @@ class ServicesTest < ActionDispatch::IntegrationTest
     travel_to(sunday) { post study_service_served_path(@study), params: { at: Time.current.iso8601 }, as: :json }
   end
 
+  test "the queue has a New service button for its owner, any time" do
+    get study_path(@study)
+    assert_select "button[data-action='setlist#newService']", minimum: 1
+
+    sign_out if respond_to?(:sign_out)
+    other = users(:two)
+    sign_in_as other
+    get study_path(@study)
+    assert_select "button[data-action='setlist#newService']", 0
+  end
+
+  test "starting fresh works on a queue that was never marked as served" do
+    assert_nil @study.last_served_at
+    post study_service_start_fresh_path(@study), params: { key: "manual-new-1" }, as: :json
+    assert_response :success
+    assert_equal 0, @study.reload.setlist_items.count
+    archive = Study.find_by(archive_key: "manual-new-1")
+    assert_equal 2, archive.setlist_items.count
+  end
+
   test "the served ping records the day once" do
     travel_to sunday do
       post study_service_served_path(@study), params: { at: Time.current.iso8601 }, as: :json

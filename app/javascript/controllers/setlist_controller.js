@@ -701,6 +701,12 @@ export default class extends Controller {
   // The whole queue moves to an archived copy on the server ("Service · 22 Nov
   // 2026", a past service) and this one is empty for the coming Sunday. Undo
   // for a few seconds puts it back — the server copy is folded back in too.
+  // "+ New service" in the queue's header: the same as the banner's Start fresh,
+  // any time — for queues used before services were recorded, or a midweek reset.
+  newService() {
+    this._startFresh({})
+  }
+
   _startFresh({ servedOn = null, undone = null } = {}) {
     if (!this.studyId || !this.items.length) return
     if (this._editing) this._endEdit()

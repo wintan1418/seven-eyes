@@ -21,6 +21,10 @@
       <span class="cx-title">Service</span>
       <span class="cx-sub">click to preview &middot; double-click to go live</span>
       <span class="cx-head-tools">
+        <% if authenticated? && study.user_id == current_user.id && !study.quick_present? && !study.archived? %>
+          <button type="button" class="cx-mini-btn" data-action="setlist#newService"
+                  title="Start a new service — this order is kept under Past services (with Undo)">&#43; New service</button>
+        <% end %>
         <button type="button" class="cx-mini-btn" data-tool="templates" data-action="setlist#openTool"
                 title="Service templates — save this order, or start from one (Sunday Service, Midweek…)">&#9776; Templates</button>
         <button type="button" class="cx-mini-btn" data-tool="order" data-action="setlist#openTool"
