@@ -402,6 +402,17 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   in /more): `ThisSunday` card first on Home (phones <640px: compact —
   summary line + 3 buttons; the order of service folds out via `sunday_card#toggle`) — order of service, readiness, Open service
   (`?queue=1`), Present (`?present=1`), Get ready (`?ready=1` runs `sunday_ready`).
+- **Audio Bible player** (Nov 2026) — `reader` controller (per pane) has three engines: `audio`
+  (server narration — human KJV / AI voices — in one shared `<audio>`), `speech` (browser
+  speechSynthesis) and `native` (Android app's `BiblioRataNative`); the phone voices speak one verse
+  per utterance so pause / prev / next / repeat work by verse (resume restarts the verse; the Android
+  voice has one speed). A verse map (server `timings`, else estimated by verse length) drives
+  prev/next, repeat-verse and "Play from here" (verse action bar → `listen:play {pane, verse}`).
+  `studies/_listen_player` + `listen_player` controller = the bar (in-flow above the phone tab bar,
+  `html.ui-has-player` lifts floating bars by `--lp-h`), talking through `listen:command` /
+  `listen:state`; repeat + sleep timer state in `lib/listen_controls.js` (node-tested), speed in
+  the Listen sheet's localStorage (`storeListenOptions`). Audio that fails to load, offline or a
+  known-slow network → the phone voice. Tests: `test/system/listen_player_test.rb`.
 - **Admin ("Overseer")** — `/admin`, `users.admin` flag (`bin/rails admin:grant EMAIL=...`),
   read-only overview: totals, live-now sessions, recent accounts/studies/live services.
 

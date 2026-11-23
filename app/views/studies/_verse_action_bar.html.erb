@@ -3,6 +3,9 @@
      role="toolbar" aria-label="Selected verses">
   <div class="ui-actionbar-head">
     <span class="ui-actionbar-label" data-verse-actions-target="label"></span>
+    <%# Listen to the chapter from the first verse picked (reader controller + player bar). %>
+    <button type="button" class="ui-pill ui-actionbar-listen" data-action="verse-actions#listen"
+            title="Listen to the chapter from this verse"><%= icon(:play) %><span>Play from here</span></button>
     <button type="button" class="ui-iconbtn is-sm" data-action="verse-actions#dismiss" aria-label="Clear selection"><%= icon(:x) %></button>
   </div>
   <div class="ui-actionbar-row">

@@ -39,6 +39,7 @@
   <%= render "studies/compare_bar", study: @study if @study.pane_count > 1 %>
   <% unless output_window %>
     <%= render "studies/verse_action_bar", study: @study %>
+    <%= render "studies/listen_player" %>
     <%= render "studies/tab_bar" %>
   <% end %>
 

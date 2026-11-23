@@ -17,6 +17,15 @@ export function listenOptions() {
   try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || "{}") } } catch { return { ...DEFAULTS } }
 }
 
+// Remember new choices (the sheet, or the player bar's speed button) and tell
+// the narrating pane and every open control (`listen:options`).
+export function storeListenOptions(changes) {
+  const next = { ...listenOptions(), ...changes }
+  try { localStorage.setItem(KEY, JSON.stringify(next)) } catch {}
+  window.dispatchEvent(new CustomEvent("listen:options", { detail: next }))
+  return next
+}
+
 export default class extends Controller {
   static targets = [ "rate", "follow", "continue", "sides", "sideList", "now", "nowLabel" ]
 
@@ -30,9 +39,15 @@ export default class extends Controller {
       this.renderNow()
     }
     window.addEventListener("listen:state", this._onState)
+    // Speed changed on the player bar: show it here too.
+    this._onOptions = () => this.render()
+    window.addEventListener("listen:options", this._onOptions)
   }
 
-  disconnect() { window.removeEventListener("listen:state", this._onState) }
+  disconnect() {
+    window.removeEventListener("listen:state", this._onState)
+    window.removeEventListener("listen:options", this._onOptions)
+  }
 
   // sheet:opened — offer the passages on screen when there's more than one.
   opened({ detail }) {
@@ -119,10 +134,7 @@ export default class extends Controller {
   }
 
   store(changes) {
-    const next = { ...listenOptions(), ...changes }
-    try { localStorage.setItem(KEY, JSON.stringify(next)) } catch {}
-    this.render()
-    window.dispatchEvent(new CustomEvent("listen:options", { detail: next }))
+    storeListenOptions(changes) // re-renders through listen:options
   }
 
   render() {
