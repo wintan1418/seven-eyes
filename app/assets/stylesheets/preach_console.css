@@ -208,6 +208,25 @@
 .ps-root.is-preaching .ps-setlist-form { padding-top: 10px; padding-bottom: 10px; gap: 6px; }
 .ps-root.is-preaching .ps-setlist-form textarea { min-height: 70px; }
 
+/* "This queue was used on Sunday 22 November. Start fresh?" (studies/_service_reset) */
+.ps-service-reset {
+  flex: none; display: grid; gap: 8px; margin: 10px 12px 0; padding: 10px 12px;
+  border-radius: 8px; background: #fff4d6; color: #3b2a12; border: 1px solid #e3c27a;
+  font: 13.5px/1.4 Inter, system-ui, sans-serif;
+}
+.ps-service-reset[hidden] { display: none; }
+.ps-service-reset .msg { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.ps-service-reset .acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.ps-service-reset button {
+  min-height: 34px; padding: 0 12px; border-radius: 6px; cursor: pointer; font: 600 13px Inter, system-ui, sans-serif;
+}
+.ps-service-reset .go { background: #8a5a14; color: #fff; border: 1px solid #8a5a14; }
+.ps-service-reset .go:hover { background: #6f480f; }
+.ps-service-reset .keep { background: transparent; color: #5a4220; border: 1px solid #c9a35c; }
+.ps-service-reset .keep:hover { background: rgba(201, 163, 92, 0.15); }
+.ps-service-reset button:focus-visible { outline: 2px solid #8a5a14; outline-offset: 2px; }
+.ps-root.is-output .ps-service-reset { display: none !important; }
+
 /* undo toast */
 .ps-queue-toast {
   position: fixed; left: 24px; bottom: 88px; z-index: 140;

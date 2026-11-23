@@ -47,4 +47,84 @@ class ThisSundayTest < ActiveSupport::TestCase
     qp.setlist_items.create!(kind: :scripture, reference: "John 1:1")
     assert_nil ThisSunday.for(users(:two))
   end
+
+  # ---- after the service (Study::Serving) ----------------------------------------
+
+  def monday = Date.new(2026, 11, 23)
+
+  test "on the day of the service it is still Today's service" do
+    travel_to Time.utc(2026, 11, 22, 9) do
+      @service.mark_served!
+      sunday = ThisSunday.for(@user)
+      assert_equal @service, sunday.study
+      assert_not sunday.past?
+      assert_equal sunday.today, sunday.date
+    end
+  end
+
+  test "once the day it was served has passed, it is last Sunday's, not this Sunday's" do
+    travel_to Time.utc(2026, 11, 22, 9) do
+      @service.mark_served!
+    end
+    travel_to Time.utc(2026, 11, 22, 22, 59) do # 23:59 in Lagos: still Sunday
+      assert_not ThisSunday.for(@user).past?
+    end
+    travel_to Time.utc(2026, 11, 22, 23, 1) do # 00:01 Monday in Lagos
+      sunday = ThisSunday.for(@user)
+      assert sunday.past?
+      assert_equal @service, sunday.study
+      assert_equal "Last Sunday, 22 Nov", sunday.served_label
+      assert_equal Date.new(2026, 11, 29), sunday.date
+      assert_equal 4, sunday.items.size
+    end
+  end
+
+  test "an older queue nobody opened since the service is not this Sunday's either" do
+    @service.update_columns(last_served_at: Time.utc(2026, 11, 22, 9))
+    @old.update_columns(last_opened_at: Time.utc(2026, 11, 19, 9)) # before the service
+    sunday = ThisSunday.for(@user, today: monday)
+    assert sunday.past?
+    assert_equal @service, sunday.study
+  end
+
+  test "a queue opened (or planned) since the last service is this Sunday's" do
+    @service.update_columns(last_served_at: Time.utc(2026, 11, 22, 9))
+    @old.update_columns(last_opened_at: Time.utc(2026, 11, 23, 8))
+    assert_equal @old, ThisSunday.for(@user, today: monday).study
+    assert_not ThisSunday.for(@user, today: monday).past?
+
+    @old.update_columns(last_opened_at: Time.utc(2026, 11, 19, 9))
+    planned = @user.studies.create!(name: "Service · 29 Nov 2026", pane_count: 1, planned_for: Date.new(2026, 11, 29),
+                                    last_opened_at: Time.utc(2026, 11, 20))
+    sunday = ThisSunday.for(@user, today: monday)
+    assert_equal planned, sunday.study, "a planned service counts even before anything is queued"
+    assert_not sunday.past?
+  end
+
+  test "Keep using it makes a served queue this Sunday's again" do
+    @service.update_columns(last_served_at: Time.utc(2026, 11, 22, 9))
+    @service.keep_for_next_service!
+    sunday = ThisSunday.for(@user, today: monday)
+    assert_equal @service, sunday.study
+    assert_not sunday.past?
+  end
+
+  test "archived copies (Start fresh) are never this Sunday" do
+    travel_to Time.utc(2026, 11, 22, 9) { @service.mark_served! }
+    travel_to Time.utc(2026, 11, 23, 9) do
+      archive = @service.start_fresh!(key: "tmp-archive-test")
+      sunday = ThisSunday.for(@user)
+      assert_not_equal archive, sunday.study
+      assert_equal @service, sunday.study, "the emptied queue is planned for the coming Sunday"
+      assert_not sunday.past?
+    end
+  end
+
+  test "a midweek service reads as the last service, with its weekday" do
+    @service.update_columns(last_served_at: Time.utc(2026, 11, 18, 18))
+    @old.update_columns(last_opened_at: Time.utc(2026, 11, 10))
+    sunday = ThisSunday.for(@user, today: Date.new(2026, 11, 19))
+    assert sunday.past?
+    assert_equal "Last service, Wed 18 Nov", sunday.served_label
+  end
 end

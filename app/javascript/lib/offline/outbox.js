@@ -37,7 +37,9 @@ export function subscribe(fn) {
 }
 
 // Changes the reader would call "changes": not where a pane was moved to.
-const COUNTED = (op) => op.kind !== "pane"
+// Background bookkeeping the reader never made as an edit (where a pane was,
+// that a service happened) isn't counted as "changes waiting".
+const COUNTED = (op) => op.kind !== "pane" && op.kind !== "service-served"
 
 export async function pendingOps() {
   try { return (await getAll("outbox")).sort((a, b) => a.seq - b.seq) } catch { return [] }
@@ -243,6 +245,43 @@ export async function queueSetlistOrder(studyId, keys, owner) {
   return upsert({
     kind: "setlist-order", key: `slo:${studyId}`, owner, url: `${setlistBase(studyId)}/order`, method: "PATCH", format: "json",
     body: { order: keys }, setlist: { studyId: String(studyId), action: "order", order: keys }
+  })
+}
+
+// ---- services (Study::Serving) ------------------------------------------------
+// The queue went live: one op per study per day (the device checks first, and
+// the key coalesces repeats); the server keeps the first time of each day.
+export function queueServed(studyId, at, owner) {
+  const url = `/studies/${studyId}/service/served`
+  return upsert({ kind: "service-served", key: `served:${studyId}:${String(at).slice(0, 10)}`, owner, url, method: "POST", format: "json", body: { at } })
+}
+
+// "Keep using it": the served queue counts as this Sunday's again.
+export function queueServiceKeep(studyId, owner) {
+  const url = `/studies/${studyId}/service/keep`
+  return upsert({ kind: "service-keep", key: `service-keep:${studyId}`, owner, url, method: "POST", format: "json", body: {} })
+}
+
+// "Start fresh": the server moves the whole queue (whatever reached it before
+// this op — the outbox replays in order) into an archived copy. It is also a
+// setlist op ("clear"), so a reload before it syncs still shows the empty queue.
+export function queueStartFresh(studyId, key, servedOn, owner) {
+  return upsert({
+    kind: "setlist-clear", key: `setlist-clear:${key}`, owner, url: `/studies/${studyId}/service/start_fresh`,
+    method: "POST", format: "json", body: { key, served_on: servedOn || "" },
+    setlist: { studyId: String(studyId), action: "clear", cid: key }
+  })
+}
+
+// Undo a start fresh. The clear may already be on the server (or on the wire),
+// so the restore always goes too — the server ignores a key it never archived.
+// `items` (what the queue held) put the list back on a reload before it syncs.
+export async function queueUndoStartFresh(studyId, key, items, owner) {
+  await removeOps((o) => o.owner === owner && o.key === `setlist-clear:${key}`)
+  return upsert({
+    kind: "setlist-restore", key: `setlist-restore:${key}`, owner, url: `/studies/${studyId}/service/undo`,
+    method: "POST", format: "json", body: { key },
+    setlist: { studyId: String(studyId), action: "restore", cid: key, items }
   })
 }
 

@@ -4,7 +4,7 @@ class GuideController < ApplicationController
 
   # The full illustrated tutorial / field guide. Open to everyone.
   def show
-    @resume = authenticated? ? current_user.studies.recent.first : nil
+    @resume = authenticated? ? current_user.studies.shelf.recent.first : nil
   end
 
   def dismiss

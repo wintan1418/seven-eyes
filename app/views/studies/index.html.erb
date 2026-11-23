@@ -18,7 +18,7 @@
     <div class="hm-glow" aria-hidden="true"></div>
     <div class="hm-lead">
       <% if @sunday %>
-        <%= render "studies/home/sunday", sunday: @sunday %>
+        <%= render "studies/home/sunday", sunday: @sunday, templates: @service_templates %>
       <% end %>
       <%= render "studies/home/today", word: @daily_word, art: @verse_art, guest:, status: @today_status,
                  daypart: @daypart, fixed: @daypart_fixed %>

@@ -1,0 +1,21 @@
+<%# Top of the queue: "This queue was used on Sunday 22 November. Start fresh
+    for Sunday 29 November?" The service_reset controller decides on the
+    device whether to show it (served on an earlier day, not answered yet, the
+    queue not empty), so a page saved for offline use is right too.
+    Start fresh → the setlist controller archives the queue (Undo); Keep using
+    it → not asked again until the next service. Signed-in owners only; never
+    on Quick Present or an archived copy.
+    locals: study %>
+<% if authenticated? && study.user_id == current_user.id && !study.quick_present? && !study.archived? %>
+  <div class="ps-service-reset" role="region" aria-label="Last week's queue" hidden
+       data-controller="service-reset"
+       data-service-reset-study-value="<%= study.id %>"
+       data-service-reset-served-on-value="<%= study.served_on&.iso8601 %>"
+       data-service-reset-dismissed-for-value="<%= study.served_on&.iso8601 if study.kept_for_next_service? %>">
+    <p class="msg" data-service-reset-target="text">This queue was used on an earlier day. Start fresh?</p>
+    <div class="acts">
+      <button type="button" class="go" data-action="service-reset#startFresh">Start fresh</button>
+      <button type="button" class="keep" data-action="service-reset#keep">Keep using it</button>
+    </div>
+  </div>
+<% end %>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_19_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_23_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -541,8 +541,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_19_150000) do
     t.datetime "updated_at", null: false
     t.bigint "user_id"
     t.boolean "quick_present", default: false, null: false
+    t.datetime "last_served_at"
+    t.datetime "service_kept_at"
+    t.date "planned_for"
+    t.datetime "archived_at"
+    t.bigint "archived_from_id"
+    t.string "archive_key"
+    t.index ["archive_key"], name: "index_studies_on_archive_key", unique: true, where: "(archive_key IS NOT NULL)"
+    t.index ["archived_from_id"], name: "index_studies_on_archived_from_id", where: "(archived_from_id IS NOT NULL)"
     t.index ["share_token"], name: "index_studies_on_share_token", unique: true, where: "(share_token IS NOT NULL)"
     t.index ["user_id", "last_opened_at"], name: "index_studies_on_user_id_and_last_opened_at"
+    t.index ["user_id", "last_served_at"], name: "index_studies_on_user_id_and_last_served_at", where: "(last_served_at IS NOT NULL)"
     t.index ["user_id"], name: "index_studies_on_user_id"
     t.index ["user_id"], name: "index_studies_one_quick_present_per_user", unique: true, where: "quick_present"
   end
@@ -675,6 +684,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_19_150000) do
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "song_collections", "users"
   add_foreign_key "songs", "users"
+  add_foreign_key "studies", "studies", column: "archived_from_id", on_delete: :nullify
   add_foreign_key "studies", "users"
   add_foreign_key "verses", "books"
   add_foreign_key "verses", "translations"

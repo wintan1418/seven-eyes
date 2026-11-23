@@ -233,6 +233,36 @@ body > .ps-root.hm-root { height: 100vh; height: 100dvh; display: flex; flex-dir
 .hm-sunday-btn.is-primary:hover { background: var(--ui-accent-hover); }
 .hm-sunday-btn:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
 
+/* After last Sunday: "Plan this Sunday" (studies/home/_sunday_plan). */
+.hm-sunday-last { margin: 2px 0 0; min-width: 0; }
+.hm-sunday-last-link {
+  display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; max-width: 100%;
+  font: 400 13.5px/1.4 var(--ui-font); color: var(--ui-fg-muted); text-decoration: none;
+}
+.hm-sunday-last-link .when { font-weight: 600; color: var(--ui-fg); }
+.hm-sunday-last-link .name { min-width: 0; overflow-wrap: anywhere; }
+.hm-sunday-last-link:hover .name { text-decoration: underline; }
+.hm-sunday-form { display: contents; }
+.hm-sunday-form > .hm-sunday-btn, .hm-sunday-actions > button.hm-sunday-btn { border: 0; cursor: pointer; width: 100%; }
+.hm-sunday-actions.is-plan .hm-sunday-btn span { min-width: 0; }
+.hm-sunday-actions.is-plan .hm-sunday-btn.is-primary { grid-row: 1; grid-column: 1 / -1; }
+.hm-sunday-templates ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.hm-sunday-templates form { display: contents; }
+.hm-sunday-template {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 44px; padding: 0 14px;
+  border: 1px solid var(--ui-border); border-radius: 12px; background: transparent; color: var(--ui-fg); cursor: pointer;
+  font: 500 14px var(--ui-font); text-align: left;
+}
+.hm-sunday-template:hover { background: var(--ui-surface); }
+.hm-sunday-template .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hm-sunday-template .meta { flex: 0 0 auto; font-size: 12.5px; color: var(--ui-fg-subtle); }
+.hm-sunday-template:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+.hm-sunday-note { margin: 0; font: 400 13px/1.45 var(--ui-font); color: var(--ui-fg-muted); }
+.hm-sunday-foot { margin: -2px 0 0; font: 500 13px var(--ui-font); }
+.hm-sunday-past-link { color: var(--ui-accent); text-decoration: none; }
+.hm-sunday-past-link:hover { text-decoration: underline; }
+.hm-sunday.is-offline .hm-sunday-form .hm-sunday-btn, .hm-sunday.is-offline .hm-sunday-template { opacity: 0.55; pointer-events: none; }
+
 @media (max-width: 767px) {
   .hm-sunday { gap: 12px; padding: 18px 18px 16px; }
   .hm-sunday-item { padding: 6px 0; }
@@ -272,6 +302,8 @@ body > .ps-root.hm-root { height: 100vh; height: 100dvh; display: flex; flex-dir
   .hm-sunday-btn { min-height: 42px; padding: 0 8px; gap: 5px; font-size: 13px; border-radius: 11px; }
   .hm-sunday-btn svg { width: 15px; height: 15px; }
   .hm-sunday-btn.is-primary { grid-row: auto; grid-column: auto; order: -1; }
+  .hm-sunday-actions.is-plan { grid-template-columns: 1fr 1fr; }
+  .hm-sunday-actions.is-plan .hm-sunday-btn.is-primary { grid-row: 1; grid-column: 1 / -1; }
   .hm-sunday-btn { white-space: nowrap; min-width: 0; }
 }
 @media (max-width: 420px) { .hm-sunday-btn:not(.is-primary) svg { display: none; } }

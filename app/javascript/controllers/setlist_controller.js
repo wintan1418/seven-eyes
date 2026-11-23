@@ -4,8 +4,10 @@ import { warmLocal, localState } from "../lib/offline/local_pane"
 import { referenceLabel } from "../lib/offline/reference_parser"
 import {
   queueSetlistCreate, queueSetlistUpdate, queueSetlistDestroy, cancelSetlistDestroy, queueSetlistOrder,
-  setlistOps, flushOutbox, subscribe, newTempId
+  setlistOps, flushOutbox, subscribe, newTempId, queueStartFresh, queueUndoStartFresh
 } from "../lib/offline/outbox"
+import { markServed } from "../lib/offline/served"
+import { serviceName } from "../lib/service_day"
 import { isNetworkSlow, quickFetch } from "../lib/offline/network"
 import { owner } from "../lib/offline/page"
 import { splitReferences, mergeQueue, moveItem, queueKey, nextUp, serverKey } from "../lib/offline/setlist_state"
@@ -40,6 +42,11 @@ import { pictureDisplay, samePicture } from "../lib/picture_fit"
 //        preach:passage {reference} (auto-add what went on screen), preach:enter,
 //        setlist:edit-song {title, body, arrangement} (the song bank's "Edit first"),
 //        setlist:picture {cid, fit?, zoom?} (the Picture Bank: how a picture fills the screen)
+//        setlist:start-fresh {servedOn, undone} (the service_reset banner: last
+//        week's queue moves to an archived copy, with Undo)
+//
+// A service: the first time on a day that a queue item goes live in preach
+// mode, the server hears it once (lib/offline/served → Study::Serving).
 //
 // Songs: the words may carry section labels and an order ("V1 C V2 C") — the
 // song editor (song_editor controller) helps write them; lib/song_sheet turns
@@ -76,6 +83,7 @@ export default class extends Controller {
       "setlist:open": () => this.open(),
       "setlist:edit-song": (e) => this._editSong(e.detail),
       "setlist:picture": (e) => this._setPicture(e.detail),
+      "setlist:start-fresh": (e) => this._startFresh(e.detail || {}),
       // The slide tools (scripture set composer, presentation import, seminar
       // builder, service templates, order of service) — lib/slides, *_controller.
       "setlist:add-item": (e) => {
@@ -217,7 +225,7 @@ export default class extends Controller {
     const since = new Map()
     ops.forEach((op) => {
       const key = op.setlist.action === "order" ? "order" : op.setlist.cid
-      if (op.setlist.action === "destroy") return // gone from the list already
+      if ([ "destroy", "clear", "restore" ].includes(op.setlist.action)) return // not one row's change
       since.set(key, Math.min(since.get(key) ?? Infinity, op.createdAt || Date.now()))
     })
     this._pending = since
@@ -680,6 +688,46 @@ export default class extends Controller {
     this._liveCid = cid
     this._paintMarks()
     this._save()
+    if (this._preaching() && this.items.some((i) => i.cid === cid)) this._served()
+  }
+
+  // Something from this queue is on the screen: today is a service day.
+  _served() {
+    markServed(this.studyId, owner()).then((queued) => { if (queued) this._kick() }).catch(() => {})
+  }
+
+  // ---- start fresh (last week's queue) -------------------------------------------
+
+  // The whole queue moves to an archived copy on the server ("Service · 22 Nov
+  // 2026", a past service) and this one is empty for the coming Sunday. Undo
+  // for a few seconds puts it back — the server copy is folded back in too.
+  _startFresh({ servedOn = null, undone = null } = {}) {
+    if (!this.studyId || !this.items.length) return
+    if (this._editing) this._endEdit()
+    const key = newTempId()
+    const old = this.items.map((i) => ({ ...i }))
+    const liveCid = this._liveCid
+    this.items = []
+    this._liveCid = null
+    this._selected = null
+    this._render()
+    this._save()
+    this._enqueue(() => queueStartFresh(this.studyId, key, servedOn, owner()))
+    const name = serviceName(servedOn)
+    this._toast(`Started fresh — the ${old.length} ${old.length === 1 ? "item is" : "items are"} kept in ${name}`, {
+      undo: () => this._undoStartFresh(key, old, liveCid, undone)
+    })
+  }
+
+  _undoStartFresh(key, old, liveCid, undone) {
+    this._hideToast()
+    const since = this.items.filter((i) => !old.some((o) => o.cid === i.cid))
+    this.items = [ ...old, ...since ]
+    this._liveCid = liveCid
+    this._render()
+    this._save()
+    this._enqueue(() => queueUndoStartFresh(this.studyId, key, old, owner()))
+    undone?.()
   }
 
   // N: preview whatever is next after the live item.

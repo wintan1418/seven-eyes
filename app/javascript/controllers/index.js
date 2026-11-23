@@ -194,6 +194,7 @@ const LAZY_CONTROLLERS = {
   "search-page": () => import("./search_page_controller"),
   "seminar-builder": () => import("./seminar_builder_controller"),
   "service-templates": () => import("./service_templates_controller"),
+  "service-reset": () => import("./service_reset_controller"),
   "setlist": () => import("./setlist_controller"),
   "share-card": () => import("./share_card_controller"),
   "shatter-slider": () => import("./shatter_slider_controller"),

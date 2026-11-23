@@ -1,0 +1,46 @@
+<% content_for :title, "Past services · BiblioRata" %>
+<%# Past services: every service whose queue went live (Study::Serving),
+    newest first — the studies themselves and the archived copies "Start
+    fresh" made in the preach console. Open one to look back, or Reuse its
+    order for the coming Sunday (a new service, ServicesController#create). %>
+<div class="ps-root ui-more-page ui-services-page">
+  <%= render "studies/app_bar", title: "Past services" %>
+  <%= render "studies/menu_sheet", studies: @studies %>
+
+  <main class="ui-more-main ui-services-main">
+    <section class="ui-menu-section" aria-labelledby="sv-title">
+      <h1 class="sv-title" id="sv-title">Past services</h1>
+      <p class="ui-offline-intro">
+        Every service you projected, newest first. Open one to look back, or reuse its order for
+        Sunday <%= l(Study.next_sunday, format: "%-d %B") %>.
+      </p>
+      <% if @services.any? %>
+        <ol class="sv-list">
+          <% @services.each do |service| %>
+            <% on = service.served_on %>
+            <li class="sv-row">
+              <%= link_to study_path(service, queue: 1), class: "sv-open" do %>
+                <span class="sv-when">
+                  <span class="d"><%= on.strftime("%-d") %></span>
+                  <span class="m"><%= on.strftime("%b") %></span>
+                </span>
+                <span class="sv-body">
+                  <span class="sv-name"><%= service.name %></span>
+                  <span class="sv-meta">
+                    <%= on.strftime("%A %-d %B %Y") %> &middot; <%= pluralize(@counts[service.id] || 0, "item") %>
+                  </span>
+                </span>
+              <% end %>
+              <%= button_to services_path, params: { from: service.id }, class: "ui-btn sv-reuse",
+                    title: "A new service for the coming Sunday with this order",
+                    form: { class: "sv-reuse-form" } do %><%= icon(:repeat) %><span>Reuse</span><% end %>
+            </li>
+          <% end %>
+        </ol>
+      <% else %>
+        <p class="sv-empty">No services yet. When something from a study&rsquo;s queue goes live in preach mode,
+          that service is kept here.</p>
+      <% end %>
+    </section>
+  </main>
+</div>

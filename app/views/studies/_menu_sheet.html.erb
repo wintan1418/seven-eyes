@@ -1,7 +1,7 @@
 <%# The ☰ menu: your studies, new study, plans, help, account.
     locals: studies (relation/array), active_id (optional), study (optional) %>
 <% active_id = local_assigns[:active_id] %>
-<% studies = local_assigns[:studies] || (authenticated? ? current_user.studies.recent.limit(30) : []) %>
+<% studies = local_assigns[:studies] || (authenticated? ? current_user.studies.shelf.recent.limit(30) : []) %>
 <div class="ui-sheet ui-sheet--left" data-controller="sheet" data-sheet-id-value="menu" data-chrome hidden>
   <div class="ui-sheet-backdrop" data-action="click->sheet#close"></div>
   <section class="ui-sheet-panel" role="dialog" aria-modal="true" aria-label="Menu" tabindex="-1">
@@ -55,6 +55,7 @@
         <% if authenticated? %>
           <%= link_to reading_plans_path, class: "ui-menu-item" do %><%= icon(:calendar) %> Reading plans<% end %>
           <%= link_to media_assets_path, class: "ui-menu-item" do %><%= icon(:image) %> My Media<% end %>
+          <%= link_to services_path, class: "ui-menu-item" do %><%= icon(:queue) %> Past services<% end %>
         <% end %>
         <% if faith_glossary_visible? %>
           <%= link_to faith_terms_path, class: "ui-menu-item" do %><%= icon(:word) %> Glossary of the Faith<% end %>

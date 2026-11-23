@@ -34,9 +34,9 @@ class ServiceTemplate < ApplicationRecord
 
   # A new study for `user` with this order in its queue. Items that no longer
   # validate (say, a reference the parser has since stopped reading) are skipped.
-  def start!(date: Date.current)
+  def start!(date: Study.next_sunday)
     transaction do
-      study = user.studies.create!(name: "#{name} — #{date.strftime('%-d %b %Y')}", pane_count: 1)
+      study = user.studies.create!(name: "#{name} — #{date.strftime('%-d %b %Y')}", pane_count: 1, planned_for: date)
       first_scripture = items.find { |i| i["kind"] == "scripture" }
       study.panes.first&.update(reference: first_scripture["reference"]) if first_scripture
       assets = library_assets

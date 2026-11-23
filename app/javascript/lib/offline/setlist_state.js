@@ -77,7 +77,8 @@ function defaultLabel(p) {
 const sameItem = (a, b) => a.cid === b.cid || (a.id != null && b.id != null && String(a.id) === String(b.id))
 
 // `ops` are outbox records carrying op.setlist = { action, cid, item, fields,
-// position, order }, oldest first. Replaying one twice changes nothing.
+// position, order, items }, oldest first. Replaying one twice changes nothing.
+// "clear" (Start fresh) empties the list; "restore" (its Undo) puts `items` back.
 export function applyOps(items, ops) {
   let list = items.map((i) => ({ ...i }))
   for (const op of ops) {
@@ -93,6 +94,11 @@ export function applyOps(items, ops) {
       list = list.filter((i) => i.cid !== s.cid && !(s.id != null && String(i.id) === String(s.id)))
     } else if (s.action === "order") {
       list = arrange(list, s.order || [])
+    } else if (s.action === "clear") { // "Start fresh": the queue moved to an archived copy
+      list = []
+    } else if (s.action === "restore") { // its Undo: those items back on top
+      const back = (s.items || []).filter((i) => !list.some((x) => sameItem(x, i))).map((i) => ({ ...i }))
+      list = [ ...back, ...list ]
     }
   }
   return list

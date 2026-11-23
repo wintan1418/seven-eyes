@@ -30,6 +30,15 @@ Rails.application.routes.draw do
     end
   end
 
+  # Services that happened (the queue went live) and planning the next one.
+  resources :services, only: %i[ index create ]
+  scope "/studies/:study_id/service", controller: :services, as: :study_service do
+    post :served
+    post :keep
+    post :start_fresh
+    post :undo
+  end
+
   # My Media: the account's picture library (HTML page + JSON for the console).
   resources :media_assets, path: "media", only: %i[ index create update destroy ]
 

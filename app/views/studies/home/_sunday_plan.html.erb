@@ -1,0 +1,57 @@
+<%# This Sunday, once last Sunday's service has happened (its queue went live on
+    an earlier day — Study::Serving): the last service in one line, and "Plan
+    this Sunday" — Start fresh (an empty service for the coming Sunday), Reuse
+    last Sunday's order (a copy of its queue) or a service template. Creating a
+    service needs a connection (sunday_card marks the card offline).
+    locals: sunday (ThisSunday, past), templates (ServiceTemplate list) %>
+<% last = sunday.study %>
+<section class="hm-sunday is-plan" aria-labelledby="hm-sunday-title"
+         data-controller="sunday-card" data-sunday-card-url-value="<%= study_path(last) %>"
+         data-sunday-card-plan-value="true">
+  <div class="hm-sunday-head">
+    <p class="hm-sunday-eyebrow"><span aria-hidden="true">✠</span> <%= sunday.date == sunday.today ? "Today" : "This Sunday" %> &middot; <%= l(sunday.date, format: "%-d %B") %></p>
+    <h2 class="hm-sunday-title" id="hm-sunday-title">Plan this Sunday</h2>
+    <p class="hm-sunday-last">
+      <%= link_to study_path(last), class: "hm-sunday-last-link" do %>
+        <span class="when"><%= sunday.served_label %></span>
+        <span aria-hidden="true">&middot;</span>
+        <span class="name"><%= last.name %></span>
+        <span aria-hidden="true">&middot;</span>
+        <span class="count"><%= pluralize(sunday.items.size, "item") %></span>
+      <% end %>
+    </p>
+  </div>
+
+  <div class="hm-sunday-actions is-plan">
+    <%= button_to services_path, class: "hm-sunday-btn is-primary", form: { class: "hm-sunday-form is-primary" } do %>
+      <%= icon(:plus) %> Start fresh
+    <% end %>
+    <%= button_to services_path, params: { from: last.id }, class: "hm-sunday-btn", form: { class: "hm-sunday-form" } do %>
+      <%= icon(:repeat) %><span>Reuse <span class="hm-wide-only">last Sunday&rsquo;s </span>order</span>
+    <% end %>
+    <button type="button" class="hm-sunday-btn" aria-expanded="false" aria-controls="hm-sunday-templates"
+            data-action="sunday-card#templates" data-sunday-card-target="templatesToggle">
+      <%= icon(:columns) %> Use a template
+    </button>
+  </div>
+
+  <div class="hm-sunday-templates" id="hm-sunday-templates" data-sunday-card-target="templates" hidden>
+    <% if templates.any? %>
+      <ul aria-label="Service templates">
+        <% templates.each do |template| %>
+          <li>
+            <%= button_to start_service_template_path(template.client_id), class: "hm-sunday-template" do %>
+              <span class="nm"><%= template.name %></span>
+              <span class="meta"><%= pluralize(template.items.size, "item") %></span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="hm-sunday-note">No templates yet. In a service&rsquo;s queue, &#9776; Templates saves its order to reuse.</p>
+    <% end %>
+  </div>
+
+  <p class="hm-sunday-note is-offline-only" data-sunday-card-target="offline" hidden>Planning a new service needs internet &mdash; you can still open last Sunday&rsquo;s.</p>
+  <p class="hm-sunday-foot"><%= link_to "Past services", services_path, class: "hm-sunday-past-link" %></p>
+</section>
