@@ -130,3 +130,18 @@ test("a picture from My Media keeps its library id through a reload and a replay
   const merged = mergeQueue({ server: [], ops: [ { setlist: { action: "create", cid: "tmp-q", item, position: 0 } } ] })
   assert.equal(merged[0].media_asset_id, 4)
 })
+
+test("Start fresh (clear) empties the queue; adds after it stay; its Undo (restore) puts the old items back on top", () => {
+  const server = [ srv(1, "Psalms 4"), srv(2, "Jeremiah 10:10") ]
+  const clear = { setlist: { action: "clear", cid: "tmp-fresh" } }
+  assert.deepEqual(mergeQueue({ server, serverTime: 100, ops: [ clear ] }), [])
+  // A create made before Start fresh goes with the old queue; one made after stays.
+  const after = mergeQueue({ server, serverTime: 100, ops: [ create("tmp-a", "John 1:1", 2), clear, create("tmp-b", "John 3:16", 0) ] })
+  assert.deepEqual(after.map((i) => i.label), [ "John 3:16" ])
+  const old = mergeQueue({ server, serverTime: 100 })
+  const restore = { setlist: { action: "restore", cid: "tmp-fresh", items: old } }
+  const undone = applyOps(after, [ restore ])
+  assert.deepEqual(undone.map((i) => i.label), [ "Psalms 4", "Jeremiah 10:10", "John 3:16" ])
+  // Replaying the restore (or restoring onto a list that already has them) adds no twins.
+  assert.deepEqual(applyOps(undone, [ restore ]).map((i) => i.label), undone.map((i) => i.label))
+})

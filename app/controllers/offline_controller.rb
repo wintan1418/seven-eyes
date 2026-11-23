@@ -73,7 +73,7 @@ class OfflineController < ApplicationController
     quick = QuickPresent.ensure!(current_user)
     pane = quick.panes.first
     translation = pane&.effective_translation
-    recent = current_user.studies.where(quick_present: false).recent.limit(RECENT_OFFLINE)
+    recent = current_user.studies.shelf.where(quick_present: false).recent.limit(RECENT_OFFLINE)
     render json: {
       quick_present: {
         id: quick.id, url: study_path(quick), name: quick.name, reference: pane&.reference,

@@ -6,14 +6,20 @@
     Phones (under 640px): a compact card — title, date, one summary line
     (items · what's still to do) and the three buttons; the order of service
     and the checks fold out (sunday_card#toggle). Laptops show everything.
-    locals: sunday (ThisSunday) %>
+    Once the last service has happened (ThisSunday#past?) the card is
+    studies/home/_sunday_plan instead: last Sunday in one line, and "Plan this
+    Sunday" (start fresh, reuse its order, or a template).
+    locals: sunday (ThisSunday), templates (ServiceTemplate list, past card only) %>
+<% if sunday.past? %>
+  <%= render "studies/home/sunday_plan", sunday: sunday, templates: local_assigns[:templates] || [] %>
+<% else %>
 <% study = sunday.study %>
 <% counts = sunday.counts %>
 <% todo = sunday.checks.count { |c| c.state == :todo } %>
 <section class="hm-sunday" aria-labelledby="hm-sunday-title"
          data-controller="sunday-card" data-sunday-card-url-value="<%= study_path(study) %>">
   <div class="hm-sunday-head">
-    <p class="hm-sunday-eyebrow"><span aria-hidden="true">✠</span> <%= sunday.date == DailyWord.today_date ? "Today" : "This Sunday" %> &middot; <%= l(sunday.date, format: "%-d %B") %></p>
+    <p class="hm-sunday-eyebrow"><span aria-hidden="true">✠</span> <%= sunday.date == sunday.today ? "Today" : "This Sunday" %> &middot; <%= l(sunday.date, format: "%-d %B") %></p>
     <h2 class="hm-sunday-title" id="hm-sunday-title"><%= illuminated(study.name) %></h2>
     <p class="hm-sunday-counts">
       <%= [ (pluralize(counts[:scripture], "scripture") if counts[:scripture].positive?),
@@ -63,3 +69,4 @@
     <%= link_to study_path(study, ready: 1), class: "hm-sunday-btn", data: { turbo_prefetch: false } do %><%= icon(:download) %><span>Get ready<span class="hm-wide-only"> for Sunday</span></span><% end %>
   </div>
 </section>
+<% end %>

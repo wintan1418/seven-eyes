@@ -32,7 +32,7 @@ class ServiceTemplatesController < ApplicationController
     study = template.start!
     respond_to do |format|
       format.json { render json: { url: study_path(study), id: study.id }, status: :created }
-      format.html { redirect_to study_path(study) }
+      format.html { redirect_to study_path(study, queue: 1) }
     end
   end
 

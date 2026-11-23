@@ -12,6 +12,7 @@
         <%= link_to root_path, class: "ui-menu-item" do %><%= icon(:notes) %> Your studies &amp; notes<% end %>
         <%= link_to reading_plans_path, class: "ui-menu-item" do %><%= icon(:calendar) %> Reading plans<% end %>
         <%= link_to media_assets_path, class: "ui-menu-item" do %><%= icon(:image) %> My Media &mdash; your pictures for any service<% end %>
+        <%= link_to services_path, class: "ui-menu-item" do %><%= icon(:queue) %> Past services &mdash; reopen or reuse one<% end %>
         <%= link_to account_path, class: "ui-menu-item" do %><%= icon(:user) %> Account<% end %>
       <% else %>
         <p class="ui-menu-note">Sign in to keep your studies, notes, highlights and reading plans on every device.</p>

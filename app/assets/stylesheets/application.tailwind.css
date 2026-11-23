@@ -31,6 +31,7 @@
 @import "./ui/today.css"; /* the Today flow (/today/begin) */
 @import "./ui/faith_admin.css"; /* glossary review desk: Rewrite with AI */
 @import "./ui/media.css"; /* My Media (/media): the account's picture library */
+@import "./ui/services.css"; /* Past services (/services) */
 @import "./ui/native.css";
 @import "./ui/offline.css";
 @import "./application_rules.css";

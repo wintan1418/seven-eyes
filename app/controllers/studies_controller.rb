@@ -28,13 +28,14 @@ class StudiesController < ApplicationController
   def index
     @daily_word = DailyWord.today
     if authenticated?
-      @studies = current_user.studies.recent.includes(panes: :translation).limit(HOME_STUDIES).to_a
+      @studies = current_user.studies.shelf.recent.includes(panes: :translation).limit(HOME_STUDIES).to_a
       @resume = @studies.find { |s| !s.quick_present? }
       @active_plan = current_user.reading_plans.recent.first
       @plan_progress = @active_plan&.progress
       @show_guide = current_user.guide_dismissed_at.blank?
       @today_status = DailyCompletion.status_for(current_user)
       @sunday = ThisSunday.for(current_user) if current_user.pastor_mode?
+      @service_templates = current_user.service_templates.recent_first.limit(8).to_a if @sunday&.past?
       set_faith_term_of_the_day
       @for_you = ForYou.call(studies: @studies, terms: @faith_visible_terms, active_plan: @active_plan, skip_term: @faith_term)
     elsif hotwire_native_app?
@@ -63,7 +64,7 @@ class StudiesController < ApplicationController
     # not the reader opening the study: don't reshuffle "recent" or prompt.
     precache = request.headers["X-Offline-Precache"].present?
     @study.touch_opened! unless precache
-    @studies = authenticated? ? current_user.studies.recent : []
+    @studies = authenticated? ? current_user.studies.shelf.recent : []
     # ?verse=2-4 (search results, key verses): mark those verses in pane I.
     @focus_verses = ChapterFocus.clean(params[:verse])
     # A returning reader with a shelf of studies is a happy one — offer the

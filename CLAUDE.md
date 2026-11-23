@@ -402,6 +402,21 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   in /more): `ThisSunday` card first on Home (phones <640px: compact —
   summary line + 3 buttons; the order of service folds out via `sunday_card#toggle`) — order of service, readiness, Open service
   (`?queue=1`), Present (`?present=1`), Get ready (`?ready=1` runs `sunday_ready`).
+  **Services that happened** (Nov 2026, `Study::Serving`): the first time on a day a queue item goes
+  live in preach mode, `setlist#_setLive` → `lib/offline/served.js` queues one `POST
+  /studies/:id/service/served {at}` per study per day (outbox op `service-served`, not counted as a
+  pending change; device meta `served:<id>`) → `studies.last_served_at`. Days are the app calendar
+  (`Study.service_date`, Lagos — no per-user zone yet; JS `lib/service_day.js`, node-tested). Once
+  that day has passed, `ThisSunday` treats the study as past (unless "Keep using it"), and Home
+  shows `studies/home/_sunday_plan`: "Last Sunday, 22 Nov · name · N items" + Plan this Sunday —
+  Start fresh (`POST /services`), Reuse (`POST /services {from}` → `copy_service!`), a template
+  (`planned_for` marks a new service as this Sunday's even while empty). The queue shows
+  `studies/_service_reset` (`service_reset` controller, decided on the device): Start fresh →
+  `setlist:start-fresh` → outbox op `setlist-clear` (`POST …/service/start_fresh {key}` moves the
+  items into an archived copy "Service · 22 Nov 2026": `archived_at`/`archived_from_id`/
+  `archive_key`, never This Sunday, hidden from study lists via `Study.shelf`) with an Undo toast
+  (`setlist-restore` → `…/service/undo`); Keep using it → `…/service/keep` (`service_kept_at`).
+  `/services` lists past services (menu, More, Home card) to reopen or reuse.
 - **Audio Bible player** (Nov 2026) — `reader` controller (per pane) has three engines: `audio`
   (server narration — human KJV / AI voices — in one shared `<audio>`), `speech` (browser
   speechSynthesis) and `native` (Android app's `BiblioRataNative`); the phone voices speak one verse

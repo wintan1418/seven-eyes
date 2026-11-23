@@ -1,4 +1,6 @@
 class Study < ApplicationRecord
+  include Study::Serving
+
   belongs_to :user, optional: true # nil = a guest's session-scoped study
   # Every pane ever made for this study, including ones hidden when the pane
   # count was lowered. Hidden panes keep their reference and notes so raising
@@ -20,6 +22,9 @@ class Study < ApplicationRecord
   after_create :build_default_panes
 
   scope :recent, -> { order(Arel.sql("last_opened_at DESC NULLS LAST, updated_at DESC")) }
+  # The studies a reader works in: not the archived copies "Start fresh" made
+  # (those are listed under Past services).
+  scope :shelf, -> { unarchived }
 
   def touch_opened!
     update_column(:last_opened_at, Time.current)

@@ -407,6 +407,11 @@
 }
 .ps-root.is-console .ps-setlist-panel .ps-drawer-head,
 .ps-root.is-console .ps-setlist-panel .ui-sunday { display: none; }
+.ps-root.is-console .ps-service-reset {
+  margin: 8px 10px 6px; background: rgba(232, 178, 74, 0.12); color: var(--cx-text); border-color: rgba(232, 178, 74, 0.45);
+}
+.ps-root.is-console .ps-service-reset .go { background: #e8b24a; border-color: #e8b24a; color: #1c140c; }
+.ps-root.is-console .ps-service-reset .keep { color: var(--cx-text); border-color: var(--cx-line-2); }
 .ps-root.is-console .ps-console {
   position: static !important; padding: 0 !important; background: none !important; border: 0 !important; display: contents !important;
 }
