@@ -251,9 +251,11 @@ export async function queueSetlistOrder(studyId, keys, owner) {
 // ---- services (Study::Serving) ------------------------------------------------
 // The queue went live: one op per study per day (the device checks first, and
 // the key coalesces repeats); the server keeps the first time of each day.
-export function queueServed(studyId, at, owner) {
+// `name` (the study's) lets Past services show the service before it syncs.
+export function queueServed(studyId, at, owner, name = null) {
   const url = `/studies/${studyId}/service/served`
-  return upsert({ kind: "service-served", key: `served:${studyId}:${String(at).slice(0, 10)}`, owner, url, method: "POST", format: "json", body: { at } })
+  return upsert({ kind: "service-served", key: `served:${studyId}:${String(at).slice(0, 10)}`, owner, url, method: "POST", format: "json", body: { at },
+                  studyId: String(studyId), name: name || null })
 }
 
 // "Keep using it": the served queue counts as this Sunday's again.
@@ -302,6 +304,7 @@ export function requestBackgroundSync() {
 }
 
 let flushing = null
+const REPLAY_TIMEOUT_MS = 20_000
 
 // Replay queued ops in order. Resolves to { sent, pending, stopped }.
 export function flushOutbox() {
@@ -321,11 +324,17 @@ async function replay() {
     if (!owner || op.owner !== owner) continue
     const url = await resolveIds(op.url)
     let res
+    // "Data on but dead" never answers: give up after a while instead of
+    // holding the outbox (and every later flush) for minutes.
+    const controller = typeof AbortController === "function" ? new AbortController() : null
+    const timer = controller && setTimeout(() => controller.abort(), REPLAY_TIMEOUT_MS)
     try {
-      res = await fetch(url, requestFor(op, token))
+      res = await fetch(url, { ...requestFor(op, token), signal: controller?.signal })
     } catch {
       stopped = "offline"
       break
+    } finally {
+      clearTimeout(timer)
     }
 
     if (res.status === 401 || res.redirected) { stopped = "signed-out"; break }

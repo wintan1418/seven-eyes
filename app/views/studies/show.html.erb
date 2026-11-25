@@ -14,6 +14,7 @@
      data-live-active-code-value="<%= LiveSession.current_for(@study)&.code unless output_window %>"
      data-remote-url-value="<%= study_remote_path(@study) %>"
      data-setlist-library-url-value="<%= library_study_setlist_items_path(@study) %>"
+     data-setlist-study-name-value="<%= @study.name %>"
      data-song-bank-url-value="<%= library_study_setlist_items_path(@study) %>"
      data-presentation-quick-find-url-value="<%= quick_find_study_path(@study) %>"
      data-font-size="<%= authenticated? ? current_user.font_size : 0 %>"

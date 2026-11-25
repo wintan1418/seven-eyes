@@ -8,6 +8,47 @@ export { getMeta, setMeta }
 
 export const MANIFEST_URL = "/offline/bibles"
 
+// ---- an in-memory copy for preach mode --------------------------------------
+// Every Go live renders a passage from here; on a slow laptop each IndexedDB
+// read is a round trip to the browser process that can wait behind the
+// queue's own writes, so the manifest, the download list and the last few
+// books are kept in memory. Stale-while-revalidate: a copy older than
+// LIBRARY_FRESH_MS answers at once and is re-read in the background. Any
+// download, removal or new manifest (in any tab or the worker) drops it.
+const LIBRARY_FRESH_MS = 30_000
+const BOOKS_KEPT = 6
+const LIBRARY_CHANNEL = "ps-library"
+let library = { manifest: null, bibles: null, books: new Map() }
+let libraryChannel = null
+let libraryGen = 0 // a read that started before a change mustn't store what it read
+
+function forgetLibrary() {
+  libraryGen++
+  library = { manifest: null, bibles: null, books: new Map() }
+}
+
+// Drop the copy here and in every other tab / the worker.
+export function libraryChanged() {
+  forgetLibrary()
+  try { (libraryChannel ||= new BroadcastChannel(LIBRARY_CHANNEL)).postMessage("changed") } catch { /* none */ }
+}
+
+try {
+  libraryChannel = new BroadcastChannel(LIBRARY_CHANNEL)
+  libraryChannel.onmessage = () => forgetLibrary()
+} catch { /* no BroadcastChannel */ }
+
+// { value, at } → value, refreshing a stale entry in the background.
+function remembered(slot, read) {
+  const entry = slot.get()
+  if (entry && Date.now() - entry.at < LIBRARY_FRESH_MS) return Promise.resolve(entry.value)
+  const gen = libraryGen
+  const fresh = read().then((value) => { if (gen === libraryGen) slot.set({ value, at: Date.now() }); return value })
+  if (!entry) return fresh
+  fresh.catch(() => {})
+  return Promise.resolve(entry.value)
+}
+
 // ---- manifest -------------------------------------------------------------
 
 export async function fetchManifest() {
@@ -15,15 +56,20 @@ export async function fetchManifest() {
   if (!res.ok) throw new Error(`manifest ${res.status}`)
   const manifest = await res.json()
   await setMeta("manifest", manifest)
+  libraryChanged()
   return manifest
 }
 
-export const storedManifest = () => getMeta("manifest")
+export const storedManifest = () => remembered(
+  { get: () => library.manifest, set: (e) => { library.manifest = e } },
+  () => getMeta("manifest"))
 
 // ---- Bibles ---------------------------------------------------------------
 
 export async function downloadedBibles() {
-  try { return await getAll("bibles") } catch { return [] }
+  try {
+    return await remembered({ get: () => library.bibles, set: (e) => { library.bibles = e } }, () => getAll("bibles"))
+  } catch { return [] }
 }
 
 export async function downloadedBible(code) {
@@ -95,6 +141,7 @@ async function fetchBible(summary, { onProgress = () => {}, signal } = {}) {
     bundle.books.forEach((b) => books.put({ code: bundle.code, osis: b.osis, chapters: b.chapters }))
     tx.objectStore("bibles").put(record)
   })
+  libraryChanged()
   onProgress(1)
   return record
 }
@@ -104,10 +151,21 @@ export async function removeBible(code) {
     tx.objectStore("books").delete(IDBKeyRange.bound([ code, "" ], [ code, "￿" ]))
     tx.objectStore("bibles").delete(code)
   })
+  libraryChanged()
 }
 
 export async function bookText(code, osis) {
-  try { return await get("books", [ code, osis ]) } catch { return undefined }
+  const key = `${code}|${osis}`
+  const kept = library.books.get(key)
+  if (kept) { library.books.delete(key); library.books.set(key, kept); return kept } // most recent last
+  const gen = libraryGen
+  let record
+  try { record = await get("books", [ code, osis ]) } catch { return undefined }
+  if (record && gen === libraryGen) {
+    library.books.set(key, record)
+    while (library.books.size > BOOKS_KEPT) library.books.delete(library.books.keys().next().value)
+  }
+  return record
 }
 
 const bookRange = (code) => IDBKeyRange.bound([ code, "" ], [ code, "\uffff" ])
@@ -143,13 +201,17 @@ export async function requestPersistence() {
 // different types never match.
 const normalize = (h) => ({ ...h, verse_id: Number(h.verse_id) })
 
+// One read for the whole passage (it was one per verse — 176 round trips for
+// Psalm 119): every highlight between the lowest and highest verse id, then
+// only those on these verses.
 export async function highlightsFor(verseIds) {
-  const out = []
-  for (const raw of verseIds) {
-    const id = Number(raw)
-    try { out.push(...await getAllByIndex("highlights", "verse_id", id)) } catch { /* none */ }
-  }
-  return out
+  const ids = verseIds.map(Number).filter((n) => Number.isFinite(n))
+  if (!ids.length) return []
+  const wanted = new Set(ids)
+  try {
+    const range = IDBKeyRange.bound(Math.min(...ids), Math.max(...ids))
+    return (await getAllByIndex("highlights", "verse_id", range)).filter((h) => wanted.has(Number(h.verse_id)))
+  } catch { return [] }
 }
 
 export async function replaceHighlights(list) {

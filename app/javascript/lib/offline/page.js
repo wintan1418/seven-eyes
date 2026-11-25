@@ -7,7 +7,7 @@
 //   • replays the outbox on load and when the connection comes back,
 //   • refreshes the cached highlights now and then.
 import { getMeta, setMeta, downloadedBibles, refreshHighlights, clearPersonal } from "./store"
-import { flushOutbox, pendingCount, pendingOps, subscribe } from "./outbox"
+import { flushOutbox, pendingOps, subscribe } from "./outbox"
 
 const HIGHLIGHTS_EVERY_MS = 10 * 60 * 1000
 
@@ -77,16 +77,15 @@ async function refreshIfStale() {
   await refreshHighlights().catch(() => {})
 }
 
+// Anything waiting goes — the background ops too (where a pane was, that a
+// service happened), which the "changes waiting" count leaves out: a service
+// projected offline must reach Past services once the signal is back.
 export async function syncNow() {
   if (!navigator.onLine) return null
-  if (!(await pendingCount().catch(() => 0)) && !(await hasPaneVisits())) return null
+  if (!(await pendingOps().catch(() => [])).length) return null
   const result = await flushOutbox().catch(() => null)
   if (result?.sent && signedIn()) await refreshHighlights().catch(() => {})
   return result
-}
-
-async function hasPaneVisits() {
-  return (await pendingOps()).some((op) => op.kind === "pane")
 }
 
 export function clearSavedPages() {
