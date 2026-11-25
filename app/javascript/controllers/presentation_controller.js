@@ -817,6 +817,9 @@ export default class extends Controller {
     if (!input) { done?.(); return }
     if (remember) this._remember()
     this._clearSlide({ repaint: false })
+    // The chapter is already on the screen (Rev 19:10 live, Rev 19:11 called):
+    // _submitPane lands on the verse like Next does — no re-render, no reads.
+    this._sameChapter = !html && this._showsChapter(pane, chapterReference) ? pane : null
     input.value = chapterReference
     const split = this._isSplit()
     this._passagesLoading++
@@ -862,10 +865,24 @@ export default class extends Controller {
     })
   }
 
+  // Does `pane` already show the whole of `chapterReference`, settled (no load
+  // in flight)? Its form names the chapter once a load of it has finished.
+  _showsChapter(pane, chapterReference) {
+    if (this._passagesLoading > 0 || this._isSplit()) return false
+    const current = pane.querySelector("input[name='pane[reference]']")?.value || ""
+    if (current.trim().toLowerCase() !== String(chapterReference).trim().toLowerCase()) return false
+    return !!pane.querySelector(".ps-verses .ps-verse")
+  }
+
   // Load the pane's form (reference/translation already set): from the
   // downloaded Bible when it has the passage, else through Turbo as usual
   // (where the service worker still has its own offline fallback).
   _submitPane(pane, { mirror = false } = {}) {
+    if (this._sameChapter === pane && !mirror) {
+      this._sameChapter = null
+      pane.dispatchEvent(new CustomEvent("preach:chapter-shown"))
+      return
+    }
     const form = pane.querySelector("form.rd-pane-form") ||
       pane.querySelector("input[name='pane[reference]']")?.form
     if (!form) return
@@ -882,6 +899,7 @@ export default class extends Controller {
       if (done) return
       done = true
       clearTimeout(timer)
+      pane.removeEventListener("preach:chapter-shown", onLoad)
       pane.removeEventListener("turbo:frame-load", onLoad)
       pane.removeEventListener("turbo:fetch-request-error", onError)
       pane.removeEventListener("turbo:frame-missing", onError)
@@ -890,6 +908,7 @@ export default class extends Controller {
     const onLoad = () => finish(true)
     const onError = () => finish(false)
     const timer = setTimeout(() => finish(false), LOAD_TIMEOUT_MS)
+    pane.addEventListener("preach:chapter-shown", onLoad, { once: true })
     pane.addEventListener("turbo:frame-load", onLoad)
     pane.addEventListener("turbo:fetch-request-error", onError)
     pane.addEventListener("turbo:frame-missing", onError)

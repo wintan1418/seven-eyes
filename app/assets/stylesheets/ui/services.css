@@ -26,3 +26,11 @@
   .sv-reuse span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .sv-reuse { padding: 0 12px; }
 }
+.sv-list[hidden], .sv-empty[hidden] { display: none; }
+.sv-tag {
+  display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; vertical-align: 2px;
+  font: 600 11px/1.5 var(--ui-font); letter-spacing: 0.02em; color: var(--ui-accent); background: var(--ui-surface);
+}
+/* Projected with no signal: shown from the device until it syncs. */
+.sv-row.is-pending { box-shadow: inset 0 0 0 1px var(--ui-border), inset 3px 0 0 var(--ui-accent); }
+.sv-wait { flex: 0 0 auto; font: 500 12.5px/1.3 var(--ui-font); color: var(--ui-fg-muted); padding: 0 6px; }

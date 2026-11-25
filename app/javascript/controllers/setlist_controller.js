@@ -55,12 +55,13 @@ const AUTO_QUEUE_KEY = "ps-autoqueue"
 const DOCK_QUERY = "(min-width: 1100px)"
 const WAITING_AFTER_MS = 2500 // a change not saved by then is shown as waiting for the network
 const RETRY_EVERY_MS = 10_000
+const SAVE_COALESCE_MS = 150
 const UNDO_MS = 6000
 
 export default class extends Controller {
   static targets = [ "host", "form", "list", "reference", "hint", "error", "title", "body", "arrangement", "submit", "cancel",
     "nextUp", "autoQueue" ]
-  static values = { libraryUrl: String }
+  static values = { libraryUrl: String, studyName: String }
 
   initialize() {
     this.items = []
@@ -98,7 +99,8 @@ export default class extends Controller {
       "preview:changed": (e) => { this._previewCid = e.detail?.cid || null; this._paintMarks() },
       "preach:passage": (e) => this._autoAdd(e.detail?.reference),
       "preach:enter": () => { if (window.matchMedia?.(DOCK_QUERY).matches) this.open() },
-      online: () => this._kick({ force: true })
+      online: () => this._kick({ force: true }),
+      pagehide: () => { if (this._saveTimer) this._saveNow() }
     }
     Object.entries(this._listeners).forEach(([ name, fn ]) => window.addEventListener(name, fn))
     this._unsubscribe = subscribe((m) => this._onOutbox(m))
@@ -111,6 +113,7 @@ export default class extends Controller {
 
   disconnect() {
     if (this._output) return
+    if (this._saveTimer) this._saveNow()
     Object.entries(this._listeners || {}).forEach(([ name, fn ]) => window.removeEventListener(name, fn))
     this._unsubscribe?.()
     clearInterval(this._retryTimer)
@@ -196,7 +199,19 @@ export default class extends Controller {
     return `setlist:${this.studyId}`
   }
 
+  // The device's copy of the queue. A Go live calls this several times (live
+  // mark, then each outbox notice): one write a moment later, not one per
+  // call — on a slow laptop every IndexedDB write is a disk flush that the
+  // next read waits behind. Written at once when the page goes away.
   _save() {
+    if (!this.studyId) return
+    clearTimeout(this._saveTimer)
+    this._saveTimer = setTimeout(() => this._saveNow(), SAVE_COALESCE_MS)
+  }
+
+  _saveNow() {
+    clearTimeout(this._saveTimer)
+    this._saveTimer = null
     if (!this.studyId) return
     const record = { items: this.items, syncedAt: this._syncedAt, failed: this._failed, liveCid: this._liveCid || null }
     setMeta(this._metaKey(), record).catch(() => {})
@@ -693,7 +708,8 @@ export default class extends Controller {
 
   // Something from this queue is on the screen: today is a service day.
   _served() {
-    markServed(this.studyId, owner()).then((queued) => { if (queued) this._kick() }).catch(() => {})
+    markServed(this.studyId, owner(), new Date(), this.studyNameValue || null)
+      .then((queued) => { if (queued) this._kick() }).catch(() => {})
   }
 
   // ---- start fresh (last week's queue) -------------------------------------------

@@ -11,8 +11,9 @@ const WORDS_WAIT_MS = 2500 // Enter in Words mode waits this long for the list
 // library region of _console, operator window only.
 //
 //   reference box   typing lists the chapter in the verse list below (preview
-//                   controller, preview:typing). Enter → Preview, Shift+Enter →
-//                   straight to the screen, Ctrl/⌘+Enter → the service list.
+//                   controller, preview:typing). Enter → Preview, Shift+Enter
+//                   (or L right after a reference) → straight to the screen,
+//                   Ctrl/⌘+Enter → the service list.
 //                   A bare number is a verse of the chapter on screen; words
 //                   that aren't a reference search the Scriptures through the
 //                   Go box's own path (AI, or on-device keywords offline) —
@@ -75,14 +76,19 @@ export default class extends Controller {
     }
     if (/^\d+$/.test(raw)) { this._hint(`↵ Verse ${raw} of the chapter on screen`, "ok"); return }
     const local = localCheck(text)
-    if (local?.ok) this._hint(`↵ ${local.label || local.chapter_reference} — Enter to preview, Shift+Enter to put it on the screen`, "ok")
+    if (local?.ok) this._hint(`↵ ${local.label || local.chapter_reference} — Enter to preview, L or Shift+Enter to put it on the screen`, "ok")
     else if (local && mode === "reference") this._hint("Not a reference yet — try John 3:16, jn 3 16, 1cor13:4-7 · Alt+W searches the words", "error")
     else if (local) this._hint(`Matching verses list below as you type — click to preview, double-click to go live · ↓ to walk them · Enter previews the first`, "search")
     else this._hint("↵ Enter to look it up", "wait")
   }
 
   key(event) {
-    if (event.key === "Enter") {
+    if (this._liveKey(event)) {
+      // "Rev 19:10" then L: the operator's "go live" key, not a letter to type.
+      event.preventDefault()
+      event.stopPropagation()
+      this.live()
+    } else if (event.key === "Enter") {
       event.preventDefault()
       event.stopPropagation()
       if (event.metaKey || event.ctrlKey) this.queue()
@@ -235,6 +241,18 @@ export default class extends Controller {
     this.inputTarget.select()
     this.inputTarget.blur()
     this._hint("Done — G or / types the next one. L puts Preview on the screen.", "ok")
+  }
+
+  // L with the caret at the end of a finished reference ("rev 19:10", "12"):
+  // no reference goes on with a letter after its numbers, so it means "put it
+  // on the screen" — the same as Shift+Enter. Anything else types an L.
+  _liveKey(event) {
+    if (event.key !== "l" && event.key !== "L") return false
+    if (event.metaKey || event.ctrlKey || event.altKey || this._mode === "words") return false
+    const input = this.inputTarget
+    const value = input.value
+    if (!/\d$/.test(value) || input.selectionStart !== value.length || input.selectionEnd !== value.length) return false
+    return !!this._reference(value.trim())
   }
 
   _raw() {

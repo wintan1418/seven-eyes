@@ -9,11 +9,14 @@
 # NetworkUnplug.hanging simulates the worse case a church gets: "data on but
 # dead" — requests are accepted and never answered (navigator.onLine stays
 # true), until the flag is cleared (or 30 s pass).
+#
+# NetworkUnplug.delay = seconds: a weak signal — every request is answered,
+# just that much later.
 class NetworkUnplug
   HANG_LIMIT = 30
 
   class << self
-    attr_accessor :unplugged, :hanging
+    attr_accessor :unplugged, :hanging, :delay
   end
 
   def initialize(app)
@@ -25,6 +28,7 @@ class NetworkUnplug
       deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + HANG_LIMIT
       sleep 0.05 while self.class.hanging && Process.clock_gettime(Process::CLOCK_MONOTONIC) < deadline
     end
+    sleep self.class.delay if self.class.delay
     if self.class.unplugged && env["rack.hijack"]
       io = env["rack.hijack"].call
       io.close rescue nil # rubocop:disable Style/RescueModifier
@@ -46,7 +50,13 @@ module OfflineTestHelper
     NetworkUnplug.hanging = true
   end
 
+  # A weak signal: every request is answered, `seconds` late.
+  def go_slow_network(seconds = 3)
+    NetworkUnplug.delay = seconds
+  end
+
   def go_online
+    NetworkUnplug.delay = nil
     NetworkUnplug.hanging = false
     NetworkUnplug.unplugged = false
     page.driver.browser.execute_cdp("Network.emulateNetworkConditions",

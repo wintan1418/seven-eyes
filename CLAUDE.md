@@ -213,6 +213,14 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   marks the network "slow" for 3 min, shared with the service worker). AI quick find falls back to
   an on-device keyword search after 3 s ("Offline search (keywords)"). Entering preach auto-downloads
   the study's translations for signed-in users; `preach_offline` badge shows "Ready offline".
+  **Go live never waits on the disk** (Nov 2026, an operator's "offline projection is slow"): a
+  verse in the chapter already presented just moves the highlight (`_showsChapter` →
+  `preach:chapter-shown`, no re-render); `store.js` keeps the manifest, download list and last 6
+  books in memory (stale-while-revalidate, dropped on any download/removal/new manifest via the
+  `ps-library` channel); `highlightsFor` is one ranged read, not one per verse; the queue's device
+  copy is written once per burst (`_save` coalesces). `L` right after a reference in the console's
+  box goes live (Shift+Enter). Timed in `test/system/offline_projection_speed_test.rb` (15 ms per
+  IndexedDB read, key press → operator Live and projector < 250 ms; was ~500 ms).
 - **Start presenting offline (Quick Present)** — each user has one `studies.quick_present` study
   (`QuickPresent.ensure!`, `POST /offline/prepare`, unique per user). `lib/offline/ready.js`, on
   any page load when online (once a day, meta `offlinePreparedAt`), makes it, saves its study /
@@ -416,7 +424,10 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   items into an archived copy "Service · 22 Nov 2026": `archived_at`/`archived_from_id`/
   `archive_key`, never This Sunday, hidden from study lists via `Study.shelf`) with an Undo toast
   (`setlist-restore` → `…/service/undo`); Keep using it → `…/service/keep` (`service_kept_at`).
-  `/services` lists past services (menu, More, Home card) to reopen or reuse.
+  `/services` lists past services (menu, More, Home card) to reopen or reuse — today's too (tagged
+  Today), and a service projected offline shows from the device's outbox ("waiting to sync",
+  `past_services` controller; the served op carries the study name) until its ping syncs. `syncNow`
+  flushes background-only ops (served pings, pane visits) on load / `online` as well.
 - **Audio Bible player** (Nov 2026) — `reader` controller (per pane) has three engines: `audio`
   (server narration — human KJV / AI voices — in one shared `<audio>`), `speech` (browser
   speechSynthesis) and `native` (Android app's `BiblioRataNative`); the phone voices speak one verse

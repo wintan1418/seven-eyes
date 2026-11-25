@@ -228,13 +228,33 @@ class ServicesTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "today's service is not listed as past yet" do
+  # An operator checking right after the service looked for it here ("it's
+  # not showing what I did today") — today's service is listed, marked Today.
+  test "today's service is listed too, marked Today" do
     serve!
     travel_to sunday + 1.hour do
       get services_path
-      assert_select ".sv-row", 0
-      assert_select ".sv-empty"
+      assert_select ".sv-row", 1
+      assert_select ".sv-row[data-study-id=?][data-served-on=?]", @study.id.to_s, "2026-11-22"
+      assert_select ".sv-row .sv-name", text: /Psalms 4/
+      assert_select ".sv-row .sv-tag", text: "Today"
+      assert_select ".sv-empty[hidden]"
     end
+    travel_to monday do
+      get services_path
+      assert_select ".sv-row .sv-tag", 0 # yesterday's is just a past service
+    end
+  end
+
+  test "with no services the empty note shows" do
+    get services_path
+    assert_select ".sv-list[hidden]"
+    assert_select ".sv-empty:not([hidden])"
+  end
+
+  test "the study page tells the queue its name (for a service projected offline)" do
+    get study_path(@study)
+    assert_select "[data-setlist-study-name-value=?]", "Psalms 4"
   end
 
   test "Past services needs an account" do

@@ -12,7 +12,7 @@ const sentToday = new Set() // "study|day": no IndexedDB read for every slide
 export const servedKey = (studyId) => `served:${studyId}`
 export const dismissedKey = (studyId) => `serviceDismissed:${studyId}`
 
-export async function markServed(studyId, owner, now = new Date()) {
+export async function markServed(studyId, owner, now = new Date(), name = null) {
   if (!studyId || !owner || owner === "guest") return false
   const day = serviceToday(now)
   const memo = `${studyId}|${day}`
@@ -21,7 +21,7 @@ export async function markServed(studyId, owner, now = new Date()) {
   try {
     if ((await getMeta(servedKey(studyId))) === day) return false
     await setMeta(servedKey(studyId), day)
-    await queueServed(studyId, now.toISOString(), owner)
+    await queueServed(studyId, now.toISOString(), owner, name)
     return true
   } catch {
     sentToday.delete(memo) // no IndexedDB: try again next time
