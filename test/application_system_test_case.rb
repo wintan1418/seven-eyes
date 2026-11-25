@@ -1,6 +1,23 @@
 require "test_helper"
 require_relative "test_helpers/offline_test_helper"
 
+# Capybara 3.40 resets the browser with Storage.clearDataForOrigin for origin
+# "*", which Chrome 158 rejects ("* is not a valid URL") — every system test
+# then errors in teardown. Clear the test server's origin instead.
+require "capybara/selenium/driver"
+require "capybara/selenium/driver_specializations/chrome_driver"
+module ClearStorageForTestOrigin
+  def execute_cdp(cmd, params = {})
+    if cmd == "Storage.clearDataForOrigin" && params[:origin] == "*"
+      server = Capybara.current_session.server
+      return unless server
+      params = params.merge(origin: server.base_url)
+    end
+    super
+  end
+end
+Capybara::Selenium::Driver::ChromeDriver.prepend(ClearStorageForTestOrigin)
+
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   include OfflineTestHelper
   driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1000 ]
@@ -14,7 +31,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 
   # Lets offline tests cut the test server off (see OfflineTestHelper).
   Capybara.app = NetworkUnplug.new(Capybara.app) unless Capybara.app.is_a?(NetworkUnplug)
-  teardown { NetworkUnplug.unplugged = false; NetworkUnplug.hanging = false }
+  teardown { NetworkUnplug.unplugged = false; NetworkUnplug.hanging = false; NetworkUnplug.delay = nil }
 
   # Capybara resets the session (and waits up to 60 s for the server's open
   # requests) before `teardown` blocks run: let hanging requests go first, or a
@@ -24,6 +41,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   ensure
     NetworkUnplug.unplugged = false
     NetworkUnplug.hanging = false
+    NetworkUnplug.delay = nil
   end
 
   # Every test starts on a clean device. The app saves pages and downloads the

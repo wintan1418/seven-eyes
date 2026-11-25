@@ -1,6 +1,6 @@
 # Services: a study's queue as something that happened on a day (Study::Serving).
 #
-#   GET  /services                          Past services — reopen or reuse one
+#   GET  /services                          Past services (today's too) — reopen or reuse one
 #   POST /services                          plan the coming Sunday: an empty service,
 #                                           or a copy of an old one's order (from:)
 #   POST /studies/:study_id/service/served  the queue went live (the device sends
@@ -17,10 +17,12 @@ class ServicesController < ApplicationController
 
   PAST_LIMIT = 60
 
+  # Today's service is listed too (marked Today): an operator checking right
+  # after a service looks for it here. A service projected with no signal is
+  # added on the device until its "served" ping syncs (past_services controller).
   def index
-    today = Study.service_today
-    @services = current_user.studies.served.where(last_served_at: ...service_day_start(today))
-                            .limit(PAST_LIMIT).to_a
+    @today = Study.service_today
+    @services = current_user.studies.served.limit(PAST_LIMIT).to_a
     @counts = SetlistItem.where(study_id: @services.map(&:id)).group(:study_id).count
     @studies = current_user.studies.shelf.recent.limit(30)
   end
@@ -73,6 +75,4 @@ class ServicesController < ApplicationController
   def require_account
     head :unauthorized unless authenticated?
   end
-
-  def service_day_start(day) = day.in_time_zone(DailyWord::TIME_ZONE).beginning_of_day
 end
