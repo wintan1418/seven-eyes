@@ -12,6 +12,8 @@ import { richPreviewNodes } from "../lib/slides/rich_slides"
 import { wordFromDetail } from "../lib/root_words"
 import { renderPreviewWord } from "../lib/root_word_slide"
 import { DEFAULTS as SET_DEFAULTS, setLabel } from "../lib/slides/scripture_set"
+import { passagesFor, copyText } from "../lib/slides/item_words"
+import { combineParts, clipboardText } from "../lib/slides/combine"
 
 // Preview → Live, EasyWorship-style, on the operator screen only (never on the
 // ?output=1 projector or the ?stage=1 pulpit screen). Lives on .ps-root.
@@ -36,7 +38,7 @@ const SEARCH_LIMIT = 30
 
 export default class extends Controller {
   static targets = [ "console", "liveLabel", "queueLive", "previewCard", "previewLabel", "previewText", "queuePreview",
-    "goLive", "verseList", "verseListTitle", "verseRows" ]
+    "goLive", "verseList", "verseListTitle", "verseRows", "editPreview", "copyPreview" ]
 
   initialize() {
     this._preview = null // {kind, reference, label, title, body, image, cid}
@@ -50,7 +52,7 @@ export default class extends Controller {
     if (this.element.classList.contains("is-output")) return
     this._listeners = {
       "preview:load": (e) => this.load(e.detail),
-      "preview:typing": (e) => this._typed(e.detail?.raw, e.detail?.mode),
+      "preview:typing": (e) => this._typed(e.detail?.raw, e.detail?.mode, e.detail),
       "preview:golive": () => this.goLive(),
       "preach:state": (e) => this._liveState(e.detail),
       "setlist:changed": (e) => { this._queued = new Set(e.detail?.keys || []); this._paintQueueButtons() }
@@ -248,7 +250,60 @@ export default class extends Controller {
     window.dispatchEvent(new CustomEvent("setlist:add", { detail: { kind: "scripture", reference: this._live.label } }))
   }
 
+  // ---- Edit (combine into one slide) / Copy what is in Preview ---------------------------
+
+  // A scripture or scripture slide in Preview: its words in the combine editor
+  // (lib/slides/combine) — edit, emphasise, save as one slide. A slide made
+  // there opens again for editing.
+  editSlide(event) {
+    event?.preventDefault?.()
+    const p = this._preview
+    const sources = this._previewSources()
+    if (!p || !sources) return
+    let item = null
+    if (p.cid && p.rich?.data?.combined) {
+      window.dispatchEvent(new CustomEvent("setlist:request-items", { detail: { reply: (items) => { item = items.find((i) => i.cid === p.cid) || null } } }))
+    }
+    window.dispatchEvent(new CustomEvent("queue-tool:open", { detail: item
+      ? { tool: "combine", item }
+      : { tool: "combine", sources, translation: this._translationCode() } }))
+  }
+
+  async copy(event) {
+    event?.preventDefault?.()
+    const sources = this._previewSources()
+    if (!sources) return
+    const { passages } = await passagesFor(sources, { translation: this._translationCode() })
+    if (!passages.length) { this._flashCopy("No words to copy"); return }
+    const ok = await copyText(clipboardText(combineParts(passages)))
+    this._flashCopy(ok ? "Copied" : "Couldn't copy")
+  }
+
+  _flashCopy(text) {
+    if (!this.hasCopyPreviewTarget) return
+    const btn = this.copyPreviewTarget
+    btn.textContent = text
+    clearTimeout(this._copyTimer)
+    this._copyTimer = setTimeout(() => { btn.textContent = "Copy" }, 1600)
+  }
+
+  _previewSources() {
+    const p = this._preview
+    if (!p) return null
+    if (p.kind === "scripture") return [ { kind: "scripture", reference: p.label || p.reference } ]
+    if (p.rich?.type === "set") return [ { kind: "scripture_set", data: p.rich.data } ]
+    return null
+  }
+
+  _translationCode() {
+    const pane = this.element.querySelector(".ps-pane.is-presented") || this.element.querySelector(".ps-pane")
+    return pane?.querySelector("select[name='pane[translation_id]'] option:checked")?.textContent?.trim() || null
+  }
+
   _paintQueueButtons() {
+    const words = !!this._previewSources()
+    if (this.hasEditPreviewTarget) this.editPreviewTarget.hidden = !words
+    if (this.hasCopyPreviewTarget) this.copyPreviewTarget.hidden = !words
     if (this.hasQueuePreviewTarget) {
       const p = this._preview
       const key = p && queueKey(p.kind === "scripture" ? { kind: "scripture", label: p.label } : { kind: p.itemKind, title: p.title, body: p.body })
@@ -350,10 +405,17 @@ export default class extends Controller {
   // `mode` (lib/scripture_mode): "words" always searches the words,
   // "reference" never does (a text that isn't a reference lists nothing),
   // "auto" (or none, e.g. the Go box) guesses as before.
-  async _typed(raw, mode = "auto") {
+  // `book` ({osis, name, strict}): the words searched inside that book only
+  // (console_library's book scope); `query` is the box's whole text.
+  async _typed(raw, mode = "auto", { book = null, query = null } = {}) {
     const text = (raw || "").trim()
     clearTimeout(this._searchTimer)
     this._searchMode = mode
+    if (book) {
+      this._typedSeq = (this._typedSeq || 0) + 1
+      if (queryWords(text).length) this._searchTimer = setTimeout(() => this._searchTyped(text, { book, query: query || text }), SEARCH_DELAY_MS)
+      return
+    }
     if (!text || (mode !== "words" && /^\d+$/.test(text))) return
     const p = mode === "words" ? null : localState().parse?.(text)
     if (mode === "reference" && p && !p.valid) { this._typedSeq = (this._typedSeq || 0) + 1; return }
@@ -520,7 +582,8 @@ export default class extends Controller {
       event.preventDefault()
       event.stopPropagation()
       const next = event.key === "ArrowDown" ? row.nextElementSibling : row.previousElementSibling
-      next?.querySelector(".pick")?.focus()
+      if (next) next.querySelector(".pick")?.focus()
+      else this._turnListPage(event.key === "ArrowDown" ? 1 : -1) // off the chapter: the one next to it
     } else if (event.key === "Enter") {
       event.preventDefault()
       event.stopPropagation()
@@ -533,6 +596,23 @@ export default class extends Controller {
     }
   }
 
+  // ↑ on a chapter's first verse / ↓ on its last: the list turns to the chapter
+  // before / after (across books: Matthew 1 ↑ → Malachi 4), the keyboard on
+  // its last / first verse — the same continuation as Next / Prev on screen.
+  async _turnListPage(direction) {
+    if (!this._list || this._list.search) return
+    const reference = await neighbourChapter(this._list.osis, this._list.chapter, direction)
+    if (!reference) return
+    const chapter = await this._chapter(reference)
+    if (!chapter?.verses?.length) return
+    this._showList(chapter)
+    this._flashTitle()
+    const rows = this.verseRowsTarget.querySelectorAll(".vrow .pick")
+    const target = direction > 0 ? rows[0] : rows[rows.length - 1]
+    target?.focus()
+    target?.closest(".vrow")?.scrollIntoView?.({ block: "nearest" })
+  }
+
   // ---- search as you type ----------------------------------------------------------------
   // Words that aren't a reference ("neither male nor female") list the
   // matching verses at once — the downloaded Bible first (no network), the
@@ -541,15 +621,23 @@ export default class extends Controller {
   // Click previews, double-click goes live; Enter in the box previews the
   // first verse holding every word (console_library).
 
-  async _searchTyped(text) {
+  // In one book (`book`): nothing with all the words there and the book was
+  // only guessed from the first word ("mark of the beast") → every book.
+  async _searchTyped(text, { book = null, query = null } = {}) {
     if (!this.hasVerseListTarget || !queryWords(text).length) return
     const seq = this._typedSeq
-    const found = (await this._searchDevice(text)) || (await this._searchServer(text))
-    if (seq !== this._typedSeq || !found) return
-    this._showFound(text, found)
+    let found = (await this._searchDevice(text, book)) || (await this._searchServer(text, book))
+    if (seq !== this._typedSeq) return
+    if (book && found && !book.strict && !found.hits.some((h) => h.tier !== "partial")) {
+      const wider = (await this._searchDevice(query, null)) || (await this._searchServer(query, null))
+      if (seq !== this._typedSeq) return
+      if (wider) { this._showFound(query, wider, { key: query, widened: book }); return }
+    }
+    if (!found) return
+    this._showFound(text, found, { key: query || text, book })
   }
 
-  async _searchDevice(text) {
+  async _searchDevice(text, book = null) {
     try {
       const local = await warmLocal()
       const downloaded = local.downloaded || []
@@ -565,7 +653,7 @@ export default class extends Controller {
         this._bibles.set(pick, { records, names: new Map(canon.map((b) => [ b.osis, b.name ])), order: new Map(canon.map((b, i) => [ b.osis, i ])) })
       }
       const bible = this._bibles.get(pick)
-      const { hits } = rankVerses(bible.records, text, { order: bible.order, limit: SEARCH_LIMIT })
+      const { hits } = rankVerses(bible.records, text, { order: bible.order, limit: SEARCH_LIMIT, books: book ? new Set([ book.osis ]) : null })
       return {
         translation: pick,
         hits: hits.map((h) => ({ reference: `${bible.names.get(h.osis) || h.osis} ${h.chapter}:${h.num}`, text: h.text, parts: h.parts, tier: h.tier }))
@@ -573,25 +661,31 @@ export default class extends Controller {
     } catch { return null }
   }
 
-  async _searchServer(text) {
+  async _searchServer(text, book = null) {
     try {
-      const url = `/search.json?q=${encodeURIComponent(text)}&translation=${encodeURIComponent(this._translationId() || "")}`
+      const url = `/search.json?q=${encodeURIComponent(text)}&translation=${encodeURIComponent(this._translationId() || "")}${book ? `&in=${encodeURIComponent(book.osis)}` : ""}`
       const { res, body } = await quickFetch(url, { headers: { Accept: "application/json" } }, { timeoutMs: CHAPTER_TIMEOUT_MS, read: "json" })
       if (!res.ok || !body?.ok) return null
       return { translation: body.translation, hits: body.hits || [] }
     } catch { return null }
   }
 
-  _showFound(text, { translation, hits }) {
+  // `key`: the box's text the list answers (console_library waits for it);
+  // `book`: searched in that book; `widened`: the book had none, all books shown.
+  _showFound(text, { translation, hits }, { key = text, book = null, widened = null } = {}) {
     this._listPinnedAt = performance.now()
     this._list = { search: text }
     this._clearPicks()
     this.verseListTarget.dataset.mode = "search"
-    this.verseListTarget.dataset.query = text
+    this.verseListTarget.dataset.query = key
+    if (book) this.verseListTarget.dataset.book = book.osis
+    else delete this.verseListTarget.dataset.book
     const strong = hits.filter((h) => h.tier !== "partial").length
+    const where = book ? ` in ${book.name}` : ""
+    const note = widened ? `Nothing in ${widened.name} — every book: ` : ""
     this.verseListTitleTarget.textContent = hits.length
-      ? `${strong ? `${strong}${hits.length >= SEARCH_LIMIT && strong === hits.length ? "+" : ""}` : "No"} verse${strong === 1 ? "" : "s"} with “${text}”${strong < hits.length ? ` · then some of the words` : ""}${translation ? ` · ${translation}` : ""}`
-      : `No verses with “${text}”${translation ? ` · ${translation}` : ""}${this._searchMode === "words" ? "" : " — Enter asks the study assistant"}`
+      ? `${note}${strong ? `${strong}${hits.length >= SEARCH_LIMIT && strong === hits.length ? "+" : ""}` : "No"} verse${strong === 1 ? "" : "s"} with “${text}”${where}${strong < hits.length ? ` · then some of the words` : ""}${translation ? ` · ${translation}` : ""}`
+      : `No verses with “${text}”${where}${translation ? ` · ${translation}` : ""}${this._searchMode === "words" || book ? "" : " — Enter asks the study assistant"}`
     this.verseRowsTarget.replaceChildren(...hits.map((h) => {
       const row = el("li", "vrow is-found")
       row.classList.toggle("is-strong", h.tier !== "partial")
@@ -692,6 +786,21 @@ function el(tag, className, text) {
   if (className) node.className = className
   if (text != null) node.textContent = text
   return node
+}
+
+// "Malachi 4" before Matthew 1, "Exodus 1" after Genesis 50 — the canon the
+// device keeps (offline manifest); null at either end of the Bible.
+async function neighbourChapter(osis, chapter, direction) {
+  const canon = (await storedManifest().catch(() => null))?.canon || []
+  const i = canon.findIndex((b) => b.osis === osis)
+  if (i < 0) return null
+  const book = canon[i]
+  if (direction > 0) {
+    if (chapter < book.chapters) return `${book.name} ${chapter + 1}`
+    return canon[i + 1] ? `${canon[i + 1].name} 1` : null
+  }
+  if (chapter > 1) return `${book.name} ${chapter - 1}`
+  return canon[i - 1] ? `${canon[i - 1].name} ${canon[i - 1].chapters}` : null
 }
 
 function visibleIn(row, box) {

@@ -157,6 +157,66 @@
   </div>
 </div>
 
+<%# ---- Combine into one slide (combine_slide controller) ---- %>
+<div class="ps-tool-dialog" hidden role="dialog" aria-modal="true" aria-label="Combine into one slide"
+     data-controller="combine-slide" data-action="click->combine-slide#backdrop keydown->combine-slide#key">
+  <div class="ps-tool-card set-card cb-card">
+    <header class="tool-head">
+      <span class="ttl">&#10697; &nbsp;Combine into one slide</span>
+      <span class="sub">Edit the words, emphasise what the preacher is stressing</span>
+      <button type="button" class="close" data-action="combine-slide#close" title="Close (Esc)">&#10005;</button>
+    </header>
+    <div class="tool-body set-body">
+      <section class="set-compose">
+        <label class="fld-lbl" for="cb-label">Reference line</label>
+        <input id="cb-label" type="text" class="pv-ref-input" autocomplete="off" spellcheck="false" maxlength="80"
+               placeholder="Revelation 13:1, 11" data-combine-slide-target="label" data-action="input->combine-slide#changed">
+        <div class="cb-tools" role="toolbar" aria-label="Emphasis">
+          <span class="fld-lbl">Verses &mdash; one a line, its number first</span>
+          <button type="button" class="cb-mark is-bold" data-action="mousedown->combine-slide#keepSelection click->combine-slide#bold"
+                  title="Bold the selected words (Ctrl+B)"><b>B</b> Bold</button>
+          <button type="button" class="cb-mark is-hl" data-action="mousedown->combine-slide#keepSelection click->combine-slide#highlight"
+                  title="Highlight the selected words (Ctrl+M)"><mark>H</mark> Highlight</button>
+        </div>
+        <textarea id="cb-text" class="pv-text cb-text" rows="9" spellcheck="false" aria-label="The verses"
+                  data-combine-slide-target="text" data-action="input->combine-slide#changed"></textarea>
+        <div class="set-hint" data-combine-slide-target="hint" aria-live="polite"></div>
+        <div class="err" data-combine-slide-target="error" hidden></div>
+        <div class="set-options">
+          <div class="opt">
+            <span class="opt-lbl">Reference</span>
+            <div class="seg">
+              <button type="button" data-option="ref_position" data-value="top" data-action="combine-slide#setOption">Top</button>
+              <button type="button" data-option="ref_position" data-value="bottom" data-action="combine-slide#setOption">Bottom</button>
+            </div>
+          </div>
+          <div class="opt">
+            <span class="opt-lbl">Verse numbers</span>
+            <div class="seg">
+              <button type="button" data-option="verse_numbers" data-value="true" data-action="combine-slide#setOption">Show</button>
+              <button type="button" data-option="verse_numbers" data-value="false" data-action="combine-slide#setOption">Hide</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="set-side">
+        <div class="set-preview-head">On the screen &mdash; one slide</div>
+        <div class="set-preview" data-combine-slide-target="preview"></div>
+      </section>
+    </div>
+    <footer class="tool-foot">
+      <span class="keys"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> adds it &middot; <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd> shows it now</span>
+      <span class="cb-copied" data-combine-slide-target="copied" hidden aria-live="polite"></span>
+      <button type="button" class="btn ghost" data-action="combine-slide#copy" title="Copy the reference and verses to the clipboard">&#10697; Copy</button>
+      <button type="button" class="btn ghost" data-action="combine-slide#close">Cancel</button>
+      <button type="button" class="btn ghost is-live" data-combine-slide-target="live" data-action="combine-slide#submitLive"
+              title="Add it to the service and put it on the screen now">Add &amp; show now</button>
+      <button type="button" class="btn primary" data-combine-slide-target="submit" data-action="combine-slide#submit"
+              title="Add it to the service — it opens in Preview">Add to service</button>
+    </footer>
+  </div>
+</div>
+
 <%# ---- Presentation import (presentation_import controller) ---- %>
 <div class="ps-tool-dialog" hidden role="dialog" aria-modal="true" aria-label="Presentation"
      data-controller="presentation-import"

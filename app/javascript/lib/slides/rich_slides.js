@@ -12,7 +12,8 @@
 //   paintRichSlide(layer, rich, index)    draw step `index`; returns the element to fit (or null)
 //   paintPresenter(root, slide, index)    stage (?stage=1) presenter view: notes + timer
 //   richPreviewNodes(rich, button)        Preview's slide list (thumbnails for a deck)
-import { setPages, pageText, refLine, withDefaults } from "./scripture_set"
+import { setPages, pageText, refLine, withDefaults, verseNumber } from "./scripture_set"
+import { emphasisParts } from "./combine"
 import { seminarSteps, stepText, stepLabel, bulletsOf } from "./seminar"
 import { pageUrl, imageUrl } from "./deck_store"
 
@@ -64,8 +65,14 @@ function paintSet(layer, raw, index) {
     const ref = el("div", "set-ref", `${refLine(block)}${block.cont ? " (cont.)" : ""}`)
     const words = el("div", "set-words")
     block.verses.forEach((v, i) => {
-      if (data.verse_numbers && v.n > 0) words.append(el("sup", "set-vnum", String(v.n)))
-      words.append(document.createTextNode(`${v.text}${i < block.verses.length - 1 ? " " : ""}`))
+      if (data.verse_numbers && v.n > 0) words.append(el("sup", "set-vnum", verseNumber(v, block)))
+      // Emphasis the operator added ("Combine into one slide"): bold / highlighted words.
+      emphasisParts(v.text).forEach((part) => {
+        if (part.em === "b") words.append(el("strong", "set-em", part.text))
+        else if (part.em === "hl") words.append(el("mark", "set-hl", part.text))
+        else words.append(document.createTextNode(part.text))
+      })
+      if (i < block.verses.length - 1) words.append(document.createTextNode(" "))
     })
     if (data.ref_position === "inline") {
       words.append(document.createTextNode(" "), el("span", "set-ref is-inline", refLine(block)))

@@ -7,6 +7,14 @@
 <% errored = local_assigns[:errored] %>
 <%= turbo_frame_tag "setlist" do %>
   <% items = study.setlist_items.in_order.to_a %>
+  <%# Several items picked (Ctrl/⌘+click, Shift+click): combine them into one slide, or copy their words. %>
+  <div class="ps-pickbar" data-setlist-target="pickBar" hidden>
+    <span class="n" data-setlist-target="pickCount"></span>
+    <button type="button" class="pb-btn is-combine" data-action="setlist#combinePicked"
+            title="One slide with all of them — edit the words, bold or highlight what the preacher stresses">&#10697; Combine into one slide</button>
+    <button type="button" class="pb-btn" data-action="setlist#copyPicked" title="Copy the verses and their reference to the clipboard">Copy</button>
+    <button type="button" class="pb-x" data-action="setlist#clearPicked" title="Clear the picks (Esc)" aria-label="Clear the picks">&#10005;</button>
+  </div>
   <ol class="ps-setlist-items" tabindex="0" role="listbox" aria-label="Queue — arrow keys to pick, Enter to preview"
       data-setlist-target="list"
       data-action="keydown->setlist#listKey"

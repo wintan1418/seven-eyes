@@ -17,6 +17,8 @@ import { songSlides } from "../lib/song_sheet"
 import { richFor } from "../lib/slides/rich_slides"
 import { pageUrl } from "../lib/slides/deck_store"
 import { pictureDisplay, samePicture } from "../lib/picture_fit"
+import { passagesFor, copyText } from "../lib/slides/item_words"
+import { combineParts, clipboardText } from "../lib/slides/combine"
 
 // The preach queue ("setlist"). Lives on .ps-root.
 //
@@ -45,6 +47,11 @@ import { pictureDisplay, samePicture } from "../lib/picture_fit"
 //        setlist:start-fresh {servedOn, undone} (the service_reset banner: last
 //        week's queue moves to an archived copy, with Undo)
 //
+// Picking several (EasyWorship): Ctrl/⌘+click toggles an item, Shift+click
+// picks a run. The pick bar then offers "Combine into one slide" (the
+// combine_slide dialog: one editable slide with emphasis) and "Copy" (the
+// verses + reference on the clipboard). Esc clears the picks.
+//
 // A service: the first time on a day that a queue item goes live in preach
 // mode, the server hears it once (lib/offline/served → Study::Serving).
 //
@@ -60,7 +67,7 @@ const UNDO_MS = 6000
 
 export default class extends Controller {
   static targets = [ "host", "form", "list", "reference", "hint", "error", "title", "body", "arrangement", "submit", "cancel",
-    "nextUp", "autoQueue" ]
+    "nextUp", "autoQueue", "pickBar", "pickCount" ]
   static values = { libraryUrl: String, studyName: String }
 
   initialize() {
@@ -69,6 +76,7 @@ export default class extends Controller {
     this._pending = new Map() // cid → since (ms); "order" for a pending reorder
     this._syncedAt = 0
     this._chain = Promise.resolve()
+    this._picked = new Set() // cids picked with Ctrl/Shift+click (combine / copy)
   }
 
   connect() {
@@ -92,6 +100,7 @@ export default class extends Controller {
         e.detail.done?.(item)
         this._toast(`Added ${item.label} to the queue`)
         if (e.detail.live && this._preaching()) { this._select(item.cid); this._goLive(item) } // from the Go box: straight to the screen
+        else if (e.detail.preview && this._preaching()) { this._select(item.cid); this._preview(item) } // a combined slide: into Preview
       },
       "setlist:add-items": (e) => this._addMany(e.detail?.items || []),
       "setlist:replace-item": (e) => this._replace(e.detail?.cid, e.detail?.fields),
@@ -441,7 +450,8 @@ export default class extends Controller {
   _startEdit(item) {
     if (item.kind === "picture" || item.kind === "word") return // a word study is re-made from its root-word card
     const own = item.kind === "scripture_set" && (item.data?.refs || []).some((r) => r.own) // pasted from the pastor's own Bible
-    const tool = own ? "paste-verses" : { scripture_set: "scripture-set", presentation: "presentation", seminar: "seminar" }[item.kind]
+    const combined = item.kind === "scripture_set" && item.data?.combined // "Combine into one slide"
+    const tool = own ? "paste-verses" : combined ? "combine" : { scripture_set: "scripture-set", presentation: "presentation", seminar: "seminar" }[item.kind]
     if (tool) { window.dispatchEvent(new CustomEvent("queue-tool:open", { detail: { tool, item: { ...item } } })); return }
     this.open()
     this._editing = item.cid
@@ -641,6 +651,7 @@ export default class extends Controller {
     event?.preventDefault?.()
     const item = this._itemFor(event?.target)
     if (!item) return
+    if (event && (event.ctrlKey || event.metaKey || event.shiftKey)) { this._pick(item, { range: event.shiftKey }); return }
     this._select(item.cid)
     if (this._preaching()) { this._preview(item); return }
     const detail = this._detail(item)
@@ -817,8 +828,77 @@ export default class extends Controller {
       this.referenceTarget.focus()
     } else if (key === "Escape") {
       handled()
-      this.listTarget.blur()
+      if (this._picked.size) this.clearPicked()
+      else this.listTarget.blur()
     }
+  }
+
+  // ---- picking several: combine into one slide / copy -----------------------------------
+
+  // Ctrl/⌘+click toggles one item (the one already selected comes along, as
+  // in EasyWorship); Shift+click picks every item from the selected one.
+  _pick(item, { range = false } = {}) {
+    const a = range && this._selected !== item.cid ? this.items.findIndex((i) => i.cid === this._selected) : -1
+    const b = this.items.findIndex((i) => i.cid === item.cid)
+    if (a >= 0 && b >= 0) {
+      this.items.slice(Math.min(a, b), Math.max(a, b) + 1).forEach((i) => this._picked.add(i.cid))
+    } else {
+      if (!this._picked.size && this._selected && this._selected !== item.cid && this.items.some((i) => i.cid === this._selected)) this._picked.add(this._selected)
+      if (this._picked.has(item.cid)) this._picked.delete(item.cid)
+      else this._picked.add(item.cid)
+      this._selected = item.cid
+    }
+    this._paintMarks()
+  }
+
+  _pickedItems() {
+    return this.items.filter((i) => this._picked.has(i.cid))
+  }
+
+  clearPicked(event) {
+    event?.preventDefault?.()
+    this._picked.clear()
+    this._paintMarks()
+  }
+
+  // Scriptures (and scripture slides) picked, as sources for the words.
+  _pickedSources() {
+    return this._pickedItems().filter((i) => i.kind === "scripture" || i.kind === "scripture_set")
+      .map((i) => (i.kind === "scripture" ? { kind: "scripture", reference: i.reference || i.label } : { kind: "scripture_set", data: i.data }))
+  }
+
+  combinePicked(event) {
+    event?.preventDefault?.()
+    const sources = this._pickedSources()
+    if (!sources.length) { this._toast("Pick scriptures to combine — songs and pictures stay as they are"); return }
+    window.dispatchEvent(new CustomEvent("queue-tool:open", {
+      detail: { tool: "combine", sources, translation: this._translationCode(), done: () => this.clearPicked() }
+    }))
+  }
+
+  async copyPicked(event) {
+    event?.preventDefault?.()
+    const sources = this._pickedSources()
+    if (!sources.length) { this._toast("Pick scriptures to copy"); return }
+    const { passages, missing } = await passagesFor(sources, { translation: this._translationCode() })
+    if (!passages.length) { this._toast(`Couldn't get the words of ${missing.join(", ")}`); return }
+    const combined = combineParts(passages)
+    const ok = await copyText(clipboardText(combined))
+    this._toast(ok ? `Copied ${combined.label}${combined.translation ? ` (${combined.translation})` : ""}` : "Couldn't copy — the browser said no")
+  }
+
+  // The Bible the presented pane shows ("KJV") — where a scripture's words come from.
+  _translationCode() {
+    const pane = this.element.querySelector(".ps-pane.is-presented") || this.element.querySelector(".ps-workspace .ps-pane")
+    return pane?.querySelector("select[name='pane[translation_id]'] option:checked")?.textContent?.trim() || null
+  }
+
+  _paintPicks() {
+    this._picked.forEach((cid) => { if (!this.items.some((i) => i.cid === cid)) this._picked.delete(cid) })
+    if (!this.hasPickBarTarget) return
+    const n = this._picked.size
+    this.pickBarTarget.hidden = n === 0
+    if (this.hasPickCountTarget) this.pickCountTarget.textContent = `${n} picked`
   }
 
   _select(cid) {
@@ -935,6 +1015,7 @@ export default class extends Controller {
       li.classList.toggle("is-preview", cid === this._previewCid)
       li.classList.toggle("is-next", !!next && cid === next.cid)
       li.classList.toggle("is-editing", cid === this._editing)
+      li.classList.toggle("is-picked", this._picked.has(cid))
       const sync = li.querySelector("[data-sync]")
       if (!sync) return
       const failed = this._failed[cid]
@@ -961,6 +1042,7 @@ export default class extends Controller {
     })
     if (this.hasHostTarget) this.hostTarget.classList.toggle("is-order-waiting", this._pending.has("order") && (offline || now - this._pending.get("order") > WAITING_AFTER_MS))
     this._paintNext(next)
+    this._paintPicks()
     window.dispatchEvent(new CustomEvent("setlist:changed", {
       detail: { keys: this.items.map(queueKey), live: this._liveCid, next: next ? this._detail(next) : null }
     }))
