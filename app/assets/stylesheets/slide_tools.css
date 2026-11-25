@@ -131,6 +131,30 @@
 .ps-tool-card .pv-text { min-height: 9.5em; font: 15px/1.45 "Source Serif 4", "EB Garamond", serif; }
 .pv-notice { margin: 12px 0 0; font: italic 12.5px "EB Garamond", serif; color: var(--sepia-mute); }
 
+/* ---- combine into one slide (combine_slide controller) ---- */
+.cb-tools { display: flex; align-items: center; gap: 6px; margin: 12px 0 5px; }
+.cb-tools .fld-lbl { flex: 1; margin: 0; }
+.ps-tool-card .cb-mark {
+  display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; cursor: pointer; border-radius: 3px;
+  background: var(--vellum-0); border: 1px solid rgba(138, 116, 68, 0.55); color: var(--sepia); font: 600 12px Inter, system-ui, sans-serif;
+}
+.ps-tool-card .cb-mark:hover { border-color: var(--rubric); color: var(--rubric); }
+.ps-tool-card .cb-mark mark { padding: 0 3px; background: #ffd54a; color: var(--ink); border-radius: 2px; }
+.ps-tool-card .cb-text { min-height: 11em; }
+.ps-tool-card .tool-foot .cb-copied { font: 600 12px Inter, system-ui, sans-serif; color: #2f6b2f; }
+.ps-tool-card .tool-foot .cb-copied[hidden] { display: none; }
+.ps-tool-card .btn.is-live { border-color: var(--ps-live, #c62828); color: var(--ps-live, #c62828); }
+.ps-copy-buffer { position: fixed; left: -9999px; top: 0; width: 1px; height: 1px; opacity: 0; }
+
+/* Words the operator emphasised on a scripture slide (lib/slides/combine): on
+   the projector, Preview, the composer's little screen. */
+.slide-stanza.is-set .set-em { font-weight: 800; color: var(--ps-slide-ref-color, #a86f00); }
+.slide-stanza.is-set .set-hl {
+  padding: 0 0.12em; border-radius: 0.12em; color: inherit;
+  background: var(--ps-slide-hl, rgba(255, 205, 60, 0.42)); box-decoration-break: clone; -webkit-box-decoration-break: clone;
+}
+:is(.out-theme-ink, .set-screen) .slide-stanza.is-set .set-em { color: var(--ps-slide-ref-color, #f2c94c); }
+
 /* The little projector: a 16:9 dark screen drawn by the same code as the real one. */
 .set-screen {
   position: relative; aspect-ratio: 16 / 9; width: 100%; overflow: hidden; border-radius: 4px;
@@ -337,3 +361,9 @@
 /* The stage screen reads NOW / NEXT from its own panels; the projected layer
    underneath only bled through them. */
 .ps-root.is-stage .ps-preach-slide { visibility: hidden; }
+
+/* Combine on a phone: the footer's buttons wrap instead of running off the card. */
+@media (max-width: 560px) {
+  .ps-tool-card.cb-card .tool-foot { flex-wrap: wrap; justify-content: flex-end; }
+  .ps-tool-card.cb-card .tool-foot .btn { flex: 1 1 auto; }
+}

@@ -540,6 +540,28 @@
   height: 38px; padding: 0 8px; border-radius: 6px; cursor: pointer;
   background: var(--cx-panel); color: var(--cx-text); border: 1px solid var(--cx-line-2); font: 600 13px var(--cx-ui); letter-spacing: 0;
 }
+/* Search inside one book (console-library book scope): the picker + the chip in the box. */
+.cx-book { flex: none; display: flex; }
+.cx-book select {
+  height: 38px; max-width: 9.5em; padding: 0 6px; border-radius: 6px; cursor: pointer;
+  background: var(--cx-panel); color: var(--cx-text); border: 1px solid var(--cx-line-2); font: 600 12px var(--cx-ui);
+}
+.cx-book select:focus-visible { outline: 2px solid var(--ps-preview); outline-offset: 1px; }
+.cx-book-chip {
+  flex: none; display: inline-flex; align-items: center; gap: 5px; height: 26px; max-width: 12em; padding: 0 6px 0 9px;
+  border: 0; border-radius: 13px; cursor: pointer; background: var(--rubric, #8a2418); color: #fff7e8;
+  font: 600 12px var(--cx-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cx-book-chip[hidden] { display: none; }
+.cx-book-chip .x { font-size: 15px; line-height: 1; opacity: 0.85; }
+.cx-book-chip:hover .x { opacity: 1; }
+.cx-find.is-scoped { border-color: var(--rubric, #8a2418); }
+.cx-find { min-width: 14em; }
+/* A laptop-wide console: the slide-tool buttons keep their icon (and title), the box keeps its room. */
+@media (max-width: 1679px) {
+  .cx-findbar .cx-btn:is(.is-compose, .is-paste) .lbl, .cx-translation > .lbl { display: none; }
+  .cx-findbar .cx-btn:is(.is-compose, .is-paste) { padding: 0 10px; font-size: 15px; }
+}
 .cx-findhint:not([data-tone="ok"], [data-tone="search"], [data-tone="wait"], [data-tone="error"]) { display: none; }
 .cx-findhint { flex: none; padding: 0 12px 6px; font: 12px/1.4 var(--cx-ui); color: var(--cx-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cx-findhint[data-tone="ok"] { color: var(--cx-text); }
@@ -860,3 +882,7 @@ html body:has(.ps-root.is-console) .ps-offline-host { top: auto; bottom: 14px; l
 .cx-mode-btn.is-on { background: var(--cx-gold); color: #1c140c; }
 .cx-mode-btn:focus-visible { outline: 2px solid var(--ps-preview); outline-offset: 1px; }
 .cx-findhint[data-tone="error"] { display: block; color: #f08a7a; }
+
+/* The queue's pick bar (combine into one slide / copy) on the dark console. */
+.ps-root.is-console .ps-pickbar { margin: 0 10px 6px; color: var(--cx-text); background: rgba(240, 165, 0, 0.14); }
+.ps-root.is-console .ps-pickbar .pb-btn:not(.is-combine) { background: transparent; color: var(--cx-text); border-color: var(--cx-line-2); }

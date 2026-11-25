@@ -5,7 +5,10 @@
 #
 #   scripture_set  { refs: [{ reference, translation, label, own, verses: [{ c, n, text }] }],
 #                    ref_position: top|bottom|inline, verse_numbers: bool,
-#                    split: auto|each, ref_style: gold|plain, per_slide: 0..6 }
+#                    split: auto|each|one, ref_style: gold|plain, per_slide: 0..6,
+#                    combined: bool }
+#                  split "one" + combined: "Combine into one slide" — every verse on a
+#                  single slide; verse text may carry emphasis marks (**bold**, ==highlight==).
 #                  A ref with `own` holds words the pastor pasted from their own
 #                  Bible (NKJV, NIV, AMP…) — the version is just their label; the
 #                  words live only in this item. n 0 = a piece of an unnumbered paste.
@@ -21,7 +24,7 @@ module SlideData
   MAX_PAGES = 300
   MAX_SLIDES = 120
   REF_POSITIONS = %w[ top bottom inline ].freeze
-  SPLITS = %w[ auto each ].freeze
+  SPLITS = %w[ auto each one ].freeze
   REF_STYLES = %w[ gold plain ].freeze
   SOURCES = %w[ pdf images ].freeze
   LAYOUTS = %w[ title bullets image quote section ].freeze
@@ -61,7 +64,7 @@ module SlideData
               "label" => str(r["label"].presence || r["reference"], 80), "verses" => verses }
       own ? ref.merge("own" => true) : ref
     end
-    {
+    set = {
       "refs" => refs,
       "ref_position" => pick(raw["ref_position"], REF_POSITIONS),
       "verse_numbers" => bool(raw["verse_numbers"], true),
@@ -69,6 +72,7 @@ module SlideData
       "ref_style" => pick(raw["ref_style"], REF_STYLES),
       "per_slide" => raw["per_slide"].to_i.clamp(PER_SLIDE.min, PER_SLIDE.max)
     }
+    bool(raw["combined"], false) ? set.merge("combined" => true) : set
   end
 
   # Does this scripture set hold words pasted from the pastor's own Bible?

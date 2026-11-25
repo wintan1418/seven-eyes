@@ -67,6 +67,7 @@ const ESC_CONFIRM_MS = 1500
 const PREFETCH_KEEP = 6 // rendered neighbour chapters kept per window
 const PREFETCH_MAX_AGE_MS = 10 * 60_000
 const LOAD_TIMEOUT_MS = 10_000 // a pane load that never answers stops blocking
+const PENDING_STEP_MS = 4000 // a Next/Prev pressed mid-load still counts this long after
 const CHECK_TIMEOUT_MS = 1500 // the server's reference check, for what the device can't read
 const GO_HINTS = {
   auto: "Type a reference, a verse number, or describe a passage",
@@ -113,6 +114,8 @@ export default class extends Controller {
     this._prefetching = new Set()
     this._crossing = false // a chapter step is loading: further steps wait for it
     this._passagesLoading = 0 // _loadPassage loads in flight (a pane mid-swap has no edge yet)
+    this._expanding = false // a single-verse pane is being swapped for its whole chapter
+    this._pendingStep = null // {direction, at}: a Next/Prev pressed mid-load, run once it lands
   }
 
   connect() {
@@ -264,10 +267,17 @@ export default class extends Controller {
   // A pane loaded with a single verse ("John 3:16") holds just that verse, so
   // Next would have nowhere to go. Swap in the whole chapter (through the same
   // validated path as a chase) and land on the verse that was loaded.
+  // Next / Prev pressed meanwhile wait for it (_pendingStep), never dropped.
   _expandToChapter() {
     const raw = this.element.querySelector(".ps-pane.is-presented input[name='pane[reference]']")?.value?.trim()
     if (!raw || !/\d\s*[:.]\s*\d/.test(raw)) return
-    this._chase(raw, { silent: true, remember: false })
+    this._expanding = true
+    // _expanding lasts until the chapter has landed (_loadPassage clears it).
+    this._chase(raw, { silent: true, remember: false }).finally(() => {
+      if (this._passagesLoading > 0) return
+      this._expanding = false
+      this._runPendingStep()
+    })
   }
 
   // Leaving preach closes the projector window but deliberately does NOT end a
@@ -331,25 +341,69 @@ export default class extends Controller {
 
   // Verse by verse — and off the end of a chapter straight into the next one
   // (1 Cor 14:40 → 15:1, Malachi 4:6 → Matthew 1:1), EasyWorship-style; Prev
-  // on verse 1 goes to the last verse of the chapter before.
+  // on verse 1 goes to the last verse of the chapter before (Matthew 1:1 →
+  // Malachi 4:6, Exodus 1:1 → Genesis 50:26). Genesis 1:1 / Revelation 22:21
+  // stay put. A step pressed while a passage is still loading waits for it
+  // (_pendingStep) instead of being lost.
   _step(direction) {
-    if (this._crossing) return
+    // Mid-step or mid-expand: the press waits for the chapter (a second Prev keeps going back).
+    if (this._crossing || this._expanding) { this._queueStep(direction); return }
+    // Another passage is loading (a chase, a queue item): its edge isn't known yet.
+    if (this._passagesLoading > 0) return
     const verses = this._primaryVerses()
     if (!verses.length) return
-    const { prev, next } = this._neighbourChapters()
-    const plan = stepPlan({ index: this._preachIndex, group: this._groupSize, count: verses.length, direction, prevRef: prev, nextRef: next })
-    if (plan.move === "verse") { this._transition(() => { this._preachIndex = plan.index }); return }
-    // A passage still loading has no edge yet: its last verse isn't the chapter's.
-    if (this._passagesLoading > 0) return
-    if (plan.move === "end") { this._toast("The end of Revelation — the last verse of the Bible", { ms: 2500 }); return }
-    if (plan.move !== "chapter") return
     const pane = this.element.querySelector(".ps-pane.is-presented")
-    // A single-verse pane ("John 3:17") not yet swapped for its whole chapter
-    // (_expandToChapter): its edge isn't the chapter's edge.
-    if (/\d\s*[:.]\s*\d/.test(this._paneSource(pane).reference || "")) return
+    const plan = this._planStep(pane, verses, this._preachIndex, this._groupSize, direction)
+    if (plan.move === "verse") { this._transition(() => { this._preachIndex = plan.index }); return }
+    this._crossChapter(pane, plan)
+  }
+
+  // Where a step from `index` goes in `pane` (lib/chapter_step), with a pane
+  // that holds only part of its chapter ("John 3:17", a range) handled: its
+  // edge isn't the chapter's edge, so the step loads the whole chapter and
+  // lands on the verse beside it (`near`).
+  _planStep(pane, verses, index, group, direction) {
+    const { prev, next } = this._neighbourChapters(pane)
+    const reference = this._paneSource(pane).reference || ""
+    const partial = /\d\s*[:.]\s*\d/.test(reference)
+    const firstNum = parseInt(verses[0]?.dataset.verseNum, 10)
+    const lastNum = parseInt(verses[verses.length - 1]?.dataset.verseNum, 10)
+    const chapter = reference.replace(/\s*[:.]\s*\d.*$/, "").trim()
+    const plan = stepPlan({ index, group, count: verses.length, direction, prevRef: prev, nextRef: next })
+    if (!partial || plan.move === "verse" || !chapter) return plan
+    if (direction < 0 && firstNum > 1) return { move: "chapter", reference: chapter, near: firstNum - 1, land: "last" }
+    if (direction > 0 && Number.isFinite(lastNum)) return { move: "chapter", reference: chapter, near: lastNum + 1, orNext: true, land: "first" }
+    return plan
+  }
+
+  // Off the edge of the chapter: load the neighbour (prefetched when we can),
+  // or say where the Bible starts / ends.
+  _crossChapter(pane, plan) {
+    if (plan.move === "end") { this._toast("The end of Revelation — the last verse of the Bible", { ms: 2500 }); return }
+    if (plan.move === "start") { this._toast("Genesis 1:1 — the first verse of the Bible", { ms: 2500 }); return }
+    if (plan.move !== "chapter") return
     this._crossing = true
-    const html = this._takePrefetched(plan.reference, this._paneSource(pane).translation)
-    this._loadPassage(plan.reference, null, { remember: false, label: null, land: plan.land, html, done: () => { this._crossing = false } })
+    const html = plan.near ? null : this._takePrefetched(plan.reference, this._paneSource(pane).translation)
+    const back = this._snapshot()
+    this._loadPassage(plan.reference, plan.near || null, {
+      remember: false, label: null, land: plan.land, html, orNext: plan.orNext, back,
+      done: () => { this._crossing = false }
+    })
+  }
+
+  _queueStep(direction) {
+    this._pendingStep = { direction, at: performance.now() }
+  }
+
+  // A step pressed while the passage loaded: run it now (only if it's fresh —
+  // a press from long ago mustn't move the screen by surprise).
+  _runPendingStep() {
+    const pending = this._pendingStep
+    this._pendingStep = null
+    if (!pending || performance.now() - pending.at > PENDING_STEP_MS) return
+    if (!this.element.classList.contains("is-preaching") || this._slide) return
+    if (pending.direction > 0) this.next()
+    else this.prev()
   }
 
   // The chapters either side of the presented pane, as its markup names them.
@@ -551,8 +605,15 @@ export default class extends Controller {
     const pane = this.element.querySelector(".ps-pane.is-presented")
     if (!pane) return
     const verses = Array.from(pane.querySelectorAll(".ps-verse"))
+    if (!verses.length) return
     const idx = this._splitIndexFor(pane) + delta
-    if (idx < 0 || idx >= verses.length) return
+    if (idx < 0 || idx >= verses.length) {
+      // Off the region's chapter: carry on into the neighbouring one, as in a single passage.
+      if (this._crossing) { this._queueStep(delta); return }
+      if (this._passagesLoading > 0) return
+      this._crossChapter(pane, this._planStep(pane, verses, this._splitIndexFor(pane), 1, delta))
+      return
+    }
     const body = pane.querySelector(".ps-verse-body")
     this._transition(() => this._setSplitIndex(pane, idx), { bodies: body ? [body] : [] })
   }
@@ -811,7 +872,11 @@ export default class extends Controller {
   // `land: "last"` lands on the chapter's last verse(s) (Prev across chapters);
   // `html`: the pane already rendered (a prefetched neighbour chapter);
   // `done`: called once the load finished either way.
-  _loadPassage(chapterReference, verseStart, { remember = true, label = undefined, verseEnd = null, land = null, html = null, done = null } = {}) {
+  // `orNext`: `verseStart` is the verse after a part-chapter pane — if the
+  // chapter has no such verse, carry on into the next chapter.
+  // `back`: a snapshot to return to if the chapter has no verses in this
+  // translation (never leave "not available" on the projector).
+  _loadPassage(chapterReference, verseStart, { remember = true, label = undefined, verseEnd = null, land = null, html = null, done = null, orNext = false, back = null } = {}) {
     const pane = this.element.querySelector(".ps-pane.is-presented")
     const input = pane?.querySelector("input[name='pane[reference]']")
     if (!input) { done?.(); return }
@@ -822,15 +887,25 @@ export default class extends Controller {
     this._passagesLoading++
     this._onceLoaded(pane, (ok) => {
       this._passagesLoading = Math.max(0, this._passagesLoading - 1)
+      if (this._passagesLoading === 0) this._expanding = false
       done?.()
-      if (!ok) { this._toast(`Couldn't load ${chapterReference} — check the connection`, { tone: "error" }); return }
+      if (!ok) { this._pendingStep = null; this._toast(`Couldn't load ${chapterReference} — check the connection`, { tone: "error" }); return }
       if (!this.element.classList.contains("is-preaching")) return
       this._pairForParallel()
       const verses = Array.from(pane.querySelectorAll(".ps-verse"))
+      if (!verses.length && back) {
+        // This translation has no such chapter (canons and seeded Bibles differ): stay where we were.
+        this._toast(`${chapterReference} isn't in this translation`, { tone: "error", ms: 3000 })
+        this._pendingStep = null
+        setTimeout(() => this._restore(back), 0) // after this frame load has finished
+        return
+      }
       let idx = land === "last" ? landingIndex("last", verses.length, split ? 1 : this._chosenGroup) : 0
+      let carryOn = false
       if (verseStart) {
         const found = verses.findIndex(v => parseInt(v.dataset.verseNum, 10) === verseStart)
         if (found >= 0) idx = found
+        else if (orNext && verses.length) { idx = verses.length - 1; carryOn = true }
       }
       if (split) {
         pane.classList.add("is-presented") // a freshly-loaded passage becomes active
@@ -847,6 +922,9 @@ export default class extends Controller {
       // What went on the screen — the queue offers it / adds it (setlist controller).
       const went = label === undefined ? (verseStart ? `${chapterReference}:${verseStart}` : chapterReference) : label
       if (went) window.dispatchEvent(new CustomEvent("preach:passage", { detail: { reference: went } }))
+      // The part-chapter pane ended on the chapter's last verse: on to the next chapter.
+      if (carryOn) this._queueStep(+1)
+      if (this._passagesLoading === 0) this._runPendingStep()
     })
     if (html && swapPaneHtml(pane, html)) return
     this._submitPane(pane)

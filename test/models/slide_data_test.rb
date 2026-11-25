@@ -11,6 +11,17 @@ class SlideDataTest < ActiveSupport::TestCase
     assert_equal false, data["verse_numbers"]
   end
 
+  test "a combined slide keeps one slide and its emphasis marks" do
+    data = SlideData.clean("scripture_set", { "refs" => [
+      { "reference" => "Revelation 13:1, 11", "label" => "Revelation 13:1, 11", "translation" => "KJV",
+        "verses" => [ { "c" => 13, "n" => 1, "text" => "a **beast** rise up" }, { "c" => 13, "n" => 11, "text" => "another ==beast== coming" } ] }
+    ], "split" => "one", "combined" => true })
+    assert_equal "one", data["split"]
+    assert_equal true, data["combined"]
+    assert_equal "a **beast** rise up", data["refs"][0]["verses"][0]["text"]
+    assert_not SlideData.clean("scripture_set", { "refs" => [] }).key?("combined")
+  end
+
   test "caps sizes so one item can't carry a whole Bible" do
     refs = Array.new(30) { { "reference" => "Ps 119", "verses" => Array.new(200) { |i| { "c" => 119, "n" => i + 1, "text" => "x" } } } }
     data = SlideData.clean("scripture_set", { "refs" => refs })

@@ -15,6 +15,11 @@
 // A ref marked `own` holds words the pastor pasted from their own Bible
 // (NKJV, NIV…: lib/slides/paste_verses.js); a verse with n 0 is a piece of an
 // unnumbered paste and shows no number.
+// split "one" (lib/slides/combine — "Combine into one slide") keeps every
+// verse on a single slide, however long; the words shrink to fit. Its verse
+// text may carry emphasis marks (**bold**, ==highlight==): plain-text views
+// drop them, the projected slide draws them.
+import { plainText } from "./combine.js"
 
 // Roughly what fits on a projector at a readable size; a longer slide is
 // split at a verse boundary (a single long verse keeps a slide to itself).
@@ -96,7 +101,8 @@ export function setPages(raw) {
     ref.verses.forEach((v) => {
       const cost = v.text.length + 8
       // A fixed number of verses a slide (the pastor chose it), else what fits.
-      const full = data.per_slide ? (block && block.verses.length >= data.per_slide) : (size > 0 && size + cost > SLIDE_BUDGET)
+      const full = data.split === "one" ? false
+        : data.per_slide ? (block && block.verses.length >= data.per_slide) : (size > 0 && size + cost > SLIDE_BUDGET)
       if (full) { start(); block = null }
       if (!block) {
         block = { label: ref.label || ref.reference, translation: ref.translation || "", verses: [], cont: placed > 0 }
@@ -138,7 +144,13 @@ export function refLine(block) {
 
 export function blockWords(block, data) {
   const numbers = withDefaults(data).verse_numbers
-  return block.verses.map((v) => (numbers && v.n > 0 ? `${v.n} ${v.text}` : v.text)).join(" ")
+  return block.verses.map((v) => (numbers && v.n > 0 ? `${verseNumber(v, block)} ${plainText(v.text)}` : plainText(v.text))).join(" ")
+}
+
+// A combined slide's verses from more than one chapter number as "13:1".
+export function verseNumber(v, block) {
+  const chapters = new Set(block.verses.map((x) => x.c).filter(Boolean))
+  return chapters.size > 1 && v.c ? `${v.c}:${v.n}` : String(v.n)
 }
 
 export function pageText(page, raw) {

@@ -19,7 +19,7 @@
   <section class="cx-region cx-service" data-cx-region="service" aria-label="Service">
     <header class="cx-head">
       <span class="cx-title">Service</span>
-      <span class="cx-sub">click to preview &middot; double-click to go live</span>
+      <span class="cx-sub" title="Ctrl+click (or Shift+click) picks several — to combine into one slide or copy">click preview &middot; double-click live &middot; Ctrl+click picks several</span>
       <span class="cx-head-tools">
         <% if authenticated? && study.user_id == current_user.id && !study.quick_present? && !study.archived? %>
           <button type="button" class="cx-mini-btn" data-action="setlist#newService"
@@ -121,9 +121,26 @@
                     title="<%= tip %> (Alt+<%= key %>)"><%= label %></button>
           <% end %>
         </div>
+        <%# Search inside one book (EasyWorship): pick it here, or type it first — "heb heavenly jerusalem". %>
+        <label class="cx-book" title="Search the words in one book (Alt+B) — or type the book first: heb heavenly jerusalem">
+          <span class="ui-sr-only">Search in</span>
+          <select data-console-library-target="book" data-action="change->console-library#bookChanged keydown->console-library#bookKey">
+            <option value="">All books</option>
+            <option value="live" data-console-library-target="liveBook" hidden>This book</option>
+            <% Bible::Canon.all.group_by(&:testament).each do |testament, books| %>
+              <optgroup label="<%= testament.to_s == "old" ? "Old Testament" : "New Testament" %>">
+                <% books.each do |b| %>
+                  <option value="<%= b.osis %>" data-aliases="<%= b.aliases.join(" ") %>"><%= b.name %></option>
+                <% end %>
+              </optgroup>
+            <% end %>
+          </select>
+        </label>
         <label class="cx-find">
           <span class="ui-sr-only">Find a scripture</span>
           <span class="ic" aria-hidden="true">&#8981;</span>
+          <button type="button" class="cx-book-chip" data-console-library-target="chip" data-action="console-library#clearBook" hidden
+                  title="Searching one book — click to search every book"><span data-console-library-target="chipLabel"></span><span class="x" aria-hidden="true">&times;</span></button>
           <input type="text" class="cx-find-input" inputmode="search" autocomplete="off" spellcheck="false" autocapitalize="none"
                  placeholder="Type a reference like John 3:16 — Enter puts it in Preview"
                  data-console-library-target="input"
@@ -134,11 +151,11 @@
         <button type="button" class="cx-btn is-queue" data-action="console-library#queue"
                 title="Add it to the service list (Ctrl+Enter)">&#43; Service</button>
         <button type="button" class="cx-btn is-compose" data-action="console-library#composer"
-                title="Scripture slide — several scriptures on one slide, each in its own Bible (Col 2:2; Matt 28:19 BSB)">&#10697; Several on one slide</button>
+                title="Scripture slide — several scriptures on one slide, each in its own Bible (Col 2:2; Matt 28:19 BSB)" aria-label="Several on one slide">&#10697;<span class="lbl"> Several on one slide</span></button>
         <button type="button" class="cx-btn is-paste" data-tool="paste-verses" data-action="console-library#pasteOwn"
-                title="Paste your own — verses from your Bible app (NKJV, NIV, AMP…) as slides in this service">&#128203; Paste your own</button>
+                title="Paste your own — verses from your Bible app (NKJV, NIV, AMP…) as slides in this service" aria-label="Paste your own">&#128203;<span class="lbl"> Paste your own</span></button>
         <label class="cx-translation" title="The translation scriptures are shown in">
-          <span>Translation</span>
+          <span class="lbl">Translation</span>
           <select data-console-library-target="translation" data-action="change->console-library#translation">
             <%= translation_options(study.panes.first&.effective_translation&.id) %>
           </select>

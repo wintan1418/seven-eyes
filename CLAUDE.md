@@ -332,6 +332,24 @@ The owner found the parchment UI cluttered, hard to navigate and bad on phones, 
   `--look-*` tokens; screen_live's Black / Clear / Logo / Timer / Alert sit in the toolbar and the
   state pill reads `data-screen-mode`. System tests written for the full-screen layout call
   `prefer_focus_view` before entering preach.
+- **Next / Prev across chapters and books** (`lib/chapter_step.js`, `presentation#_step`): Malachi 4:6 ⇄
+  Matthew 1:1, Exodus 1:1 ← → Genesis 50:26; Genesis 1:1 / Revelation 22:21 stay put with a toast. A
+  step pressed while a passage loads (or a single-verse pane opens its chapter) waits
+  (`_pendingStep`, 4 s) instead of being dropped; a part-chapter pane ("John 3:17") steps into the rest
+  of its chapter (`_planStep`); split regions cross chapters too; a neighbour chapter missing in the
+  pane's translation toasts and stays (`back` snapshot). Tests: `test/system/preach_continuation_test.rb`.
+- **Book-scoped search** (console library, Nov 2026): "heb heavenly jerusalem" / "hebrews: heavenly
+  jerusalem" or the book picker next to the box (Alt+B; "This book" = the book on screen) searches the
+  words in that book only — device `rankVerses({books})`, else `/search.json?in=OSIS`. A chip in the
+  box shows the book (× / Esc = every book). Without a colon only in Auto/Reference mode and only for
+  names/aliases (≥3 letters) or 4+ letters of a name; a guessed book with no hits widens to every book.
+  Pure logic `lib/book_scope.js` (node-tested); canon = the picker's `<option data-aliases>`.
+- **Combine into one slide + Copy** (Nov 2026): Ctrl/⌘+click / Shift+click queue items → pick bar
+  (`setlist#combinePicked` / `copyPicked`); Preview's ✎ Edit / Copy do the same for what is previewed.
+  `combine_slide` dialog (`studies/_slide_tools`): auto reference line ("Revelation 13:1, 11"), one verse
+  a line, Bold (`**…**`, Ctrl+B) / Highlight (`==…==`, Ctrl+M) → a `scripture_set` with `split: "one"`,
+  `combined: true` (✎ reopens it). Slides draw `.set-em` / `.set-hl`; plain text (stage, phones, body,
+  Copy) drops the marks. `lib/slides/combine.js` (node-tested), words via `lib/slides/item_words.js`.
 - **My Media** (Nov 2026, phase 1) — each account's picture library (`MediaAsset`: the file on
   Active Storage — or a legacy Cloudinary URL — title, default display `{fit, zoom}`, size,
   dimensions, `last_used_at`). `MediaLibrary.add` dedupes by the file's MD5 (= the blob checksum,

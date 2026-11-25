@@ -4,6 +4,7 @@ import { quickFetch } from "../lib/offline/network"
 import { queryWords } from "../lib/scripture_search"
 import { readMode, tidyReference, MODE_EVENT } from "../lib/scripture_mode"
 import { pictureDisplay, pictureLabel, applyPicture, ZOOM_MIN } from "../lib/picture_fit"
+import { makeBookResolver, splitBookScope, bookOfReference } from "../lib/book_scope"
 
 const WORDS_WAIT_MS = 2500 // Enter in Words mode waits this long for the list
 
@@ -17,6 +18,13 @@ const WORDS_WAIT_MS = 2500 // Enter in Words mode waits this long for the list
 //                   that aren't a reference search the Scriptures through the
 //                   Go box's own path (AI, or on-device keywords offline) —
 //                   results land in Preview, never on the projector.
+//   book scope      search the words inside one book, EasyWorship-style:
+//                   type the book first ("heb heavenly jerusalem",
+//                   "hebrews: heavenly jerusalem") or pick it in the book
+//                   picker (Alt+B; "This book" = the book on screen). A chip
+//                   in the box shows the book; × (or Esc) searches every book.
+//                   Typed without a colon only in Auto / Reference (Words
+//                   takes words literally — "mark of the beast").
 //   search mode     Auto | Reference | Words (search_mode controller,
 //                   lib/scripture_mode): Reference only reads references and
 //                   never searches the words; Words only searches the words
@@ -36,7 +44,8 @@ const WORDS_WAIT_MS = 2500 // Enter in Words mode waits this long for the list
 //                   (setlist:picture), which saves them and changes the screen.
 export default class extends Controller {
   static targets = [ "input", "hint", "translation", "decks", "pictures",
-    "pictureControls", "pictureName", "pictureZoom", "pictureZoomOut" ]
+    "pictureControls", "pictureName", "pictureZoom", "pictureZoomOut",
+    "book", "liveBook", "chip", "chipLabel" ]
 
   connect() {
     this.root = this.element.closest(".ps-root")
@@ -44,8 +53,9 @@ export default class extends Controller {
     this._live = null
     this._defaultHint = this.hasHintTarget ? this.hintTarget.innerHTML : ""
     this._mode = readMode()
+    this._resolveBook = makeBookResolver(this._canon())
     this._listeners = {
-      "preach:state": (e) => { this._live = e.detail || null },
+      "preach:state": (e) => { this._live = e.detail || null; this._paintLiveBook() },
       "console:on": () => { this._syncTranslation(); this._paintKinds() },
       "setlist:changed": () => this._paintKinds(),
       "preview:changed": (e) => { this._previewCid = e.detail?.cid || null; this._paintKinds() },
@@ -65,6 +75,18 @@ export default class extends Controller {
     await warmLocal() // the parser, before the first keystroke is read
     const raw = this._raw()
     const mode = this._mode
+    const scope = this._scope(raw)
+    this._paintChip(scope)
+    if (scope) {
+      // Words inside one book: the matching verses list below as you type.
+      window.dispatchEvent(new CustomEvent("preview:typing", { detail: {
+        raw: scope.words, query: raw, source: "library", mode: "words",
+        book: { osis: scope.book.osis, name: scope.book.name, strict: scope.explicit }
+      } }))
+      if (scope.words) this._hint(`Searching ${scope.book.name} for “${scope.words}” — ↓ walks the verses, Enter previews the first, Shift+Enter puts it on the screen · Esc searches every book`, "search")
+      else this._hint(`Searching ${scope.book.name} — type a word or two from the verse`, "wait")
+      return
+    }
     const text = mode === "words" ? raw : this._refText(raw)
     window.dispatchEvent(new CustomEvent("preview:typing", { detail: { raw: text, source: "library", mode } }))
     if (!raw) { this._hint(null); return }
@@ -82,6 +104,19 @@ export default class extends Controller {
   }
 
   key(event) {
+    if (event.altKey && event.code === "KeyB" && !event.ctrlKey && !event.metaKey && this.hasBookTarget) {
+      event.preventDefault()
+      event.stopPropagation()
+      this.bookTarget.focus()
+      return
+    }
+    if (event.key === "Escape" && this._scope(this._raw())) {
+      // First Esc drops the book (the words stay); the next clears the box.
+      event.preventDefault()
+      event.stopPropagation()
+      this.clearBook()
+      return
+    }
     if (event.key === "Enter") {
       event.preventDefault()
       event.stopPropagation()
@@ -103,6 +138,7 @@ export default class extends Controller {
     const raw = this._raw()
     if (!raw) { this.inputTarget.focus(); return }
     await warmLocal()
+    if (await this._scoped(raw, { live: false })) return
     if (this._mode !== "auto") { await this._explicit(raw, { live: false }); return }
     const reference = this._reference(raw)
     const found = reference ? null : this._topMatch(raw)
@@ -117,6 +153,7 @@ export default class extends Controller {
     const raw = this._raw()
     if (!raw) return
     await warmLocal()
+    if (await this._scoped(raw, { live: true })) return
     if (/^\d+$/.test(raw) && this._mode !== "words" && this._live && !this._live.slide) {
       window.dispatchEvent(new CustomEvent("preach:command", { detail: { action: "verse", value: Number(raw) } }))
     } else if (this._mode !== "auto") {
@@ -150,6 +187,20 @@ export default class extends Controller {
       else found.click()
     }
     this._done()
+  }
+
+  // A book-scoped search ("heb heavenly jerusalem"): Enter previews the first
+  // verse holding every word, Shift+Enter puts it up. False: not scoped.
+  async _scoped(raw, { live }) {
+    const scope = this._scope(raw)
+    if (!scope) return false
+    if (!scope.words) { this._hint(`Searching ${scope.book.name} — type a word or two from the verse`, "wait"); return true }
+    const found = await this._wordsMatch(raw)
+    if (!found) { this._hint(`No verses with “${scope.words}” in ${scope.book.name} · Esc searches every book`, "error"); return true }
+    if (live) found.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }))
+    else found.click()
+    this._done()
+    return true
   }
 
   // Words mode: the first verse of the list for exactly this text, waiting
@@ -188,8 +239,9 @@ export default class extends Controller {
     const raw = this._raw()
     if (!raw) { this.inputTarget.focus(); return }
     await warmLocal()
-    let reference = this._mode === "words" ? null : this._reference(raw)
-    if (this._mode === "words") {
+    const scoped = !!this._scope(raw)
+    let reference = this._mode === "words" || scoped ? null : this._reference(raw)
+    if (this._mode === "words" || scoped) {
       reference = (await this._wordsMatch(raw))?.closest(".vrow")?.dataset.label
       if (!reference) { this._hint(`No verses with “${raw}” to add`, "error"); return }
     }
@@ -246,6 +298,89 @@ export default class extends Controller {
     if (text == null) { this.hintTarget.innerHTML = this._defaultHint; this.hintTarget.dataset.tone = ""; return }
     this.hintTarget.textContent = text
     this.hintTarget.dataset.tone = tone
+  }
+
+  // ---- one book (EasyWorship's "search in Hebrews") --------------------------------------
+
+  // The canon the book picker was rendered with (Bible::Canon): names + aliases.
+  _canon() {
+    if (!this.hasBookTarget) return []
+    return Array.from(this.bookTarget.querySelectorAll("option[data-aliases]")).map((o) => ({
+      osis: o.value, name: o.textContent.trim(), aliases: (o.dataset.aliases || "").split(/\s+/).filter(Boolean)
+    }))
+  }
+
+  // What the box searches in: a book typed first, else the picker's book.
+  // → { book: {osis, name}, words, explicit } or null (every book / a reference).
+  _scope(raw) {
+    const text = String(raw || "").trim()
+    if (this._mode !== "words" || /:\s*\S/.test(text)) {
+      // A reference ("heb 12", "john 3:16") is never a search.
+      const ref = this._mode === "words" ? null : localCheck(this._refText(text))
+      if (!ref?.ok) {
+        const typed = splitBookScope(text, this._resolveBook)
+        if (typed && (this._mode !== "words" || typed.explicit)) return typed
+      }
+    }
+    const picked = this._pickedBook()
+    if (!picked) return null
+    if (this._mode !== "words" && localCheck(this._refText(text))?.ok) return null
+    if (this._mode !== "words" && /^\d+(?:\s*[-–]\s*\d+)?$/.test(text)) return null // a verse of the chapter on screen
+    return { book: picked, words: text, explicit: true, picked: true }
+  }
+
+  _pickedBook() {
+    if (!this.hasBookTarget || !this.bookTarget.value) return null
+    if (this.bookTarget.value === "live") return this._liveBook()
+    const option = this.bookTarget.selectedOptions[0]
+    return option ? { osis: option.value, name: option.textContent.trim() } : null
+  }
+
+  _liveBook() {
+    if (!this._live || this._live.slide) return null
+    return bookOfReference(this._live.reference, this._resolveBook)
+  }
+
+  _paintLiveBook() {
+    if (!this.hasLiveBookTarget) return
+    const book = this._liveBook()
+    this.liveBookTarget.hidden = !book
+    this.liveBookTarget.textContent = book ? `This book — ${book.name}` : "This book"
+    if (this.bookTarget.value === "live" && this._raw()) this._paintChip(this._scope(this._raw()))
+  }
+
+  _paintChip(scope) {
+    if (!this.hasChipTarget) return
+    this.chipTarget.hidden = !scope
+    this.element.querySelector(".cx-find")?.classList.toggle("is-scoped", !!scope)
+    if (scope) this.chipLabelTarget.textContent = scope.book.name
+  }
+
+  bookChanged() {
+    this._paintChip(this._scope(this._raw()))
+    if (this._raw()) this.typed()
+    else if (this._pickedBook()) this._hint(`Searching ${this._pickedBook().name} — type a word or two from the verse`, "wait")
+    else this._hint(null)
+  }
+
+  // In the book picker: Enter / Esc go back to typing.
+  bookKey(event) {
+    if (event.key === "Enter" || event.key === "Escape") {
+      event.preventDefault()
+      event.stopPropagation()
+      this.inputTarget.focus()
+    }
+  }
+
+  // × on the chip (or Esc in the box): search every book — the words stay.
+  clearBook(event) {
+    event?.preventDefault?.()
+    const scope = this._scope(this._raw())
+    if (this.hasBookTarget) this.bookTarget.value = ""
+    if (scope && !scope.picked) this.inputTarget.value = scope.words
+    this._paintChip(null)
+    this.inputTarget.focus()
+    this.typed()
   }
 
   // ---- translation --------------------------------------------------------------------

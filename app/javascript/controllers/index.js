@@ -160,6 +160,7 @@ application.register("read-more", ReadMoreController)
 
 const LAZY_CONTROLLERS = {
   "ai-search": () => import("./ai_search_controller"),
+  "combine-slide": () => import("./combine_slide_controller"),
   "console": () => import("./console_controller"),
   "console-library": () => import("./console_library_controller"),
   "console-live": () => import("./console_live_controller"),
